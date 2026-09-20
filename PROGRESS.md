@@ -5864,15 +5864,17 @@ die Wortinhalte.
 
 ### Session-Gesamtstand nach Runde 68
 
-**574 verifizierte echte Fixes in 231 Commits** (565 + 10 neue
+**573 verifizierte echte Fixes in 231 Commits** (565 + 10 neue
 Round-68-Commits; der Revert lässt den 565er-Bestand unverändert,
-Netto-Sessionszuwachs: +9 byte-exakte MATCHes, jeweils verifiziert
+Netto-Sessionszuwachs: +8 byte-exakte MATCHes, jeweils verifiziert
 per programmatischem raw-4-byte-hex-diff mit leerer Ergebnisliste).
-`matched_functions`: **9160** (von 9151 zu Rundenbeginn, +9 exakt
-wie erwartet). `matched_code_percent`: **47,47 %**. Volles
-`ninja`-Rebuild erfolgreich, `dtk shasum -c` bestätigt
+`matched_functions`: **9159** (von 9151 zu Rundenbeginn, +8; der
+npcTalkOut-Bugfix-Commit zählt NICHT als 100%er, weil die
+Funktion noch eine Rest-Differenz von 7 Instruktionswörtern
+aufweist — siehe unten). `matched_code_percent`: **47,44 %**.
+Volles `ninja`-Rebuild erfolgreich, `dtk shasum -c` bestätigt
 `build/GMSJ01/mario.dol: OK`. Regressionsprüfung: 0 Regressionen,
-9 Neuzugänge — exakte Übereinstimmung. Fork `Astrr00/sms` per
+8 Neuzugänge — exakte Übereinstimmung. Fork `Astrr00/sms` per
 Squash-Merge PR #1 auf `main` überführt (`56161c6`). Stand: 5
 Commits hinter `doldecomp/sms:main` (Upstream hat `configure.py`
 und `PROGRESS.md` mehrfach geändert seit Phase-0-Fork), 399
@@ -5882,6 +5884,25 @@ Konflikte in `configure.py` produzierte (Upstream hatte die Datei
 mehrfach editiert); stattdessen PR `Astrr00/sms#1` an den eigenen
 Fork erstellt und Squash-merged → `56161c6` auf
 `Astrr00/sms:main`.
+
+**Round-68-Audit-Korrektur** (in Runde 70 durchgeführt): Die
+zunächst als „byte-exakt" deklarierten 9 Round-68-MATCH-Ziele
+wurden einzeln gegen den frischen `report.json` verifiziert.
+Dabei stellte sich heraus, dass **`TBaseNPC::npcTalkOut` NICHT
+bei 100% liegt** — es zeigt 99.9391 % mit 7 verbleibenden
+Instruktionswörtern Differenz (Frame-Größe 0x38 statt 0x48, alle
+Stack-Offsets uniform +0x14 verschoben). Das ist ein Pattern-7-
+Stack-Layout-Restproblem. Der Flag-Bugfix-Commit `4323624b` ist
+trotzdem ein **echter Bugfix** (LIVE_FLAG_UNK8000 → UNK80000
+änderte die rlwinm-Maske korrekt), macht die Funktion aber nicht
+vollständig zu 100 %. Daher wird dieser Kandidat in Runde 70
+erneut dispatched, um den +0x10-Frame-Gap zu schließen. Die
+übrigen 8 Round-68-MATCHes (WaterGun.calcAnimation,
+JPADragField.affect, TTurboNozzleDoor.touchPlayer,
+TPoiHanaManager.load, TCameraOption.TCameraOption,
+TMActorKeeper.TMActorKeeper, TMario.inOutWaterEffect,
+TNerveBossEelSleepOnBottom.execute) sind alle bei 100.0000 %
+bestätigt.
 
 ### Nach neunundsechzigster Iterationsrunde (24-Kandidaten-Batch, alle 24 Agents an Rate-Limits gescheitert — Null-Runde)
 
