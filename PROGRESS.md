@@ -6009,3 +6009,92 @@ Regressionen, 1 Neuzugang — exakte Übereinstimmung. Fork
 `Astrr00/sms` weiterhin bei Squash-Merge `56161c6` auf `main`;
 5 Commits hinter `doldecomp/sms:main`.
 
+### Nach einundsiebzigster Iterationsrunde (5 byte-exakte MATCHes, 9 neue Dead-Ends)
+
+**5 byte-exakte MATCHes** (alle mit rohem Vier-Byte-Hexvergleich
+verifiziert: gleiche Wortzahl, leere Diff-Liste `[]`):
+
+1. `TBossPakkun::setGroundCollision` (Commit `7760ec64`,
+   `src/Enemy/bosspakkun.cpp`) — benannter `dieNerve`-Local für
+   `&TNerveBPDie::theNerve()` plus benannter `TPosition3f`-Local
+   für `moveMtx`. 57/57 Wörter, 228B.
+2. `TTrembleModelEffect::reset` (Commit `77025abc`,
+   `src/MarioUtil/DrawUtil.cpp`) — Loop-Bounds von
+   `getVertexData().getVtxNum()` auf direktes `getVtxNum()`
+   umgestellt und benanntes `J3DModelData*`-Local vor
+   `setVtxPosArray` eingeführt. 120/120 Wörter, 480B.
+3. `THamuKuri::behaveToWater` (Commit `cd245a39`,
+   `src/Enemy/hamukuri.cpp`) — `SMS_GetMarioPos()` durch
+   `*gpMarioPos` ersetzt (direkter Globalzugriff statt
+   Inline-Getter erzeugt die Retail-Load-Sequenz).
+   143/143 Wörter, 572B.
+4. `TTamaNoko::calcRootMatrix` (Commit `cd245a39`,
+   `src/Enemy/tamaNoko.cpp`) — gemeinsames
+   `JGeometry::TVec3<f32> scale(2.0f, 2.0f, 2.0f)`-Local für
+   beide `setGlobalScale`-Aufrufe gezogen statt je anonymem
+   Temporary. 266/266 Wörter, 1064B.
+5. `TTrembleModelEffect::init` (Commit `cd245a39`,
+   `src/MarioUtil/DrawUtil.cpp`) — `getVertexData().getVtxNum()`
+   /`getVtxPosArray()`-Kette auf die direkten
+   `J3DModelData`-Accessoren `getVtxNum()`/`getVtxPosArray()`
+   verkürzt. 354/354 Wörter, 1416B.
+
+**9 neue Dead-Ends** (mehrere informierte Varianten getestet,
+sauber reverted, in `.decomp_session_state.json` aufgenommen):
+
+- `TGraphWeb::getRandomNextIndex` — verbleibender 4-Byte-
+  Stack-Offset nach 2 Varianten.
+- `CPolarSubCamera::execGroundCheck_` — Inlining des
+  `should_clip`-Helpers erzeugte 22 Diffs und falsches
+  Frame/Register-Layout.
+- `TRoulette::initMapObj` — 3 Varianten (benannter
+  `TIdxGroupObj*`-Local, expandierte `getInstance()->
+  getRootNameRef()->search`-Kette, beides kombiniert)
+  kollabierten den Frame 0xA0 -> 0x98.
+- `TBossMantaManager::setupEfbAlpha` — Stack-Layout und
+  Local-Array-Offsets bleiben abweichend.
+- `evSetHide4LiveActor` — Frame 0xA0 vs 0x98 und
+  fctiwz-Spill-Offsets; `interp->pop().getDataInt()` erreicht
+  den Retail-Frame, aber die pop()-Scheduling-Reihenfolge
+  divergiert weiter.
+- `TSplashManager::makeDL` — 5-Wort-Diff: GXColor-Temp und
+  `thing[]`-Slots vertauscht; 4 Varianten (const-Referenz,
+  direkte Aggregate-Init, hoisted Declaration, split
+  decl/assign) änderten das Slot-Mapping nicht.
+- `TNerveBathtubKillerExplosion::execute` — Null-Vektor-Temp
+  0x18 vs 0x1C; Pointer-Merge-Variante identisch.
+- `TLiveActor::bind` — der by-value `fst`-Temp des
+  `operator-` sitzt auf 0x10 statt 0x20; 5 Varianten
+  (benanntes Local, const-Ref-Bindung, `sub`-Sequenzen)
+  zerstörten jeweils das `bl sub`-Call-Muster oder blähten
+  den Frame.
+- `SMS_InitChangeNpcColor` — in Runde 70 als
+  Toolchain-Drift dokumentiert; jetzt auch in der
+  Ausschlussliste verankert.
+
+**Weitere gescheiterte Versuche** (nicht in der Ausschlussliste,
+da nur einzelne Durchgänge): `TNerveTamaNokoHitWater::execute`
+(manuelle `unk165`-Lösung statt `unsetUnk165()`-Helper ergab
+204/206 Wörter — reverted).
+
+**Bekannte Pre-existing-Validierungsprobleme** (nicht durch
+diese Runde verursacht, dokumentiert statt verschwiegen):
+
+- `mario/MarioUtil/DrawUtil`: `validate-symbol-order.py`
+  meldet fehlendes schwaches Symbol `identity33__Q29JGeometry
+  64TRotation3<...>Fv` (fehlte nachweislich bereits im Objekt
+  vor der Round-71-Änderung) sowie 14 UNUSED-Size-Warnungen
+  auf bestehenden Null-Byte-Stubs. Symbolprüfung der TU ist
+  damit **nicht sauber**.
+- `mario/Enemy/hamukuri`: `onHaveCap__13TDoroHamuKuriFv` ist
+  global gelinkt, die Map erwartet `weak` (Original vermutlich
+  Header-inline definiert); dazu lange Weak-Order-Warnliste.
+  Beides unabhängig vom `behaveToWater`-Diff.
+
+### Session-Gesamtstand nach Runde 71
+
+**579 verifizierte echte Fixes** (574 + 5 neue Runde-71-Matches
+in 3 Commits). `matched_functions`: **9165**. `matched_code_percent`:
+**47,57 %** (`ninja changes_all`: 47,47 % -> 47,57 %, ausschließlich
+Neuzugänge, keine Regressionen). Volles `ninja`-Rebuild erfolgreich,
+`dtk shasum -c` bestätigt `build/GMSJ01/mario.dol: OK`.
