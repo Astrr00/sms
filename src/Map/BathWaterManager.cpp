@@ -1006,7 +1006,8 @@ public:
 		TScreenTexture* tex = static_cast<TScreenTexture*>(
 		    JDrama::TNameRefGen::search("スクリーンテクスチャ"));
 
-		unk80148->getTexture()->setResTIMG(1, *tex->getTexture()->getTexInfo());
+		unk80148->getTexture()->setResTIMG(1,
+                                       *tex->getTexture()->getTexInfo());
 		unk80148->getMaterialNodePointer(0)->makeDisplayList();
 		unk8014C = new J3DModel(unk80148, 0, 1);
 
@@ -1659,7 +1660,8 @@ void TBathWaterMeshRenderer::calcCoord()
 void TBathWaterManager::loadAfter()
 {
 	TScreenTexture* tex = static_cast<TScreenTexture*>(
-	    JDrama::TNameRefGen::search("スクリーンテクスチャ"));
+	    JDrama::TNameRefGen::getInstance()->getRootNameRef()->search(
+	        "スクリーンテクスチャ"));
 	unk28[0] = new TBathWaterFlatRenderer(unk18);
 	unk28[1] = new TBathWaterMeshRenderer(unk18, tex->getTexture());
 	unk30    = unk28[1];
