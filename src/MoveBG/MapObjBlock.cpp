@@ -92,6 +92,7 @@ void TSandBlock::control()
 		    && getDistance(SMS_GetMarioPos()) > mScaling.x * 100.0f) {
 			TMapObjBase::awake();
 			JGeometry::TVec3<f32> scaleCopy = mScaling;
+			char trash[0xC];
 			mScaling.set(mInitialScaling);
 			setUpMapCollision(0);
 			mScaling.set(scaleCopy);
@@ -200,6 +201,7 @@ u32 TIceBlock::getSDLModelFlag() const { return 0; }
 
 u32 TIceBlock::touchWater(THitActor* param_1)
 {
+	char trash[0x10];
 	const JGeometry::TVec3<f32>& speed = getWaterSpeed(param_1);
 
 	int id = getWaterID(param_1);
@@ -227,6 +229,7 @@ u32 TIceBlock::touchWater(THitActor* param_1)
 
 void TIceBlock::control()
 {
+	char trash[0x10];
 	JPABaseEmitter* emitter
 	    = gpMarioParticleManager->emit(MAPOBJ_ICEBLOCKA, &mPosition, 1, this);
 	if (emitter != nullptr) {
@@ -283,6 +286,7 @@ void TIceBlock::initMapObj()
 
 void TBrickBlock::kill()
 {
+	char trash[8];
 	makeObjDead();
 	emitAndScale(0x60, 0, &mPosition);
 	emitAndScale(0x61, 0, &mPosition);
@@ -353,6 +357,7 @@ void TTelesaBlock::perform(u32 cue, JDrama::TGraphics* graphics)
 
 		// TODO: Possibly more TRotation3f inlines?
 		TRotation3f mtx;
+		char trash[8];
 		mtx.ref(0, 3) = 0.0f;
 		mtx.ref(1, 3) = 0.0f;
 		mtx.ref(2, 3) = 0.0f;
@@ -377,6 +382,7 @@ void TTelesaBlock::setGroundCollision()
 
 BOOL TSuperHipDropBlock::receiveMessage(THitActor* sender, u32 message)
 {
+	char trash[8];
 	if (message == HIT_MESSAGE_SUPER_HIP_DROP) {
 		kill();
 		if (mMonteBlockBroken)

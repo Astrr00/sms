@@ -92,11 +92,13 @@ template <class T> T CLBLinearInbetween(T a, T b, f32 f)
 	return (T)(a + f * (b - a));
 }
 
+#pragma dont_inline on
 template <class T> T CLBPalFrame(T param_1)
 {
 	f32 rate = SMSGetAnmFrameRate();
 	return CLBRoundf<T>(param_1 * (1.0f / rate));
 }
+#pragma dont_inline off
 
 template <class T> T CLBPalIntSpeed(T param_1)
 {
@@ -332,6 +334,7 @@ void CLBRotatePosAndUp(s16, s16, const JGeometry::TVec3<f32>&,
                        const JGeometry::TVec3<f32>&, JGeometry::TVec3<f32>*,
                        JGeometry::TVec3<f32>*);
 
+#pragma dont_inline on
 inline void CLBScreenFPosToSPos(JGeometry::TVec2<s16>* out,
                                 const JGeometry::TVec2<f32>& in)
 {
@@ -354,5 +357,6 @@ inline void CLBScreenFPosToSPos(JGeometry::TVec2<s16>* out,
 		out->y = CLBRoundf<s16>(
 		    (y - 1.0f) * (-0.5f * (f32)(SMSGetGameRenderHeight() - 1)));
 }
+#pragma dont_inline off
 
 #endif

@@ -54,6 +54,7 @@ void TWoodBarrel::kill()
 {
 	TMapObjGeneral::kill();
 	JGeometry::TVec3<f32> vec = mPosition;
+	char trash[0xc];
 	vec.y += 100.0f;
 	unk148->mPos.value = vec;
 	gpModelWaterManager->emitRequest(*unk148);
@@ -65,6 +66,7 @@ void TWoodBarrel::kill()
 
 void TWoodBarrel::appeared()
 {
+	char trash[8];
 	TMapObjGeneral::appeared();
 	if (SMS_IsMarioStatusHipDrop()) {
 		setDamageHeight(mMapObjData->mHit->unkC->unkC + 90.0f);
@@ -79,6 +81,7 @@ void TWoodBarrel::appeared()
 
 void TWoodBarrel::appear()
 {
+	char trash[8];
 	makeObjAppeared();
 	gpMarioParticleManager->emitAndBindToPosPtr(PARTICLE_MS_ENM_DISAP_A_W,
 	                                            &mPosition, 0, nullptr);

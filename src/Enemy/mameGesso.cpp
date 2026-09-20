@@ -83,6 +83,7 @@ void TMameGessoManager::initSetEnemies() { }
 
 void TMameGessoManager::perform(u32 cue, JDrama::TGraphics* graphics)
 {
+	char trash[8];
 	for (int i = 0; i < mObjNum; i++) {
 		if (!(cue & CUE_MOVE))
 			continue;
@@ -178,8 +179,7 @@ void TMameGesso::reset()
 {
 	TWalkerEnemy::reset();
 
-	// TODO: still don't know the real rand function/class...
-	unk1CC    = MsRandF(0, unk194->mSLGenerateInterval.get());
+	unk1CC    = TMsRange<s32>(0, unk194->mSLGenerateInterval.get()).rand();
 	unk1D0    = 0;
 	unk1E8    = 0.0f;
 	unk1EC    = 1;
@@ -224,7 +224,7 @@ void TMameGesso::kill()
 f32 TMameGesso::getGravityY() const
 {
 	f32 result = mGravity;
-	if (mSpine->getCurrentNerve() == &TNerveMameGessoObject::theNerve())
+	if (mSpine->getCurrentNerve() == &TNerveMameGessoGraphJumpWander::theNerve())
 		result = unk194->mSLJumpWanderGravityY.get();
 
 	if (mSpine->getCurrentNerve() == &TNerveMameGessoThrown::theNerve())
@@ -439,6 +439,7 @@ DEFINE_NERVE(TNerveMameGessoDamage, TLiveActor)
 
 	if (spine->getTime() == 0) {
 		JGeometry::TVec3<f32> vel = self->getVelocity();
+		char trash[8];
 
 		vel.x = 0.0f;
 		vel.z = 0.0f;
@@ -580,6 +581,7 @@ DEFINE_NERVE(TNerveMameGessoThrown, TLiveActor)
 DEFINE_NERVE(TNerveMameGessoObject, TLiveActor)
 {
 	TMameGesso* self = (TMameGesso*)spine->getBody();
+	char trash[0x10];
 
 	if (SMS_IsMarioStatusTypeSwimming()) {
 		self->offHitFlag(HIT_FLAG_NO_COLLISION);
@@ -640,6 +642,7 @@ DEFINE_NERVE(TNerveMameGessoWait, TLiveActor)
 		self->setWaitAnm();
 
 	if (self->checkCurAnmEnd(0)) {
+		char trash[8];
 		int wait = self->getGroundPlane()->isWaterSurface()
 		               ? self->unk194->mSLWaitTimeInWater.get()
 		               : self->unk194->mSLWaitTimeOnGround.get();

@@ -251,6 +251,7 @@ BOOL TMario::warpIn()
 
 bool TMario::isUnUsualStageStart()
 {
+	char trash[0x28];
 	// Missing stack space
 	// volatile u32 padding[14];
 
@@ -366,6 +367,7 @@ BOOL TMario::toroccoStart()
 
 BOOL TMario::warpOut()
 {
+	char trash[0x10];
 	// Missing stack space
 	// volatile u32 padding[4];
 
@@ -522,6 +524,7 @@ BOOL TMario::disappear()
 
 BOOL TMario::demoMain()
 {
+	char trash[0x10];
 	// Missing stack space
 	// volatile u32 padding[10];
 

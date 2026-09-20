@@ -289,6 +289,7 @@ void TTobiPuku::reset()
 
 void TTobiPuku::moveObject()
 {
+	char trash[8];
 	mTurnSpeed = unk19C->mSLTurnSpeedLow.get();
 	if (mBoundSw && TTobiPuku::isInhibitedForceMove())
 		hitWall();
@@ -328,6 +329,7 @@ void TTobiPuku::bound() { }
 
 void TTobiPuku::calcRootMatrix()
 {
+	char trash[0x10];
 	gpCurTobiPuku = this;
 	TSpineEnemy::calcRootMatrix();
 	if (mRotation.x != 0.0f) {
@@ -418,6 +420,7 @@ bool TTobiPuku::isRoll() { return false; }
 
 void TTobiPuku::behaveToWater(THitActor* param_1)
 {
+	char trash[8];
 	if (mSpine->getCurrentNerve() != &TNerveTobiPukuHitWater::theNerve()) {
 		SMSGetMSound()->startSoundActor(MSD_SE_EN_COMMON_FLY, &mPosition, 0,
 		                                nullptr, 0, 4);
@@ -470,6 +473,7 @@ bool TTobiPuku::isReachedToGoalXZ()
 
 void TTobiPuku::generateEffectColumWater()
 {
+	char trash[8];
 	if (checkLiveFlag(LIVE_FLAG_CLIPPED_OUT))
 		return;
 
@@ -561,6 +565,7 @@ void TTobiPuku::genEventCoin() { isDeadBck(); }
 
 void TTobiPuku::changeOut()
 {
+	char trash[8];
 	offLiveFlag(LIVE_FLAG_HIDDEN);
 	mPosition = mJuiceBlock->mPosition;
 	gpMarioParticleManager->emitAndBindToPosPtr(PARTICLE_MS_TLS_CHANGE,
@@ -666,6 +671,7 @@ void TMoePuku::calcRootMatrix()
 
 void TMoePuku::hitWater()
 {
+	char trash[8];
 	TTobiPuku::hitWater();
 
 	MtxPtr mtx = mMActor->getModel()->getAnmMtx(1);
@@ -747,6 +753,7 @@ void TMoePuku::setJumpStartAnm()
 
 void TMoePuku::generateEffectColumWater()
 {
+	char trash[8];
 	if (checkLiveFlag(LIVE_FLAG_CLIPPED_OUT))
 		return;
 
@@ -1066,6 +1073,7 @@ DEFINE_NERVE(TNerveTobiPukuLand, TLiveActor)
 DEFINE_NERVE(TNerveTobiPukuBound, TLiveActor)
 {
 	TTobiPuku* self = (TTobiPuku*)spine->getBody();
+	JGeometry::TVec3<f32> velocity2;
 	if (spine->getTime() == 0) {
 		self->unk1AE = 1;
 		if (self->unk198 < self->unk19C->mSLBoundNum.get()) {
@@ -1081,8 +1089,9 @@ DEFINE_NERVE(TNerveTobiPukuBound, TLiveActor)
 			self->onLiveFlag(LIVE_FLAG_AIRBORNE);
 		}
 	}
+	char trash[0xC];
 
-	JGeometry::TVec3<f32> velocity2 = self->mVelocity;
+	velocity2 = self->mVelocity;
 	if (velocity2.y > 0.0f)
 		self->unk1B0 = self->mPosition.y;
 

@@ -68,6 +68,7 @@ void TLauncher::init(TLiveManager* param_1)
 
 BOOL TLauncher::receiveMessage(THitActor* sender, u32 message)
 {
+	char trash[8];
 	if (checkLiveFlag(LIVE_FLAG_DEAD))
 		return false;
 
@@ -76,10 +77,10 @@ BOOL TLauncher::receiveMessage(THitActor* sender, u32 message)
 
 	if (sender->getActorType() == 0x1000001) {
 		if (message == HIT_MESSAGE_SPRAYED_BY_WATER) {
-			gpMarioParticleManager->emit(PARTICLE_MS_ENM_WATHIT, &mPosition, 0,
-			                             nullptr);
-			gpMSound->startSoundSet(MSD_SE_EN_COMMON_W_HIT_OK, &mPosition, 0,
-			                        0.0f, 0, 0, 4);
+			gpMarioParticleManager->emit(PARTICLE_MS_ENM_WATHIT,
+			                             &sender->mPosition, 0, nullptr);
+			gpMSound->startSoundSet(MSD_SE_EN_COMMON_W_HIT_OK,
+			                        &sender->mPosition, 0, 0.0f, 0, 0, 4);
 			if (mState == STATE_HITBYWATER)
 				return true;
 
@@ -268,6 +269,7 @@ void TCommonLauncher::stateInitial() { changeState(STATE_NORMAL); }
 
 void TCommonLauncher::stateHitByWater()
 {
+	char trash[8];
 	if (mTicksSpentInCurState == 0) {
 		changeBck(1);
 		decHitPoints();
@@ -315,12 +317,13 @@ void TCommonLauncher::stateLaunch()
 		TSpineEnemy* enemy = getProperEnemy(unk164);
 		if (enemy) {
 			JGeometry::TVec3<f32> local_14 = mRotation;
+			JGeometry::TVec3<f32> local_20;
 
 			local_14.x = MsWrap(local_14.x - 270.0f, 0.0f, 360.0f);
 
 			Mtx mtx;
 			MsMtxSetRotRPH(mtx, local_14.x, local_14.y, local_14.z);
-			JGeometry::TVec3<f32> local_20(0.0f, 4.0f, 0.0f);
+			local_20.set(0.0f, 4.0f, 0.0f);
 			local_14.set(0.0f, 0.0f, 0.0f);
 			MTXMultVec(mtx, &local_20, &local_20);
 			enemy->resetSRTV(mPosition, local_14, enemy->mScaling, local_20);
@@ -374,6 +377,7 @@ const char** TCommonLauncher::getBasNameTable() const
 
 void TCommonLauncher::perform(u32 cue, JDrama::TGraphics* graphics)
 {
+	char trash[0x10];
 	TSpineEnemy::perform(cue, graphics);
 	if ((cue & CUE_CALC_ANIM) && mMActor->checkCurBckFromIndex(1)) {
 		MtxPtr mtx = mMActor->getModel()->getAnmMtx(0);

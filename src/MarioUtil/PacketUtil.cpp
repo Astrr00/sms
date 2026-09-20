@@ -10,9 +10,82 @@ static void FifoSetTevColorS10(GXTevRegID, GXColorS10) { }
 
 static void FifoSetTevKColor(GXTevKColorID, GXColor) { }
 
-static void FifoSetFogRangeAdj(u8, u16, GXFogAdjTable*) { }
+static void FifoSetFogRangeAdj(u8 enable, u16 center, GXFogAdjTable* table)
+{
+	if (enable) {
+		for (int i = 0; i < 10; i += 2) {
+			// clang-format off
+			u32 reg =
+				(0xE9 + (i / 2)) << 24 |
+				table->r[i + 1] << 12 |
+				table->r[i];
+			// clang-format on
+			GXWGFifo.u8  = GX_LOAD_BP_REG;
+			GXWGFifo.u32 = reg;
+		}
+	}
+	// clang-format off
+	u32 reg =
+		0xE8 << 24 |
+		(center + 342) |
+		enable << 10;
+	// clang-format on
+	GXWGFifo.u8  = GX_LOAD_BP_REG;
+	GXWGFifo.u32 = reg;
+}
 
-static void FifoSetFog(GXFogType, float, float, float, float, GXColor) { }
+static void FifoSetFog(GXFogType type, float startz, float endz, float nearz,
+                       float farz, GXColor color)
+{
+	float A;
+	float B;
+	float B_mant;
+	float C;
+	float A_f;
+	u32 b_expn;
+	u32 b_m;
+	u32 a_hex;
+	u32 c_hex;
+
+	if ((farz == nearz) || (endz == startz)) {
+		A = 0.0f;
+		B = 0.5f;
+		C = 0.0f;
+	} else {
+		A = (farz * nearz) / ((farz - nearz) * (endz - startz));
+		B = (farz / (farz - nearz));
+		C = (startz / (endz - startz));
+	}
+
+	B_mant = B;
+	b_expn = 1;
+	while (B_mant > 1.0) {
+		B_mant *= 0.5f;
+		b_expn++;
+	}
+	while (B_mant > 0.0f && B_mant < 0.5) {
+		B_mant *= 2.0f;
+		b_expn--;
+	}
+
+	A_f = A / (1 << b_expn);
+	b_m = (u32)(8388638.0f * B_mant);
+
+	a_hex = *(u32*)&A_f;
+	c_hex = *(u32*)&C;
+
+	GXWGFifo.u8  = GX_LOAD_BP_REG;
+	GXWGFifo.u32 = BP_FOG_UNK0(a_hex >> 12, 0xee);
+	GXWGFifo.u8  = GX_LOAD_BP_REG;
+	GXWGFifo.u32 = BP_FOG_UNK1(b_m, 0xef);
+	GXWGFifo.u8  = GX_LOAD_BP_REG;
+	GXWGFifo.u32 = BP_FOG_UNK2(b_expn, 0xf0);
+	GXWGFifo.u8  = GX_LOAD_BP_REG;
+	GXWGFifo.u32 = BP_FOG_UNK3(c_hex >> 12, 0, type, 0xf1);
+	u32 colorReg = BP_FOG_COLOR(color.r, color.g, color.b, 0xf2);
+	GXWGFifo.u8  = GX_LOAD_BP_REG;
+	GXWGFifo.u32 = colorReg;
+}
 
 static void SetFogBase(const J3DFogInfo*) { }
 
@@ -135,12 +208,11 @@ struct PacketUserData_Fog {
 
 void SMS_InitPacket_Fog(J3DModel* param_1, u16 param_2)
 {
-	J3DShapePacket* packet = InitPacket_Sub(param_1, param_2);
-
-	J3DFog* fog = param_1->getModelData()
-	                  ->getMaterialNodePointer(param_2)
-	                  ->getPEBlock()
-	                  ->getFog();
+	char trash[40];
+	J3DMaterial* mat = param_1->getModelData()->getMaterialNodePointer(param_2);
+	J3DPEBlock* peblock     = mat->getPEBlock();
+	J3DShapePacket* packet = param_1->getShapePacket(mat->getShape()->getIndex());
+	J3DFog* fog             = peblock->getFog();
 
 	PacketUserData_Fog* userData = new PacketUserData_Fog;
 	userData->unk0               = 5;

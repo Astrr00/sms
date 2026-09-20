@@ -31,6 +31,7 @@ TRailMapObj::TRailMapObj(const char* name)
 // TODO: weird stack frame issues here D:
 void TRailMapObj::initGraphTracer(TGraphWeb* graph)
 {
+	char trash[0x10];
 	unk138 = new TGraphTracer;
 
 	unk138->unk0 = graph;
@@ -164,6 +165,7 @@ BOOL TRailMapObj::calcRecycle()
 
 void TRailMapObj::resetPosition()
 {
+	char trash[0x10];
 	mPosition = mInitialPosition;
 	mRotation = mInitialRotation;
 	unk148    = 0;
@@ -255,6 +257,7 @@ TNormalLift::TNormalLift(const char* name)
 
 void TNormalLift::resetPosition()
 {
+	char trash[0x10];
 	TRailMapObj::resetPosition();
 	unk158 = 1;
 }
@@ -540,6 +543,7 @@ TWoodBlock::TWoodBlock(const char* name)
 
 BOOL TWoodBlock::calcRecycle()
 {
+	char trash[8];
 	switch (unk148) {
 	case 0:
 		unk14C = 1;

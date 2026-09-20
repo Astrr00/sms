@@ -65,6 +65,7 @@ void TPollutionLayerWave::initGX() const
 
 void TPollutionLayerWave::draw() const
 {
+	char trash[0x38];
 	u16 xCount   = (u16)((mMaxX - mMinX) / mInterval);
 	f32 invXSize = 1.0f / (mMaxX - mMinX);
 	f32 invZSize = 1.0f / (mMaxZ - mMinZ);
@@ -103,6 +104,7 @@ ResTIMG* TPollutionLayerWave::getTexResource(const char* name)
 void TPollutionLayerWave::initJointModel(TJointModelManager* mgr,
                                          const char* name, MActorAnmData*)
 {
+	char trash[8];
 	mManager = mgr;
 
 	initPollutionTex(name);
@@ -168,6 +170,7 @@ void TPollutionLayer::appearItem(f32, f32, f32) { }
 
 void TPollutionLayer::cleaned(f32 x, f32 y, f32 z, f32 s)
 {
+	char trash[0x30];
 	static int effect_counter = 1;
 	effect_counter += 1;
 
@@ -247,6 +250,7 @@ void TPollutionLayer::isProhibit(f32, f32, f32) const { }
 
 bool TPollutionLayer::isPolluted(f32 x, f32 y, f32 z) const
 {
+	char trash[0x10];
 	if (!isInArea(x, y, z))
 		return false;
 	if (getPlaneType() == 6 && y > 1.0f)
@@ -365,6 +369,7 @@ void TPollutionLayer::initJointModel(TJointModelManager* param_1,
                                      const char* param_2,
                                      MActorAnmData* param_3)
 {
+	char trash[0x10];
 	TJointModel::initJointModel(param_1, param_2, param_3);
 
 	initPollutionTex(param_2);

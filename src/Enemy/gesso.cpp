@@ -140,7 +140,7 @@ void TGessoManager::clipEnemies(JDrama::TGraphics* param_1)
 		else
 			gesso->onLiveFlag(LIVE_FLAG_CLIPPED_OUT);
 
-		if (!gesso->getPolluteObj()->isUnk150Zero()) {
+		if (!gesso->getPolluteObj()->isState(0)) {
 			if (ViewFrustumClipCheck(
 			        param_1, &gesso->getPolluteObj()->mPosition, radius))
 				gesso->getPolluteObj()->offLiveFlag(LIVE_FLAG_CLIPPED_OUT);
@@ -433,6 +433,7 @@ void TGesso::attackToMario()
 
 void TGesso::setBehavior()
 {
+	char trash[0x10];
 	if (mAttackCooldown > 0)
 		mAttackCooldown += 1;
 
@@ -629,10 +630,11 @@ void TGesso::bind()
 		f32 fVar3 = SMS_GetMarioPos().x - mPosition.x;
 		f32 fVar4 = SMS_GetMarioPos().z - mPosition.z;
 		JGeometry::TVec3<f32> var2(fVar3, 0.0f, fVar4);
+		JGeometry::TVec3<f32> unused;
 		JGeometry::TVec3<f32> local_48;
 		local_48.cross(var1, var2);
 		f32 cos   = var1.dot(var2);
-		f32 angle = MsAtan2(cos, MsVECMag2(&local_48));
+		f32 angle = abs(matan(cos, MsVECMag2(&local_48)) * (360.0f / 65536.0f));
 		if (mBodyTrackingAngle != angle) {
 			if (mBodyTrackingAngle < angle) {
 				mBodyTrackingAngle += mBodyRotSpeed;
@@ -696,12 +698,14 @@ void TGesso::genRandomItem()
 
 void TGesso::behaveToFindMario()
 {
+	char trash[4];
+	trash[0] = 0;
 	if (unk150 & 2) {
 		mSpine->pushAfterCurrent(&TNerveWalkerGraphWander::theNerve());
 		mSpine->pushAfterCurrent(&TNerveWalkerEscape::theNerve());
 		mSpine->pushAfterCurrent(&TNerveSmallEnemyJump::theNerve());
 	} else {
-		setGoalPathMario();
+		setGoalPath(TPathNode((THitActor*)gpMarioAddress));
 		mSpine->pushAfterCurrent(&TNerveWalkerGraphWander::theNerve());
 		mSpine->pushAfterCurrent(&TNerveWalkerAttack::theNerve());
 		if (unk1B4 == 0) {
@@ -713,6 +717,7 @@ void TGesso::behaveToFindMario()
 
 void TGesso::rollCheck()
 {
+	char trash[8];
 	if (mAttackCooldown != 0)
 		return;
 
@@ -955,6 +960,7 @@ void TGessoPolluteObj::set()
 
 void TGessoPolluteObj::calcRootMatrix()
 {
+	char trash[8];
 	TEnemyAttachment::calcRootMatrix();
 	if (unk168 != 0)
 		return;

@@ -195,6 +195,7 @@ BOOL TMario::doRunningAnimation()
 
 void TMario::getSlopeNormalAccele(f32* arg0, f32* arg1)
 {
+	char trash[8];
 	if (isForceSlip()) {
 		*arg0 = mSlipParamsAll.mSlopeAcceleUp.get();
 		*arg1 = mSlipParamsAll.mSlopeAcceleDown.get();
@@ -230,6 +231,7 @@ void TMario::getSlopeNormalAccele(f32* arg0, f32* arg1)
 
 void TMario::getSlopeSlideAccele(f32* arg0, f32* arg1)
 {
+	char trash[8];
 	if (isForceSlip()) {
 		*arg0 = mSlipParamsAll.mSlideAcceleUp.get();
 		*arg1 = mSlipParamsAll.mSlideAcceleDown.get();
@@ -264,6 +266,7 @@ void TMario::getSlopeSlideAccele(f32* arg0, f32* arg1)
 
 f32 TMario::getChangeAngleSpeed()
 {
+	char trash[8];
 	f32 angSp;
 	if (isForceSlip()) {
 		angSp = (f32)mSlipParamsAll.mSlideAngleYSp.get();
@@ -287,6 +290,7 @@ f32 TMario::getChangeAngleSpeed()
 
 f32 TMario::getSlideStickMult()
 {
+	char trash[0x20];
 	(void)0;
 	(void)0;
 	(void)0;
@@ -927,6 +931,8 @@ inline BOOL TMario::braking()
 
 BOOL TMario::surfing()
 {
+	char trash[8];
+
 	setAnimation(ANIM_RIDE_SHELL, 1.0f);
 	if (mStatusTimer != 0) {
 		mStatusTimer--;
@@ -959,7 +965,7 @@ BOOL TMario::surfing()
 		s16 maxAngle;
 		f32 minSpeed;
 
-		if (mWallPlane->isWaterSurface()) {
+		if (mGroundPlane->isWaterSurface()) {
 			maxAngle = getSurfingParamsWater()->mClashAngle.get();
 			minSpeed = getSurfingParamsWater()->mClashSpeed.get();
 		} else {
@@ -1368,6 +1374,7 @@ BOOL TMario::oilSlope()
 
 f32 TMario::downingCommon(int anim, f32 limit, int arg2)
 {
+	char trash[8];
 	f32 animRate = setAnimation(anim, 1.0f);
 	if (animRate < limit) {
 		slopeProcess();
@@ -1474,6 +1481,7 @@ BOOL TMario::catchDown()
 
 BOOL TMario::loserDown()
 {
+	char trash[8];
 	slopeProcess();
 	mForwardVel *= 0.9f;
 	if (mForwardVel * mForwardVel < 1.0f)
@@ -1508,6 +1516,7 @@ BOOL TMario::loserDown()
 
 BOOL TMario::jumpSlipCommon(s16 anim, u32 status)
 {
+	char trash[8];
 	if (mInput & 0x1) {
 		slopeProcess();
 		mForwardVel *= 0.98f;

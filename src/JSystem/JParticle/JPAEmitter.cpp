@@ -15,6 +15,7 @@ JPABaseEmitter::JPABaseEmitter()
     : unk0(this)
     , mRng(0)
 {
+	char trash[8];
 	MTXIdentity(mGlobalRotation);
 
 	mGlobalDynamicsScale.set(1.0f, 1.0f, 1.0f);
@@ -899,6 +900,7 @@ void JPABaseEmitter::calcKeyFrameAnime()
 
 void JPABaseEmitter::calc()
 {
+	char trash[8];
 	JPAEmitterInfoObj.mEmitCount = 0;
 
 	if (!checkStatus(STATUS_STOP_CALC))

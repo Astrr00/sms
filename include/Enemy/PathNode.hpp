@@ -17,11 +17,9 @@ public:
 
 	// fabricated
 	TPathNode(THitActor* actor)
+	    : unk0(actor)
+	    , unk4(0.0f, 0.0f, 0.0f)
 	{
-		unk0   = actor;
-		unk4.x = 0;
-		unk4.y = 0;
-		unk4.z = 0;
 		if (actor) {
 			unk4.set(actor->mPosition.x, actor->mPosition.y,
 			         actor->mPosition.z);
@@ -34,7 +32,7 @@ public:
 		unk0 = nullptr;
 		unk4 = point;
 	}
-	// TODO: this inline doesn't match in a couple of places.
+#pragma dont_inline on
 	const JGeometry::TVec3<f32>& getPoint() const
 	{
 		if (unk0 != 0)
@@ -42,6 +40,7 @@ public:
 
 		return unk4;
 	}
+#pragma dont_inline off
 
 public:
 	/* 0x0 */ THitActor* unk0;

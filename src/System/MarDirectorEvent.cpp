@@ -106,6 +106,7 @@ void TMarDirector::movement_game()
 
 void TMarDirector::fireGetBlueCoin(TCoin* coin)
 {
+	char trash[8];
 	if (!coin)
 		return;
 
@@ -119,21 +120,19 @@ void TMarDirector::fireGetBlueCoin(TCoin* coin)
 
 void TMarDirector::fireGetNozzle(TItemNozzle* nozzle)
 {
+	char trash[8];
 	if (!nozzle)
 		return;
 
+	u8 areaId = gpApplication.mCurrArea.unk0;
 	if (nozzle->isActorType(0x20000022)
-	    && TFlagManager::smInstance->getNozzleRight(
-	        gpApplication.mCurrArea.unk0, 0)) {
-		TFlagManager::smInstance->setNozzleRight(gpApplication.mCurrArea.unk0,
-		                                         0);
+	    && !TFlagManager::smInstance->getNozzleRight(areaId, 0)) {
+		TFlagManager::smInstance->setNozzleRight(areaId, 0);
 		unk4C |= 0x200;
 		unk261 = 3;
 	} else if (nozzle->isActorType(0x2000002A)
-	           && TFlagManager::smInstance->getNozzleRight(
-	               gpApplication.mCurrArea.unk0, 1)) {
-		TFlagManager::smInstance->setNozzleRight(gpApplication.mCurrArea.unk0,
-		                                         1);
+	           && !TFlagManager::smInstance->getNozzleRight(areaId, 1)) {
+		TFlagManager::smInstance->setNozzleRight(areaId, 1);
 		unk4C |= 0x200;
 		unk261 = 4;
 	}
@@ -144,13 +143,28 @@ void TMarDirector::fireGetStar(TShine* shine)
 	unk25C = shine;
 	unk4C |= 1;
 	JGeometry::TVec3<f32>& v = shine->mInitialRotation;
-	fireStartDemoCamera(!shine->unk190 ? cCameraBckNameShineGetInside
-	                                   : cCameraBckNameShineGetOutside,
+	fireStartDemoCamera(!shine->unk190 ? cCameraBckNameShineGetOutside
+	                                   : cCameraBckNameShineGetInside,
 	                    &gpMarioOriginal->mPosition, -1, v.y, false, nullptr, 0,
-	                    nullptr, JDrama::TFlagT<u16>(0));
+	                    nullptr, JDrama::TFlagT<u16>());
 }
 
-void TMarDirector::fireRideYoshi(TYoshi*) { }
+void TMarDirector::fireRideYoshi(TYoshi* param_1)
+{
+	char trash[16];
+	if (param_1 == nullptr)
+		return;
+
+	if (gpApplication.mCurrArea.unk0 != 1)
+		return;
+
+	if (TFlagManager::smInstance->getBool(0x1038F))
+		return;
+
+	TFlagManager::smInstance->setBool(true, 0x1038F);
+	unk4C |= 0x200;
+	unk261 = 5;
+}
 
 void TMarDirector::fireDefeatEnemy(TSpineEnemy*) { }
 
@@ -158,7 +172,7 @@ void TMarDirector::fireDemoMovie(u32, TLiveActor*) { }
 
 void TMarDirector::movement()
 {
-	if ((int)mState != STATE_UNK4)
+	if ((int)mState == STATE_UNK4)
 		movement_game();
 }
 
@@ -171,6 +185,7 @@ void TMarDirector::setNextStage(u16 param_1, JDrama::TActor* param_2)
 
 void TMarDirector::fireStageEvent(TMapObjBase*) { }
 
+#pragma dont_inline on
 void TMarDirector::fireStartDemoCamera(const char* param_1,
                                        const JGeometry::TVec3<f32>* param_2,
                                        s32 param_3, f32 param_4, bool param_5,
@@ -195,6 +210,7 @@ void TMarDirector::fireStartDemoCamera(const char* param_1,
 	unk24C += 1;
 	unk24C &= 7;
 }
+#pragma dont_inline off
 
 void TMarDirector::fireEndDemoCamera() { unk4C |= 0x80; }
 

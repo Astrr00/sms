@@ -34,6 +34,7 @@ TWalkerEnemy::TWalkerEnemy(const char* name)
 
 void TWalkerEnemy::init(TLiveManager* param_1)
 {
+	char trash[8];
 	TSmallEnemy::init(param_1);
 	mBinder = new TWalker;
 	getWalker()->reset();
@@ -100,7 +101,7 @@ void TWalkerEnemy::reset()
 	((TWalker*)mBinder)->reset();
 	mSpine->reset();
 	mSpine->setNext(mSpine->getDefault());
-	setGoalPathMario();
+	setGoalPath(TPathNode((THitActor*)gpMarioAddress));
 }
 
 void TWalkerEnemy::walkBehavior(int param_1, float param_2)
@@ -138,7 +139,9 @@ void TWalkerEnemy::behaveToFindMario()
 		mSpine->pushAfterCurrent(&TNerveWalkerEscape::theNerve());
 		mSpine->pushAfterCurrent(&TNerveSmallEnemyJump::theNerve());
 	} else {
-		setGoalPathMario();
+		TPathNode node((THitActor*)gpMarioAddress);
+		TPathNode* nodePtr = &node;
+		setGoalPath(*nodePtr);
 		mSpine->pushAfterCurrent(&TNerveWalkerGraphWander::theNerve());
 		mSpine->pushAfterCurrent(&TNerveWalkerAttack::theNerve());
 		mSpine->pushAfterCurrent(&TNerveSmallEnemyJump::theNerve());
@@ -231,6 +234,7 @@ DEFINE_NERVE(TNerveWalkerGraphWander, TLiveActor)
 DEFINE_NERVE(TNerveWalkerAttack, TLiveActor)
 {
 	TWalkerEnemy* self = (TWalkerEnemy*)spine->getBody();
+	char trash[0x10];
 
 	if (spine->getTime() == 0)
 		self->setRunAnm();
@@ -304,7 +308,7 @@ DEFINE_NERVE(TNerveWalkerTraceMario, TLiveActor)
 	TWalkerEnemy* self = (TWalkerEnemy*)spine->getBody();
 	if (spine->getTime() == 0) {
 		self->setRunAnm();
-		self->setGoalPathMario();
+		self->setGoalPath(TPathNode((THitActor*)gpMarioAddress));
 	}
 
 	if (spine->getTime() == 10)

@@ -41,6 +41,7 @@ f32 TItem::mAppearedScaleSpeed = 0.01f;
 
 void TItem::appeared()
 {
+	char trash[8];
 	if (checkMapObjFlag(MAP_OBJ_FLAG_DISAPPEARING) && !isStateTimerEngaged()) {
 		if (mContainer != nullptr)
 			mContainer->receiveMessage(this, HIT_MESSAGE_UNK5);
@@ -227,6 +228,7 @@ void TCoin::makeObjDead()
 
 void TCoin::appearWithoutSound()
 {
+	char trash[0x10];
 	TItem::appear();
 	gpMarioParticleManager->emitAndBindToMtxPtr(
 	    MAPOBJ_MS_WATCOIN_KIRA, getModel()->getAnmMtx(0), 0, this);
@@ -366,6 +368,7 @@ TCoinRed::TCoinRed(const char* name)
 
 void TCoinBlue::makeObjAppeared()
 {
+	char trash[8];
 	if (TFlagManager::getInstance()->getBlueCoinFlag(
 	        gpMarDirector->getCurrentMap(), getEventId()))
 		return;
@@ -375,6 +378,7 @@ void TCoinBlue::makeObjAppeared()
 
 void TCoinBlue::taken(THitActor* param_1)
 {
+	char trash[8];
 	SMSGetMarDirector()->fireGetBlueCoin(this);
 
 	if (mContainer)
@@ -480,6 +484,7 @@ void TShine::calc()
 
 void TShine::movingCircle()
 {
+	char trash[0x18];
 	// TODO: hack, remove
 	(void)0;
 	(void)0;
@@ -846,6 +851,7 @@ TShine::TShine(const char* name)
 
 void TEggYoshi::decideRandomLoveFruit()
 {
+	char trash[0x40];
 	u8 map = gpMarDirector->mMap;
 
 	if (map == 7 && gpMarDirector->unk7D == 1) {
@@ -927,6 +933,7 @@ void TEggYoshi::touchFruit(THitActor* fruit)
 
 void TEggYoshi::touchActor(THitActor* other)
 {
+	char trash[8];
 	if (!isState(STATE_NORMAL) && !isState(0xD))
 		return;
 
@@ -996,6 +1003,7 @@ void TEggYoshi::control()
 
 void TEggYoshi::perform(u32 cue, JDrama::TGraphics* graphics)
 {
+	char trash[0x18];
 	TMapObjGeneral::perform(cue, graphics);
 
 	if (!isState(0xC) && !isState(STATE_DEAD) && !isState(STATE_HOLDING)
@@ -1010,6 +1018,7 @@ void TEggYoshi::perform(u32 cue, JDrama::TGraphics* graphics)
 
 void TEggYoshi::startFruit()
 {
+	char trash[8];
 	receiveMessage(nullptr, HIT_MESSAGE_UNK10);
 	if (isState(0) || isState(0xE) || isState(0xF) || isState(0x10))
 		receiveMessage(nullptr, HIT_MESSAGE_UNK10);
@@ -1096,6 +1105,7 @@ TEggYoshi::TEggYoshi(const char* name)
 
 void TItemNozzle::touchPlayer(THitActor* param_1)
 {
+	char trash[8];
 	if (isState(STATE_HOLDING))
 		return;
 
@@ -1224,6 +1234,7 @@ BOOL TNozzleBox::receiveMessage(THitActor* sender, u32 message)
 
 void TNozzleBox::touchPlayer(THitActor*)
 {
+	char trash[0x20];
 	if (mContainedNozzleType == TWaterGun::Hover
 	    && !TFlagManager::smInstance->getNozzleRight(
 	        gpMarDirector->getCurrentMap(), 0)

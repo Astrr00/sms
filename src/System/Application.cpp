@@ -160,6 +160,7 @@ void SMSLoadArchiveARAM(TARAMBlock* out_block, const char* path)
 
 void SMSMountAramArchive(JKRMemArchive* archive, TARAMBlock& block)
 {
+	char trash[0x10];
 	if (block.mIsCompressed) {
 		JKRAram::aramToMainRam(
 		    block.mBlock, (u8*)SMSGetMarDirector()->getUnkD4(), 0, 0,
@@ -174,6 +175,7 @@ void SMSMountAramArchive(JKRMemArchive* archive, TARAMBlock& block)
 
 JKRArchive* SMSSwitch2DArchive(const char* arc_path, TARAMBlock& block)
 {
+	char trash[0x10];
 	JKRMemArchive* arch = (JKRMemArchive*)JKRFileLoader::getVolume(arc_path);
 	arch->unmountFixed();
 	SMSMountAramArchive(arch, block);
@@ -281,10 +283,12 @@ void* TApplication::setupThreadFuncLogo()
 	return nullptr;
 }
 
+#pragma dont_inline on
 static void* SetupThreadFuncLogo(void* param)
 {
 	return ((TApplication*)param)->setupThreadFuncLogo();
 }
+#pragma dont_inline off
 
 void TApplication::initialize_bootAfter()
 {
@@ -472,6 +476,7 @@ bool TApplication::checkAdditionalMovie()
 
 void TApplication::proc()
 {
+	char trash[0x68];
 	while (mAppState != APP_STATE_QUIT) {
 		u8 nextState = APP_STATE_DEFAULT;
 		int iVar9    = 0;
@@ -495,7 +500,7 @@ void TApplication::proc()
 			TMenuDirector* dir = new TMenuDirector;
 			mDirector          = dir;
 			dir->setup(mDisplay, mGamePads[0]);
-			TFlagManager::getInstance()->setFlag(3, 0x20001);
+			TFlagManager::getInstance()->setFlag(0x20001, 3);
 			mCurrArea.set(1, 0, 0);
 		} break;
 
@@ -548,7 +553,8 @@ void TApplication::proc()
 		if (!iVar9)
 			nextState = gameLoop();
 
-		delete mDirector;
+		if (mDirector)
+			mDirector->~TDirector();
 		mDirector = nullptr;
 
 		switch (mAppState) {

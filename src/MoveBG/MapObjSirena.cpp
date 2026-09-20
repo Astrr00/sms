@@ -58,6 +58,7 @@ TRoulette::TRoulette(const char* name)
     , unk144(0.2f)
     , unk150(nullptr)
 {
+	char trash[16];
 	unk148 = 0;
 	unk14A = 0;
 	unk14C = 0;
@@ -146,6 +147,7 @@ void TRoulette::setRollSp(f32 sp)
 
 void TRoulette::switchStop()
 {
+	char trash[8];
 	if (unk150->unk6C != 0) {
 		if (SMS_GetMarioPos().y < 20.0f + SMS_GetMarioGrLevel()
 		    && unk13C != 0.0f) {
@@ -220,6 +222,7 @@ TSlotDrum::TSlotDrum(const char* name)
 
 void TSlotDrum::initMapObj()
 {
+	char trash[8];
 	unk148 = 3;
 	unk14C = 400.0f;
 	unk150 = mPosition.y;
@@ -601,7 +604,8 @@ int TItemSlotDrum::getForcastResult(int idx)
 				break;
 		}
 	}
-	return getResultFromAng((int)(angle / unk168) * unk168);
+	angle = (int)(angle / unk168) * unk168;
+	return getResultFromAng(angle);
 }
 
 int TItemSlotDrum::getResultFromAng(f32 ang)
@@ -646,6 +650,7 @@ void TCasinoPanelGate::initMapObj()
 
 void TCasinoPanelGate::moveObject()
 {
+	char trash[0x18];
 	TLiveActor::moveObject();
 	mPosition.y = unk150 - unk14C;
 	if (unk16D) {
@@ -1159,6 +1164,7 @@ TWarpAreaActor::TWarpAreaActor(const char* name)
 
 u32 TChestRevolve::touchWater(THitActor* actor)
 {
+	char trash[8];
 	if (isState(STATE_NORMAL)) {
 		mState = STATE_REVOLVING;
 		startAnim(1);
@@ -1184,6 +1190,7 @@ void TChestRevolve::control()
 
 BOOL TPanelRevolve::receiveMessage(THitActor* actor, u32 message)
 {
+	char trash[8];
 	if (isState(STATE_NORMAL)) {
 		SMSGetMSound()->startSoundActor(MSD_SE_OBJ_PANEL_ROLL, &mPosition, 0,
 		                                nullptr, 0, 4);
@@ -1196,6 +1203,7 @@ BOOL TPanelRevolve::receiveMessage(THitActor* actor, u32 message)
 
 void TPanelRevolve::touchPlayer(THitActor* actor)
 {
+	char trash[8];
 	if (marioHipAttack() && isState(STATE_NORMAL)) {
 		SMSGetMSound()->startSoundActor(MSD_SE_OBJ_PANEL_ROLL, &mPosition, 0,
 		                                nullptr, 0, 4);
@@ -1222,6 +1230,7 @@ void TPanelRevolve::control()
 
 void TPictureTelesa::afterFinishedAnim()
 {
+	char trash[8];
 	TWaterHitPictureHideObj::afterFinishedAnim();
 	if (isActorType(0x400001A2)) {
 		SMSGetMSound()->startSoundSystemSE(MSD_SE_SY_CLEAR_SIGN_BIG, 0, nullptr,

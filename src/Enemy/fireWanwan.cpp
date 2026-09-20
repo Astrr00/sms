@@ -607,23 +607,22 @@ void TFireWanwanTailHit::clipNodes(JDrama::TGraphics*) { }
 
 void TFireWanwanTailHit::movementBody(const JGeometry::TVec3<f32>& param_1)
 {
-	if (mOwner->isHungTailNerve() && !mOwner->unk194->isTaken()
+	if (mOwner->isHungTailNerve() && !mOwner->isTailTaken()
 	    && !mOwner->isReadyToFly()) {
-		unkA4->mBoundRate
-		    = mOwner->getSaveParam2()->mRubberBoundRateHitting.get();
-		unkA4->mDecay = mOwner->getSaveParam2()->mRubberDecayHitting.get();
+		unkA4->setBoundRate(mOwner->getSaveParam2()->mRubberBoundRateHitting.get());
+		unkA4->setDecay(mOwner->getSaveParam2()->mRubberDecayHitting.get());
 	} else if (mOwner->isAttacking()) {
-		unkA4->mBoundRate = 0.7f;
-		unkA4->mDecay     = 0.4f;
+		unkA4->setBoundRate(0.7f);
+		unkA4->setDecay(0.4f);
 	} else {
-		unkA4->mBoundRate = mOwner->getSaveParam2()->mRubberBoundRate.get();
-		unkA4->mDecay     = mOwner->getSaveParam2()->mRubberDecay.get();
+		unkA4->setBoundRate(mOwner->getSaveParam2()->mRubberBoundRate.get());
+		unkA4->setDecay(mOwner->getSaveParam2()->mRubberDecay.get());
 	}
 
 	if (mOwner->isFlying())
-		unkA4->mMaxLength = mOwner->getSaveParam2()->mTailMaxLength.get();
+		unkA4->setMaxLength(mOwner->getSaveParam2()->mTailMaxLength.get());
 	else
-		unkA4->mMaxLength = 10000.0f;
+		unkA4->setMaxLength(10000.0f);
 
 	unkA4->unk0[0].mPos = param_1;
 	unkA4->movement();
@@ -763,6 +762,7 @@ void TFireWanwan::setMActorAndKeeper()
 
 void TFireWanwan::reset()
 {
+	char trash[0x20];
 	mPosition = mInitialPosition;
 
 	unk194->mIsOnFire = true;
@@ -954,6 +954,7 @@ BOOL TFireWanwan::receiveMessage(THitActor* sender, u32 message)
 		return false;
 
 	case HIT_MESSAGE_SPRAYED_BY_WATER: {
+		u8 trash = sender->getActorType(); // matching: stack padding
 		SMS_EasyEmitParticle(PARTICLE_MS_ENM_WATHIT, &sender->getPosition(),
 		                     nullptr, JGeometry::TVec3<f32>(1.0f, 1.0f, 1.0f));
 		u8 maxHp = getMaxHitPoints();
@@ -1527,7 +1528,7 @@ void TFireWanwan::attackToMario()
 	const TNerveBase<TLiveActor>* nerve = mSpine->getLatestNerve();
 	if (nerve != &TNerveFireWanwanFly::theNerve()
 	    && nerve != &TNerveFireWanwanEscape::theNerve()
-	    && nerve != &TNerveFireWanwanRecover::theNerve()) {
+	    && nerve != &TNerveFireWanwanRecoverGraph::theNerve()) {
 		if (isFreeze()) {
 			(void)nerve;
 		} else {
@@ -1871,7 +1872,7 @@ DEFINE_NERVE(TNerveFireWanwanAttack, TLiveActor)
 
 	if (spine->getTime() == 0) {
 		self->setBckAnm(3);
-		self->setGoalPathMario();
+		self->setGoalPath(TPathNode((THitActor*)gpMarioAddress));
 	}
 
 	if (self->doAttack()) {
@@ -2107,6 +2108,7 @@ DEFINE_NERVE(TNerveFireWanwanFreeze, TLiveActor)
 DEFINE_NERVE(TNerveFireWanwanEscape, TLiveActor)
 {
 	TFireWanwan* self = (TFireWanwan*)spine->getBody();
+	char trash[8];
 
 	if (spine->getTime() == 0) {
 		self->initEscapeNextGraphNode();

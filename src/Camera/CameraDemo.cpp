@@ -118,6 +118,7 @@ void CPolarSubCamera::updateDemoCamera_(bool param_1)
 void CPolarSubCamera::updateGateDemoCamera_()
 {
 	f32 fovy;
+	char trash[4];
 	unk2B0->updateDemo(nullptr, nullptr, nullptr, &fovy);
 
 	int v = mInbetween->getUnk4();
@@ -242,6 +243,7 @@ void CPolarSubCamera::ctrlNormalDeadDemo_()
 		diff.x           = mTarget.x - mPosition.x;
 		diff.y           = mTarget.y - mPosition.y;
 		diff.z           = mTarget.z - mPosition.z;
+		char trash[28];
 		f32 distToTarget = MsVECMag2(&diff);
 		if (distToTarget > 0.001f) {
 			f32 r = MsClamp(10500.0f * (1.0f / distToTarget), 5.0f, 80.0f);

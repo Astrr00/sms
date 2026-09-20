@@ -429,6 +429,7 @@ void TBEelTears::perform(u32 cue, JDrama::TGraphics* graphics)
 
 BOOL TBEelTears::receiveMessage(THitActor*, u32 message)
 {
+	char trash[8];
 	if (message == HIT_MESSAGE_SPRAYED_BY_WATER) {
 		mStateTimer = 60;
 		if (mSpine->getCurrentNerve() == &TNerveBEelTearsMoveUp::theNerve()
@@ -530,6 +531,7 @@ DEFINE_NERVE(TNerveBEelTearsMoveUp, TLiveActor)
 
 DEFINE_NERVE(TNerveBEelTearsWaterHit, TLiveActor)
 {
+	char trash[0x18];
 	TBEelTears* tears = static_cast<TBEelTears*>(spine->getBody());
 	if (spine->getTime() == 0) {
 		SMSGetMSound()->startSoundActor(MSD_SE_BS_UNG_TEAR_TREMBLE,
@@ -591,6 +593,7 @@ DEFINE_NERVE(TNerveBEelTearsMarioRecover, TLiveActor)
 
 DEFINE_NERVE(TNerveBEelTearsSplit, TLiveActor)
 {
+	char trash[16];
 	TBEelTears* tears = static_cast<TBEelTears*>(spine->getBody());
 	if (spine->getTime() == 0) {
 		SMSGetMSound()->startSoundActor(MSD_SE_BS_UNG_TEAR_TREMBLE,
@@ -747,8 +750,8 @@ void TBossEelManager::createModelData()
 
 void TBossEelManager::clipEnemies(JDrama::TGraphics* graphics)
 {
-	clipActorsAux(graphics, mSaveParams.mSLViewClipRadius.get(),
-	              mSaveParams.mSLViewClipFar.get());
+	clipActorsAux(graphics, mSaveParams.mSLViewClipFar.get(),
+	              mSaveParams.mSLViewClipRadius.get());
 }
 
 TBossEelTooth::TBossEelTooth(u8 toothType, TBossEel* owner,
@@ -759,7 +762,7 @@ TBossEelTooth::TBossEelTooth(u8 toothType, TBossEel* owner,
     , mOwner(owner)
     , mHitPoints(0)
     , mToothType(toothType)
-    , unk78(0.0f, 0.0f, 0.0f)
+    , mTrembleRotation(0.0f, 0.0f, 0.0f)
     , mDamageCooldown(0)
     , mCanShedTears(true)
 {
@@ -898,7 +901,8 @@ void TBossEelTooth::perform(u32 cue, JDrama::TGraphics* graphics)
 					if (mSharedParts->getMActor()->checkCurBckFromIndex(22)) {
 						mSharedParts->getMActor()->setBckFromIndex(20);
 						JGeometry::TVec3<f32> tearsPosition(
-						    mDetachedMtx[0][3], unk78.y + mDetachedMtx[1][3],
+						    mDetachedMtx[0][3],
+						    mTrembleRotation.y + mDetachedMtx[1][3],
 						    mDetachedMtx[2][3]);
 						mOwner->generateBubble(tearsPosition);
 						mSharedParts->getMActor()->setFrameRate(
@@ -912,9 +916,9 @@ void TBossEelTooth::perform(u32 cue, JDrama::TGraphics* graphics)
 
 				f32 speed = mOwner->getBossEelParams().mSLToothUpSpeed.get();
 				if (mToothType == 1) {
-					unk78.y += speed;
-					if (unk78.y > mOwner->getBossEelParams()
-					                  .mSLToothLiveHeight.get()
+					mTrembleRotation.y += speed;
+					if (mTrembleRotation.y > mOwner->getBossEelParams()
+					                             .mSLToothLiveHeight.get()
 					    || mPosition.y > gpMarioPos->y + 2000.0f) {
 						mHitPoints = 0;
 						onHitFlag(HIT_FLAG_NO_COLLISION);
@@ -955,11 +959,11 @@ void TBossEelTooth::perform(u32 cue, JDrama::TGraphics* graphics)
 				emitter->setGlobalScale(mOwner->mScaling);
 		}
 
-		TPosition3f transform(0, 0, unk78.x);
+		TPosition3f transform(0, 0, mTrembleRotation.x);
 		MTXConcat(toothMtx, transform, toothMtx);
-		MsMtxSetRotRPH(transform, unk78.z, unk78.z, 0.0f);
+		MsMtxSetRotRPH(transform, mTrembleRotation.z, mTrembleRotation.z, 0.0f);
 		MTXConcat(toothMtx, transform, toothMtx);
-		toothMtx[1][3] += unk78.y;
+		toothMtx[1][3] += mTrembleRotation.y;
 		mPosition.x = toothMtx[0][3];
 		mPosition.y = toothMtx[1][3];
 		mPosition.z = toothMtx[2][3];
@@ -1073,6 +1077,7 @@ TBossEelEye::TBossEelEye(const TLiveActor* owner, int jointIndex,
     , mBlurTimer(0)
     , mBlurDuration(50)
 {
+	char trash[16];
 	mBlendModel = new SDLModel(modelData, modelFlags, 1);
 	mBlendModel->getModelData()->getMaterialName()->getIndex("_mat7");
 	getMActor()->initNormalMotionBlend();
@@ -1105,8 +1110,7 @@ void TBossEelEye::perform(u32 cue, JDrama::TGraphics* graphics)
 		if (mCopyConnectedMtx == 0)
 			MTXCopy(eyeMtx, mBlendMtx);
 
-		mBlendRatio
-		    = JGeometry::TUtil<f32>::clamp(mBlendRatio - 0.01f, 0.0f, 1.0f);
+		mBlendRatio = MsClamp(mBlendRatio - 0.01f, 0.0f, 1.0f);
 		getMActor()->setMotionBlendRatioForBck(mBlendRatio);
 		if (mAnimationMode == 1
 		    && getMActor()->curAnmEndsNext(ANM_TYPE_BCK, nullptr)) {
@@ -1181,6 +1185,7 @@ void TBossEelHeartCoin::perform(u32 cue, JDrama::TGraphics* graphics)
 		mPosition.y = jointMtx[1][3];
 
 		TPosition3f heartMtx(mPosition.x, mPosition.y, mPosition.z);
+		char trash[44];
 		getMActor()->getModel()->setBaseTRMtx(heartMtx);
 	}
 	getMActor()->perform(cue, graphics);
@@ -1258,6 +1263,7 @@ TBossEelCollision::TBossEelCollision(MtxPtr collisionMtx, const char* name)
 
 void TBossEelCollision::perform(u32 cue, JDrama::TGraphics* graphics)
 {
+	char trash[0x18];
 	if (cue & CUE_MOVE) {
 		calcEntryRadius();
 		for (s32 i = 0; i < mColCount; ++i) {
@@ -1319,6 +1325,7 @@ void TBossEelAwaCollision::behaveToMario()
 
 void TBossEelAwaCollision::perform(u32 cue, JDrama::TGraphics* graphics)
 {
+	char trash[0x20];
 	if (cue & CUE_MOVE) {
 		calcEntryRadius();
 		if (gpMarioPos->y < mPosition.y + 500.0f)
@@ -1375,6 +1382,7 @@ void TBossEelTearsRecoverCollision::behaveToMario()
 void TBossEelTearsRecoverCollision::perform(u32 cue,
                                             JDrama::TGraphics* graphics)
 {
+	char trash[0x18];
 	if (cue & CUE_MOVE) {
 		calcEntryRadius();
 		for (s32 i = 0; i < mColCount; ++i) {
@@ -1559,6 +1567,7 @@ void TBossEel::calcAndSetCollisionCubeBite_()
 
 void TBossEel::updateTearsCnt()
 {
+	char trash[0x50];
 	static const s32 eyeTable[] = { 0, 2, 1, 3 };
 
 	++mTearCycleTimer;
@@ -1643,6 +1652,7 @@ void TBossEel::shedTears(MtxPtr spawnMtx)
 #pragma dont_inline on
 void TBossEel::forceShedTears(bool rearEyes)
 {
+	char trash[0x30];
 	mTearEyeToggle = !mTearEyeToggle;
 	s32 eyeIndex;
 	if (!rearEyes) {
@@ -1949,7 +1959,7 @@ void TBossEel::deadCheck()
 	}
 }
 
-BOOL TBossEel::isValidToothDamage()
+bool TBossEel::isValidToothDamage()
 {
 	if (mSpine->getCurrentNerve() == &TNerveBossEelEat::theNerve())
 		return false;
@@ -2109,6 +2119,7 @@ DEFINE_NERVE(TNerveBossEelSecondSpin, TLiveActor)
 
 DEFINE_NERVE(TNerveBossEelAppear, TLiveActor)
 {
+	char trash[32];
 	TBossEel* eel = static_cast<TBossEel*>(spine->getBody());
 	if (spine->getTime() == 0) {
 		SMSGetMSound()->startSoundActor(MSD_SE_BS_UNG_UP, &eel->mPosition, 0,
@@ -2192,6 +2203,7 @@ DEFINE_NERVE(TNerveBossEelOutWait, TLiveActor)
 
 static BOOL ExecBackNerve_Sub(TSpineBase<TLiveActor>* spine, f32 speed)
 {
+	char trash[0x28];
 	TBossEel* eel = static_cast<TBossEel*>(spine->getBody());
 	if (spine->getTime() == 1) {
 		SMSGetMSound()->startSoundActor(MSD_SE_BS_UNG_DOWN, &eel->mPosition, 0,
@@ -2386,6 +2398,7 @@ DEFINE_NERVE(TNerveBossEelMouthOpenWait, TLiveActor)
 
 DEFINE_NERVE(TNerveBossEelSleepOnBottom, TLiveActor)
 {
+	char trash[16];
 	TBossEel* eel = static_cast<TBossEel*>(spine->getBody());
 
 	if (spine->getTime() == 0) {

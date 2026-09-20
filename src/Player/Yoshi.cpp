@@ -415,6 +415,7 @@ bool TYoshi::appearFromEgg(const JGeometry::TVec3<f32>& pos, f32 yrot,
 
 bool TYoshi::disappear()
 {
+	char trash[8];
 	if (isHatched()) {
 		if (mState == STATE_MOUNTED)
 			mMario->getOffYoshi(true);
@@ -436,6 +437,7 @@ bool TYoshi::disappear()
 
 void TYoshi::kill()
 {
+	char trash[8];
 
 	disappear();
 	mBodyAnmSound->stop();
@@ -444,6 +446,7 @@ void TYoshi::kill()
 
 void TYoshi::ride()
 {
+	char trash[0x18];
 	mState = STATE_MOUNTED;
 
 	changeAnimation(0x16);
@@ -460,6 +463,7 @@ void TYoshi::ride()
 
 void TYoshi::getOff(bool param_1)
 {
+	char trash[0x10];
 	if (mState != STATE_MOUNTED)
 		return;
 
@@ -619,6 +623,8 @@ void TYoshi::thinkAnimation()
 
 void TYoshi::thinkUpper()
 {
+	char trash[0x10];
+
 	if (mState != STATE_MOUNTED)
 		return;
 
@@ -626,46 +632,28 @@ void TYoshi::thinkUpper()
 
 	J3DJoint* joint
 	    = mActor->getModel()->getModelData()->getJointNodePointer(18);
-	const TWaterGun* waterGun = mMario->mWaterGun;
-
-	bool shouldUseEatMtx = false;
 
 	if (mTongue->mState != TYoshiTongue::STATE_IDLE
-	    && waterGun->mCurrentWater != 0) {
-		if (waterGun->getCurrentNozzle()->getNozzleKind() == 1) {
-			if (((TNozzleTrigger*)waterGun->getCurrentNozzle())->unk385
-			    == TNozzleTrigger::ACTIVE)
-				shouldUseEatMtx = true;
-			else
-				shouldUseEatMtx = false;
-		} else {
-			if (waterGun->getCurrentNozzle()->unk378 > 0.0f)
-				shouldUseEatMtx = true;
-			else
-				shouldUseEatMtx = false;
-		}
-	}
-
-	if (shouldUseEatMtx) {
+	    || mMario->mWaterGun->isEmitting()) {
 		if (joint->getMtxCalc() != unk54) {
 			unk5C.setFrame(unk5C.getStart());
 			unk5C.setRate(1.0f);
 			unk5C.setEnd(unk4C->getFrameMax());
 			unk5C.setFrame(0.0f);
 			joint->setMtxCalc(unk54);
-			mBodyAnmSound->initAnmSound(mBodyAnmSoundTable[3], 1, 0.0f);
+			mTongueAnmSound->initAnmSound(mBodyAnmSoundTable[3], 1, 0.0f);
 		}
 
 		unk4C->setFrame(unk5C.getFrame());
 	} else {
-		if (joint->getMtxCalc() == unk58) {
+		if (joint->getMtxCalc() == unk54) {
 			unk5C.setFrame(unk5C.getStart());
 			unk5C.setRate(1.0f);
 			unk5C.setEnd(unk50->getFrameMax());
 			unk5C.setFrame(0.0f);
 			joint->setMtxCalc(unk58);
-			mBodyAnmSound->initAnmSound(mBodyAnmSoundTable[4], 1, 0.0f);
-		} else if (joint->getMtxCalc() != unk58) {
+			mTongueAnmSound->initAnmSound(mBodyAnmSoundTable[4], 1, 0.0f);
+		} else if (joint->getMtxCalc() == unk58) {
 			if (unk5C.checkState(J3DFrameCtrl::STATE_COMPLETED_ONCE
 			                     | J3DFrameCtrl::STATE_LOOPED_ONCE))
 				joint->setMtxCalc(nullptr);
@@ -748,6 +736,7 @@ void TYoshi::doSearch()
 
 void TYoshi::doEat(u32 param_1)
 {
+	char trash[0x10];
 	int r31;
 	BOOL bVar1 = true;
 

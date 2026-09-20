@@ -11,6 +11,7 @@ extern JPAEmitterManager* gpEmitterManager4D2;
 
 void TSunGlass::startFade(int type, bool arg1)
 {
+	char trash[0x18];
 	TFlagManager::getInstance()->getFlag(0x40000);
 
 	if (type == 2) {
@@ -103,10 +104,12 @@ u8 TSunGlass::getShineAlpha()
 	return alpha;
 }
 
-void TSunGlass::loadAfter() { unk14.a = getShineAlpha(); }
+void TSunGlass::loadAfter() {
+	char trash[8]; unk14.a = getShineAlpha(); }
 
 void TSunGlass::load(JSUMemoryInputStream& stream)
 {
+	char trash[24];
 	JDrama::TViewObj::load(stream);
 	unk10 = gpMarDirector->unk18[1];
 }
@@ -131,6 +134,7 @@ void TSunShine::perform(u32 cue, JDrama::TGraphics* graphics)
 
 void TSunShine::loadAfter()
 {
+	char trash[8];
 	JDrama::TViewObj::loadAfter();
 	if (gpMarDirector->getCurrentMap() == 6) {
 		unk14.r = 0x48;

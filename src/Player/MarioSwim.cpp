@@ -93,6 +93,7 @@ void TMario::doSwimming()
 
 BOOL TMario::checkSwimJump()
 {
+	char trash[8];
 	if (mInput & 0x2) {
 		if (checkFlag(MARIO_FLAG_FLUDD_EMITTING) && !isUnderWater()) {
 			mPosition.y = 1.0f + mFloorPosition.z;
@@ -206,6 +207,7 @@ BOOL TMario::swimPaddleStart()
 
 BOOL TMario::swimPaddle()
 {
+	char trash[8];
 	f32 anmRate = 0.5f;
 	if (checkFlag(MARIO_FLAG_FLUDD_EMITTING))
 		anmRate = 5.0f;
@@ -332,6 +334,7 @@ BOOL TMario::swimPDown()
 
 BOOL TMario::swimMain()
 {
+	char trash[0x18];
 	if (checkFlag(MARIO_FLAG_GAME_OVER))
 		changePlayerStatus(MARIO_STATUS_SWIM_P_DOWN, 0, false);
 

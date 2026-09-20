@@ -56,6 +56,7 @@ void JAIBasic::checkEntriedSeq()
 		    mSeqArchiveHandle + (sound->mSoundID & JAISoundID_IndexMask));
 
 		u8 pos;
+		u8 trash[8];
 		u8* ptr = (u8*)unk0->checkOnMemory(
 		    sound->mSoundID & JAISoundID_IndexMask, &pos);
 
@@ -664,6 +665,7 @@ void JAIBasic::checkReadSeq()
 
 void JAIBasic::checkSeqWave()
 {
+	char trash[8];
 	for (int i = 0; i < JAIGlobalParameter::seqPlayTrackMax; ++i) {
 		JAISeqUpdateData* sud = &unk0->mSeqTrackInfo[i];
 		JAISoundHandle& sound = sud->mSound;

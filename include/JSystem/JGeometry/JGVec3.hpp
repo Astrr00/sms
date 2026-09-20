@@ -92,13 +92,16 @@ public:
 
 	explicit TVec3(f32 value) { setAll(value); }
 
+#pragma dont_inline on
 	TVec3(const TVec3& other)
 	{
 		// NOTE: yes, this has to use lwz/stw and not lfs/stf.
 		// Checked via MarioCollision.cpp where this is not inlined
 		*(Vec*)this = *(Vec*)&other;
 	}
+#pragma dont_inline off
 
+#pragma dont_inline on
 	TVec3& operator=(const TVec3& other)
 	{
 		// NOTE: yes, this has to use lwz/stw and not lfs/stf.
@@ -106,6 +109,7 @@ public:
 		*(Vec*)this = *(Vec*)&other;
 		return *this;
 	}
+#pragma dont_inline off
 
 	// fabricated
 	operator Vec*() const { return (Vec*)&x; }
@@ -113,19 +117,23 @@ public:
 
 	void zero() { x = y = z = 0.0f; }
 
+#pragma dont_inline on
 	void set(const Vec& v)
 	{
 		x = v.x;
 		y = v.y;
 		z = v.z;
 	}
+#pragma dont_inline off
 
+#pragma dont_inline on
 	template <class TY> void set(TY x_, TY y_, TY z_)
 	{
 		x = x_;
 		y = y_;
 		z = z_;
 	}
+#pragma dont_inline off
 
 	template <class TY> void set(const TVec3<TY>& other)
 	{
@@ -164,12 +172,14 @@ public:
 		z -= translate.z;
 	}
 
+#pragma dont_inline on
 	void sub(const TVec3& fst, const TVec3& snd)
 	{
 		x = fst.x - snd.x;
 		y = fst.y - snd.y;
 		z = fst.z - snd.z;
 	}
+#pragma dont_inline off
 
 	void mul(const TVec3& b)
 	{
@@ -206,11 +216,13 @@ public:
 		mul(other);
 		return *this;
 	}
+#pragma dont_inline on
 	TVec3& operator*=(f32 other)
 	{
 		scale(other);
 		return *this;
 	}
+#pragma dont_inline off
 	TVec3& operator/=(f32 other)
 	{
 		div(other);
@@ -289,12 +301,14 @@ public:
 		z = b.z * scale;
 	}
 
+#pragma dont_inline on
 	void scaleAdd(f32 scale, const TVec3& b, const TVec3& c)
 	{
 		x = b.x + c.x * scale;
 		y = b.y + c.y * scale;
 		z = b.z + c.z * scale;
 	}
+#pragma dont_inline off
 
 	// === length stuff ===
 
@@ -325,6 +339,7 @@ public:
 
 	void normalize(const TVec3& other) { setLength(other, TUtil<f32>::one()); }
 
+#pragma dont_inline on
 	void setLength(const TVec3& v, f32 length)
 	{
 		f32 lsq = v.squared();
@@ -335,6 +350,7 @@ public:
 
 		scale(length * JGeometry::TUtil<f32>::inv_sqrt(lsq), v);
 	}
+#pragma dont_inline off
 
 	void setMax(const TVec3& max)
 	{

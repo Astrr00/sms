@@ -6,7 +6,7 @@
 #include <Player/Yoshi.hpp>
 #include <Player/ModelWaterManager.hpp>
 #include <MarioUtil/ShadowUtil.hpp>
-#include <System/StageUtil.hpp>
+
 #include <System/MarioGamePad.hpp>
 #include <M3DUtil/M3UModelMario.hpp>
 #include <Map/Map.hpp>
@@ -21,6 +21,8 @@ static const char* dummyMactorStringValue1 = "\0\0\0\0\0\0\0\0\0\0\0";
 static const char* SMS_NO_MEMORY_MESSAGE   = "メモリが足りません\n";
 const char cDirtyFileName[] = "/scene/map/pollution/H_ma_rak.bti";
 const char cDirtyTexName[]  = "H_ma_rak_dummy";
+
+bool SMS_isMultiPlayerMap();
 
 TMario::TMario()
     : TTakeActor("HitActor")
@@ -339,6 +341,7 @@ void TMario::load(JSUMemoryInputStream& stream)
 
 void TMario::loadAfter()
 {
+	char trash[8];
 	if (checkFlag(MARIO_FLAG_HAS_FLUDD))
 		mWaterGun->initInLoadAfter();
 
@@ -363,6 +366,7 @@ void TMario::loadAfter()
 
 void TMario::initValues()
 {
+	char trash[8];
 	mHealth     = mDeParams.mHpMax.get();
 	mDirty      = 0.0f;
 	mOilBrake   = 1.0f;

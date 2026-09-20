@@ -94,6 +94,7 @@ void TMonumentShine::hitByWater(THitActor* actor)
 
 BOOL TMonumentShine::receiveMessage(THitActor* sender, u32 message)
 {
+	char trash[8];
 	if (sender->isActorType(0x01000001)) {
 		gpMarioParticleManager->emit(PARTICLE_MS_ENM_WATHIT, &sender->mPosition,
 		                             0, nullptr);
@@ -178,13 +179,11 @@ void TMonumentShine::control()
 			}
 		}
 	} else {
-		f32 rot   = mRotation.y;
-		f32 limit = 360.0f;
-		while (rot >= limit)
-			rot -= limit;
-		f32 zero = 0.0f;
-		while (rot < zero)
-			rot += limit;
+		f32 rot = mRotation.y;
+		while (rot >= 360.0f)
+			rot -= 360.0f;
+		while (rot < 0.0f)
+			rot += 360.0f;
 		mRotation.y = rot;
 	}
 }
@@ -263,6 +262,7 @@ void TBellDolpic::touchPlayer(THitActor* actor) { ring(actor->mPosition); }
 
 BOOL TBellDolpic::receiveMessage(THitActor* sender, u32 message)
 {
+	char trash[8];
 	if (sender->isActorType(0x80000001)) {
 		ring(sender->mPosition);
 	}
@@ -304,6 +304,7 @@ BOOL TBellDolpic::receiveMessage(THitActor* sender, u32 message)
 void TBellDolpic::control()
 {
 	JGeometry::TVec3<f32> pos;
+	char trash[16];
 
 	if (unk154 == 0) {
 		if (unk158 == 0) {
@@ -354,6 +355,7 @@ void TBellDolpic::control()
 
 void TDptMonteFence::touchPlayer(THitActor* actor)
 {
+	char trash[8];
 	if (SMS_IsMarioStatusThrownDown()) {
 		SMSGetMSound()->startSoundActor(MSD_SE_IT_BARREL_CRASH, &mPosition, 0,
 		                                nullptr, 0, 4);
@@ -388,6 +390,7 @@ void TMapObjSmoke::load(JSUMemoryInputStream& in)
 
 void TMareGate::control()
 {
+	char trash[8];
 	TMapObjBase::control();
 
 	MSound* sound = SMSGetMSound();
@@ -457,6 +460,7 @@ void TDemoCannon::startDemo()
 
 void TDemoCannon::perform(u32 cue, JDrama::TGraphics* graphics)
 {
+	char trash[0x10];
 	TMapObjBase::perform(cue, graphics);
 
 	if (!unk14C)
@@ -537,6 +541,8 @@ void TTurboNozzleDoor::touchPlayer(THitActor* player)
 	                                nullptr, 0, 4);
 
 	JGeometry::TVec3<f32> scale(1.3f);
+	char trash[20];
+	trash[0] = 0;
 
 	unk138.set(mPosition.x, mPosition.y + 100.0f, mPosition.z);
 

@@ -25,9 +25,10 @@
 
 void TMapObjBase::changeObjMtx(MtxPtr mtx)
 {
-	mPosition.x = mtx[3][0];
-	mPosition.y = mtx[3][1] + mYOffset;
-	mPosition.z = mtx[3][2];
+	char trash[0x28];
+	mPosition.x = mtx[0][3];
+	mPosition.y = mtx[1][3] + mYOffset;
+	mPosition.z = mtx[2][3];
 	if (mMActor) {
 		if (checkMapObjFlag(MAP_OBJ_FLAG_UNK100)) {
 			setModelMtx(mtx);
@@ -51,6 +52,27 @@ void TMapObjBase::changeObjSRT(const JGeometry::TVec3<f32>& param_1,
 }
 
 u32 TMapObjBase::getSDLModelFlag() const { return 3; }
+
+void TMapObjBase::loadBeforeInit(JSUMemoryInputStream&) { }
+
+void TMapObjBase::calc() { }
+
+void TMapObjBase::draw() const { }
+
+void TMapObjBase::dead() { }
+
+u32 TMapObjBase::touchWater(THitActor*) { return false; }
+
+u16 TMapObjBase::getHitObjNumMax() { return 5; }
+
+f32 TMapObjBase::getRadiusAtY(f32) const { return mBodyRadius; }
+
+MtxPtr TMapObjBase::getTakingMtx()
+{
+	if (checkMapObjFlag(MAP_OBJ_FLAG_UNK40))
+		return nullptr;
+	return TLiveActor::getTakingMtx();
+}
 
 void TMapObjBase::awake()
 {
@@ -131,6 +153,7 @@ void TMapObjBase::setUpMapCollision(u16 param_1)
 
 void TMapObjBase::soundBas(u32 param_1, f32 param_2, f32 param_3)
 {
+	char trash[8];
 	f32 currFrame = mMActor->getFrameCtrl(ANM_TYPE_BCK)->getFrame();
 	if (currFrame <= param_2 && param_2 < currFrame + param_3) {
 		SMSGetMSound()->startSoundActor(param_1, &mPosition, 0, nullptr, 0, 4);
@@ -139,6 +162,7 @@ void TMapObjBase::soundBas(u32 param_1, f32 param_2, f32 param_3)
 
 void TMapObjBase::startSound(u16 param_1)
 {
+	char trash[8];
 	if (unk100 != param_1)
 		unk100 = param_1;
 
@@ -258,6 +282,7 @@ void TMapObjBase::startAnim(u16 param_1)
 
 void TMapObjBase::makeObjDefault()
 {
+	char trash[0x28];
 	mPosition.set(mInitialPosition.x, mInitialPosition.y + mYOffset,
 	              mInitialPosition.z);
 
@@ -275,6 +300,7 @@ void TMapObjBase::makeObjDefault()
 
 void TMapObjBase::makeObjDead()
 {
+	char trash[0x30];
 	mVelocity.x = mVelocity.y = mVelocity.z = 0.0f;
 	onLiveFlag(LIVE_FLAG_UNK10);
 
@@ -606,6 +632,7 @@ Mtx* TMapObjBase::getRootJointMtx() const
 
 void TMapObjBase::calcRootMatrix()
 {
+	char trash[8];
 	J3DModel* model = getModel();
 	MsMtxSetXYZRPH(model->getBaseTRMtx(), mPosition.x, mPosition.y - mYOffset,
 	               mPosition.z, mRotation.x, mRotation.y, mRotation.z);

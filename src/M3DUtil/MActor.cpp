@@ -157,6 +157,7 @@ void MActor::setModel(J3DModel* param_1, u32 param_2)
 
 bool MActor::isCurAnmAlreadyEnd(int type)
 {
+	char trash[8];
 	bool result = true;
 
 	J3DFrameCtrl* ctrl = getFrameCtrl(type);
@@ -304,6 +305,7 @@ void MActor::updateOutSubBck()
 
 void MActor::calcAnm()
 {
+	char trash[0x18];
 	frameUpdate();
 
 	updateIn();
@@ -313,6 +315,7 @@ void MActor::calcAnm()
 
 void MActor::calc()
 {
+	char trash[0x10];
 	if (!unk39)
 		return;
 
@@ -338,6 +341,7 @@ void MActor::setLightID(s16 light_id)
 void MActor::setLightData(const TBGCheckData* param_1,
                           const JGeometry::TVec3<f32>& param_2)
 {
+	char trash[0x20];
 	if (!unk40)
 		return;
 
@@ -365,6 +369,7 @@ void MActor::update() { }
 
 void MActor::entry()
 {
+	char trash[8];
 	if (!unk39)
 		return;
 
@@ -388,6 +393,7 @@ void MActor::entry()
 
 void MActor::frameUpdate()
 {
+	char trash[8];
 	for (int i = ANM_TYPE_FIRST; i < ANM_TYPE_COUNT; ++i)
 		if (mAnmByType[i] && mAnmByType[i]->getCurIdx() >= 0)
 			mAnmByType[i]->getFrameCtrl()->update();
@@ -407,6 +413,7 @@ void MActor::matAnmFrameUpdate()
 
 void MActor::perform(u32 cue, JDrama::TGraphics*)
 {
+	char trash[0x10];
 	if (cue & CUE_CALC_ANIM)
 		calcAnm();
 
@@ -608,6 +615,7 @@ void MActor::setBrkFromIndex(int index)
 
 void MActor::updateIn()
 {
+	char trash[8];
 	if (mAnmByType[ANM_TYPE_BCK] && mAnmByType[ANM_TYPE_BCK]->getCurIdx() >= 0)
 		mAnmByType[ANM_TYPE_BCK]->updateIn();
 
@@ -619,6 +627,7 @@ void MActor::updateIn()
 
 void MActor::updateOut()
 {
+	char trash[8];
 	if (mAnmByType[ANM_TYPE_BCK] && mAnmByType[ANM_TYPE_BCK]->getCurIdx() >= 0)
 		mAnmByType[ANM_TYPE_BCK]->updateOut();
 
@@ -644,6 +653,7 @@ void MActor::entryOut()
 
 void MActor::updateMatAnm()
 {
+	char trash[8];
 	j3dSys.setTexture(mModel->getModelData()->getTexture());
 	for (u16 i = 0; i < mMaterialNum; ++i)
 		if (unk30[i] != 0x32 || unk2C[i] != 0x32)

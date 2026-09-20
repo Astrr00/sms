@@ -43,6 +43,7 @@ TAmenbo::TAmenbo(const char* name)
 
 void TAmenbo::init(TLiveManager* manager)
 {
+	char trash[8];
 	mManager = manager;
 	mManager->manageActor(this);
 	mMActorKeeper = new TMActorKeeper(mManager, 1);
@@ -63,7 +64,7 @@ void TAmenbo::init(TLiveManager* manager)
 	mOutOfWaterDeathTimer  = 0;
 	for (int i = 0; i < 4; ++i) {
 		unk1EC[i].mJointIdx
-		    = getModel()->getModelData()->getMaterialName()->getIndex(
+		    = getModel()->getModelData()->getJointName()->getIndex(
 		        cJointNames[i]);
 	}
 }
@@ -207,6 +208,7 @@ BOOL TAmenbo::receiveMessage(THitActor* sender, u32 message)
 
 void TAmenbo::behaveToWater(THitActor* param_1)
 {
+	char trash[8];
 	if (mWaterGunHitCooldown <= 0 && isWaterFromWaterGun(param_1)) {
 		mWaterGunHitCooldown = 45;
 		mSpine->reset();
@@ -244,10 +246,12 @@ void TAmenbo::forceKill()
 
 bool TAmenbo::isCollidMove(THitActor* param_1) { return param_1 != this; }
 
-bool TAmenbo::doKeepDistance() { return !isAttacking(); }
+bool TAmenbo::doKeepDistance() {
+	char trash[8]; return !isAttacking(); }
 
 void TAmenbo::attackToMario()
 {
+	char trash[8];
 	if (isAttacking())
 		sendAttackMsgToMario();
 }

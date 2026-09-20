@@ -418,6 +418,7 @@ void TOptionRumbleUnit::toggle()
 
 void TOptionRumbleUnit::adjust()
 {
+	char trash[8];
 	bool b = mSelectionText->getNumber() == 1 ? true : false;
 	SMSRumbleMgr->setActive(b);
 	adjustView();
@@ -647,6 +648,7 @@ void TOptionSoundUnit::toggle()
 
 void TOptionSoundUnit::adjust()
 {
+	char trash[8];
 	adjustView();
 	const FabricatedSoundSettings& setting
 	    = cSoundSettings[mSelectionText->getNumber()];
@@ -708,6 +710,7 @@ int TOptionSoundUnit::typeToFlag(TOptionSoundUnit::SoundType type)
 
 void TOptionSoundUnit::setState(TOptionSoundUnit::State state)
 {
+	char trash[8];
 	mState = state;
 	switch (state) {
 	case STATE_INACTIVE:
@@ -762,6 +765,7 @@ void TOptionSoundUnit::adjustView()
 
 void TOptionSoundUnit::adjustSound()
 {
+	char trash[8];
 	stopSound();
 
 	const FabricatedSoundSettings& setting
@@ -782,6 +786,7 @@ void TOptionSoundUnit::setInfluencedAlphaRecursive(J2DPane* pane, bool flag)
 
 void TOptionControl::load()
 {
+	char trash[8];
 	JKRArchive* optionArch = (JKRArchive*)JKRFileLoader::getVolume("option");
 
 	mScreen = new J2DSetScreen("option.blo", optionArch);
@@ -801,6 +806,7 @@ void TOptionControl::load()
 #pragma dont_inline on
 void TOptionControl::loadSetting()
 {
+	char trash[0x28];
 	switch (TFlagManager::getInstance()->getFlag(0xA0000)) {
 	case 0:
 		mSoundOption->setValue(0);
@@ -833,6 +839,7 @@ void TOptionControl::draw(J2DOrthoGraph* graph) { mScreen->draw(0, 0, graph); }
 // mario walks from the card select screen to the options screen
 bool TOptionControl::movementCard2Option()
 {
+	char trash[0x10];
 	if (gpCameraOption->unk12 == 0) {
 		mRumbleOption->mShouldRumble = false;
 		mScreen->search('oya0')->show();
@@ -885,6 +892,7 @@ bool TOptionControl::movementOption2Card()
 void TOptionControl::setType(TOptionControl::SelectType type,
                              bool initial_options_entry)
 {
+	char trash[8];
 	if (mSelectedOption != type || initial_options_entry) {
 		mSelectedOption = type;
 		switch (type) {
@@ -949,6 +957,7 @@ bool TOptionControl::isChangedSetting() const
 
 void TOptionControl::resetChangedSetting()
 {
+	char trash[8];
 	mInitialRumbleValue = mRumbleOption->getValue();
 	mInitialSoundValue  = mSoundOption->getValue();
 }

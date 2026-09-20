@@ -21,6 +21,7 @@ bool CPolarSubCamera::controlByCameraCode_(int* param_1)
 		int count = gpCubeCamera->unk10;
 
 		JGeometry::TVec3<f32> local_24 = SMS_GetMarioPos();
+		char trash[0x28];
 		local_24.y += 75.0f;
 		for (int i = 0; i < count; ++i) {
 			if (gpCubeCamera->isInCube(local_24, i)) {

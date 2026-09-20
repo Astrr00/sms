@@ -24,6 +24,7 @@ void TMario::rumbleStart(int channelDataIdx, int repeatCount)
 
 void TMario::incHP(int hp)
 {
+	char trash[0x20];
 	// volatile u32 padding[10];
 	if (isUnderWater() || checkFlag(MARIO_FLAG_HELMET_FLW_CAMERA)) {
 		mAir += hp;
@@ -46,6 +47,7 @@ void TMario::incHP(int hp)
 
 void TMario::decHP(int hp)
 {
+	char trash[8];
 	// volatile u32 padding[2];
 	if (isUnderWater() || checkFlag(MARIO_FLAG_HELMET_FLW_CAMERA)) {
 		mAir -= hp;
@@ -167,6 +169,7 @@ BOOL TMario::trampleExec(THitActor* param_1)
 
 	if (param_1->checkActorType(ACTOR_TYPE_UNK4000000)) {
 		JGeometry::TVec3<f32> scale(0.5f);
+		char trash[8];
 		SMS_EasyEmitParticle(PARTICLE_MS_FUMI_B, &mPosition, this, scale);
 		SMS_EasyEmitParticle(PARTICLE_MS_FUMI_C, &mPosition, this, scale);
 	} else {
@@ -191,6 +194,7 @@ void TMario::resetNozzle() { }
 
 void TMario::normalizeNozzle()
 {
+	char trash[8];
 	// volatile u32 padding[2];
 	if (checkFlag(MARIO_FLAG_HAS_FLUDD)) {
 		mWaterGun->changeNozzle(TWaterGun::Spray, true);
@@ -201,6 +205,7 @@ void TMario::normalizeNozzle()
 
 void TMario::loserExec()
 {
+	char trash[8];
 	// volatile u32 padding[2];
 	if (mStatus != MARIO_STATUS_SWIM_DOWN && mStatus != MARIO_STATUS_ELEC_DOWN
 	    && mStatus != MARIO_STATUS_SWIM_P_DOWN
@@ -253,7 +258,7 @@ void TMario::floorDamageExec(const TMario::TEParams& params)
 	mFloorHitActor.mPosition.z = mPosition.z + JMASCos(mFaceAngle.y);
 	damageExec(&mFloorHitActor, params.mDamage.get(), params.mDownType.get(),
 	           params.mWaterEmit.get(), params.mMinSpeed.get(),
-	           params.mMotor.get(), params.mDamage.get(),
+	           params.mMotor.get(), params.mDirty.get(),
 	           params.mInvincibleTime.get());
 }
 
@@ -405,6 +410,7 @@ void TMario::damageExec(THitActor* hittingActor, int damage, int damageAnimType,
 
 void TMario::considerTake()
 {
+	char trash[0x18];
 	// volatile u32 missingStack[6];
 	bool check = false;
 

@@ -165,6 +165,7 @@ TSmallEnemy::TSmallEnemy(const char* name)
 
 void TSmallEnemy::setMActorAndKeeper()
 {
+	char trash[8];
 	mMActorKeeper = new TMActorKeeper(mManager, 1);
 	mMActor       = mMActorKeeper->createMActorFromNthData(0, 0);
 }
@@ -205,7 +206,7 @@ void TSmallEnemy::init(TLiveManager* param_1)
 	if (!unk124->getGraph() || unk124->getGraph()->isDummy())
 		unk124->init(gpConductor->getGraphByName("main"));
 
-	setGoalPathMario();
+	setGoalPath(TPathNode((THitActor*)gpMarioAddress));
 	initAnmSound();
 }
 
@@ -240,19 +241,23 @@ void TSmallEnemy::attackToMario()
 {
 	sendAttackMsgToMario();
 
-	// TODO: wtf
-	JGeometry::TVec3<f32> local_14(0, 0, 0);
-	(void)&local_14;
+	JGeometry::TVec3<f32> accum(0.0f, 0.0f, 0.0f);
 
-	JGeometry::TVec3<f32> local_20;
-	local_20.sub(mPosition, SMS_GetMarioPos());
-	MsVECNormalize(&local_20, &local_20);
-	mVelocity.set(local_20);
+	JGeometry::TVec3<f32> dir(mPosition.x - SMS_GetMarioPos().x,
+	                          mPosition.y - SMS_GetMarioPos().y,
+	                          mPosition.z - SMS_GetMarioPos().z);
 
-	JGeometry::TVec3<f32> v;
-	v.scale(mBodyScale * mBodyRadius, local_20);
-	v += local_14;
-	mLinearVelocity = v;
+	// @fabricated: stack padding to match the retail frame size
+	f32 trash;
+	(void)&trash;
+
+	MsVECNormalize(&dir, &dir);
+	mVelocity.x = dir.x;
+	mVelocity.z = dir.z;
+
+	dir.scale(mBodyScale * mBodyRadius);
+	accum += dir;
+	mLinearVelocity = accum;
 }
 
 void TSmallEnemy::reset()
@@ -397,6 +402,7 @@ void TSmallEnemy::genEventCoin()
 
 void TSmallEnemy::setAfterDeadEffect()
 {
+	char trash[8];
 	if (JPABaseEmitter* emitter = gpMarioParticleManager->emit(
 	        PARTICLE_MS_ENM_DISAP_A, &mPosition, 0, nullptr)) {
 		emitter->setGlobalScale(mScaling);
@@ -413,7 +419,8 @@ void TSmallEnemy::setAfterDeadEffect()
 
 void TSmallEnemy::generateItem()
 {
-	f32 rand = TMsRange<f32>(0.0f, 100.0f).rand();
+	TMsRange<f32> genRange(0.0f, 100.0f);
+	f32 rand = genRange.rand();
 	(void)rand; // TODO: due to rand being incorrect
 	f32 eggRate  = getSaveParams()->mSLGenEggRate.get();
 	f32 itemRate = getSaveParams()->mSLGenItemRate.get();
@@ -509,6 +516,7 @@ void TSmallEnemy::updateAnmSound() { TSpineEnemy::updateAnmSound(); }
 
 BOOL TSmallEnemy::receiveMessage(THitActor* sender, u32 message)
 {
+	char trash[0x30];
 	if (isEatenByYosshi() && message == HIT_MESSAGE_TAKE && !mHolder) {
 		onHitFlag(HIT_FLAG_NO_COLLISION);
 		mHolder = (TTakeActor*)sender;
@@ -561,6 +569,7 @@ BOOL TSmallEnemy::receiveMessage(THitActor* sender, u32 message)
 
 bool TSmallEnemy::changeByJuice()
 {
+	char trash[0x18];
 	if (gpModelWaterManager->unk5D5F == 1 || gpModelWaterManager->unk5D5F == 2
 	    || gpModelWaterManager->unk5D5F == 3
 	    || TSmallEnemyManager::mTestJuiceType != 0) {
@@ -725,11 +734,12 @@ void TSmallEnemy::scalingChangeActor()
 
 void TSmallEnemy::changeOut()
 {
+	char trash[8];
 	SMSGetMSound()->startSoundActor(MSD_SE_EN_TELSA_RECOVER, &mPosition, 0,
 	                                nullptr, 0, 4);
 
 	kill();
-	mJuiceBlock->mPosition = mPosition;
+	mPosition = mJuiceBlock->mPosition;
 
 	gpMarioParticleManager->emitAndBindToPosPtr(0xCD, &mPosition, 0, nullptr);
 	getMActor()->setFrameRate(SMSGetAnmFrameRate(), ANM_TYPE_BCK);
@@ -823,6 +833,7 @@ bool TSmallEnemy::isFindMarioFromParam(float param_1) const
 
 void TSmallEnemy::generateEffectColumWater()
 {
+	char trash[8];
 	if (checkLiveFlag(LIVE_FLAG_CLIPPED_OUT))
 		return;
 
@@ -864,6 +875,7 @@ void TSmallEnemy::expandCollision()
 
 bool TSmallEnemy::isEaten()
 {
+	char trash[8];
 	if (mHolder && mHolder->getHeldObject() == this) {
 		MtxPtr mtx = mHolder->getTakingMtx();
 		if (mtx) {
@@ -910,10 +922,12 @@ void TSmallEnemy::behaveToHitOthers(THitActor* param_1)
 	if (!isCollidMove(param_1))
 		return;
 
+	const JGeometry::TVec3<f32>* otherPos = &param_1->getPosition();
+
 	JGeometry::TVec3<f32> result(0.0f, 0.0f, 0.0f);
 
-	JGeometry::TVec3<f32> local_14;
-	local_14.sub(mPosition, param_1->getPosition());
+	JGeometry::TVec3<f32> local_14(mPosition.x - otherPos->x, mPosition.y - otherPos->y,
+	                               mPosition.z - otherPos->z);
 
 	if (local_14.x == 0.0f && local_14.y == 0.0f && local_14.z == 0.0f)
 		local_14.x += 1.0f;

@@ -77,6 +77,7 @@ TEnemyMario::TSettingParams::TSettingParams(const char* path)
 
 void TEnemyMario::initValues()
 {
+	char trash[8];
 	mHealth     = mDeParams.mHpMax.get();
 	mDirty      = 0.0f;
 	mOilBrake   = 1.0f;
@@ -803,6 +804,7 @@ void TEnemyMario::emAppear()
 
 void TEnemyMario::startDisappear(u16 doing)
 {
+	char trash[0x10];
 	mDisappearPosition = mPosition;
 
 	u8 currentMap      = gpMarDirector->getCurrentMap();
@@ -861,6 +863,7 @@ void TEnemyMario::emDisappearToGate()
 
 void TEnemyMario::emReplay()
 {
+	char trash[0x18];
 	mInputReplays[mReplayIndex]->play(&mIntendedMag, &mIntendedYaw,
 	                                  &unk108->mInput, &unk108->mFrameInput,
 	                                  &unk108->mAnalogLU8, &unk108->mAnalogRU8);
@@ -1064,6 +1067,7 @@ void TEnemyMario::emPreDownAnimation()
 #pragma dont_inline on
 void TEnemyMario::emDownAnimation()
 {
+	char trash[0x28];
 	changePlayerStatus(MARIO_STATUS_NOMOTION, 0, true);
 	setAnimation(ANIM_FALL_DOWN_WAIT, 1.0f);
 
@@ -1221,6 +1225,7 @@ void TEnemyMario::emReplayRunAway()
 
 void TEnemyMario::decideDoingAfterCarry()
 {
+	char trash[0x20];
 	if (checkEMFlag(EM_FLAG_ENFORCE_TAKE)) {
 		offEMFlag(EM_FLAG_ENFORCE_TAKE);
 		emReplayWaitingToReplayJumpToNearestNode();
@@ -1435,6 +1440,7 @@ void TEnemyMario::considerAfter()
 
 void TEnemyMario::hitWater(THitActor* sender)
 {
+	char trash[0x10];
 	if (mSpecialModel != nullptr)
 		return;
 

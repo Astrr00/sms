@@ -32,6 +32,7 @@ BOOL TMario::startJumpWall()
 
 void TMario::doJumping()
 {
+	char trash[0x20];
 	f32 sideVel = 0.0f;
 	mForwardVel *= mJumpParams.mJumpSpeedBrake.get();
 
@@ -697,6 +698,7 @@ BOOL TMario::slipFalling()
 
 BOOL TMario::fireDowning()
 {
+	char trash[8];
 	if (mStatusTimer == 1)
 		startVoice(MSD_SE_MV05_DAMAGE_FIRE_01);
 	mStatusTimer += 1;
@@ -893,6 +895,7 @@ BOOL TMario::boardJumping()
 
 BOOL TMario::rocketCheck()
 {
+	char trash[0x20];
 	bool bVar2 = true;
 	if (mStatus == MARIO_STATUS_ROCKET)
 		bVar2 = false;
@@ -922,6 +925,7 @@ BOOL TMario::rocketCheck()
 
 BOOL TMario::rocketing()
 {
+	char trash[0x50];
 	if (!checkFlag(MARIO_FLAG_HAS_FLUDD))
 		return changePlayerStatus(MARIO_STATUS_ROCKET_LANDING, 0, 0);
 

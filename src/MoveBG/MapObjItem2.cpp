@@ -19,6 +19,17 @@
 #include <MSound/MSoundBGM.hpp>
 #include <M3DUtil/InfectiousStrings.hpp>
 
+namespace {
+template <class T> inline T MsMin(const T& a, const T& b)
+{
+	return a > b ? b : a;
+}
+template <class T> inline T MsMax(const T& a, const T& b)
+{
+	return a > b ? a : b;
+}
+} // namespace
+
 TMushroom1up::TMushroom1up(int param_1, const char* name)
     : TMapObjBase(name)
     , unk138(0)
@@ -44,6 +55,7 @@ void TMushroom1up::touchPlayer(THitActor* param_1)
 
 void TMushroom1up::makeObjAppeared()
 {
+	char trash[8];
 	TMapObjBase::makeObjAppeared();
 	mStateTimer = 1200;
 	unk138      = 0;
@@ -92,11 +104,12 @@ void TMushroom1up::control()
 			return;
 		}
 
+		char trash[12];
 		JGeometry::TVec3<f32> pos = SMS_GetMarioPos();
-		pos.x += 1.5f * (50.0f * MsCos(5.0f * t));
 		pos.y += 200.0f;
+		pos.x += 1.5f * (50.0f * MsCos(5.0f * t));
 		pos.z += 1.5f * (50.0f * MsSin(5.0f * t));
-		mPosition.set(pos);
+		mPosition = pos;
 
 		mScaling.set(1.5f, 1.5f, 1.5f);
 		mLinearVelocity.zero();
@@ -119,6 +132,7 @@ void TMushroom1up::control()
 	}
 
 	JGeometry::TVec3<f32> diff = SMS_GetMarioPos();
+	char trash2[4];
 	diff -= mPosition;
 	diff.y = 0.0f;
 	if (diff.isZero())
@@ -131,9 +145,9 @@ void TMushroom1up::control()
 	f32 delta = MsAngleDiff(angle, mRotation.y);
 	f32 step;
 	if (delta > 0.0f)
-		step = MsClamp(delta, -1.0f, 1.0f);
+		step = MsMin(delta, 1.0f);
 	else
-		step = MsClamp(delta, -1.0f, 1.0f);
+		step = MsMax(delta, -1.0f);
 
 	mRotation.y = MsWrap(mRotation.y + step, 0.0f, 360.0f);
 
@@ -144,6 +158,7 @@ void TMushroom1up::control()
 
 void TMushroom1up::perform(u32 cue, JDrama::TGraphics* graphics)
 {
+	char trash[0x18];
 	if (unk139 != 2 && mStateTimer < 240 && (cue & CUE_ENTRY)
 	    && gpMarDirector->mMoveTickCount % 6 > 2)
 		cue &= ~CUE_ENTRY;
@@ -162,6 +177,7 @@ TJumpBase::TJumpBase(const char* name)
 
 void TJumpBase::initMapObj()
 {
+	char trash[8];
 	TMapObjBase::initMapObj();
 	if (mMapCollisionManager) {
 		TMapCollisionBase* base = mMapCollisionManager->unk8;

@@ -121,6 +121,7 @@ static const GXColorS10 nameKuriTevColorData[7] = {
 
 void TNameKuriManager::initSetEnemies()
 {
+	char trash[16];
 	void* brainBmd           = JKRGetResource("/scene/namekuri2/brain.bmd");
 	SDLModelData* brainModel = new SDLModelData(J3DModelLoaderDataBase::load(
 	    brainBmd, J3DMLF_MaterialPEFull | J3DMLF_UseUniqueMaterials
@@ -283,6 +284,7 @@ TNameKuri::TNameKuri(const char* name)
 
 void TNameKuri::init(TLiveManager* param_1)
 {
+	char trash[40];
 	JKRHeap::getCurrentHeap()->getTotalFreeSize();
 
 	TWalkerEnemy::init(param_1);
@@ -401,6 +403,7 @@ void TNameKuri::calcRootMatrix()
 
 void TNameKuri::perform(u32 cue, JDrama::TGraphics* graphics)
 {
+	char trash[0x10];
 	TWalkerEnemy::perform(cue, graphics);
 	unk1CC->perform(cue, graphics);
 	if (cue & CUE_CALC_ANIM) {
@@ -422,6 +425,7 @@ void TNameKuri::moveObject()
 	TWalkerEnemy::moveObject();
 
 	JGeometry::TVec3<f32> local_50 = mVelocity;
+	char trash[0xc];
 	if (local_50.y < 0.0f
 	    && (mSpine->getCurrentNerve() == &TNerveWalkerGraphWander::theNerve()
 	        || mSpine->getCurrentNerve() == &TNerveWalkerEscape::theNerve())

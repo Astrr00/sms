@@ -80,6 +80,7 @@ TGKHitObj::TGKHitObj(TGateKeeperBase* owner, int joint_idx, const char* name)
 
 BOOL TGKHitObj::receiveMessage(THitActor* sender, u32 message)
 {
+	char trash[8];
 	if (sender->getActorType() == 0x1000001
 	    && message == HIT_MESSAGE_SPRAYED_BY_WATER) {
 		if (mVulnerable)
@@ -126,6 +127,7 @@ void TGateKeeperBase::kill() { onLiveFlag(LIVE_FLAG_DEAD); }
 
 BOOL TGateKeeperBase::receiveMessage(THitActor* sender, u32 message)
 {
+	char trash[8];
 	if (sender->getActorType() == 0x1000001) {
 		if (mVulnerable && message == HIT_MESSAGE_SPRAYED_BY_WATER)
 			unk154++;
@@ -598,6 +600,7 @@ const char** TBiancoGateKeeper::getBasNameTable() const
 
 void TBiancoGateKeeper::emitParticles()
 {
+	char trash[0x10];
 	const TNerveBase<TLiveActor>* sleep = &TNerveBGKSleep::theNerve();
 	if (mSpine->getLatestNerve() != sleep) {
 		const TNerveBase<TLiveActor>* goro = &TNerveBGKLaunchGoro::theNerve();
@@ -629,6 +632,7 @@ void TBiancoGateKeeper::emitParticles()
 
 void TBiancoGateKeeper::controlCollision()
 {
+	char trash[0x18];
 	if (mMActor->checkCurBckFromIndex(0xB)
 	    || mMActor->checkCurBckFromIndex(7)) {
 		mHead->mVulnerable = TRUE;
@@ -666,6 +670,7 @@ void TBiancoGateKeeper::controlCollision()
 
 void TBiancoGateKeeper::perform(u32 cue, JDrama::TGraphics* graphics)
 {
+	char trash[0x28];
 	if (checkLiveFlag(LIVE_FLAG_DEAD))
 		return;
 

@@ -32,6 +32,7 @@ f32 TMario::getJumpAccelControl() const
 
 f32 TMario::getJumpSlideControl() const
 {
+	char trash[8];
 	if (mStatus == MARIO_STATUS_WIRE_JUMP)
 		return mWireParams.mWireJumpSlideControl.get();
 
@@ -43,6 +44,7 @@ f32 TMario::getJumpSlideControl() const
 
 bool TMario::canSquat() const
 {
+	char trash[0x20];
 	if (checkFlag(MARIO_FLAG_HAS_FLUDD) && mWaterGun
 	    && ((const TWaterGun*)mWaterGun)
 	               ->getCurrentNozzle()
@@ -400,7 +402,21 @@ void TMario::isTurnStart() { }
 
 void TMario::isTurnning() { }
 
-void TMario::setMissJumping() { }
+inline void TMario::setMissJumping()
+{
+	mFaceAngle.x    = 0;
+	mModelFaceAngle = mFaceAngle.y;
+	if (mForwardVel > 0.0f) {
+		s16 a     = mSlopeAngle + 0x8000;
+		s16 angle = mFaceAngle.y - a;
+		f32 x     = mForwardVel * JMASSin(angle);
+		f32 z     = mForwardVel * JMASCos(angle) * 0.75f;
+		setPlayerVelocity(MsSqrtf(x * x + z * z));
+		mFaceAngle.y = a + matan(z, x);
+	}
+	dropObject();
+	changePlayerStatus(MARIO_STATUS_MISS_JUMP, 0, false);
+}
 
 void TMario::setPlayerJumpSpeed(f32 speed_mult, f32 force)
 {
@@ -750,20 +766,7 @@ int TMario::changePlayerStatus(u32 status, u32 arg, bool force)
 BOOL TMario::changePlayerTriJump()
 {
 	if (isJumpMiss()) {
-		mFaceAngle.x    = 0;
-		mModelFaceAngle = mFaceAngle.y;
-		if (mForwardVel > 0.0f) {
-			// TODO: inline
-			s16 a     = mSlopeAngle + 0x8000;
-			s16 angle = mFaceAngle.y - a;
-			f32 x     = mForwardVel * JMASSin(angle);
-			f32 z     = mForwardVel * JMASCos(angle) * 0.75f;
-			f32 mag   = MsSqrtf(x * x + z * z);
-			setPlayerVelocity(mag);
-			mFaceAngle.y = a + matan(z, x);
-		}
-		dropObject();
-		changePlayerStatus(MARIO_STATUS_MISS_JUMP, 0, false);
+		setMissJumping();
 	} else {
 		if (considerRotateJumpStart())
 			return 1;
@@ -777,20 +780,7 @@ BOOL TMario::changePlayerTriJump()
 int TMario::changePlayerJumping(u32 param_1, u32 param_2)
 {
 	if (isJumpMiss()) {
-		mFaceAngle.x    = 0;
-		mModelFaceAngle = mFaceAngle.y;
-		if (mForwardVel > 0.0f) {
-			// TODO: inline
-			s16 a     = mSlopeAngle + 0x8000;
-			s16 angle = mFaceAngle.y - a;
-			f32 x     = mForwardVel * JMASSin(angle);
-			f32 z     = mForwardVel * JMASCos(angle) * 0.75f;
-			f32 mag   = MsSqrtf(x * x + z * z);
-			setPlayerVelocity(mag);
-			mFaceAngle.y = a + matan(z, x);
-		}
-		dropObject();
-		changePlayerStatus(MARIO_STATUS_MISS_JUMP, 0, false);
+		setMissJumping();
 	} else {
 		if (considerRotateJumpStart())
 			return 1;
@@ -842,6 +832,7 @@ void TMario::checkGraffitoDamage() { }
 
 void TMario::checkGraffitoFire()
 {
+	char trash[0x30];
 	if (isInvincible())
 		return;
 
@@ -877,6 +868,7 @@ void TMario::checkGraffitoLava() { }
 
 void TMario::checkGraffitoSlip()
 {
+	char trash[8];
 	if (isTouchGround4cm()) {
 		mFootPrintTimer = mDeParams.mFootPrintTimerMax.get();
 
@@ -939,6 +931,7 @@ void TMario::checkGraffitoSlip()
 
 void TMario::checkGraffitoElec()
 {
+	char trash[0x30];
 	(void)0;
 	(void)0;
 	(void)0;
@@ -1144,6 +1137,7 @@ void TMario::dirtyLimitCheck()
 
 void TMario::thinkDirty()
 {
+	char trash[8];
 	if (checkFlag(MARIO_FLAG_DIRTY)) {
 		if (mStatus == MARIO_STATUS_RUN || mStatus == MARIO_STATUS_OIL_RUN)
 			mDirty += mDirtyParams.mIncRunning.get();
@@ -1181,7 +1175,8 @@ void TMario::thinkDirty()
 
 void TMario::thinkHeight()
 {
-	if (checkStatusType(MARIO_STATUS_FLAG_JUMPING)) {
+	bool jumping = checkStatusType(MARIO_STATUS_FLAG_JUMPING);
+	if (jumping) {
 		f32 height = mPosition.y - mFloorPosition.y;
 		if (unk36C < height)
 			unk36C = height;
@@ -1272,6 +1267,7 @@ static void startForceJumpSound2(Vec* param_1, u32 param_2, f32 param_3,
 
 void TMario::checkEnforceJump()
 {
+	char trash[0x18];
 	if (mGroundPlane->isLegal() && mGroundPlane->isBounceOnLanding()
 	    && isTouchGround4cm() && (mPrevStatus & MARIO_STATUS_FLAG_JUMPING)) {
 
@@ -1301,6 +1297,7 @@ void TMario::checkReturn()
 
 void TMario::checkThrowObject()
 {
+	char trash[8];
 	if (mModel->unkC[0].checkPass(4.0f)) {
 		startVoice(MSD_SE_MV15_EXERT_INST_01);
 		dropObject();
@@ -2226,6 +2223,7 @@ void TMario::thinkSand()
 
 void TMario::thinkParams()
 {
+	char trash[0x18];
 	mRotation.y = SHORTANGLE2DEG(mFaceAngle.y);
 	if (mInvincibilityFrames > 0)
 		mInvincibilityFrames -= 1;

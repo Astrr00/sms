@@ -218,6 +218,7 @@ void TMapObjTreeScale::startScaleUp()
 
 u32 TMapObjTreeScale::touchWater(THitActor* water)
 {
+	char trash[8];
 	if (mScaling.x == 1.0f)
 		return TMapObjGeneral::touchWater(water);
 
@@ -229,6 +230,7 @@ u32 TMapObjTreeScale::touchWater(THitActor* water)
 
 void TMapObjTreeScale::control()
 {
+	char trash[0x20];
 	switch (mState) {
 	case STATE_SMALL:
 		if (SMSGetMarDirector()->getCurrentMap() != 4
@@ -320,6 +322,7 @@ void TMapObjTreeScale::beSmall()
 
 void TMapObjTreeScale::loadAfter()
 {
+	char trash[0x10];
 	TMapObjGeneral::loadAfter();
 
 	if (SMSGetMarDirector()->getCurrentMap() == 4

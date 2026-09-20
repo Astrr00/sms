@@ -33,6 +33,8 @@
 // TODO: these come from some header...
 static const char cDirtyFileName[] = "/scene/map/pollution/H_ma_rak.bti";
 static const char cDirtyTexName[]  = "H_ma_rak_dummy";
+static const Vec cZeroVec = { 0.0f, 0.0f, 0.0f };
+static const Vec cOneVec  = { 1.0f, 1.0f, 1.0f };
 
 TNozzleBmdData nozzleBmdData = {
 	{
@@ -246,6 +248,7 @@ void TNozzleBase::calcGunAngle(const TMarioControllerWork& work)
 
 void TNozzleBase::movement(const TMarioControllerWork& controllerWork)
 {
+	char trash[8];
 	if (mFludd->mCurrentWater <= 0) {
 		return;
 	}
@@ -863,6 +866,7 @@ void TNozzleTrigger::animation(int param_1)
 
 void TNozzleDeform::movement(const TMarioControllerWork& controllerWork)
 {
+	char trash[0x10];
 	if (!mFludd->hasWater()) {
 		return;
 	}
@@ -1421,6 +1425,7 @@ void TWaterGun::initInLoadAfter() { }
 #pragma dont_inline on
 MtxPtr TWaterGun::getEmitMtx(int jointIndex)
 {
+	char trash[0x30];
 	MtxPtr result = nullptr;
 	if (mMario->onYoshi()) {
 		result = mMario->mYoshi->getTongueMtx();
@@ -1453,6 +1458,7 @@ MtxPtr TWaterGun::getNozzleMtx()
 
 void TWaterGun::changeNozzle(TNozzleType nozzleType, bool animate)
 {
+	char trash[0x40];
 	f32 usedWater = (f32)mCurrentWater
 	                / mNozzleList[mCurrentNozzle]->mEmitParams.mAmountMax.get();
 	if (nozzleType == Spray) {
@@ -1545,7 +1551,6 @@ void TWaterGun::movement()
 void TWaterGun::setBaseTRMtx(Mtx mtx)
 {
 	Mtx result;
-	Mtx temp;
 
 	f32 initialAngle = mtx[1][0];
 	if (initialAngle < 0.0f)
@@ -1555,6 +1560,7 @@ void TWaterGun::setBaseTRMtx(Mtx mtx)
 	s16 angle = initialAngle * (unk1D04 - unk1D06) + unk1D06;
 
 	f32 angleDegrees = SHORTANGLE2DEG(angle);
+	Mtx temp;
 	MsMtxSetRotRPH(temp, 0.0f, 0.0f, angleDegrees);
 
 	MTXConcat(mtx, temp, result);
@@ -1563,6 +1569,8 @@ void TWaterGun::setBaseTRMtx(Mtx mtx)
 
 void TWaterGun::calcAnimation(JDrama::TGraphics* graphics)
 {
+	volatile u32 unused[12];
+
 	gpMarioForCallBack      = mMario;
 	J3DFrameCtrl* frameCtrl = mFluddModel->getFrameCtrl(ANM_TYPE_BCK);
 	if (mMario == nullptr)
@@ -1674,6 +1682,7 @@ TNozzleBase* TWaterGun::getCurrentNozzle() const
 
 void TWaterGun::setAmountToRate(f32 rate)
 {
+	char trash[0x18];
 	// volatile u32 unused2[7]; // TODO: possibly inlined function
 	if (mCurrentNozzle == 3) {
 		TNozzleBase* currentNozzle = getCurrentNozzle();
@@ -1687,6 +1696,7 @@ void TWaterGun::setAmountToRate(f32 rate)
 
 BOOL TWaterGun::isPressureOn()
 {
+	char trash[0x18];
 	// volatile u32 unused2[6];
 	if (getCurrentNozzle()->getNozzleKind() == 1) {
 		TNozzleTrigger* triggerNozzle = (TNozzleTrigger*)getCurrentNozzle();
@@ -1699,6 +1709,7 @@ BOOL TWaterGun::isPressureOn()
 
 f32 TWaterGun::getPressure()
 {
+	char trash[0x10];
 	// TODO: Missing stack space
 	// volatile u32 unused2[5];
 	if (getCurrentNozzle()->getNozzleKind() == 1) {
@@ -1710,6 +1721,7 @@ f32 TWaterGun::getPressure()
 
 f32 TWaterGun::getPressureMax()
 {
+	char trash[0x10];
 	// TODO: Missing stack space
 	// volatile u32 unused2[6];
 
@@ -1726,6 +1738,7 @@ void TWaterGun::getEmitPosDirSpeed(int index, JGeometry::TVec3<f32>* pos,
                                    JGeometry::TVec3<f32>* dir,
                                    JGeometry::TVec3<f32>* speed)
 {
+	char trash[0x18];
 	// TODO: Fix unused stack space
 	// volatile u32 unused2[6];
 
@@ -1779,6 +1792,7 @@ void TWaterGun::triggerPressureMovement(
 }
 void TWaterGun::emit()
 {
+	char trash[0x50];
 	// TODO: Missing stack space
 	// volatile u32 unused1[25];
 
@@ -1845,6 +1859,7 @@ void TWaterGun::emit()
 }
 BOOL TWaterGun::suck()
 {
+	char trash[0x28];
 	// TODO: Missing stack space
 	// volatile u32 unused1[7];
 	if (mCurrentNozzle == (s8)Yoshi) {
@@ -1888,6 +1903,7 @@ BOOL TWaterGun::damage()
 
 void TWaterGun::changeBackup()
 {
+	char trash[8];
 	// TODO: Missing stack space
 	// volatile u32 unused2[5];
 	if (mSwitchToSecondNozzleProgress == 0.0f) {

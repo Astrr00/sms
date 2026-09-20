@@ -621,6 +621,7 @@ void TMario::soundMovement()
 
 void TMario::animSound()
 {
+	char trash[0x30];
 	mSoundFlags = mGroundPlane->unk6;
 
 	if (checkFlag(MARIO_FLAG_DIRTY)) {
@@ -715,6 +716,7 @@ u32 TMario::startVoice(u32 param_1)
 
 u32 TMario::startVoiceIfNoVoice(u32 param_1)
 {
+	char trash[8];
 	if (SMSGetMSound()->getMarioVoiceID(0) == -1)
 		return startVoice(param_1);
 

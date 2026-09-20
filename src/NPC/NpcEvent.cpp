@@ -53,9 +53,8 @@ static void evGetAddressFromViewObjName(TSpcTypedInterp<TEventWatcher>* interp,
 {
 	interp->verifyArgNum(1, &arg_num);
 	const char* name = interp->pop().getDataString();
-	JDrama::TViewObj* viewObj
-	    = static_cast<JDrama::TViewObj*>(JDrama::TNameRefGen::search(name));
-	interp->push((int)viewObj);
+	interp->push((int)static_cast<JDrama::TViewObj*>(
+	    JDrama::TNameRefGen::search(name)));
 }
 
 static void evCheckCurNerve4Npc(TSpcTypedInterp<TEventWatcher>* interp,
@@ -217,11 +216,11 @@ static void evResetFruitNum(TSpcTypedInterp<TEventWatcher>* interp, u32 arg_num)
 static void evGetFruitNum(TSpcTypedInterp<TEventWatcher>* interp, u32 arg_num)
 {
 	interp->verifyArgNum(2, &arg_num);
-	int fVar4                 = interp->pop().getDataInt();
+	u32 fVar4                 = interp->pop().getDataInt();
 	TFruitBasketEvent* basket = (TFruitBasketEvent*)interp->pop().getDataInt();
 
 	int iVar3 = 0;
-	switch (fVar4) {
+	switch ((int)fVar4) {
 	case 0:
 		iVar3 = 0;
 		break;
@@ -246,13 +245,13 @@ static void evGetFruitNum(TSpcTypedInterp<TEventWatcher>* interp, u32 arg_num)
 static void evSetFruitType(TSpcTypedInterp<TEventWatcher>* interp, u32 arg_num)
 {
 	interp->verifyArgNum(3, &arg_num);
-	int fVar5                 = interp->pop().getDataInt();
-	int fVar4                 = interp->pop().getDataInt();
+	u32 fVar5                 = interp->pop().getDataInt();
+	u32 fVar4                 = interp->pop().getDataInt();
 	TFruitBasketEvent* basket = (TFruitBasketEvent*)interp->pop().getDataInt();
+	int r28;
 
-	if (fVar5 != 0) {
-		int r28;
-		switch (fVar4) {
+	if ((int)fVar5 != 0) {
+		switch ((int)fVar4) {
 		case 0:
 			r28 = 0x40000394;
 			break;
@@ -350,6 +349,7 @@ void TNpcEvent::initDownSunflowerNum()
 
 static s32 ReviveSunflowerCallBack(u32 param_1, u32 param_2)
 {
+	char trash[0x10];
 	if (param_2 == 0) {
 		TBaseNPC* sunflower = (TBaseNPC*)param_1;
 		sunflower->sunflowerReviveIn();

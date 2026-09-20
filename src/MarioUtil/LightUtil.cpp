@@ -195,6 +195,7 @@ TLightDrawBuffer::TLightDrawBuffer(int param_1, u32 param_2, const char* name)
     , mXluDrawBufferObject(nullptr)
     , unk80(param_1)
 {
+	char trash[8];
 	snprintf(unk1C, 0x32, "%s%s", name, "opa");
 	mOpaDrawBufferObject = new JDrama::TDrawBufObj(3, param_2, unk1C);
 
@@ -302,6 +303,7 @@ int TLightWithDBSet::getAmbIndex(const char* name)
 
 void TPlayerLightWithDBSet::makeDrawBuffer()
 {
+	char trash[32];
 	static const char lightName[] = "太陽（プレイヤー）";
 	static const char ambName[]   = "太陽アンビエント（プレイヤー）";
 
@@ -321,6 +323,7 @@ void TPlayerLightWithDBSet::makeDrawBuffer()
 
 void TObjectLightWithDBSet::makeDrawBuffer()
 {
+	char trash[32];
 	static const char lightName[] = "太陽（オブジェクト）";
 	static const char ambName[]   = "太陽アンビエント（オブジェクト）";
 
@@ -340,6 +343,7 @@ void TObjectLightWithDBSet::makeDrawBuffer()
 
 void TMapObjectLightWithDBSet::makeDrawBuffer()
 {
+	char trash[32];
 	static const char lightName[] = "太陽（オブジェクト）";
 	static const char ambName[]   = "太陽アンビエント（オブジェクト）";
 
@@ -360,6 +364,7 @@ void TMapObjectLightWithDBSet::makeDrawBuffer()
 
 void TIndirectLightWithDBSet::makeDrawBuffer()
 {
+	char trash[32];
 	static const char lightName[] = "太陽（オブジェクト）";
 	static const char ambName[]   = "太陽アンビエント（オブジェクト）";
 

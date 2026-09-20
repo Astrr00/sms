@@ -82,6 +82,7 @@ void TPoiHanaManager::perform(u32 cue, JDrama::TGraphics* graphics)
 
 void TPoiHanaManager::initSetEnemies()
 {
+	char trash[0xa0];
 	int bodyIdx
 	    = getObj(0)->getModel()->getModelData()->getMaterialName()->getIndex(
 	        "_body");
@@ -186,6 +187,7 @@ void TPoiHana::reset()
 
 void TPoiHana::moveObject()
 {
+	char trash[0x10];
 	if (checkLiveFlag(LIVE_FLAG_CLIPPED_OUT)) {
 		unk1BC->mPosition = mPosition;
 	} else {
@@ -553,6 +555,7 @@ void TSleepPoiHana::load(JSUMemoryInputStream& stream)
 
 DEFINE_NERVE(TNervePoihanaSleep, TLiveActor)
 {
+	char trash[8];
 	TPoiHana* self = (TPoiHana*)spine->getBody();
 
 	if (spine->getTime() == 0) {
@@ -610,6 +613,7 @@ DEFINE_NERVE(TNervePoihanaSleep, TLiveActor)
 
 DEFINE_NERVE(TNervePoihanaFreeze, TLiveActor)
 {
+	char trash[0x10];
 	TPoiHana* self = (TPoiHana*)spine->getBody();
 
 	if (spine->getTime() == 0) {

@@ -90,6 +90,7 @@ void TMapObjGeneral::sink()
 
 void TMapObjGeneral::put()
 {
+	char trash[8];
 	mHolder                    = nullptr;
 	mHolder                    = nullptr;
 	s32 preservedTimeTilAppear = getStateTimer();
@@ -150,6 +151,7 @@ void TMapObjGeneral::touchingPlayer()
 
 void TMapObjGeneral::holding()
 {
+	char trash[8];
 	mPosition     = mHolder->mPosition;
 	mGroundHeight = gpMap->checkGround(mPosition, &mGroundPlane);
 }
@@ -180,6 +182,7 @@ void TMapObjGeneral::recovering()
 
 void TMapObjGeneral::sinking()
 {
+	char trash[8];
 	mPosition.y -= mMapObjData->mSink->unk0;
 
 	for (int i = 0; i < getColNum(); ++i) {
@@ -316,6 +319,7 @@ void TMapObjGeneral::hold(TTakeActor* actor)
 
 void TMapObjGeneral::ensureTakeSituation()
 {
+	char trash[8];
 	TMapObjBase::ensureTakeSituation();
 	if (isState(STATE_HOLDING) && mHolder == nullptr) {
 		mState = STATE_NORMAL;
@@ -337,6 +341,7 @@ void TMapObjGeneral::kill()
 
 void TMapObjGeneral::appear()
 {
+	char trash[8];
 	makeObjAppeared();
 	startAnim(1);
 	if (checkMapObjFlag(MAP_OBJ_FLAG_UNK800000)) {
@@ -543,6 +548,7 @@ void TMapObjGeneral::bind()
 
 void TMapObjGeneral::control()
 {
+	char trash[8];
 	TMapObjBase::control();
 	if (checkMapObjFlag(MAP_OBJ_FLAG_CAN_SINK) && isState(STATE_NORMAL)
 	    && !isAirborne() && isPollutedGround(mPosition))

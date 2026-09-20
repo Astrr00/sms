@@ -286,8 +286,10 @@ void THamuKuriManager::setSearchHamuKuri()
 	}
 }
 
+#pragma dont_inline on
 void THamuKuriManager::requestSerialKill(THamuKuri* param_1)
 {
+	char trash[8];
 	int trampled = 1;
 
 	THamuKuriSaveLoadParams* params = (THamuKuriSaveLoadParams*)unk38;
@@ -307,6 +309,7 @@ void THamuKuriManager::requestSerialKill(THamuKuri* param_1)
 		                             param_1->mPosition.z, 0x20000005, true);
 	}
 }
+#pragma dont_inline off
 
 void THamuKuriManager::checkSerialKill()
 {
@@ -429,6 +432,7 @@ TSpineEnemy* TDangoHamuKuriManager::createEnemyInstance()
 void TDangoHamuKuriManager::createModelDataArray(
     const TModelDataLoadEntry* param_1)
 {
+	char trash[8];
 	THamuKuriManager* manager
 	    = (THamuKuriManager*)gpConductor->getManagerByName(
 	        "ハムクリマネージャー");
@@ -830,6 +834,7 @@ void THamuKuri::canGoForSearchActor() { }
 
 void THamuKuri::behaveToFindMario()
 {
+	char trash[8];
 	TWalkerEnemy::behaveToFindMario();
 	SMSGetMSound()->startSoundActor(MSD_SE_EN_HMKRI_VO_ATTACK, &mPosition, 0,
 	                                nullptr, 0, 4);
@@ -849,6 +854,7 @@ void THamuKuri::attackToMario()
 
 void THamuKuri::moveObject()
 {
+	char trash[8];
 	if (unk198) {
 		offLiveFlag(LIVE_FLAG_CLIPPED_OUT);
 		if (!isAirborne()) {
@@ -895,6 +901,7 @@ void THamuKuri::moveObject()
 
 void THamuKuri::setBehavior()
 {
+	char trash[8];
 	if (isAirborne() && mPosition.y > mGroundHeight + 250.0f
 	    && mSpine->getCurrentNerve() != &TNerveWalkerGenerate::theNerve()) {
 		unk1F0 = 1;
@@ -909,8 +916,10 @@ void THamuKuri::setBehavior()
 
 void THamuKuri::changeCapHolder() { }
 
+#pragma dont_inline on
 void THamuKuri::selectCapHolder()
 {
+	char trash[8];
 	if (!gpMarioOriginal->isWearingCap()) {
 		sendAttackMsgToMario();
 	} else {
@@ -926,6 +935,7 @@ void THamuKuri::selectCapHolder()
 		}
 	}
 }
+#pragma dont_inline off
 
 void THamuKuri::makeCapFly(TMapObjBase* param_1)
 {
@@ -1000,6 +1010,7 @@ void THamuKuri::genRandomItem() { TSmallEnemy::genRandomItem(); }
 
 void THamuKuri::setAfterDeadEffect()
 {
+	char trash[8];
 	if (unk198) {
 		TMapObjBase* obj = gpItemManager->makeObjAppear(
 		    mPosition.x, mPosition.y, mPosition.z, 0x2000003c, true);
@@ -1051,6 +1062,7 @@ void THamuKuri::setWalkAnm() { setBckAnm(4); }
 
 void THamuKuri::setDeadAnm()
 {
+	char trash[0x18];
 	if (unk198 && mHeldObject != nullptr
 	    && mHeldObject->receiveMessage(this, HIT_MESSAGE_PUT)) {
 		TMapObjBase* heldObj = (TMapObjBase*)mHeldObject;
@@ -1085,6 +1097,7 @@ void THamuKuri::setRollAnm() { setBckAnm(7); }
 
 void THamuKuri::setCrashAnm()
 {
+	char trash[8];
 	if (unk198 && mHeldObject != nullptr
 	    && mHeldObject->receiveMessage(this, HIT_MESSAGE_PUT)) {
 		TMapObjBase* heldObj = (TMapObjBase*)mHeldObject;
@@ -1347,6 +1360,7 @@ BOOL THaneHamuKuri::isReachedToGoal() const
 
 void THaneHamuKuri::attackToMario()
 {
+	char trash[8];
 	SMSGetMSound()->startSoundActor(MSD_SE_EN_HANEKURI_ATTACK, &mPosition, 0,
 	                                nullptr, 0, 4);
 	sendAttackMsgToMario();
@@ -1372,6 +1386,7 @@ void THaneHamuKuri::setCrashAnm() { setBckAnm(0); }
 
 void THaneHamuKuri::setDeadAnm()
 {
+	char trash[0x18];
 	if (unk198 && mHeldObject != nullptr
 	    && mHeldObject->receiveMessage(this, HIT_MESSAGE_PUT)) {
 		TMapObjBase* heldObj = (TMapObjBase*)mHeldObject;
@@ -1414,6 +1429,7 @@ TDoroHaneKuri::TDoroHaneKuri(const char* name)
 
 void TDoroHaneKuri::init(TLiveManager* param_1)
 {
+	char trash[8];
 	THaneHamuKuri::init(param_1);
 
 	mSpine->initWith(&TNerveWalkerGraphWander::theNerve());
@@ -1473,6 +1489,7 @@ void TDoroHaneKuri::behaveToWater(THitActor*)
 
 void TDoroHaneKuri::setBehavior()
 {
+	char trash[0x18];
 	if (mSpine->getCurrentNerve() == &TNerveSmallEnemyDie::theNerve()
 	    && mHeldObject && mHeldObject->receiveMessage(this, HIT_MESSAGE_PUT)) {
 		TMapObjBase* held = (TMapObjBase*)mHeldObject;
@@ -2044,6 +2061,7 @@ void TFireHamuKuri::behaveToWater(THitActor* param_1)
 
 void TFireHamuKuri::reset()
 {
+	char trash[8];
 	THamuKuri::reset();
 	mHitPoints = getSaveParam() ? getSaveParam()->mSLHitPointMax.get() : 1;
 	unk150 &= ~0x2;
@@ -2071,6 +2089,7 @@ void TFireHamuKuri::moveObject()
 
 void TFireHamuKuri::calcRootMatrix()
 {
+	char trash[0x10];
 	TSpineEnemy::calcRootMatrix();
 	if (unk210 && !checkLiveFlag(LIVE_FLAG_CLIPPED_OUT)) {
 		if (JPABaseEmitter* emitter
@@ -2173,8 +2192,10 @@ void TFireHamuKuri::sendAttackMsgToMario()
 		SMS_SendMessageToMario(this, HIT_MESSAGE_ATTACK);
 }
 
+#pragma dont_inline on
 void TFireHamuKuri::changeTevColor()
 {
+	char trash[8];
 	if (recoverFire()) {
 		unk21C.r = (mFireHamNoseColorDiff.r * unk218) / 30
 		           + mFireHamNoseColorStart.r;
@@ -2191,6 +2212,7 @@ void TFireHamuKuri::changeTevColor()
 		           + mFireHamOtherColorStart.b;
 	}
 }
+#pragma dont_inline off
 
 TDoroHamuKuri::TDoroHamuKuri(const char* name)
     : THamuKuri(name)
@@ -2199,6 +2221,7 @@ TDoroHamuKuri::TDoroHamuKuri(const char* name)
 
 void TDoroHamuKuri::init(TLiveManager* param_1)
 {
+	char trash[8];
 	THamuKuri::init(param_1);
 	mActorType = 0x10000013;
 	mSpine->initWith(&TNerveWalkerGenerate::theNerve());
@@ -2236,6 +2259,7 @@ void TDoroHamuKuri::attackToMario()
 
 void TDoroHamuKuri::setBehavior()
 {
+	char trash[0x10];
 	TDoroHamuKuriManager* man = (TDoroHamuKuriManager*)getManager();
 	if (!unk198 && man->unk70) {
 		if (mSpine->getCurrentNerve() == &TNerveWalkerGraphWander::theNerve()
@@ -2360,7 +2384,7 @@ DEFINE_NERVE(TNerveHamuKuriBoundFreeze, TLiveActor)
 		self->unk1E4.x              = thing.x;
 		self->unk1E4.y              = thing.y;
 		self->unk1E4.z              = thing.z;
-		self->setGoalPathMario();
+		self->setGoalPath(TPathNode((THitActor*)gpMarioAddress));
 		self->unk1E0 = 1;
 	}
 
@@ -2515,7 +2539,7 @@ DEFINE_NERVE(TNerveHaneHamuKuriUpWait, TLiveActor)
 	THaneHamuKuri* self = (THaneHamuKuri*)spine->getBody();
 	if (spine->getTime() < 1) {
 		self->setWaitAnm();
-		self->setGoalPathMario();
+		self->setGoalPath(TPathNode((THitActor*)gpMarioAddress));
 	}
 
 	self->mScaling.x = self->mScaling.z
@@ -2541,7 +2565,7 @@ DEFINE_NERVE(TNerveHaneHamuKuriMoveOnGraph, TLiveActor)
 		self->setWalkAnm();
 		self->initialGraphNode();
 		if (self->getTracer()->getGraph()->getNodeNum() == 1)
-			self->setGoalPathMario();
+			self->setGoalPath(TPathNode((THitActor*)gpMarioAddress));
 	}
 
 	if (self->getTracer()->getGraph()->getNodeNum() == 1) {

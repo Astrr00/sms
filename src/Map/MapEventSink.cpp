@@ -212,6 +212,7 @@ TMapEventSink::TMapEventSink(const char* name)
 
 bool TMapEventSinkInPollution::watch()
 {
+	char trash[0x18];
 	for (int i = 0; i < mBuildingNum; ++i) {
 		if (!mIsBuildingRecovered[i] && getPollutionObj(i)->isCleaned()) {
 			mRaisingBuildingIdx = i;
@@ -223,6 +224,7 @@ bool TMapEventSinkInPollution::watch()
 
 void TMapEventSinkInPollution::initBuriedBuilding()
 {
+	char trash[0x18];
 	for (int i = 0; i < mBuildingNum; ++i)
 		if (getPollutionObj(i)->isCleaned())
 			makeBuildingRecovered(i);
@@ -230,6 +232,13 @@ void TMapEventSinkInPollution::initBuriedBuilding()
 
 void TMapEventSinkInPollution::loadAfter()
 {
+	// The two extra locals raise this function's inline cost just enough that
+	// MWCC still inlines it into TMapEventSinkInPollutionReset::loadAfter(),
+	// but no longer into TMapEventSinkBianco::loadAfter() (one level deeper),
+	// which is what retail does. trash is shrunk to keep the frame size.
+	char trash[0x40];
+	int trash2 = 0;
+	int trash3 = 0;
 	TMapEventSink::loadAfter();
 	for (int i = 0; i < mBuildingNum; ++i) {
 		gpPollution->getCounterObj().registerPollutionObj(
@@ -244,6 +253,7 @@ TPollutionObj* TMapEventSinkInPollutionReset::getResetPollutionObj(int i)
 
 void TMapEventSinkInPollutionReset::makeBuildingRecovered(int i)
 {
+	char trash[0x40];
 	TMapEventSinkInPollution::makeBuildingRecovered(i);
 	getPollutionObj(i)->kill();
 	getResetPollutionObj(i)->alive();
@@ -287,6 +297,7 @@ void TMapEventSinkBianco::finishControl()
 
 void TMapEventSinkBianco::rising()
 {
+	char trash[0x18];
 	TMapEventSinkInPollutionReset::rising();
 	if (mRaisingBuildingIdx == 0)
 		TMapObjBase::moveJoint(unk64, 0.0f, unk3C, 0.0f);
@@ -294,6 +305,7 @@ void TMapEventSinkBianco::rising()
 
 bool TMapEventSinkBianco::control()
 {
+	char trash[0x10];
 	if (mRaisingBuildingIdx == 0 && unk4C == unk7C) {
 		gpItemManager->makeShineAppearWithTime(
 		    "シャイン（坂上げ用）", 300, unk50[mRaisingBuildingIdx].x,
@@ -343,6 +355,7 @@ void TMapEventSinkBianco::startControl()
 
 bool TMapEventSinkBianco::watch()
 {
+	char trash[0x18];
 	if (!mIsBuildingRecovered[0]
 	    && mGateKeeper->checkLiveFlag(LIVE_FLAG_DEAD)) {
 		mRaisingBuildingIdx = 0;
@@ -367,6 +380,7 @@ bool TMapEventSinkBianco::watch()
 
 void TMapEventSinkBianco::loadAfter()
 {
+	char trash[0x40];
 	TMapEventSinkInPollutionReset::loadAfter();
 
 	TMapStaticObj* ref
@@ -395,6 +409,7 @@ void TMapEventSinkBianco::load(JSUMemoryInputStream& stream)
 
 void TMapEventSinkShadowMario::rising()
 {
+	char trash[0x18];
 	TMapEventSink::rising();
 	unk64[mRaisingBuildingIdx]->mPosition.y += unk3C;
 }

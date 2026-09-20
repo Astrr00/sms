@@ -110,6 +110,7 @@ BOOL TMario::barWait()
 
 BOOL TMario::barClimb()
 {
+	char trash[0x30];
 	if (mHolder == nullptr)
 		return changePlayerStatus(MARIO_STATUS_LAND_SAFE_DOWN, 0, false);
 
@@ -257,6 +258,8 @@ int TMario::doRoofMovingProcess()
 	newPos.z = mPosition.z - mVel.z * mRoofPlane->getNormal().y;
 	newPos.y = mPosition.y;
 
+	char trash[4];
+
 	int code = hangingCheckRoof(&newPos);
 	if (code == 2)
 		code = 0;
@@ -278,6 +281,7 @@ void TMario::doRoofWaitingProcess()
 
 BOOL TMario::roofCommonEvents()
 {
+	char trash[8];
 	if (mInput & 0x8000) {
 		mInput &= ~0x8000;
 		return changePlayerStatus(MARIO_STATUS_LANDING, 0, false);
@@ -1522,6 +1526,7 @@ BOOL TMario::fencePunch()
 			}
 		}
 	}
+	char trash[16];
 
 	if (isLast1AnimeFrame()) {
 		changePlayerStatus(MARIO_STATUS_FENCE_MOVE, 0, false);

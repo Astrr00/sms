@@ -534,6 +534,7 @@ void THinokuri2::init(TLiveManager* param_1)
 
 void THinokuri2::reset()
 {
+	char trash[0x28];
 	TSpineEnemy::reset();
 	onLiveFlag(LIVE_FLAG_UNK8);
 	resetPolInterval();
@@ -676,6 +677,7 @@ void THinokuri2::generateEnemy()
 
 void THinokuri2::updateAnmSound()
 {
+	char trash[8];
 	TSpineEnemy::updateAnmSound();
 	if (unk158 > 0)
 		SMSGetMSound()->startSoundActor(MSD_SE_BS_HINO_SEED_LQ_LEV, &mPosition,
@@ -772,8 +774,8 @@ BOOL THinokuri2::receiveMessageLv1(THitActor* sender, u32 message)
 
 		++unk18C;
 
-		if (mSpine->getCurrentNerve() != &TNerveHino2Freeze::theNerve())
-			mSpine->setNext(&TNerveHino2Freeze::theNerve());
+		if (mSpine->getCurrentNerve() != &TNerveHino2Damage::theNerve())
+			mSpine->setNext(&TNerveHino2Damage::theNerve());
 
 		return true;
 	}
@@ -796,6 +798,7 @@ BOOL THinokuri2::receiveMessageLv1(THitActor* sender, u32 message)
 
 BOOL THinokuri2::receiveMessageLv2(THitActor* sender, u32 message)
 {
+	char trash[0x40];
 	if (sender->getActorType() == 0x1000001
 	    && message == HIT_MESSAGE_SPRAYED_BY_WATER) {
 		if (mJointIdxMessageCameFrom != 0x13)
@@ -1192,9 +1195,9 @@ DEFINE_NERVE(TNerveHino2PrePol, TLiveActor)
 			if (wait > uVar5) {
 				f32 prob = self->getSaveParam()->mSLStampProb.get();
 				if (rand() * (1.0f / (RAND_MAX + 1)) < prob) {
-					spine->pushAfterCurrent(&TNerveHino2Pollute::theNerve());
-				} else {
 					spine->pushAfterCurrent(&TNerveHino2Stamp::theNerve());
+				} else {
+					spine->pushAfterCurrent(&TNerveHino2Pollute::theNerve());
 				}
 
 				self->mWaitTimer = 0;
@@ -1278,6 +1281,7 @@ DEFINE_NERVE(TNerveHino2Pollute, TLiveActor)
 
 DEFINE_NERVE(TNerveHino2Damage, TLiveActor)
 {
+	char trash[0x48];
 	THinokuri2* self = (THinokuri2*)spine->getBody();
 
 	if (spine->getTime() == 0) {

@@ -78,19 +78,23 @@ void TTamaNokoFlower::perform(u32 cue, JDrama::TGraphics* graphics)
 				if (!gpMarDirector->isDemoModeNow()) {
 					unk1C = 1;
 
+					JGeometry::TVec3<f32> local_88;
+					Mtx local_b8;
+					MtxPtr mtx = local_b8;
+
 					for (int i = 0; i < 5; ++i) {
-						JGeometry::TVec3<f32> local_88(0.0f, 0.0f, 350.0f);
-						Mtx local_b8;
+						local_88.set(0.0f, 0.0f, 350.0f);
 
-						MsMtxSetRotY(local_b8, (i + 1) * 72.0f);
+						MsMtxSetRotY(mtx, (i + 1) * 72.0f);
 
-						MTXMultVec(local_b8, &local_88, &unk20);
+						MTXMultVec(mtx, &local_88, &local_88);
 
 						JGeometry::TVec3<f32> local_c4 = unk10->getPosition();
+						f32 y;
 						if (TMapObjBase* mapObj = gpItemManager->makeObjAppear(
-						        local_c4.x + local_88.x, local_c4.y,
+						        local_c4.x + local_88.x, y = local_c4.y,
 						        local_c4.z + local_88.z, 0x2000000e, true)) {
-							mapObj->mPosition.y = local_c4.y;
+							mapObj->mPosition.y = y;
 							MsVECNormalize(&local_88, &local_88);
 							mapObj->mVelocity.set(local_88.x * 4.0f, 20.0f,
 							                      local_88.z * 4.0f);
@@ -126,11 +130,13 @@ void TTamaNokoFlower::perform(u32 cue, JDrama::TGraphics* graphics)
 		if (cue & CUE_CALC_VIEW)
 			unk18->viewCalc();
 
-		if (cue & CUE_ENTRY) {
+		if (cue & CUE_ENTRY)
 			unk18->entry();
-			return;
-		}
+
+		return;
 	}
+
+	char trash[32];
 
 	unk18->perform(cue, graphics);
 }
@@ -358,6 +364,7 @@ void TTamaNoko::behaveToRelease()
 
 BOOL TTamaNoko::receiveMessage(THitActor* sender, u32 message)
 {
+	char trash[0x20];
 	if (message == HIT_MESSAGE_TRAMPLE || message == HIT_MESSAGE_HIP_DROP) {
 		if (isHitValid(message)) {
 			unk184 = 0;
@@ -584,6 +591,7 @@ void TTamaNoko::forceSleep()
 
 void TTamaNoko::setAfterDeadEffect()
 {
+	char trash[8];
 	TSmallEnemy::setAfterDeadEffect();
 	unk19C->unk34 = 1;
 	unk19C->setBckAnm(0);
@@ -598,6 +606,7 @@ const char** TTamaNoko::getBasNameTable() const { return tamaNoko_bastable; }
 
 f32 TTamaNoko::getGravityY() const
 {
+	char trash[8];
 	if (mSpine->getCurrentNerve() == &TNerveTamaNokoAttack::theNerve())
 		return unk198->mSLAttackGravityY.get();
 
@@ -630,7 +639,7 @@ bool TTamaNoko::isCollidMove(THitActor* param_1)
 	if (param_1->getActorType() == getActorType())
 		return true;
 
-	if (mSpine->getCurrentNerve() == &TNerveTamaNokoSleep::theNerve()) {
+	if (mSpine->getCurrentNerve() == &TNerveTamaNokoDown::theNerve()) {
 		param_1->receiveMessage(this, HIT_MESSAGE_TRAMPLE);
 		return true;
 	}
@@ -662,7 +671,7 @@ DEFINE_NERVE(TNerveTamaNokoAttack, TLiveActor)
 		if (!self->isBckAnm(9))
 			self->setBckAnm(10);
 
-		self->setGoalPathMario();
+		self->setGoalPath(TPathNode((THitActor*)gpMarioAddress));
 	}
 
 	JGeometry::TVec3<f32> local_48 = self->getVelocity();

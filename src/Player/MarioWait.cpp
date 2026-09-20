@@ -30,6 +30,7 @@ bool TMario::canSleep()
 	f32 height = mDeParams.mSleepingCheckHeight.get();
 	f32 groundY;
 	const TBGCheckData* gnd;
+	const TBGCheckData* gnd2; // unused, but reserves its stack slot
 
 	groundY = gpMap->checkGround(mPosition.x - dist, mPosition.y + 30.0f,
 	                             mPosition.z, &gnd);
@@ -128,6 +129,7 @@ BOOL TMario::waitingCommonEvents()
 
 void TMario::stopCommon(int anim_id, int status_on_end)
 {
+	char trash[8];
 	waitProcess();
 	setAnimation(anim_id, 1.0f);
 	if (onYoshi() && mYoshi->mActor->curAnmEndsNext(ANM_TYPE_BCK, nullptr)) {
@@ -146,6 +148,7 @@ void TMario::changeMontemanWaitingAnim()
 
 BOOL TMario::waiting()
 {
+	char trash[24];
 	if (waitingCommonEvents())
 		return 1;
 
@@ -343,6 +346,7 @@ BOOL TMario::squating()
 	if (mGamePad->checkMeaning(TMarioGamePad::MEANING_L)) {
 		E_SIDEWALK_TYPE type;
 		f32 v1, v2;
+		char trash[56];
 		getSideWalkValues(&type, &v1, &v2);
 		switch ((int)type) {
 		case 0:

@@ -159,6 +159,7 @@ void TMario::smallTouchDownEffect()
 
 void TMario::rippleEffect()
 {
+	char trash[8];
 	if (checkFlag(MARIO_FLAG_IN_SHALLOW_WATER)) {
 		SMS_EmitRipplePool(unk220, this);
 	} else {
@@ -174,6 +175,7 @@ void TMario::inOutWaterEffect(f32 waterY)
 {
 	JGeometry::TVec3<f32> pos = mPosition;
 	pos.y                     = mFloorPosition.z;
+	char trash[8];
 
 	if (checkFlag(MARIO_FLAG_IN_SHALLOW_WATER)
 	    || checkPrevFlag(MARIO_FLAG_IN_SHALLOW_WATER)) {
@@ -324,6 +326,7 @@ void TMario::treeSlipEffect()
 
 void TMario::frontSlipEffect()
 {
+	char trash[8];
 	if (mGroundPlane->isWetGround()
 	    || (mStatus == MARIO_STATUS_CATCH && mStatusState == 1)) {
 		gpMarioParticleManager->emitAndBindToMtxPtr(PARTICLE_MS_M_WATSLIDE_A,
@@ -420,6 +423,7 @@ static const s32 warpInEffectIDs[] = {
 
 void TMario::warpInEffect()
 {
+	char trash[0x18];
 	for (int i = 0; i < 10; i++) {
 		u16 boneIdx;
 		switch (i) {
@@ -491,6 +495,7 @@ void TMario::warpInLight()
 
 void TMario::warpOutEffect(int kind, f32 rotDeg)
 {
+	char trash[8];
 	switch (kind) {
 	case 0:
 		gpMarioParticleManager->emitWithRotate(
@@ -585,6 +590,7 @@ void TMario::emitRotateShootEffect()
 
 void TMario::emitFootPrintWithEffect(int effectId, int printId)
 {
+	char trash[8];
 	int foot   = 2;
 	MtxPtr mtx = nullptr;
 	if (mStatus == MARIO_STATUS_RUN) {
@@ -755,7 +761,7 @@ void TMario::kickFruitEffect()
 		emitter->setGlobalScale(scale);
 		JGeometry::TVec3<f32> pos = mPosition;
 		pos.y += 30.0f;
-		emitter->setEmitterTranslation(pos);
+		emitter->mGlobalTranslation.set(pos);
 	}
 }
 

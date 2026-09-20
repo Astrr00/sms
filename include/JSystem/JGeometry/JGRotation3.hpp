@@ -14,7 +14,9 @@ template <class T> inline T max(T a, T b) { return a >= b ? a : b; }
 
 template <class T> class TRotation3 : public T {
 public:
+#pragma dont_inline on
 	TRotation3() { }
+#pragma dont_inline off
 
 	TRotation3(const JGeometry::TVec3<f32>& axis, f32 angle)
 	{
@@ -22,6 +24,7 @@ public:
 		setRotate(axis, angle);
 	}
 
+#pragma dont_inline on
 	void identity33()
 	{
 		this->ref(0, 0) = 1.0f;
@@ -36,6 +39,7 @@ public:
 		this->ref(1, 2) = 0.0f;
 		this->ref(2, 2) = 1.0f;
 	}
+#pragma dont_inline off
 
 	void setRotate(const JGeometry::TVec3<f32>& param_1, f32 param_2)
 	{
@@ -203,6 +207,7 @@ public:
 		quat.w = 0.5f / scale * (this->at(1, 0) - this->at(0, 1));
 	}
 
+#pragma dont_inline on
 	void setSQ(const JGeometry::TVec3<f32>& scale,
 	           const JGeometry::TQuat4<f32>& qt)
 	{
@@ -233,6 +238,7 @@ public:
 		this->ref(2, 1) = scale.z * (f7 + f5);
 		this->ref(2, 2) = scale.z * (f6 - f9);
 	}
+#pragma dont_inline off
 
 	// from TP, may be useful in the future?
 	void getEulerXYZ(JGeometry::TVec3<f32>&) const;
@@ -300,17 +306,12 @@ public:
 		f32 s = sin(param_1);
 		f32 c = cos(param_1);
 
-		this->ref(0, 0) = 1.0f;
-		this->ref(0, 1) = 0.0f;
-		this->ref(0, 2) = 0.0f;
-
-		this->ref(1, 0) = 0.0f;
 		this->ref(1, 1) = c;
-		this->ref(1, 2) = s;
-
-		this->ref(2, 0) = 0.0f;
-		this->ref(2, 1) = -s;
+		this->ref(1, 2) = -s;
+		this->ref(2, 1) = s;
 		this->ref(2, 2) = c;
+		this->ref(0, 0) = 1.0f;
+		this->ref(1, 0) = this->ref(0, 1) = this->ref(2, 0) = this->ref(0, 2) = 0.0f;
 	}
 
 	void setEularY(float param_1)
@@ -319,35 +320,24 @@ public:
 		f32 c = cos(param_1);
 
 		this->ref(0, 0) = c;
-		this->ref(0, 1) = 0.0f;
 		this->ref(0, 2) = s;
-
-		this->ref(1, 0) = 0.0f;
-		this->ref(1, 1) = 1.0f;
-		this->ref(1, 2) = 0.0f;
-
 		this->ref(2, 0) = -s;
-		this->ref(2, 1) = 0.0f;
 		this->ref(2, 2) = c;
+		this->ref(1, 1) = 1.0f;
+		this->ref(0, 1) = this->ref(1, 0) = this->ref(1, 2) = this->ref(2, 1) = 0.0f;
 	}
 
 	void setEularZ(float param_1)
 	{
-
 		f32 s = sin(param_1);
 		f32 c = cos(param_1);
 
 		this->ref(0, 0) = c;
 		this->ref(0, 1) = -s;
-		this->ref(0, 2) = 0.0f;
-
 		this->ref(1, 0) = s;
 		this->ref(1, 1) = c;
-		this->ref(1, 2) = 0.0f;
-
-		this->ref(2, 0) = 0.0f;
-		this->ref(2, 1) = 0.0f;
 		this->ref(2, 2) = 1.0f;
+		this->ref(0, 2) = this->ref(2, 0) = this->ref(1, 2) = this->ref(2, 1) = 0.0f;
 	}
 
 	void mult33(const TVec3<f32>& param_1, TVec3<f32>& param_2) const

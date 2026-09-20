@@ -109,6 +109,7 @@ TSmallEnemy* TTelesaManager::createEnemyInstance() { return new TTelesa; }
 
 void TTelesaManager::createEnemies(int param_1)
 {
+	char trash[8];
 	TEnemyManager::createEnemies(param_1);
 	int bodyMatIdx = getObj(0)
 	                     ->getMActor()
@@ -144,6 +145,7 @@ void TTelesaManager::createModelData()
 
 void TTelesaManager::telesaForceKill()
 {
+	char trash[0x10];
 	bool anyKilled = false;
 	for (int i = 0; i < mObjNum; ++i) {
 		TTelesa* telesa = (TTelesa*)unk18[i];
@@ -213,6 +215,7 @@ TTelesa::TTelesa(const char* name)
 
 void TTelesa::load(JSUMemoryInputStream& stream)
 {
+	char trash[8];
 	TSmallEnemy::load(stream);
 	reset();
 	mDampenedGroundHeight = mPosition.y;
@@ -349,6 +352,7 @@ void TTelesa::setBehavior()
 
 void TTelesa::attackToMario()
 {
+	char trash[8];
 	if (checkLiveFlag(LIVE_FLAG_HIDDEN)
 	    || !(mPosition.y + mAttackHeight - 50.0f < SMS_GetMarioPos().y)) {
 		SMS_SendMessageToMario(this, HIT_MESSAGE_ATTACK);
@@ -533,6 +537,7 @@ BOOL TTelesa::isReachedToGoal() const
 
 bool TTelesa::changeByJuice()
 {
+	char trash[8];
 	if (checkUnk150(0x40)) {
 
 		if (mJuiceBlock != nullptr)
@@ -578,6 +583,7 @@ void TTelesa::scalingChangeActor()
 
 void TTelesa::changeOut()
 {
+	char trash[8];
 	onHitFlag(HIT_FLAG_NO_COLLISION);
 	SMSGetMSound()->startSoundActor(MSD_SE_EN_TELSA_RECOVER, &mPosition, 0,
 	                                nullptr, 0, 4);
@@ -705,6 +711,7 @@ void TTelesa::initAttacker(THitActor* param_1)
 
 void TTelesa::initItemAttacker(THitActor* param_1)
 {
+	char trash[8];
 	reset();
 	offLiveFlag(LIVE_FLAG_HIDDEN);
 	unk1B8 = 1;
@@ -883,6 +890,7 @@ TSeeTelesa::TSeeTelesa(const char* name)
 
 void TSeeTelesa::load(JSUMemoryInputStream& stream)
 {
+	char trash[8];
 	TTelesa::load(stream);
 	setTypeCanSee();
 }
@@ -894,6 +902,7 @@ TLoopTelesa::TLoopTelesa(const char* name)
 
 void TLoopTelesa::load(JSUMemoryInputStream& stream)
 {
+	char trash[8];
 	TTelesa::load(stream);
 	setTypeLoop();
 }
@@ -946,6 +955,7 @@ void TMarioModokiTelesa::load(JSUMemoryInputStream& stream)
 
 	stream >> mImitationIndex;
 
+	char trash[16];
 	SDLModelData* modelToUse = ((TTelesaManager*)mManager)->mModokiTelesaModel;
 	switch (mImitationIndex) {
 		// NOTE: IMITATION_INDEX_NOT_IMITATING=0 stands for no model change
@@ -1055,7 +1065,7 @@ DEFINE_NERVE(TNerveTelesaImitate, TLiveActor)
 	self->walkBehavior(3, 1.0f);
 
 	if (spine->getTime() == 10) {
-		self->setGoalPathMario();
+		self->setGoalPath(TPathNode((THitActor*)gpMarioAddress));
 
 		if (imitatedItem != nullptr) {
 			((TMarioModokiTelesa*)self)->imitateAnm();
@@ -1099,6 +1109,7 @@ DEFINE_NERVE(TNerveTelesaImitate, TLiveActor)
 
 DEFINE_NERVE(TNerveTelesaDie, TLiveActor)
 {
+	char trash[8];
 	TTelesa* self = (TTelesa*)spine->getBody();
 
 	if (spine->getTime() == 0) {
@@ -1153,7 +1164,7 @@ DEFINE_NERVE(TNerveTelesaFreeze, TLiveActor)
 
 	if (spine->getTime() == 0) {
 		self->setBckAnm(5);
-		self->setGoalPathMario();
+		self->setGoalPath(TPathNode((THitActor*)gpMarioAddress));
 	} else if (self->checkCurAnmEnd(0)) {
 		if (self->isBckAnm(4)) {
 			if (!self->isFlying()) {
@@ -1236,6 +1247,7 @@ void TKageMarioModoki::load(JSUMemoryInputStream& stream)
 
 void TKageMarioModoki::init(TLiveManager* manager)
 {
+	char trash[8];
 	TWalkerEnemy::init(manager);
 	mSpine->initWith(&TNerveKageMarioModokiWait::theNerve());
 	mMActor->resetDL();
