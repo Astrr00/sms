@@ -387,8 +387,7 @@ void TTrembleModelEffect::reset()
 	switch (unk8 & 2) {
 	case 0: {
 		JGeometry::TVec3<s16>* src = (JGeometry::TVec3<s16>*)unk4;
-		for (u32 i = 0; i < unk0->getModelData()->getVertexData().getVtxNum();
-		     i++) {
+		for (u32 i = 0; i < unk0->getModelData()->getVtxNum(); i++) {
 			unk20[i].set(0, 0, 0);
 			unk14[i]    = src[i];
 			unk18[0][i] = src[i];
@@ -398,8 +397,7 @@ void TTrembleModelEffect::reset()
 	}
 	case 2: {
 		JGeometry::TVec3<f32>* src = (JGeometry::TVec3<f32>*)unk4;
-		for (u32 i = 0; i < unk0->getModelData()->getVertexData().getVtxNum();
-		     i++) {
+		for (u32 i = 0; i < unk0->getModelData()->getVtxNum(); i++) {
 			unk34[i].set(0.0f, 0.0f, 0.0f);
 			unk28[i]    = src[i];
 			unk2C[0][i] = src[i];
@@ -411,7 +409,8 @@ void TTrembleModelEffect::reset()
 
 	unk8 &= ~1;
 	GXInvalidateVtxCache();
-	unk0->getModelData()->getVertexData().setVtxPosArray(unk4);
+	J3DModelData* modelData = unk0->getModelData();
+	modelData->getVertexData().setVtxPosArray(unk4);
 	unk0->getVertexBuffer()->setVtxPosArrayPointer(0, unk4);
 	unk0->getVertexBuffer()->setVtxPosArrayPointer(1, unk4);
 	unk0->getVertexBuffer()->setCurrentVtxPos(unk4);
