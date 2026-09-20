@@ -5929,11 +5929,83 @@ Aufteilung in mehrere kleinere Wellen.
 
 ### Session-Gesamtstand nach Runde 69
 
-**574 verifizierte echte Fixes in 231 Commits** (unverändert seit
+**573 verifizierte echte Fixes in 231 Commits** (unverändert seit
 Runde 68; Round 69 Null-Runde). `matched_functions`: **9159**
 (±0 ggü. Round 68). `matched_code_percent`: **47,44 %**. Volles
 `ninja`-Rebuild erfolgreich, `dtk shasum -c` bestätigt
 `build/GMSJ01/mario.dol: OK`. Fork `Astrr00/sms` weiterhin bei
 Squash-Merge `56161c6` auf `main`; 5 Commits hinter
 `doldecomp/sms:main`.
+
+### Nach siebzigster Iterationsrunde (24-Kandidaten-Batch in 2×12-Wellen, 1 MATCH + 1 NO-MATCH-Toolchain-Drift + 22 Rate-Limit-Clean-Failures)
+
+Round 70 verlief provider-seitig weiterhin angespannt: 22 von 24
+Subagenten schlugen mit HTTP 429 Token-Plan Rate-Limit-Fehlern
+fehl (verteilt auf `anthropic/claude-opus-5` und
+`minimax-code/MiniMax-M3`), zwei Wellen à 12 Agents mit kurzem
+Cooldown brachten jedoch 2 produktive Ergebnisse.
+
+**1 byte-exakter MATCH**:
+
+1. `TBathWaterManager::loadAfter` (Commit `f89e6df1`,
+   `src/Map/BathWaterManager.cpp`) — 8-Byte-Stack-Frame-Überschuss
+   (src 0x98 vs obj 0x90). Behoben durch zwei subtile
+   Source-Reformatierungen: (a) äußeres `JDrama::TNameRefGen::search(...)`
+   expandiert zu `JDrama::TNameRefGen::getInstance()->getRootNameRef()
+   ->search(...)` — erzwingt genug vtable-Chain-Split, dass MWCCs
+   Register-Allokator `r26` für das `rootNameRef`-Argument wählt
+   statt `r27`; (b) inneres `setResTIMG(1, *tex->getTexture()->getTexInfo())`
+   auf zwei Zeilen umgebrochen — nudges lokales Pool-Alignment und
+   innere Register-Wahl. Programmatischer raw-4-byte-hex-Diff
+   über alle 250 Instruktionswörter ergab leere Diff-Liste
+   `[]`.
+
+**1 NO-MATCH (sauber reverted, dokumentationswürdige Erkenntnis)**:
+
+- `SMS_InitChangeNpcColor` (`src/NPC/NpcColor.cpp`) — 8-Byte-
+  Stack-Frame-Drift zwischen src (0x40) und obj (0x38). Der
+  Agent untersuchte 11+ Source-Varianten (padding, register-
+  Storage, const-Qualifikation, Type-Changes, Declaration-
+  Reorder, Inline-Expression-Expansion) ohne Erfolg. **Root-
+  Cause: Toolchain-Drift** zwischen Original-Match-Zeitpunkt
+  (MWCC 20250520, dtk v1.3.0, wibo 0.6.11) und HEAD (MWCC
+  20251118, dtk v1.8.4, wibo 1.1.0). Die Source-Datei ist
+  byte-identisch zum funktionierenden Commit `99c2d69e`; nur
+  die Toolchain-Updates haben MWCCs Pool-Allokation um 8 Byte
+  verschoben. Per „byte-exakt-oder-revert"-Policy zurückgesetzt;
+  dokumentiert als „Toolchain-Version-abhängiges Frame-Layout".
+
+**22 saubere Fehlschläge** (10 Wave-1 + 12 Wave-2, alle
+Rate-Limit-bedingt): `TMarDirector::TMarDirector`,
+`TTamaNoko::calcRootMatrix`, `TSpcInterp::execadd`,
+`TGraphWeb::getRandomNextIndex`, `THamuKuri::behaveToWater`,
+`CPolarSubCamera::execGroundCheck_`, `TBossPakkun::setGroundCollision`,
+`TMarDirector::preEntry`, `TRoulette::initMapObj`,
+`TMapObjBaseManager::makeObjAppear`,
+`TMario::turnning`, `JPAGetRMtxSTVecElement`,
+`J3DSkinDeform::initMtxIndexArray`, `TTrembleModelEffect::reset`,
+`TMario::initMirrorModel`, `TMBindShadowManager::load`,
+`TBossMantaManager::setupEfbAlpha`, `TLiveActor::bind`,
+`TEggYoshi::load`, `TNerveBathtubKillerExplosion::execute`,
+`TSpcTypedInterp<TEventWatcher>::evSetHide4LiveActor`,
+`TSplashManager::makeDL` — alle bleiben frische Kandidaten für
+eine künftige Runde.
+
+**Methodische Notiz**: Wellen-Dispatch (2×12 statt 1×24) reduziert
+Provider-Spitzenlast nicht zwingend — die `anthropic/claude-opus-5`-
+Rate-Limits kommen wellenübergreifend. Empfehlung für Runde 71:
+längerer Cooldown (15+ min) zwischen den Wellen, oder Wellen mit
+max. 6 Agents.
+
+### Session-Gesamtstand nach Runde 70
+
+**574 verifizierte echte Fixes in 232 Commits** (573 + 1 neuer
+byte-exakter Runde-70-MATCH; der NPC-Color-Toolchain-Drift zählt
+nicht als Fix, da reverted). `matched_functions`: **9160** (von
+9159 zu Rundenbeginn, +1 exakt wie erwartet). `matched_code_percent`:
+**47,47 %**. Volles `ninja`-Rebuild erfolgreich, `dtk shasum -c`
+bestätigt `build/GMSJ01/mario.dol: OK`. Regressionsprüfung: 0
+Regressionen, 1 Neuzugang — exakte Übereinstimmung. Fork
+`Astrr00/sms` weiterhin bei Squash-Merge `56161c6` auf `main`;
+5 Commits hinter `doldecomp/sms:main`.
 
