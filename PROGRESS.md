@@ -5766,3 +5766,120 @@ Template-Instanzen). `matched_code_percent`: **47,35 %**. Volles
 zuvor 100 %-matchenden Funktionen vor/nach dem Rebuild): 0
 Regressionen, 18 Neuzugänge — exakte Übereinstimmung.
 
+### Nach achtundsechzigster Iterationsrunde (24-Kandidaten-Batch plus dedizierter Regressions-Fix, 9 MATCH + 1 Revert, Regression einer früheren Runde entdeckt und korrigiert)
+
+**Wichtige Erkenntnis dieser Runde**: Eine routinemäßige
+Re-Verifikation der in Runde 67 committeten Funktion
+`TMapCollisionData::removeCheckListData` (Commit `6b801674`) ergab,
+dass der ursprüngliche Subagent-Selbstbericht ("166/166 Instructions
+identisch") **inkorrekt** war — die Instruktionszählung war zwar
+richtig, aber drei einzelne 4-Byte-Instruktionswörter hatten
+tatsächlich abweichendes Bit-Muster (Register r5 statt r3 für die
+`&unk42[start]`-Temporäradresse, plus eine 2-Instruktionen-
+Scheduler-Order-Swap-Unterscheidung). Dieses Pattern entspricht exakt
+dem Round-59-Regressionsfund aus Runde 64. Bestätigt durch
+Verifizierungs-Konvention: kein Agent darf eine Funktion als
+"byte-exakt" deklarieren ohne einen programmatischen
+Position-für-Position-Diff ALLER Instruktionswörter, bei dem die
+Ergebnisliste LEER ist (`diff_list == []`), nicht nur eine
+qualifizierte Augenschein- oder Opcodes/Frame-Größe-Übereinstimmung.
+
+**10 neue Commits** (9 byte-exakte MATCHes + 1 Regressions-Revert):
+
+1. `TWaterGun::calcAnimation` (Commit `f06076fa`) — **zwei
+   kombinierte Fixes**: (a) fehlende 48-Byte-Rahmenreserve
+   (`volatile u32 unused[12]` als erste Anweisung, Pattern 7), (b)
+   **TU-weite .rodata-Reparatur**: zwei fehlende tote 12-Byte-Datei-
+   statische Vec-Konstanten (`cZeroVec = {0,0,0}` und
+   `cOneVec = {1,1,1}`) als `static const Vec` direkt nach
+   `cDirtyTexName` deklariert, um exakt Retails rodata-Layout durch
+   Offset 0x2da zu reproduzieren; bestätigt durch 44-Funktionen-
+   Cross-Check (Regression: 19→18 Mismatches, keine neu gebrochenen).
+2. `JPADragField::affect` (Commit `ffe7caaf`) — `char trash[4]`
+   gefolgt von `trash[0] = 0;` (geschriebener Trash wächst den
+   unteren Pool, Runde-67-Erkenntnis direkt angewendet).
+3. `TBaseNPC::npcTalkOut` (Commit `4323624b`) — **echter Bug**:
+   Tippfehler `LIVE_FLAG_UNK8000` (Bit 16) statt
+   `LIVE_FLAG_UNK80000` (Bit 12) im `offLiveFlag`-Aufruf; andere
+   `rlwinm`-Maske (`mb=17,me=15` statt `mb=13,me=11`).
+4. `TTurboNozzleDoor::touchPlayer` (Commit `fcc02ca1`) —
+   geschriebener `char trash[20]` direkt nach `scale`-Lokal
+   (Pattern 7; Größe empirisch ermittelt: 24 overshoots, 16
+   undershoots).
+5. `TPoiHanaManager::load` (Commit `4f305653`, Header-Fix in
+   `include/Enemy/PoiHana.hpp`) — **echter Bug**: leerer Body
+   `TPoiHanaCollision(const char* name = "ポイハナコリジョン") { }`
+   leitete `name` nicht an den `THitActor`-Basiskonstruktor weiter,
+   wodurch statt der 0x13-Byte-katakana-Zeichenkette eine
+   9-Byte-"HitActor"-Default-Zeichenkette emittiert wurde — was alle
+   nachfolgenden .rodata-Offsets um +8 verschob und sich als
+   uniformer -8-Byte-Versatz in allen String-Pool-Adressen der
+   Lade-Funktion zeigte. Fix: Member-Initialliste
+   `: THitActor(name) { }`.
+6. `TCameraOption::TCameraOption` (Commit `bd85659c`) — zwei
+   `void*`-Lokale (innerhalb `if`-Blocks, einer vor, einer nach
+   `origin`); Pointer-Typ überlebt Stack-Layout-Registrierung als
+   4-Byte-Slot, Position relativ zu `origin` wählt exakt 4 über /
+   4 unter wie Retail.
+7. `TMActorKeeper::TMActorKeeper` (Commit `e239d637`) —
+   `char trash[8]` (gleiche Idiom wie die zwei Geschwister-Methoden
+   in derselben Datei).
+8. `TMario::inOutWaterEffect` (Commit `5a76f68f`) —
+   `char trash[8]` nach `pos.y = mFloorPosition.z;` (gleiche Idiom
+   wie Geschwister `TMario::rippleEffect`).
+9. `TNerveBossEelSleepOnBottom::execute` (Commit `6fda642b`) —
+   unbenutzter `char trash[16]` als erste Anweisung im
+   `DEFINE_NERVE`-Body (reine 16-Byte-Rahmen-Lücke).
+10. **Revert** `TMapCollisionData::removeCheckListData` (Commit
+    `ececd4ea`, Revertiert `6b801674`) — Subagent-Regression mit
+    25+ Source-Varianten (alle möglichen Anker-Positionen,
+    Ausdrucksumformulierungen, Schleifenstrukturen, Casts,
+    self-assigns, alternative Bound-Formen) bestätigt, dass die
+    Scheduler-Tie-Break-Reihenfolge zwischen Compiler-Invocations
+    unterschiedlich ist und nicht aus Quellebene reproduzierbar;
+    Funktion zurück auf Pre-`6b801674`-Stand (3 Instruktionswörter
+    Diff, dokumentiert).
+
+**Zwölf gründlich dokumentierte Sackgassen** (alle sauber
+zurückgesetzt, mehrere über Schritt-Limit hinaus):
+`TMario::jumpProcess`, `TNerveMameGessoJitabata::execute`,
+`TEnemyMario::tryTake`, `TNerveTelesaFreeze::execute`,
+`TMapObjGeneral::receiveMessage`,
+`TNerveWalkerEscape::execute`, `TGenerator::perform`,
+`TPollutionAction::action`, `TPollutionLayer::initTexImage`,
+`TNameKuri::setDeadAnm`, `TGCConsole2::processAppearLife`,
+`TLightWithDBSetManager::addChildGroupObj` — alle revertiert, keine
+bleibenden Änderungen.
+
+**Methodik-Verfeinerung (Verifizierungs-Standard)**: Ab dieser
+Runde gilt projektweit: Ein Subagent-Bericht "byte-exakt verifiziert"
+gilt nur dann als glaubwürdig, wenn der Bericht einen
+programmatischen Positional-Diff aller Instruktionswörter enthält,
+dessen Ergebnisliste leer ist (`len(diff_list) == 0`) — keine
+qualifizierten Aussagen wie "alle Offsets matched", "Frame passt
+exakt", oder "166/166 Instructions identisch". Letzteres
+(Instruction-Count-Match) wurde dieses Mal widerlegt: Round-67-
+Agent zählte korrekt 166 Instructions, diffte aber nie byte-genau
+die Wortinhalte.
+
+### Session-Gesamtstand nach Runde 68
+
+**574 verifizierte echte Fixes in 231 Commits** (565 + 10 neue
+Round-68-Commits; der Revert lässt den 565er-Bestand unverändert,
+Netto-Sessionszuwachs: +9 byte-exakte MATCHes, jeweils verifiziert
+per programmatischem raw-4-byte-hex-diff mit leerer Ergebnisliste).
+`matched_functions`: **9160** (von 9151 zu Rundenbeginn, +9 exakt
+wie erwartet). `matched_code_percent`: **47,47 %**. Volles
+`ninja`-Rebuild erfolgreich, `dtk shasum -c` bestätigt
+`build/GMSJ01/mario.dol: OK`. Regressionsprüfung: 0 Regressionen,
+9 Neuzugänge — exakte Übereinstimmung. Fork `Astrr00/sms` per
+Squash-Merge PR #1 auf `main` überführt (`56161c6`). Stand: 5
+Commits hinter `doldecomp/sms:main` (Upstream hat `configure.py`
+und `PROGRESS.md` mehrfach geändert seit Phase-0-Fork), 399
+Commits voraus (eigene Arbeit). PR `doldecomp/sms#195` wurde
+geschlossen, weil ein direkter Merge gegen `doldecomp/sms:main`
+Konflikte in `configure.py` produzierte (Upstream hatte die Datei
+mehrfach editiert); stattdessen PR `Astrr00/sms#1` an den eigenen
+Fork erstellt und Squash-merged → `56161c6` auf
+`Astrr00/sms:main`.
+
