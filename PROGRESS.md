@@ -5883,3 +5883,36 @@ mehrfach editiert); stattdessen PR `Astrr00/sms#1` an den eigenen
 Fork erstellt und Squash-merged → `56161c6` auf
 `Astrr00/sms:main`.
 
+### Nach neunundsechzigster Iterationsrunde (24-Kandidaten-Batch, alle 24 Agents an Rate-Limits gescheitert — Null-Runde)
+
+Round 69 lieferte **null** neue byte-exakte Fixes. Alle 24
+parallel dispatchten Subagenten schlugen mit HTTP 429 Token-Plan
+Rate-Limit-Fehlern fehl — fünf davon beim Provider
+`anthropic/claude-opus-5`, die übrigen 19 beim Provider
+`minimax-code/MiniMax-M3`. Kein Agent erreichte die
+Untersuchungs- oder gar Commit-Phase; keine Quelldatei wurde
+modifiziert (`git status` nach Batch-Ende leer).
+
+**Statistik**: `matched_functions` 9159 (identisch zu Round-68-
+Endstand, +0), `matched_code_percent` 47,44 %, `build/GMSJ01/
+mario.dol: OK`. Alle 24 Kandidaten bleiben frisch für eine
+Retry-Runde.
+
+**Methodische Notiz**: Anders als in früheren Runden, in denen
+einzelne Rate-Limits auftraten und mit kleineren Retry-Batches
+umgangen werden konnten, war diesmal die gesamte Dispatch-Welle
+betroffen — was auf eine globale Token-Plan-Ausschöpfung
+hindeutet, nicht auf ein sporadisches Provider-Problem. Konsequenz
+für nächste Runden: ggf. längere Wartezeit vor Re-Dispatch oder
+Aufteilung in mehrere kleinere Wellen.
+
+### Session-Gesamtstand nach Runde 69
+
+**574 verifizierte echte Fixes in 231 Commits** (unverändert seit
+Runde 68; Round 69 Null-Runde). `matched_functions`: **9159**
+(±0 ggü. Round 68). `matched_code_percent`: **47,44 %**. Volles
+`ninja`-Rebuild erfolgreich, `dtk shasum -c` bestätigt
+`build/GMSJ01/mario.dol: OK`. Fork `Astrr00/sms` weiterhin bei
+Squash-Merge `56161c6` auf `main`; 5 Commits hinter
+`doldecomp/sms:main`.
+
