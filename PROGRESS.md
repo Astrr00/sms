@@ -5766,3 +5766,470 @@ Template-Instanzen). `matched_code_percent`: **47,35 %**. Volles
 zuvor 100 %-matchenden Funktionen vor/nach dem Rebuild): 0
 Regressionen, 18 Neuzugänge — exakte Übereinstimmung.
 
+### Nach achtundsechzigster Iterationsrunde (24-Kandidaten-Batch plus dedizierter Regressions-Fix, 9 MATCH + 1 Revert, Regression einer früheren Runde entdeckt und korrigiert)
+
+**Wichtige Erkenntnis dieser Runde**: Eine routinemäßige
+Re-Verifikation der in Runde 67 committeten Funktion
+`TMapCollisionData::removeCheckListData` (Commit `6b801674`) ergab,
+dass der ursprüngliche Subagent-Selbstbericht ("166/166 Instructions
+identisch") **inkorrekt** war — die Instruktionszählung war zwar
+richtig, aber drei einzelne 4-Byte-Instruktionswörter hatten
+tatsächlich abweichendes Bit-Muster (Register r5 statt r3 für die
+`&unk42[start]`-Temporäradresse, plus eine 2-Instruktionen-
+Scheduler-Order-Swap-Unterscheidung). Dieses Pattern entspricht exakt
+dem Round-59-Regressionsfund aus Runde 64. Bestätigt durch
+Verifizierungs-Konvention: kein Agent darf eine Funktion als
+"byte-exakt" deklarieren ohne einen programmatischen
+Position-für-Position-Diff ALLER Instruktionswörter, bei dem die
+Ergebnisliste LEER ist (`diff_list == []`), nicht nur eine
+qualifizierte Augenschein- oder Opcodes/Frame-Größe-Übereinstimmung.
+
+**10 neue Commits** (9 byte-exakte MATCHes + 1 Regressions-Revert):
+
+1. `TWaterGun::calcAnimation` (Commit `f06076fa`) — **zwei
+   kombinierte Fixes**: (a) fehlende 48-Byte-Rahmenreserve
+   (`volatile u32 unused[12]` als erste Anweisung, Pattern 7), (b)
+   **TU-weite .rodata-Reparatur**: zwei fehlende tote 12-Byte-Datei-
+   statische Vec-Konstanten (`cZeroVec = {0,0,0}` und
+   `cOneVec = {1,1,1}`) als `static const Vec` direkt nach
+   `cDirtyTexName` deklariert, um exakt Retails rodata-Layout durch
+   Offset 0x2da zu reproduzieren; bestätigt durch 44-Funktionen-
+   Cross-Check (Regression: 19→18 Mismatches, keine neu gebrochenen).
+2. `JPADragField::affect` (Commit `ffe7caaf`) — `char trash[4]`
+   gefolgt von `trash[0] = 0;` (geschriebener Trash wächst den
+   unteren Pool, Runde-67-Erkenntnis direkt angewendet).
+3. `TBaseNPC::npcTalkOut` (Commit `4323624b`) — **echter Bug**:
+   Tippfehler `LIVE_FLAG_UNK8000` (Bit 16) statt
+   `LIVE_FLAG_UNK80000` (Bit 12) im `offLiveFlag`-Aufruf; andere
+   `rlwinm`-Maske (`mb=17,me=15` statt `mb=13,me=11`).
+4. `TTurboNozzleDoor::touchPlayer` (Commit `fcc02ca1`) —
+   geschriebener `char trash[20]` direkt nach `scale`-Lokal
+   (Pattern 7; Größe empirisch ermittelt: 24 overshoots, 16
+   undershoots).
+5. `TPoiHanaManager::load` (Commit `4f305653`, Header-Fix in
+   `include/Enemy/PoiHana.hpp`) — **echter Bug**: leerer Body
+   `TPoiHanaCollision(const char* name = "ポイハナコリジョン") { }`
+   leitete `name` nicht an den `THitActor`-Basiskonstruktor weiter,
+   wodurch statt der 0x13-Byte-katakana-Zeichenkette eine
+   9-Byte-"HitActor"-Default-Zeichenkette emittiert wurde — was alle
+   nachfolgenden .rodata-Offsets um +8 verschob und sich als
+   uniformer -8-Byte-Versatz in allen String-Pool-Adressen der
+   Lade-Funktion zeigte. Fix: Member-Initialliste
+   `: THitActor(name) { }`.
+6. `TCameraOption::TCameraOption` (Commit `bd85659c`) — zwei
+   `void*`-Lokale (innerhalb `if`-Blocks, einer vor, einer nach
+   `origin`); Pointer-Typ überlebt Stack-Layout-Registrierung als
+   4-Byte-Slot, Position relativ zu `origin` wählt exakt 4 über /
+   4 unter wie Retail.
+7. `TMActorKeeper::TMActorKeeper` (Commit `e239d637`) —
+   `char trash[8]` (gleiche Idiom wie die zwei Geschwister-Methoden
+   in derselben Datei).
+8. `TMario::inOutWaterEffect` (Commit `5a76f68f`) —
+   `char trash[8]` nach `pos.y = mFloorPosition.z;` (gleiche Idiom
+   wie Geschwister `TMario::rippleEffect`).
+9. `TNerveBossEelSleepOnBottom::execute` (Commit `6fda642b`) —
+   unbenutzter `char trash[16]` als erste Anweisung im
+   `DEFINE_NERVE`-Body (reine 16-Byte-Rahmen-Lücke).
+10. **Revert** `TMapCollisionData::removeCheckListData` (Commit
+    `ececd4ea`, Revertiert `6b801674`) — Subagent-Regression mit
+    25+ Source-Varianten (alle möglichen Anker-Positionen,
+    Ausdrucksumformulierungen, Schleifenstrukturen, Casts,
+    self-assigns, alternative Bound-Formen) bestätigt, dass die
+    Scheduler-Tie-Break-Reihenfolge zwischen Compiler-Invocations
+    unterschiedlich ist und nicht aus Quellebene reproduzierbar;
+    Funktion zurück auf Pre-`6b801674`-Stand (3 Instruktionswörter
+    Diff, dokumentiert).
+
+**Zwölf gründlich dokumentierte Sackgassen** (alle sauber
+zurückgesetzt, mehrere über Schritt-Limit hinaus):
+`TMario::jumpProcess`, `TNerveMameGessoJitabata::execute`,
+`TEnemyMario::tryTake`, `TNerveTelesaFreeze::execute`,
+`TMapObjGeneral::receiveMessage`,
+`TNerveWalkerEscape::execute`, `TGenerator::perform`,
+`TPollutionAction::action`, `TPollutionLayer::initTexImage`,
+`TNameKuri::setDeadAnm`, `TGCConsole2::processAppearLife`,
+`TLightWithDBSetManager::addChildGroupObj` — alle revertiert, keine
+bleibenden Änderungen.
+
+**Methodik-Verfeinerung (Verifizierungs-Standard)**: Ab dieser
+Runde gilt projektweit: Ein Subagent-Bericht "byte-exakt verifiziert"
+gilt nur dann als glaubwürdig, wenn der Bericht einen
+programmatischen Positional-Diff aller Instruktionswörter enthält,
+dessen Ergebnisliste leer ist (`len(diff_list) == 0`) — keine
+qualifizierten Aussagen wie "alle Offsets matched", "Frame passt
+exakt", oder "166/166 Instructions identisch". Letzteres
+(Instruction-Count-Match) wurde dieses Mal widerlegt: Round-67-
+Agent zählte korrekt 166 Instructions, diffte aber nie byte-genau
+die Wortinhalte.
+
+### Session-Gesamtstand nach Runde 68
+
+**573 verifizierte echte Fixes in 231 Commits** (565 + 10 neue
+Round-68-Commits; der Revert lässt den 565er-Bestand unverändert,
+Netto-Sessionszuwachs: +8 byte-exakte MATCHes, jeweils verifiziert
+per programmatischem raw-4-byte-hex-diff mit leerer Ergebnisliste).
+`matched_functions`: **9159** (von 9151 zu Rundenbeginn, +8; der
+npcTalkOut-Bugfix-Commit zählt NICHT als 100%er, weil die
+Funktion noch eine Rest-Differenz von 7 Instruktionswörtern
+aufweist — siehe unten). `matched_code_percent`: **47,44 %**.
+Volles `ninja`-Rebuild erfolgreich, `dtk shasum -c` bestätigt
+`build/GMSJ01/mario.dol: OK`. Regressionsprüfung: 0 Regressionen,
+8 Neuzugänge — exakte Übereinstimmung. Fork `Astrr00/sms` per
+Squash-Merge PR #1 auf `main` überführt (`56161c6`). Stand: 5
+Commits hinter `doldecomp/sms:main` (Upstream hat `configure.py`
+und `PROGRESS.md` mehrfach geändert seit Phase-0-Fork), 399
+Commits voraus (eigene Arbeit). PR `doldecomp/sms#195` wurde
+geschlossen, weil ein direkter Merge gegen `doldecomp/sms:main`
+Konflikte in `configure.py` produzierte (Upstream hatte die Datei
+mehrfach editiert); stattdessen PR `Astrr00/sms#1` an den eigenen
+Fork erstellt und Squash-merged → `56161c6` auf
+`Astrr00/sms:main`.
+
+**Round-68-Audit-Korrektur** (in Runde 70 durchgeführt): Die
+zunächst als „byte-exakt" deklarierten 9 Round-68-MATCH-Ziele
+wurden einzeln gegen den frischen `report.json` verifiziert.
+Dabei stellte sich heraus, dass **`TBaseNPC::npcTalkOut` NICHT
+bei 100% liegt** — es zeigt 99.9391 % mit 7 verbleibenden
+Instruktionswörtern Differenz (Frame-Größe 0x38 statt 0x48, alle
+Stack-Offsets uniform +0x14 verschoben). Das ist ein Pattern-7-
+Stack-Layout-Restproblem. Der Flag-Bugfix-Commit `4323624b` ist
+trotzdem ein **echter Bugfix** (LIVE_FLAG_UNK8000 → UNK80000
+änderte die rlwinm-Maske korrekt), macht die Funktion aber nicht
+vollständig zu 100 %. Daher wird dieser Kandidat in Runde 70
+erneut dispatched, um den +0x10-Frame-Gap zu schließen. Die
+übrigen 8 Round-68-MATCHes (WaterGun.calcAnimation,
+JPADragField.affect, TTurboNozzleDoor.touchPlayer,
+TPoiHanaManager.load, TCameraOption.TCameraOption,
+TMActorKeeper.TMActorKeeper, TMario.inOutWaterEffect,
+TNerveBossEelSleepOnBottom.execute) sind alle bei 100.0000 %
+bestätigt.
+
+### Nach neunundsechzigster Iterationsrunde (24-Kandidaten-Batch, alle 24 Agents an Rate-Limits gescheitert — Null-Runde)
+
+Round 69 lieferte **null** neue byte-exakte Fixes. Alle 24
+parallel dispatchten Subagenten schlugen mit HTTP 429 Token-Plan
+Rate-Limit-Fehlern fehl — fünf davon beim Provider
+`anthropic/claude-opus-5`, die übrigen 19 beim Provider
+`minimax-code/MiniMax-M3`. Kein Agent erreichte die
+Untersuchungs- oder gar Commit-Phase; keine Quelldatei wurde
+modifiziert (`git status` nach Batch-Ende leer).
+
+**Statistik**: `matched_functions` 9159 (identisch zu Round-68-
+Endstand, +0), `matched_code_percent` 47,44 %, `build/GMSJ01/
+mario.dol: OK`. Alle 24 Kandidaten bleiben frisch für eine
+Retry-Runde.
+
+**Methodische Notiz**: Anders als in früheren Runden, in denen
+einzelne Rate-Limits auftraten und mit kleineren Retry-Batches
+umgangen werden konnten, war diesmal die gesamte Dispatch-Welle
+betroffen — was auf eine globale Token-Plan-Ausschöpfung
+hindeutet, nicht auf ein sporadisches Provider-Problem. Konsequenz
+für nächste Runden: ggf. längere Wartezeit vor Re-Dispatch oder
+Aufteilung in mehrere kleinere Wellen.
+
+### Session-Gesamtstand nach Runde 69
+
+**573 verifizierte echte Fixes in 231 Commits** (unverändert seit
+Runde 68; Round 69 Null-Runde). `matched_functions`: **9159**
+(±0 ggü. Round 68). `matched_code_percent`: **47,44 %**. Volles
+`ninja`-Rebuild erfolgreich, `dtk shasum -c` bestätigt
+`build/GMSJ01/mario.dol: OK`. Fork `Astrr00/sms` weiterhin bei
+Squash-Merge `56161c6` auf `main`; 5 Commits hinter
+`doldecomp/sms:main`.
+
+### Nach siebzigster Iterationsrunde (24-Kandidaten-Batch in 2×12-Wellen, 1 MATCH + 1 NO-MATCH-Toolchain-Drift + 22 Rate-Limit-Clean-Failures)
+
+Round 70 verlief provider-seitig weiterhin angespannt: 22 von 24
+Subagenten schlugen mit HTTP 429 Token-Plan Rate-Limit-Fehlern
+fehl (verteilt auf `anthropic/claude-opus-5` und
+`minimax-code/MiniMax-M3`), zwei Wellen à 12 Agents mit kurzem
+Cooldown brachten jedoch 2 produktive Ergebnisse.
+
+**1 byte-exakter MATCH**:
+
+1. `TBathWaterManager::loadAfter` (Commit `f89e6df1`,
+   `src/Map/BathWaterManager.cpp`) — 8-Byte-Stack-Frame-Überschuss
+   (src 0x98 vs obj 0x90). Behoben durch zwei subtile
+   Source-Reformatierungen: (a) äußeres `JDrama::TNameRefGen::search(...)`
+   expandiert zu `JDrama::TNameRefGen::getInstance()->getRootNameRef()
+   ->search(...)` — erzwingt genug vtable-Chain-Split, dass MWCCs
+   Register-Allokator `r26` für das `rootNameRef`-Argument wählt
+   statt `r27`; (b) inneres `setResTIMG(1, *tex->getTexture()->getTexInfo())`
+   auf zwei Zeilen umgebrochen — nudges lokales Pool-Alignment und
+   innere Register-Wahl. Programmatischer raw-4-byte-hex-Diff
+   über alle 250 Instruktionswörter ergab leere Diff-Liste
+   `[]`.
+
+**1 NO-MATCH (sauber reverted, dokumentationswürdige Erkenntnis)**:
+
+- `SMS_InitChangeNpcColor` (`src/NPC/NpcColor.cpp`) — 8-Byte-
+  Stack-Frame-Drift zwischen src (0x40) und obj (0x38). Der
+  Agent untersuchte 11+ Source-Varianten (padding, register-
+  Storage, const-Qualifikation, Type-Changes, Declaration-
+  Reorder, Inline-Expression-Expansion) ohne Erfolg. **Root-
+  Cause: Toolchain-Drift** zwischen Original-Match-Zeitpunkt
+  (MWCC 20250520, dtk v1.3.0, wibo 0.6.11) und HEAD (MWCC
+  20251118, dtk v1.8.4, wibo 1.1.0). Die Source-Datei ist
+  byte-identisch zum funktionierenden Commit `99c2d69e`; nur
+  die Toolchain-Updates haben MWCCs Pool-Allokation um 8 Byte
+  verschoben. Per „byte-exakt-oder-revert"-Policy zurückgesetzt;
+  dokumentiert als „Toolchain-Version-abhängiges Frame-Layout".
+
+**22 saubere Fehlschläge** (10 Wave-1 + 12 Wave-2, alle
+Rate-Limit-bedingt): `TMarDirector::TMarDirector`,
+`TTamaNoko::calcRootMatrix`, `TSpcInterp::execadd`,
+`TGraphWeb::getRandomNextIndex`, `THamuKuri::behaveToWater`,
+`CPolarSubCamera::execGroundCheck_`, `TBossPakkun::setGroundCollision`,
+`TMarDirector::preEntry`, `TRoulette::initMapObj`,
+`TMapObjBaseManager::makeObjAppear`,
+`TMario::turnning`, `JPAGetRMtxSTVecElement`,
+`J3DSkinDeform::initMtxIndexArray`, `TTrembleModelEffect::reset`,
+`TMario::initMirrorModel`, `TMBindShadowManager::load`,
+`TBossMantaManager::setupEfbAlpha`, `TLiveActor::bind`,
+`TEggYoshi::load`, `TNerveBathtubKillerExplosion::execute`,
+`TSpcTypedInterp<TEventWatcher>::evSetHide4LiveActor`,
+`TSplashManager::makeDL` — alle bleiben frische Kandidaten für
+eine künftige Runde.
+
+**Methodische Notiz**: Wellen-Dispatch (2×12 statt 1×24) reduziert
+Provider-Spitzenlast nicht zwingend — die `anthropic/claude-opus-5`-
+Rate-Limits kommen wellenübergreifend. Empfehlung für Runde 71:
+längerer Cooldown (15+ min) zwischen den Wellen, oder Wellen mit
+max. 6 Agents.
+
+### Session-Gesamtstand nach Runde 70
+
+**574 verifizierte echte Fixes in 232 Commits** (573 + 1 neuer
+byte-exakter Runde-70-MATCH; der NPC-Color-Toolchain-Drift zählt
+nicht als Fix, da reverted). `matched_functions`: **9160** (von
+9159 zu Rundenbeginn, +1 exakt wie erwartet). `matched_code_percent`:
+**47,47 %**. Volles `ninja`-Rebuild erfolgreich, `dtk shasum -c`
+bestätigt `build/GMSJ01/mario.dol: OK`. Regressionsprüfung: 0
+Regressionen, 1 Neuzugang — exakte Übereinstimmung. Fork
+`Astrr00/sms` weiterhin bei Squash-Merge `56161c6` auf `main`;
+5 Commits hinter `doldecomp/sms:main`.
+
+### Nach einundsiebzigster Iterationsrunde (5 byte-exakte MATCHes, 9 neue Dead-Ends)
+
+**5 byte-exakte MATCHes** (alle mit rohem Vier-Byte-Hexvergleich
+verifiziert: gleiche Wortzahl, leere Diff-Liste `[]`):
+
+1. `TBossPakkun::setGroundCollision` (Commit `7760ec64`,
+   `src/Enemy/bosspakkun.cpp`) — benannter `dieNerve`-Local für
+   `&TNerveBPDie::theNerve()` plus benannter `TPosition3f`-Local
+   für `moveMtx`. 57/57 Wörter, 228B.
+2. `TTrembleModelEffect::reset` (Commit `77025abc`,
+   `src/MarioUtil/DrawUtil.cpp`) — Loop-Bounds von
+   `getVertexData().getVtxNum()` auf direktes `getVtxNum()`
+   umgestellt und benanntes `J3DModelData*`-Local vor
+   `setVtxPosArray` eingeführt. 120/120 Wörter, 480B.
+3. `THamuKuri::behaveToWater` (Commit `cd245a39`,
+   `src/Enemy/hamukuri.cpp`) — `SMS_GetMarioPos()` durch
+   `*gpMarioPos` ersetzt (direkter Globalzugriff statt
+   Inline-Getter erzeugt die Retail-Load-Sequenz).
+   143/143 Wörter, 572B.
+4. `TTamaNoko::calcRootMatrix` (Commit `cd245a39`,
+   `src/Enemy/tamaNoko.cpp`) — gemeinsames
+   `JGeometry::TVec3<f32> scale(2.0f, 2.0f, 2.0f)`-Local für
+   beide `setGlobalScale`-Aufrufe gezogen statt je anonymem
+   Temporary. 266/266 Wörter, 1064B.
+5. `TTrembleModelEffect::init` (Commit `cd245a39`,
+   `src/MarioUtil/DrawUtil.cpp`) — `getVertexData().getVtxNum()`
+   /`getVtxPosArray()`-Kette auf die direkten
+   `J3DModelData`-Accessoren `getVtxNum()`/`getVtxPosArray()`
+   verkürzt. 354/354 Wörter, 1416B.
+
+**9 neue Dead-Ends** (mehrere informierte Varianten getestet,
+sauber reverted, in `.decomp_session_state.json` aufgenommen):
+
+- `TGraphWeb::getRandomNextIndex` — verbleibender 4-Byte-
+  Stack-Offset nach 2 Varianten.
+- `CPolarSubCamera::execGroundCheck_` — Inlining des
+  `should_clip`-Helpers erzeugte 22 Diffs und falsches
+  Frame/Register-Layout.
+- `TRoulette::initMapObj` — 3 Varianten (benannter
+  `TIdxGroupObj*`-Local, expandierte `getInstance()->
+  getRootNameRef()->search`-Kette, beides kombiniert)
+  kollabierten den Frame 0xA0 -> 0x98.
+- `TBossMantaManager::setupEfbAlpha` — Stack-Layout und
+  Local-Array-Offsets bleiben abweichend.
+- `evSetHide4LiveActor` — Frame 0xA0 vs 0x98 und
+  fctiwz-Spill-Offsets; `interp->pop().getDataInt()` erreicht
+  den Retail-Frame, aber die pop()-Scheduling-Reihenfolge
+  divergiert weiter.
+- `TSplashManager::makeDL` — 5-Wort-Diff: GXColor-Temp und
+  `thing[]`-Slots vertauscht; 4 Varianten (const-Referenz,
+  direkte Aggregate-Init, hoisted Declaration, split
+  decl/assign) änderten das Slot-Mapping nicht.
+- `TNerveBathtubKillerExplosion::execute` — Null-Vektor-Temp
+  0x18 vs 0x1C; Pointer-Merge-Variante identisch.
+- `TLiveActor::bind` — der by-value `fst`-Temp des
+  `operator-` sitzt auf 0x10 statt 0x20; 5 Varianten
+  (benanntes Local, const-Ref-Bindung, `sub`-Sequenzen)
+  zerstörten jeweils das `bl sub`-Call-Muster oder blähten
+  den Frame.
+- `SMS_InitChangeNpcColor` — in Runde 70 als
+  Toolchain-Drift dokumentiert; jetzt auch in der
+  Ausschlussliste verankert.
+
+**Weitere gescheiterte Versuche** (nicht in der Ausschlussliste,
+da nur einzelne Durchgänge): `TNerveTamaNokoHitWater::execute`
+(manuelle `unk165`-Lösung statt `unsetUnk165()`-Helper ergab
+204/206 Wörter — reverted).
+
+**Bekannte Pre-existing-Validierungsprobleme** (nicht durch
+diese Runde verursacht, dokumentiert statt verschwiegen):
+
+- `mario/MarioUtil/DrawUtil`: `validate-symbol-order.py`
+  meldet fehlendes schwaches Symbol `identity33__Q29JGeometry
+  64TRotation3<...>Fv` (fehlte nachweislich bereits im Objekt
+  vor der Round-71-Änderung) sowie 14 UNUSED-Size-Warnungen
+  auf bestehenden Null-Byte-Stubs. Symbolprüfung der TU ist
+  damit **nicht sauber**.
+- `mario/Enemy/hamukuri`: `onHaveCap__13TDoroHamuKuriFv` ist
+  global gelinkt, die Map erwartet `weak` (Original vermutlich
+  Header-inline definiert); dazu lange Weak-Order-Warnliste.
+  Beides unabhängig vom `behaveToWater`-Diff.
+
+### Session-Gesamtstand nach Runde 71
+
+**579 verifizierte echte Fixes** (574 + 5 neue Runde-71-Matches
+in 3 Commits). `matched_functions`: **9165**. `matched_code_percent`:
+**47,57 %** (`ninja changes_all`: 47,47 % -> 47,57 %, ausschließlich
+Neuzugänge, keine Regressionen). Volles `ninja`-Rebuild erfolgreich,
+`dtk shasum -c` bestätigt `build/GMSJ01/mario.dol: OK`.
+
+
+### Nach zweiundsiebzigster Iterationsrunde (Cloud-Session: DOL fehlt, Runden 70/71 nach main portiert, kein Retail-Bytevergleich)
+
+**Beobachtung, Umgebung.** Workspace `/workspace`, Branch
+Ausgang `main` (`0b9a2b13`), Remote nur `origin` =
+`github.com/Astrr00/sms`. Arbeitsbaum vor dieser Runde sauber,
+kein unpushed Commit gegen `origin/main`. Betriebssystem dieser
+Session: Linux. `python3 configure.py --version GMSJ01` erzeugt
+die Pre-Split-`build.ninja` (Exit 0). `ninja` bricht danach ab:
+
+`Failed: While loading object 'main.dol' / orig/GMSJ01/sys/main.dol not found`.
+
+Lokal fehlend, exakt:
+
+- `orig/GMSJ01/sys/main.dol` (Eingabe von `dtk dol split`)
+- `orig/GMSJ01/files/mario.MAP` (Eingabe von `validate-symbol-order.py`)
+- alles unter `build/GMSJ01/asm/` und `build/GMSJ01/obj/` (entsteht erst durch den Split)
+- eine Disc-Abbildung unter `orig/GMSJ01/` (nur `.gitkeep`)
+
+`config/GMSJ01/build.sha1` erwartet für das **gelinkte**
+`build/GMSJ01/mario.dol` den SHA1
+`9f5a8caf56f5356aeac9d3ed28bf8de976a03625`. Dieser Hash wurde
+hier nicht nachgemessen. `dtk shasum -c`, `objdiff` und
+`ninja changes_all` sind ohne die DOL nicht ausführbar.
+`matched_functions` / `matched_code_percent` wurden in dieser
+Session **nicht** neu gemessen. Die Zahlen aus Runden 68–71
+bleiben Berichte jener Sessions.
+
+Installiert über die Projektskripte, nicht committet
+(`build/` ist ignoriert): ninja 1.13.2, dtk 1.8.4, wibo 1.1.0,
+objdiff-cli 3.8.1, binutils 2.42-2, Compilerpaket `20251118`.
+`mwcceppc.exe` unter wibo meldet Version 2.3.3 build 163.
+
+**Beobachtung, Upstream `doldecomp/sms`.** Fetch ohne Merge.
+Merge-Base mit `upstream/main` ist `b4cab1d2` („BossPakkun closer“).
+`upstream/main` ist `78460084` („Add explicit casts for narrowing
+conversions“, 2026-09-26) und liegt **60 Commits** vor dieser
+Base. Darunter `8dc741f9` „Move middleware libraries to libs/“
+sowie eine Serie von SDK-Typ-/`nullptr`-/`uintptr_t`-Anpassungen.
+Schnittmenge der seit der Base geänderten Pfade mit unseren
+eigenen Änderungen: 89 Dateien, unter anderem `configure.py` und
+zahlreiche bereits gematchte Spielcode-TUs. Ein Merge würde
+diese Matching-Fixes nicht ersetzen, aber in derselben Datei
+mit der `libs/`-Verschiebung und den Typanpassungen kollidieren.
+Nicht gemergt, nicht rebasiert. Die drei Runde-67-Kandidaten-TUs
+sind auf `upstream/main` weiterhin `NonMatching`
+(`Strategic/ObjModel.cpp`, `Enemy/coasterkiller.cpp`,
+`MoveBG/MapObjGeneral.cpp`). `THamuKuri::behaveToWater` ruft
+upstream weiterhin `SMS_GetMarioPos()` auf.
+
+**Beobachtung, Stand der Runde-67-Kandidaten auf `main`.**
+`TMActorKeeper::TMActorKeeper(TLiveManager*)` enthält bereits
+`char trash[8]` aus `decomp-work` `e239d637`; der Runde-70-Audit
+auf `decomp-work` behauptet dafür 100 %. Hier nicht per objdiff
+geprüft. `TMapObjGeneral::receiveMessage` ist in Runde 68 als
+Sackgasse dokumentiert und unverändert. `TCoasterEnemy::bind`
+ist unverändert der kurze Rumpf; `symbols.txt` nennt
+`bind__13TCoasterEnemyFv` Größe `0xDC`. Ohne Original-ASM kein
+neuer Versuch.
+
+**Übernahme von `origin/decomp-work`.** `main` endete inhaltlich
+beim Squash `56161c69` (Code bis Runde 68, `PROGRESS.md` nur bis
+Runde 67). Auf `decomp-work` lagen danach noch die Quelldiffs
+von Runde 70/71, die auf `main` fehlten. Übernommen, unverändert:
+
+- `TBathWaterManager::loadAfter` (`f89e6df1`)
+- `TBossPakkun::setGroundCollision` (`7760ec64`)
+- `TTrembleModelEffect::reset` (`77025abc`)
+- `THamuKuri::behaveToWater`, `TTamaNoko::calcRootMatrix`,
+  `TTrembleModelEffect::init` (`cd245a39`)
+
+`configure.py` bleibt unverändert (kein Matching-Flip). Die
+Runden-68–71-Abschnitte dieser Datei stammen aus
+`origin/decomp-work` und wurden hier nicht neu gemessen.
+
+**Beobachtung, eigener MWCC-Vergleich vorher/nachher** (dieselben
+Flags wie `cflags_game`: `-O4,p -inline deferred -opt all,nostrength`,
+`-prefix SMS.mch`, GC/1.2.5). Alle sechs Symbole haben vorher und
+nachher dieselbe Länge wie `symbols.txt`:
+
+| Symbol | Wörter | Retail-Größe |
+| --- | --- | --- |
+| `loadAfter__17TBathWaterManagerFv` | 250 | `0x3E8` |
+| `setGroundCollision__11TBossPakkunFv` | 57 | `0xE4` |
+| `reset__19TTrembleModelEffectFv` | 120 | `0x1E0` |
+| `init__19TTrembleModelEffectFP8J3DModel` | 354 | `0x588` |
+| `behaveToWater__9THamuKuriFP9THitActor` | 143 | `0x23C` |
+| `calcRootMatrix__9TTamaNokoFv` | 266 | `0x428` |
+
+Positionsvergleich der Instruktionswörter, nur die Differenzen:
+
+- `loadAfter`: 5 Wörter, alle Prolog/Epilog. `stwu` `-0x98` → `-0x90`
+  (`9421ff68` → `9421ff70`); `stmw`/`lmw`/`lwz` LR/`addi r1`
+  um dieselben 8 Byte verschoben. Die übrigen 245 Wörter sind identisch.
+  Das ist die in Runde 70 behauptete Frame-Korrektur. Die dort
+  zusätzlich genannte Registerwahl r26 statt r27 tritt in **diesem**
+  Vorher/Nachher-Diff nicht auf.
+- `setGroundCollision`: 1 Wort, `addi r30,r1,0x18` → `addi r30,r1,0x20`
+  (`3bc10018` → `3bc10020`). Übrige 56 Wörter identisch.
+- `reset`: 5 Wörter, Frame `stwu` `-0xC8` → `-0xA8` (`9421ff38` →
+  `9421ff58`) plus passende Save/Restore-Offsets.
+- `init`: 5 Wörter, Frame `-0x110` → `-0xE0` (`9421fef0` → `9421ff20`).
+- `behaveToWater`: 4 Wörter, Stack-Offsets `0x5c/0x60/0x64` →
+  `0x58/0x5c/0x60`.
+- `calcRootMatrix`: 7 Wörter, Frame `-0x68` → `-0x50` plus Offsets
+  der Scale-Slots.
+
+**Vermutung, nicht Beobachtung.** Dass die Nachher-Fassung
+bytegleich zum Retail-Objekt ist, ist die Aussage der
+`decomp-work`-Commits und des dortigen `objdiff`-Reports.
+Diese Session hatte das Retail-Objekt nicht und kann das
+weder bestätigen noch widerlegen. Ein reiner Größenvergleich
+reicht dafür nicht: die Länge war schon vorher gleich.
+
+`ninja` gesamt, `dtk shasum -c` und ein objdiff-Report sind in
+dieser Session **nicht** gelaufen, weil die DOL fehlt.
+TU-Zähler in `configure.py` auf `main` (Link-Status, nicht
+Funktionsprozent): 416 `Matching`, 321 `NonMatching`.
+
+### Nächster Schritt
+
+1. `orig/GMSJ01/sys/main.dol` und `orig/GMSJ01/files/mario.MAP`
+   lokal bereitstellen (nicht committen).
+2. `ninja`, dann `python tools/decomp-diff.py` für
+   `mario/Map/BathWaterManager`, `mario/Enemy/bosspakkun`,
+   `mario/MarioUtil/DrawUtil`, `mario/Enemy/hamukuri`,
+   `mario/Enemy/tamaNoko` — die sechs Symbole Wort für Wort
+   gegen das Originalobjekt.
+3. `dtk shasum -c config/GMSJ01/build.sha1`. Erst danach einen
+   Matching-Flip erwägen. Die betroffenen TUs bleiben bis dahin
+   `NonMatching`.
+4. Wenn der Split steht: `TCoasterEnemy::bind` (`0xDC`) als
+   nächsten offenen Kandidaten. `receiveMessage` von
+   `TMapObjGeneral` nicht wiederholen (Sackgasse Runde 68).
