@@ -1105,10 +1105,10 @@ const char** TBossPakkun::getBasNameTable() const
 
 void TBossPakkun::setGroundCollision()
 {
+	TPosition3f collisionMtx;
 	const TNerveBase<TLiveActor>* dieNerve = &TNerveBPDie::theNerve();
-	if (mSpine->getLatestNerve() != dieNerve
-	    && mMapCollisionManager != nullptr) {
-		TPosition3f collisionMtx;
+	const TNerveBase<TLiveActor>* currentNerve = mSpine->getLatestNerve();
+	if (currentNerve != dieNerve && mMapCollisionManager != nullptr) {
 		collisionMtx.set(getModel()->getAnmMtx(2));
 		if (mMapCollisionManager->unk8 != nullptr)
 			mMapCollisionManager->unk8->moveMtx(collisionMtx);
