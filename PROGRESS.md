@@ -9175,3 +9175,61 @@ Keine TU auf `Matching` gestellt.
    `initAttacker` behält `actor`, `startVoice` behält `sound`.
 8. Vermeidungslisten aus Runde 81 bis 105 bleiben.
    Den Frame nicht polstern.
+
+### Nach hundertundsiebter Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 106:
+47,83 % matched code, 1717092 / 3590088 Bytes,
+9197 / 12881 Funktionen.
+Game Code 35,55 %, 1004944 / 2826784 Bytes,
+5232 / 8857 Funktionen.
+Daten 394595 / 640331 Bytes, 61,62 %.
+
+`TMario::TDeParams::TDeParams` lud den Namen
+`mHpMax`.
+Retail speichert in `.sdata2` die Zeichenkette `mHPMax`.
+Zwei `li` zeigen auf genau diese Zeichenkette.
+Unter `functionRelocDiffs=data_value` waren das
+die einzigen zwei Abweichungen, 99,98 %.
+
+**Vollmatch, strikt.** Das Feld heißt jetzt `mHPMax`.
+`PARAM_INIT` schreibt denselben Namen in den Pool.
+0 Abweichungen, 2440 Bytes, 610 Instruktionen.
+`MarioInit` bleibt `NonMatching`.
+Die Zugriffe in den anderen TUs sind nur der Member-Offset.
+`.sdata2` von `MarioInit` steigt von 99,04 % auf 99,23 %.
+Der Daten-Zähler in Bytes bleibt gleich.
+
+**Zähler.** `ninja changes_all` bleibt leer.
+Die Instruktionswörter waren schon identisch.
+Der Report zählte den Konstruktor schon als Match.
+Matched code bleibt 1717092 / 3590088 Bytes,
+9197 / 12881 Funktionen.
+Game Code und Daten bleiben unverändert.
+Keine andere TU ändert ein Maß.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+Die Hino2-Defaults 100, 200 und 0,5 bleiben.
+
+### Nächster Schritt
+
+1. `TDeParams::mHPMax` behält die Schreibweise `mHPMax`.
+   `MarioInit` nicht auf `Matching` stellen.
+2. `THino2Params` behält 100, 200 und 0,5
+   für `mSLBodyHitR0`, `mSLBodyHitH0` und `mSLBankProp`.
+3. `hoseiDiveCameraCallback` behält `marioPos`.
+   `MSRandVol::MSRandVol` behält `f32 half`.
+4. `isUpperThanMirrorPlane` nicht ohne `dot`.
+   `changeXluJoint` nicht mit einem gemeinsamen `int i`.
+   `entryMirrorDrawBufferAlways` nicht mit
+   gefalteten Draw-Buffer-Suchen.
+5. `TShine::loadBeforeInit` nicht über ein benanntes `next`.
+   `TMario::catching` nicht über `MSound* sound`.
+   `stampModel` nicht über ein vorgezogenes `mMinX`.
+6. `TNerveMantaDeath` nicht über ein benanntes `se`.
+   `makeMActors` nicht über einen benannten Keeper.
+7. Vermeidungslisten aus Runde 81 bis 106 bleiben.
+   Den Frame nicht polstern.
