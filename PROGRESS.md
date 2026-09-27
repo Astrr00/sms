@@ -10888,6 +10888,23 @@ strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R164 (`TMapObjSwitch::control`)
+
+**Vollmatch, strikt.**
+
+- Retail-Bool-Synthese (`lwz r0` → `cmpwi` → `li`/`clrlwi.`) statt inline
+  `isStateTimerEngaged()`.
+- Zweites `lwz` von `mStateTimer` nach `r4` vor `gpMSound` → `r3` via
+  `volatile int*`-Reload + `gpMSound->playTimer`.
+
+0 Abweichungen, 88 Bytes, 22 Instruktionen.
+`decomp-diff -u mario/MoveBG/MapObjTown -d TMapObjSwitch::control`: 100 %.
+
+R163 `TRollBlock::load`, R162 `THideObjPictureTwin::loadAfter`, R160
+`TCloset::calcRootMatrix` unverändert strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R161 (Round 71 — kein neuer strikter Vollmatch)
 
 **Kein neuer strikter Vollmatch** (Scope A). R160 `TCloset::calcRootMatrix` unverändert strikt.

@@ -494,8 +494,18 @@ THideObjInfo::THideObjInfo(const char* name)
 void TMapObjSwitch::control()
 {
 	TMapObjBase::control();
-	if (isStateTimerEngaged())
-		SMSGetMSound()->playTimer(mStateTimer);
+
+	bool engaged;
+	if (mStateTimer > 0)
+		engaged = true;
+	else
+		engaged = false;
+
+	if (engaged) {
+		volatile int* stateTimerPtr = &mStateTimer;
+		u32 timer                   = (u32)*stateTimerPtr;
+		gpMSound->playTimer(timer);
+	}
 }
 
 BOOL TMapObjSwitch::receiveMessage(THitActor*, u32 message)
