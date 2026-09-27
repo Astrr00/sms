@@ -2542,6 +2542,9 @@ DEFINE_NERVE(TNerveDangoHamuKuriAttack, TLiveActor) { }
 
 DEFINE_NERVE(TNerveHaneHamuKuriUpWait, TLiveActor)
 {
+	char trash[0x4];
+	trash[0] = 0;
+
 	THaneHamuKuri* self = (THaneHamuKuri*)spine->getBody();
 	if (spine->getTime() < 1) {
 		self->setWaitAnm();
