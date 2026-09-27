@@ -10842,6 +10842,34 @@ nicht davor — sonst `addi r4,r1,0x10` statt **0x20**). Frame **0x30**,
 Locals bleiben **+8** versetzt. `TNerveDoroHaneHitWater`: Retail-Frame kleiner
 als unser Build — kein reines Trash-Pad.
 
+### R158 (Aufgabe B; Scan, keine neuen Vollmatches)
+
+**Defer eingehalten.** Kein Retry auf WallDie, warpRequest, PoihanaThrow,
+HamuKuriBoundFreeze, BathtubKiller death.
+
+**Kandidaten (~8) — kein striktes Match, nicht committiert.**
+
+1. **`TNerveMantaSpawn`** — `trash[8]` am Eingang: Frame **0x60** OK;
+   `emitAndBindToPosPtr`-Stack weiter **+8** (**0x34** vs. **0x3c**);
+   `trashEmit[8]` im `getTime()==0`-Block vergrößert Frame.
+2. **`TNerveMantaHitWater`** — `trash[8]`: Frame **0xb0** OK; Locals/Loops
+   durchgängig **+4**; `trashAfterSelf[4]` (Write) / `trash[0xc]` /
+   `trashBeforeParticles[4]`: Frame oder Operanden schlechter.
+3. **`TNerveNKFollowMario`** — KageMarioModokiWait-Muster (`trash[8]`+
+   `trashAfterSelf[4]`+`TPathNode`+`trashPath[8]`, Writes): Frame **0x60**
+   statt **0x58**, Path-Stack noch versetzt.
+4. **`TNerveTamaNokoDown`** — `trashScale[4]` nach `local_1c`: Frame **+0x10**,
+   Vec **+0xc**.
+5. **`TNerveDoroHaneHitWater`** — Frame unser Build **+8** vs. Retail (Shrink).
+6. **`TNerveHamuKuriGoForSearchActor`** — Frame unser Build **+8** (inlined
+   `walkBehavior` / Vec-Diff).
+7. **`TNerveMantaAppearDemo`** — Epilog-/Frame **+0x10** (wie R156).
+8. **`TNervePakkunGenerate`** — Register-/Control-Flow (`|`), nicht Trash-Pad.
+
+**Vollmatch, strikt.** keine.
+
+**Verify.** `ninja`, `dtk shasum -c` → OK (Quellbaum = `185dd5cb`).
+
 ### R157 (Aufgabe B; Sweep, keine neuen Vollmatches)
 
 **`TNerveHamuKuriWallDie`.** `char trash[8];` am Eingang → Frame **0x80**;
