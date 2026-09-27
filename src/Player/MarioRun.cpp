@@ -798,7 +798,8 @@ BOOL TMario::rotating()
 	if (mStatus == MARIO_STATUS_ROTATE_L)
 		mModelFaceAngle = mStatusTimer * 4096;
 	else
-		mModelFaceAngle = -(mStatusTimer * 4096);
+		// Unsigned store. A signed negation inserts extsh before sth.
+		mModelFaceAngle = (u16)-(mStatusTimer * 4096);
 
 	return 0;
 }
