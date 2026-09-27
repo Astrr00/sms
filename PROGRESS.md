@@ -6324,3 +6324,79 @@ Offset nicht.
    4-Byte-Slot von `checkData` (`0x34` → `0x30`) bei gleichem Frame.
 3. Kein Matching-Flip der fünf TUs, solange dort andere
    Funktionen abweichen.
+
+### Nach vierundsiebzigster Iterationsrunde (`makeObjAppear`-Float-Overload matched)
+
+**Beobachtung, vorher.**
+`TMapObjBaseManager::makeObjAppear(f32,f32,f32,u32,bool)`,
+94 Instruktionen, 376 Bytes, Frame beiderseits `0x58`.
+Zwei Wörter abweichend: `addi r4, r1, 0x30` gegen `0x34`
+und `lwz r3, 0x30(r1)` gegen `0x34(r1)`.
+Das ist der Slot von `checkData`.
+
+**Zurückgenommen, eine Hypothese je Versuch.**
+
+1. `f32 raised = y + 5.0f` als Argument von `checkGround`.
+   `fadds` bleibt in `f2`, `checkData` bleibt bei `0x34`,
+   Frame bleibt `0x58`. Die Summe belegt keinen Stack-Slot.
+2. `int i` vor `y2` deklarieren und die Schleife mit diesem
+   `i` schreiben. Offset unverändert. Der Index besitzt den
+   toten Slot nicht. `checkData` vor den `if` zu ziehen war
+   schon Runde 73 und bleibt ohne Effekt.
+
+**Beobachtung, nachher.** Die Ternärform steht am Aufruf,
+ohne die fabricierte Inline-Methode `checkFlag`:
+
+`checkData->mFlags & BG_CHECK_FLAG_ILLEGAL ? true : false`
+
+`checkData` liegt beiderseits bei `r1+0x30`.
+94 Instruktionswörter, Frame `0x58`.
+Unter `functionRelocDiffs=data_value` zeigen `gpMap`,
+`TMap::checkGround` und der 4-Byte-Pool der `5.0f`
+dieselben Ziele. Null abweichende Wörter.
+`isIllegalData` trägt `#pragma dont_inline` und wäre hier
+ein `bl`. Das Original faltet denselben Test ein.
+`checkFlag` im Header ist unverändert.
+
+**Messung, `ninja` und `dtk shasum -c`.**
+
+Vorher, Runde 73: 47,57 % matched code,
+1707908 / 3590088 Bytes, 9165 / 12881 Funktionen.
+Game Code 35,23 %, 995760 / 2826784 Bytes,
+5200 / 8857 Funktionen.
+
+Nachher: 47,58 % matched code,
+1708284 / 3590088 Bytes, 9166 / 12881 Funktionen.
+Game Code 35,24 %, 996136 / 2826784 Bytes,
+5201 / 8857 Funktionen.
+
+Delta: +1 Funktion, +376 Bytes. Das ist die Größe der
+Funktion (94 Instruktionen).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+`configure.py` nicht geflippt. Dieselbe TU hat weiter
+abweichende Geschwister, Wörter gezählt, nicht die
+gerundete Prozentanzeige:
+
+- `newAndRegisterObjByEventID`: 10 Wörter, Anzeige 99,98 %
+- `newUniqueObjByName`: 42 Wörter, Anzeige 98,88 %
+- `TMapObjManager::load`: 9 Wörter, Anzeige 99,97 %
+
+`validate-symbol-order.py -u mario/MoveBG/MapObjManager`:
+PASS. Eine vorbestehende UNUSED-Größenwarnung
+`loadMatTable__14TMapObjManagerFPCc`, Map `0x34`,
+Objekt `0x38`. Diese Funktion ist nicht angefasst.
+`TCoasterEnemy::bind` ist nicht angefasst.
+
+### Nächster Schritt
+
+1. `MoveBG/MapObjManager.cpp` nicht auf `Matching` stellen.
+2. `TCoasterEnemy::bind` nicht mit einem benannten `TVec3`
+   oder mit `operator=` wiederholen.
+3. Nächster Kandidat außerhalb dieser TU: eine fast
+   matchende Funktion mit kleinem Slot- oder Frame-Gap.
+   Die drei Geschwister oben sind mehrere Wörter auseinander,
+   kein einzelner 4-Byte-Slot. Die fünf bereits verifizierten
+   TUs bleiben `NonMatching`.
