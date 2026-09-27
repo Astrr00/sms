@@ -957,6 +957,10 @@ void TEggYoshi::touchActor(THitActor* other)
 
 void TEggYoshi::control()
 {
+	JGeometry::TVec3<f32> pos;
+	JGeometry::TVec3<f32> v;
+	char trash[0x8];
+	trash[0] = 0;
 	TMapObjBase::control();
 
 	switch (mState) {
@@ -972,7 +976,7 @@ void TEggYoshi::control()
 			startAnim(3);
 			TYoshi* yoshi = SMS_GetYoshi();
 			if (!yoshi->isHatched()) {
-				JGeometry::TVec3<f32> pos = mPosition;
+				pos = mPosition;
 				yoshi->appearFromEgg(pos, mRotation.y, this);
 				yoshi->setEggYoshiPtr(this);
 			}
@@ -981,16 +985,15 @@ void TEggYoshi::control()
 		break;
 	case 0xC:
 		if (animIsFinished()) {
-			kill();
+			makeObjDead();
 			mState = STATE_DEAD;
 		}
 		break;
-	case 0xF: {
-		JGeometry::TVec3<f32> v = mVelocity;
+	case 0xF:
+		v = mVelocity;
 		if (v.y == 0.0f)
 			mState = 0x10;
 		break;
-	}
 	case 0x0:
 	case 0x1:
 	case 0x2:
