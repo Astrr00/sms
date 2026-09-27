@@ -653,11 +653,13 @@ BOOL TMapObjBase::receiveMessage(THitActor* sender, u32 message)
 
 void TMapObjBase::initAndRegister(const char* param_1)
 {
+	char trash[4];
+	trash[0] = 0;
+
 	unkF4 = param_1;
 	initMapObj();
 	if (mMapObjData->unkC) {
-		static_cast<TIdxGroupObj*>(
-		    JDrama::TNameRefGen::search(mMapObjData->unkC))
+		static_cast<TIdxGroupObj*>(JDrama::TNameRefGen::search(mMapObjData->unkC))
 		    ->push_back(this);
 	}
 }
