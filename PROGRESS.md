@@ -10785,6 +10785,21 @@ DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 3. `initAndRegister`: SMS-B.
 4. Defer-Listen unverändert.
 
+### R155 (`TMapObjBase::throwObjToFrontFromPoint`)
+
+**Vollmatch, strikt.**
+
+- `throwObjToFrontFromPoint`: `Mtx mtx` am Funktionskopf (else-Zweig), danach
+  `char trash[8]`; `mMActor`-Zweig nutzt `MtxPtr anmMtx` statt lokalem `mtx`.
+  Frame `-0x88`, `MsMtxSetRotRPH`-Buffer @ `0x34` wie Retail.
+- Geschwister `throwObjToFront`: gleiches Muster reicht nicht (Frame `-0x90` vs
+  `-0x88` mit `trash[8]` — offen).
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+**Nächste MoveBG:** `rotateVecByAxisY`; `touchFruit` / `appearWithDemo` /
+`newAndRegisterCoin` nur bei klarem Stack-Hebel. SMS-B unverändert.
+
 ### R154 (`TMapObjBillboard::touchWater`)
 
 **Vollmatch, strikt.**
