@@ -10247,10 +10247,44 @@ SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
 
 Keine TU auf `Matching` gestellt.
 
+### Nach hundertneunundzwanzigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 128:
+48,03 % matched code, 1724428 / 3590088 Bytes,
+9215 / 12881 Funktionen.
+Game Code 35,82 %, 1012280 / 2826784 Bytes,
+5250 / 8857 Funktionen.
+
+Partielle Versuche (revertiert): `TNerveBathtubKillerBreak::execute`
+(`trash[4]` am Nerve-Anfang bzw. vor `generateItemBathtubKiller` —
+Frame `0x30` OK, Spill-Offsets @ `0x18` vs `0x1c` unverändert).
+
+**Vollmatch, strikt.**
+
+`TNerveHaneHamuKuriUpWait::execute`: `char trash[4]; trash[0] = 0;` am
+Nerve-Anfang für Retail-Frame `0x58` (vorher `0x54`).
+
+0 Abweichungen, 392 Bytes, 98 Instruktionen.
+`validate-symbol-order` `mario/Enemy/hamukuri`: BINDING-FAIL
+`onHaveCap__13TDoroHamuKuriFv` (weak vs global, vorbestehend; kein
+Diff durch diese Runde).
+
+**Zähler.** matched code 48,03 % → 48,04 %,
+1724428 → 1724820 Bytes (+392),
+9215 → 9216 Funktionen (+1).
+Game Code 35,82 % → 35,84 %,
+1012280 → 1012672 Bytes (+392),
+5250 → 5251 Funktionen (+1).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
 ### Nächster Schritt
 
-1. Runden 114–119 / 121–127 unverändert.
+1. Runden 114–119 / 121–128 unverändert.
 2. `initAnmSound`: NPC-Pfad / `MAnmSoundNPC`-Inline vs Retail-`0x2c`-Spill.
 3. `TNerveHino2Burst`: inline Wasser-Emit + Slot @ `0x78` (nicht nur Frame).
 4. `considerRotateStart` / `turnEnd` / `turnning`: Slot+Frame (inlining).
-5. Vermeidungslisten aus Runde 81 bis 127 bleiben.
+5. Vermeidungslisten aus Runde 81 bis 128 bleiben.
