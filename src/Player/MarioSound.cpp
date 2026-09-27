@@ -711,12 +711,12 @@ u32 TMario::startVoice(u32 param_1)
 	if (onYoshi())
 		return 0;
 
-	return SMSGetMSound()->startMarioVoice(param_1, mHealth, getVoiceStatus());
+	MSound* sound = SMSGetMSound();
+	return sound->startMarioVoice(param_1, mHealth, getVoiceStatus());
 }
 
 u32 TMario::startVoiceIfNoVoice(u32 param_1)
 {
-	char trash[8];
 	if (SMSGetMSound()->getMarioVoiceID(0) == -1)
 		return startVoice(param_1);
 
