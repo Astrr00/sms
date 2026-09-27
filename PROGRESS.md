@@ -10592,3 +10592,27 @@ Stack-Layout (~0x48–0x68) aus `mario.MAP`, nicht Entry-`trash`.
 3. Tex-Loop `++j` erst mit passendem Frame/Cluster committen.
 4. `thinkSituation` / `soundMovement` / `changeScene`: Frame verkleinern.
 5. Defer-Listen unverändert.
+
+### Nach hundertvierzigster Iterationsrunde
+
+**Beobachtung.** R139: `initModel` zu verflochten; Strategie auf andere TUs.
+
+**Vollmatch, strikt.**
+
+`TRoulette::moveObject`: ASM `lfs`/`stfs` @ **0x34** → `mRotation.y` (nicht
+`.x`) plus `char trash[0x20]; trash[0] = 0;` für Retail-Frame `0x58`.
+
+0 Abweichungen, 244 Bytes, 61 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/MapObjSirena`: PASS (bestehende UNUSED-
+Size-Warnung `getSlotResult` unverändert).
+
+`initMirrorModel` bleibt 100 %; Mirror-Strings @ **0xa50** unverändert.
+
+`ninja` / DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### Nächster Schritt
+
+1. R138–R140 Mirror / `turnning` trash[4] / `moveObject` unverändert halten.
+2. Weitere MoveBG/Enemy-Kandidaten mit klarem Member-Offset (wie `0x34` Ry).
+3. `initModel` nur mit kombiniertem Frame+Compound+`++j`-Cluster.
+4. Defer-Listen unverändert.
