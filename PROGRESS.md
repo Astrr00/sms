@@ -10823,6 +10823,23 @@ DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 `initDrawNear` GX-Spill ohne Frame-Wachstum; `rotateVecByAxisY` nur bei inlined
 Retail-Pfad. Skip: touchFruit / appearWithDemo / newAndRegisterCoin.
 
+### R158 (`TCloset::calcRootMatrix`)
+
+**Vollmatch, strikt.**
+
+- `TCloset::calcRootMatrix`: Entry-`char trash[4]; trash[0]=0;`, danach
+  `getModel()`; Mid-`char pad2[4]; pad2[0]=0;` vor `TRotation3f mtx` →
+  `MsMtxSetXYZRPH`-Basis @ `0x14`, `mtx.ref(1,3)` @ `0x30`, Frame `-0x70`
+  (**match**).
+
+R157 `initMapObj` partial, R156–R154 unverändert.
+`validate-symbol-order` `mario/MoveBG/MapObjSirena`: PASS (UNUSED-Size-Warnungen).
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+**Nächste MoveBG:** `TMapObjSwitch::receiveMessage` (`TFlagT` @ `0x2c` vs `0x24`);
+`initMapObj` / `initDrawNear` nur mit neuem Hebel. Skip: Defer-Liste unverändert.
+
 ### R155 (`TMapObjBase::throwObjToFrontFromPoint`)
 
 **Vollmatch, strikt.**

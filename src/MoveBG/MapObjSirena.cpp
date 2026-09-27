@@ -996,10 +996,11 @@ void TCloset::calcRootMatrix()
 {
 	char trash[4];
 	trash[0] = 0;
-	char pad2[4];
 
 	gpCurObject = this;
 	J3DModel* model = getModel();
+	char pad2[4];
+	pad2[0] = 0;
 	TRotation3f mtx;
 	MsMtxSetXYZRPH(mtx, mPosition.x, mPosition.y + unk14C, mPosition.z,
 	               mRotation.x, mRotation.y, mRotation.z);
