@@ -6749,3 +6749,71 @@ Kein Matching-Flip.
    schon wortgleich ist. Nicht `TCoin::appear` und
    nicht `TItem::calc` als erstes: dort fehlen
    `0x20` Byte ohne einen einzigen Stack-Zugriff.
+
+### Nach achtzigster Iterationsrunde (drei Matches)
+
+**Beobachtung, vorher.** Stand Runde 79:
+47,62 % matched code, 1709660 / 3590088 Bytes,
+9173 / 12881 Funktionen.
+Game Code 35,29 %, 997512 / 2826784 Bytes,
+5208 / 8857 Funktionen.
+
+**Match, drei Nerves in `bosspakkun`.**
+Der Rumpf war wortgleich, der Frame 8 Byte zu klein.
+`int time = spine->getTime()` hebt den Frame.
+Null abweichende Wörter danach.
+
+- `TNerveBPGetUp::execute`, 46 Instruktionen, 184 Bytes.
+  Frame `0x20` auf `0x28`.
+- `TNerveBPCannon::execute`, 73 Instruktionen, 292 Bytes.
+  Frame `0x30` auf `0x38`.
+- `TNerveBPSwing::execute`, 44 Instruktionen, 176 Bytes.
+  Frame `0x30` auf `0x38`.
+  Nur der erste `getTime()` ist benannt.
+  Der zweite bleibt `spine->getTime()`, das Original
+  lädt nach `changeBck` neu.
+
+`validate-symbol-order.py -u mario/Enemy/bosspakkun`
+PASS. Die zwei UNUSED-Größenwarnungen sind alt.
+Die TU bleibt `NonMatching`.
+
+**Gemessen und zurückgenommen.**
+
+- `TNerveBPTumbleIn`: derselbe benannte `getTime()`
+  ändert den Frame nicht. Er bleibt `0x40` gegen
+  `0x48`. Drei Lade-Stellen, kein Stack-Objekt
+  dazwischen.
+- `TNerveBPFlyPivot`: der Frame wächst auf `0x40`,
+  gleich dem Original. Der Rückgabewert von `pop()`
+  bleibt auf `0x1c` statt `0x20`.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,64 % matched code,
+1710312 / 3590088 Bytes, 9176 / 12881 Funktionen.
+Game Code 35,31 %, 998164 / 2826784 Bytes,
+5211 / 8857 Funktionen.
+
+Delta gegen Runde 79: +3 Funktionen, +652 Bytes
+(184 + 292 + 176).
+
+`changes_all` meldet nur diese drei Executes von
+unter 100 % auf 100 %. Keine Regression.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Kein Matching-Flip.
+
+### Nächster Schritt
+
+1. `bosspakkun` nicht auf `Matching` stellen.
+2. `getTime()` nicht pauschal benennen.
+   `TumbleIn` hat nicht reagiert.
+   `FlyPivot` schließt den `pop()`-Slot nicht.
+3. `TNerveBPTornado` hat 16 Byte zu wenig Frame
+   und keinen Stack-Zugriff im Rumpf.
+   Ein einzelner `int` reicht dort erfahrungsgemäß
+   nicht.
+4. `TNerveBPDie` fehlt `0x20` ohne Stack-Zugriff,
+   wie `TCoin::appear` und `TItem::calc`.
