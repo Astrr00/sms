@@ -9013,3 +9013,92 @@ Keine TU auf `Matching` gestellt.
 8. Vermeidungslisten aus Runde 81 bis 103 bleiben.
    `MtxToQuat` nicht in Teilsummen zerlegen.
    `turnEnd`, `TelesaFreeze` und `touchWater` liegen lassen.
+
+### Nach hundertundfünfter Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 104:
+47,83 % matched code, 1716996 / 3590088 Bytes,
+9196 / 12881 Funktionen.
+Game Code 35,55 %, 1004848 / 2826784 Bytes,
+5231 / 8857 Funktionen.
+Daten 394595 / 640331 Bytes, 61,62 %.
+
+`hoseiDiveCameraCallback` kopierte `position.x`
+über r5.
+Retail benutzt r6.
+Der Frame stimmte schon (`0x20`).
+r5 hält danach `gpMarioPos` für `warpPosAndAt`.
+
+**Vollmatch.**
+
+```cpp
+const JGeometry::TVec3<f32>* marioPos = gpMarioPos;
+gpCamera->warpPosAndAt(position, *marioPos);
+```
+
+Der benannte Zeiger lässt die Kopie in r6.
+0 Abweichungen, 96 Bytes, 24 Instruktionen.
+`bosseel` bleibt `NonMatching`.
+Symbolordnung PASS.
+Die Weak-Reihenfolge und fünf UNUSED-Größen
+sind vorbestehend.
+
+**Gemessen und zurückgenommen.**
+
+`dot` in `isUpperThanMirrorPlane` weglassen
+lässt den Frame bei `0x30` gegen `0x28`
+und tauscht die `fadds`-Operanden.
+Ein gemeinsames `int i` in `changeXluJoint`
+ändert nichts.
+Der Frame bleibt `0x90` gegen `0x88`.
+Die beiden Suchen in `entryMirrorDrawBufferAlways`
+inline zu falten vergrößert den Frame
+von `0x68` auf `0x70`.
+Retail ist `0x60`.
+Alle drei zurückgenommen.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,83 % matched code,
+1717092 / 3590088 Bytes, 9197 / 12881 Funktionen.
+Game Code 35,55 %, 1004944 / 2826784 Bytes,
+5232 / 8857 Funktionen.
+Daten unverändert: 394595 / 640331 Bytes, 61,62 %.
+Game-Daten unverändert: 315371 / 556995 Bytes, 56,62 %.
+
+Delta Code gegen Runde 104: +1 Funktion, +96 Bytes.
+Delta Daten: 0 Bytes.
+
+`changes_all` nur
+`hoseiDiveCameraCallback__FUlUl`
+99,58 % auf 100 %.
+Unit-Code `bosseel` 43,83 % auf 44,04 %.
+Keine Regression.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `hoseiDiveCameraCallback` behält `marioPos`.
+   `bosseel` nicht auf `Matching` stellen.
+2. `MSRandVol::MSRandVol` behält `f32 half`.
+   `MSoundSE` nicht auf `Matching` stellen.
+3. `TShine::loadBeforeInit` nicht über ein benanntes `next`.
+   `TMario::catching` nicht über `MSound* sound`.
+   `stampModel` nicht über ein vorgezogenes `mMinX`.
+4. `isUpperThanMirrorPlane` behält `dot`.
+   `changeXluJoint` behält zwei Schleifenindizes.
+   `entryMirrorDrawBufferAlways` behält `dbOpa` und `dbXlu`.
+5. `TNerveMantaDeath` nicht über ein benanntes `se`.
+   `makeMActors` nicht über einen benannten Keeper.
+6. `TDonchou::loadAfter` behält `drum` und `itemDrum`.
+   `getObjAppearPos` bleibt `const`.
+7. `TTelesa::initAttacker` behält `TLiveActor* actor`.
+   `TMario::startVoice` behält `MSound* sound`.
+8. Vermeidungslisten aus Runde 81 bis 104 bleiben.
+   Den Frame nicht polstern.
+   `MtxToQuat` nicht in Teilsummen zerlegen.
+   `turnEnd`, `TelesaFreeze` und `touchWater` liegen lassen.
