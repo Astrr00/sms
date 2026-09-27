@@ -46,21 +46,24 @@ bool TMapObjBase::isHideObj(THitActor* param_1)
 	return false;
 }
 
+// The second pair is inlined so `b1 || ...` shares one return true.
+// A single four-way disjunction does not.
+static inline bool stateIs3Or4(u8 state)
+{
+	bool b2 = true;
+	if (state != 3 && state != 4)
+		b2 = false;
+	return b2;
+}
+
 bool TMapObjBase::isDemo()
 {
 	bool b1 = true;
 	if (gpMarDirector->unk124 != 1 && gpMarDirector->unk124 != 2)
 		b1 = false;
 
-	if (!b1) {
-		// TODO: should be OR, but need fancy inlines for that...
-		bool b2 = true;
-		if (gpMarDirector->unk124 != 3 && gpMarDirector->unk124 != 4)
-			b2 = false;
-		if (b2) {
-			return true;
-		}
-	}
+	if (b1 || stateIs3Or4(gpMarDirector->unk124))
+		return true;
 	return false;
 }
 
