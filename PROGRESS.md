@@ -6986,3 +6986,65 @@ Kein Matching-Flip.
    `push(TSpcSlice())` oder einem benannten
    `TSpcSlice` wiederholen.
 4. Die Vermeidungsliste aus Runde 81 bleibt.
+
+### Nach dreiundachtzigster Iterationsrunde (ein Match)
+
+**Beobachtung, vorher.** Stand Runde 82:
+47,71 % matched code, 1712736 / 3590088 Bytes,
+9181 / 12881 Funktionen.
+Game Code 35,40 %, 1000588 / 2826784 Bytes,
+5216 / 8857 Funktionen.
+
+**Match, `TMapObjBase::isDemo`.**
+22 Instruktionen, 88 Bytes.
+Vorher ein vertauschtes `bne`: Zustand 1 und 2
+sprangen auf `return false`.
+`if (b1) return true` legt ein zweites `return true`
+vor die Prüfung von 3 und 4.
+`if (!b2) return false` macht aus dem zweiten
+Sprung ein `bne` und tauscht die Rückgaben.
+Ein `goto` initialisiert `b2` zu früh.
+
+Die passende Form ist ein Oder mit der zweiten
+Paarprüfung als Inline. Der Helfer wird nicht
+emittiert.
+
+```
+if (b1 || stateIs3Or4(gpMarDirector->unk124))
+    return true;
+return false;
+```
+
+Null abweichende Wörter. Die TU bleibt
+`NonMatching`.
+
+`validate-symbol-order.py -u mario/MoveBG/MapObjLib`
+schlägt schon vorher fehl: `SMatrix33C::at` fehlt,
+und die UNUSED-Reihenfolge weicht ab.
+Das ist nicht durch `isDemo` entstanden.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,71 % matched code,
+1712824 / 3590088 Bytes, 9182 / 12881 Funktionen.
+Game Code 35,40 %, 1000676 / 2826784 Bytes,
+5217 / 8857 Funktionen.
+
+Delta gegen Runde 82: +1 Funktion, +88 Bytes.
+Die angezeigte Prozentzahl bleibt 47,71.
+
+`changes_all` meldet nur `isDemo__11TMapObjBaseFv`
+von 99,77 % auf 100 %. Keine Regression.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Kein Matching-Flip.
+
+### Nächster Schritt
+
+1. `MapObjLib` nicht auf `Matching` stellen.
+2. `isDemo` nicht auf ein vierfaches Oder
+   oder ein `goto` zurückdrehen.
+3. Die Vermeidungsliste aus Runde 81 und die
+   drei Fehlversuche aus Runde 82 bleiben.
