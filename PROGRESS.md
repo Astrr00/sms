@@ -10562,11 +10562,33 @@ Relocs); MarioDraw matched_data 11,92 % → 48,36 %.
 `ninja` / DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 `changes_all`: Total matched_code 48,35 % → 48,36 %.
 
+### Nach hundertneununddreißigster Iterationsrunde (PROGRESS, 0 Vollmatches)
+
+**Beobachtung.** R138-Stand: `initMirrorModel` 100 %; `initModel` 94,1 %;
+Spiegel-Strings @ **0xa50** OK.
+
+**`initModel`-Recovery (revertiert).** Retail `stwu -0x5c0`; unser Build mit
+`marioInitModelSetInfoRo0/1`-Kopie **−0x558** (−0x68). Compound-Literale für
+`setInfo[0/1]` erzeugen Retail-Stack-Spills (`lwz 0xa38(r30)` → `0x3b0(r1)` …)
+und **−0x578** (−0x48), aber Gesamt-Fuzzy fällt auf ~89,9 % (Tex-Loop-Cluster).
+`++j` statt `++i` in der `J3DTexNoAnm`-Schleife ist ASM-korrekt (Retail
+`addi r7,r7,1`), verschlechtert aber solo auf 88,7 % — Loop und Frame müssen
+gemeinsam angegangen werden. Scratch-Locals / Buffer vergrößern / Locals an den
+Funktionsanfang: kein Frame-Gewinn.
+
+**Nächster ASM-Haken für `initModel`.** Behalten: Foot-Nullblöcke +
+`marioInitModelSetInfoRo0/1` @ **0xa38** (Mirror fix). Ziel: Compound-Literal-
+**Codegen** für `setInfo` **ohne** zweites Rodata — vermutlich UNUSED-Inline/
+Stack-Layout (~0x48–0x68) aus `mario.MAP`, nicht Entry-`trash`.
+
+**Vollmatch.** keine.
+
+`ninja` / DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### Nächster Schritt
 
-1. Runden 114–119 / 121–135 / R138 unverändert (R114–R135 `turnning` trash).
-2. `initModel` fuzzy zurück (Relocs nach setInfo-Rodata-Move).
-3. `Hino2Pollute`: Nerv-Body aus ASM/`m2c`.
+1. R138 Mirror-Fix unverändert; `turnning` trash[4] behalten.
+2. `initModel`: MAP/UNUSED + Stack −0x5c0 mit Compound-`setInfo`-Spills.
+3. Tex-Loop `++j` erst mit passendem Frame/Cluster committen.
 4. `thinkSituation` / `soundMovement` / `changeScene`: Frame verkleinern.
-5. `bosseel` / `walkerEnemy` / `BGKAppear` wie R135.
-6. Defer-Listen unverändert.
+5. Defer-Listen unverändert.
