@@ -1149,6 +1149,9 @@ DEFINE_NERVE(TNerveKumokunWait, TLiveActor)
 
 DEFINE_NERVE(TNerveKumokunFreeze, TLiveActor)
 {
+	char trash[8];
+	trash[0] = 0;
+
 	TKumokun* self = (TKumokun*)spine->getBody();
 	if (spine->getTime() == 0) {
 		self->clearAnmStack();
