@@ -7188,3 +7188,68 @@ SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
    ein `goto` zurückdrehen.
 5. Vermeidungslisten aus Runde 81 und 82 bleiben.
    `MapObjLib` und `MarioMove` nicht auf `Matching` stellen.
+
+### Nach sechsundachtzigster Iterationsrunde (ein Status-Match)
+
+**Beobachtung, vorher.** Stand Runde 85:
+47,73 % matched code, 1713508 / 3590088 Bytes,
+9183 / 12881 Funktionen.
+Game Code 35,42 %, 1001360 / 2826784 Bytes,
+5218 / 8857 Funktionen.
+Daten 385739 / 640331 Bytes, 60,24 %.
+
+**Match, `TMario::changePlayerStatus`.**
+`setStatusToRunning` ist dort geinlined.
+Die Laufgeschwindigkeit nahm das Maximum aus
+`mIntendedMag` und 8.
+Das Ziel nimmt das Minimum: bei `mIntendedMag <= 8`
+bleibt der Wert, sonst wird 8 eingesetzt.
+115 Instruktionen, 460 Bytes, null abweichende Wörter.
+Vorher 99,83 %. Die TU bleibt `NonMatching`.
+
+Die freistehende Kopie von `setStatusToRunning` ist
+UNUSED, 216 Bytes gegen 220 in der Map.
+Die Größe ändert sich durch die Auswahl nicht.
+`validate-symbol-order.py` bleibt rot am alten
+fehlenden `setMissJumping`. Keine neue Reihenfolge.
+`thinkDirty` und die Wurzelmatrizen sind unverändert.
+
+**Angeschaut, nicht angefasst.**
+`TPollutionLayer::stampModel` tauscht nur zwei `lfs`,
+der `fcmpo` bleibt derselbe.
+`MSRandVol::getRandVol` tauscht zwei Index-Register,
+`f1`/`f2`/`f3` an `getRandom` sind dieselben Werte.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,74 % matched code,
+1713968 / 3590088 Bytes, 9184 / 12881 Funktionen.
+Game Code 35,44 %, 1001820 / 2826784 Bytes,
+5219 / 8857 Funktionen.
+Daten unverändert: 385739 / 640331 Bytes, 60,24 %.
+
+Delta Code gegen Runde 85: +1 Funktion, +460 Bytes.
+
+`changes_all` meldet nur `changePlayerStatus`
+von 99,83 % auf 100 %.
+`MarioMove` matched code von 38,86 % auf 40,21 %.
+Keine Regression.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### Nächster Schritt
+
+1. `changePlayerStatus` nicht wieder auf
+   `mIntendedMag <= 8 ? 8 : mIntendedMag` stellen.
+2. `thinkDirty` nicht wieder auf `- 1.0f` stellen.
+3. Die drei `makeRootMtxRot*` nicht wieder auf
+   `M_PI / 180.0f` stellen.
+4. Runde 84 nicht zurückdrehen: `p1 - p2 + 1`,
+   `150 * analog * 256`, `hitWater` mit `30.0f`.
+5. `isDemo` nicht auf ein vierfaches Oder oder
+   ein `goto` zurückdrehen.
+6. Vermeidungslisten aus Runde 81 und 82 bleiben.
+   `stampModel` und `getRandVol` nicht wegen
+   Registertausch jagen.
+   `MarioMove` nicht auf `Matching` stellen.
