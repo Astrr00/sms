@@ -1870,6 +1870,9 @@ DEFINE_NERVE(TNerveFireWanwanFindMario, TLiveActor)
 
 DEFINE_NERVE(TNerveFireWanwanAttack, TLiveActor)
 {
+	char trash[4];
+	trash[0] = 0;
+
 	TFireWanwan* self = (TFireWanwan*)spine->getBody();
 
 	if (spine->getTime() == 0) {
@@ -1948,6 +1951,9 @@ DEFINE_NERVE(TNerveFireWanwanRecoverGraph, TLiveActor)
 
 DEFINE_NERVE(TNerveFireWanwanRecover, TLiveActor)
 {
+	char trash[0x40];
+	trash[0] = 0;
+
 	TFireWanwan* self = (TFireWanwan*)spine->getBody();
 
 	if (spine->getTime() == 0) {
