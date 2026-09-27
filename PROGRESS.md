@@ -9879,3 +9879,50 @@ Keine TU auf `Matching` gestellt.
 4. `TShine::loadBeforeInit`: nur Layouts mit `name@0x24`, Reads `@0x20`/`@0x18`, Frame `0x50`.
 5. `TObjManager::load` / Demo-`TFlagT` weiter vermeiden.
 6. Vermeidungslisten aus Runde 81 bis 118 bleiben.
+
+### Nach hundertzwanzigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 119:
+47,94 % matched code, 1720924 / 3590088 Bytes,
+9207 / 12881 Funktionen.
+Game Code 35,69 %, 1008776 / 2826784 Bytes,
+5242 / 8857 Funktionen.
+
+**Kein neues Vollmatch** (Instruktionen + Relocs + Zähler).
+
+`MapObjGeneral::touchGround` / `checkWallCollision`:
+`trash[0x38]` bzw. `trash[0x18]` am Anfang → Retail-Frame,
+aber `TVec3`/`TBGWallCheckRecord` weiter 0x28/0x18 zu tief —
+zurückgesetzt.
+
+`TCoin::perform`: `trash[0x10]` → Frame `0x50`, Argblock für
+`TQuestionManager::request` bei `0x34` statt `0x20` — nicht geshipt.
+
+`TNozzleBox::load`: Frame `0x60` mit `trash[0x20]`, `strBuf` bei
+`0x10` statt `0x30` — nicht geshipt.
+
+`TMareEventWallRock::load`: `trash[8]` → Frame `0x88`, Schleife
+noch `stw`/`addi` bei `0x64` statt `0x68` (objdiff 99,97 %) —
+nicht geshipt.
+
+`waitingToAppear` / `TEggYoshi::control` / `TRoulette::moveObject`:
+Frame-Padding allein reichte nicht — nicht geshipt.
+
+**Zähler.** matched code unverändert 47,94 %,
+1720924 Bytes, 9207 Funktionen.
+Game Code unverändert 35,69 %,
+1008776 Bytes, 5242 Funktionen.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### Nächster Schritt
+
+1. `recovering` / Runden 114–119 unverändert.
+2. Frame+Slot-Kandidaten: Padding **und** explizite Locals/UNUSED-Inlines
+   für `TBGWallCheckRecord`, `TVec3`-Spills, `strBuf@0x30`.
+3. `TMareEventWallRock::load`: 4 B in der `push_back`-Schleife vor
+   erneutem `trash`-Only.
+4. `TShine::loadBeforeInit` / `TObjManager::load` / Demo-`TFlagT`
+   weiter vermeiden.
+5. Vermeidungslisten aus Runde 81 bis 119 bleiben.
