@@ -2648,6 +2648,9 @@ DEFINE_NERVE(TNerveFireHamuKuriRecover, TLiveActor)
 
 DEFINE_NERVE(TNerveDoroHaneRise, TLiveActor)
 {
+	char trash[0x10];
+	trash[0] = 0;
+
 	TDoroHaneKuri* self = (TDoroHaneKuri*)spine->getBody();
 
 	if (self->mPosition.y < self->mGroundHeight + 800.0f)
