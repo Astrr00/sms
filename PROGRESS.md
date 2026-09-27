@@ -8927,3 +8927,89 @@ Keine TU auf `Matching` gestellt.
 8. Vermeidungslisten aus Runde 81 bis 102 bleiben.
    `initNeonMatColor` nicht mit benanntem `index`.
    `MtxToQuat` nicht in Teilsummen zerlegen.
+
+### Nach hundertundvierter Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 103:
+47,82 % matched code, 1716828 / 3590088 Bytes,
+9195 / 12881 Funktionen.
+Game Code 35,54 %, 1004680 / 2826784 Bytes,
+5230 / 8857 Funktionen.
+Daten 394595 / 640331 Bytes, 61,62 %.
+
+`MSRandVol::MSRandVol` war nur im Prolog
+acht Byte zu klein.
+Retail-Frame `0x20`, bei uns `0x18`.
+Der Rumpf, 35 Instruktionen, stimmte.
+`param` liegt schon in r31, `this` in r30.
+
+**Vollmatch.**
+
+```cpp
+f32 half = 0.5f;
+mPSlopes[2] = half;
+mAmplitudes[1] = half;
+```
+
+`mAmplitude` bleibt das Literal `0.5f`
+im Initialisierer.
+0 Abweichungen, 168 Bytes, 42 Instruktionen.
+`MSoundSE` bleibt `NonMatching`.
+Symbolordnung PASS.
+Die Weak-Reihenfolge und die UNUSED-Größe
+von `getRandomVolume` sind vorbestehend.
+
+**Gemessen und zurückgenommen.**
+
+Ein benanntes `s32 next` in
+`TShine::loadBeforeInit` wird wegoptimiert.
+Der Frame bleibt `0x48` gegen `0x50`.
+`MSound* sound` in `TMario::catching`
+wird ebenfalls wegoptimiert.
+Der Frame bleibt `0x28` gegen `0x30`.
+`f32 minX = mMinX` in `stampModel`
+ändert die Ladereihenfolge nicht.
+Alle drei zurückgenommen.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,83 % matched code,
+1716996 / 3590088 Bytes, 9196 / 12881 Funktionen.
+Game Code 35,55 %, 1004848 / 2826784 Bytes,
+5231 / 8857 Funktionen.
+Daten unverändert: 394595 / 640331 Bytes, 61,62 %.
+Game-Daten unverändert: 315371 / 556995 Bytes, 56,62 %.
+
+Delta Code gegen Runde 103: +1 Funktion, +168 Bytes.
+Delta Daten: 0 Bytes.
+
+`changes_all` nur
+`__ct__Q214MSoundSESystem9MSRandVolFUl`
+99,83 % auf 100 %.
+Unit-Code `MSoundSE` 25,01 % auf 26,43 %.
+Keine Regression.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `MSRandVol::MSRandVol` behält `f32 half`.
+   `MSoundSE` nicht auf `Matching` stellen.
+2. `TDonchou::loadAfter` behält `drum` und `itemDrum`.
+   `getObjAppearPos` bleibt `const`.
+3. `TMario::catching` nicht über `MSound* sound`.
+   Den Frame nicht polstern.
+   `mRotBroadEnableV` bleibt.
+4. `TShine::loadBeforeInit` nicht über ein benanntes
+   `next` zwischen den beiden `s32`.
+5. `stampModel` nicht über ein vorgezogenes `mMinX`.
+6. `TNerveMantaDeath` nicht über ein benanntes `se`.
+   `makeMActors` nicht über einen benannten Keeper.
+7. `TTelesa::initAttacker` behält `TLiveActor* actor`.
+   `TMario::startVoice` behält `MSound* sound`.
+8. Vermeidungslisten aus Runde 81 bis 103 bleiben.
+   `MtxToQuat` nicht in Teilsummen zerlegen.
+   `turnEnd`, `TelesaFreeze` und `touchWater` liegen lassen.
