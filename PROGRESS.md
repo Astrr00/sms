@@ -7471,3 +7471,100 @@ Keine TU auf `Matching` gestellt.
    gefaltete 525 oder als `targetY += 60` schreiben.
    `MarioRun`, `bosspakkun`, `hamukuri` und
    `NpcWalkTurn` nicht auf `Matching` stellen.
+
+### Nach neunzigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 89:
+47,75 % matched code, 1714264 / 3590088 Bytes,
+9185 / 12881 Funktionen.
+Game Code 35,45 %, 1002116 / 2826784 Bytes,
+5220 / 8857 Funktionen.
+Daten 385811 / 640331 Bytes, 60,25 %.
+
+**Ein neues Vollmatch, drei Partial-Fixes.**
+
+`THaneHamuKuri2::walkBehavior`: die Höhe ist
+`unk210 + height`, wobei `height` die Summe
+`unk230 + unk234` ist.
+Retail addiert die beiden Offsets zuerst und
+reserviert das Slot.
+0 Abweichungen, 364 Bytes, 100 %.
+
+`TNervePoihanaThrow::execute`: `MsMtxSetRotRPH`
+bekommt `mRotation` (0x30), nicht `mPosition` (0x10).
+Die drei `lfs` stimmen.
+Der Frame bleibt 0xa0 gegen 0xb0, jeder Slot
+um 0x10 verschoben. 99,82 % auf 99,84 %.
+
+`TDangoHamuKuri::receiveMessage`: der Wasser-Partikel
+hängt an `&sender->mPosition`, der Treffer-Sound
+an `&mPosition`.
+Der Rumpf stimmt.
+Der Frame bleibt 0x20 gegen 0x48.
+99,91 % auf 99,95 %.
+
+`TMapObjGeneral::recovering`: die Joint-Höhe ist
+`mat[1][3]`, die Y-Spalte der 3x4-Matrix.
+Der Rumpf stimmt.
+Der Frame bleibt 0x20 gegen 0x48.
+99,84 % auf 99,87 %.
+
+Keiner der drei Frames wurde mit einem einzelnen
+`int` oder `trash` aufgefüllt.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,76 % matched code,
+1714628 / 3590088 Bytes, 9186 / 12881 Funktionen.
+Game Code 35,46 %, 1002480 / 2826784 Bytes,
+5221 / 8857 Funktionen.
+Daten unverändert: 385811 / 640331 Bytes, 60,25 %.
+Game-Daten unverändert: 306587 / 556995 Bytes, 55,04 %.
+
+Delta Code gegen Runde 89: +1 Funktion, +364 Bytes.
+Delta Daten: 0 Bytes.
+
+`changes_all` listet keine Regression.
+`hamukuri` matched code 55,80 % auf 56,60 %.
+`poihana` und `MapObjGeneral` Symbolordnung PASS.
+`hamukuri` bleibt am alten `onHaveCap`-Linkage rot.
+`isOnTrap` UNUSED-Grösse in `poihana` ist alt.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `walkBehavior` behält die benannte Summe
+   `height = unk230 + unk234`.
+2. `TNervePoihanaThrow` behält `mRotation`.
+   Den 16-Byte-Frame nicht mit einem einzelnen `int`
+   auffüllen.
+3. `receiveMessage` des Dango behält
+   `&sender->mPosition` für den Partikel.
+   Den Frame nicht mit `trash` schliessen.
+4. `recovering` behält `mat[1][3]`.
+5. Runde 89 bleibt: `(u8*)boss + 1`,
+   Translationsspalte in `attackToMario`,
+   `CLBSquared(10.0f)`.
+   `set(dx, 0, dz)` in `isCanWalk` nicht wiederholen.
+6. `rotating` behält den `u16`-Cast.
+   `mSLDamageRadius` bleibt 65.
+   `changePlayerStatus` behält das Minimum aus
+   `mIntendedMag` und 8.
+7. `thinkDirty` bleibt bei `- 200.0f`.
+   Die drei `makeRootMtxRot*` bleiben bei
+   `0.017453294f`.
+8. Runde 84 bleibt: `p1 - p2 + 1`,
+   `150 * analog * 256`, `hitWater` mit `30.0f`.
+9. `isDemo` bleibt die Oder-Form mit `stateIs3Or4`.
+10. Vermeidungslisten aus Runde 81 und 82 bleiben.
+    `stampModel`, `getRandVol`, `setQuat` und
+    `TRoulette::moveObject` nicht wegen Registertausch
+    jagen. `startDisappearTimer` nicht wieder als
+    gefaltete 525 oder als `targetY += 60` schreiben.
+    `MarioRun`, `bosspakkun`, `hamukuri`, `poihana`,
+    `MapObjGeneral` und `NpcWalkTurn` nicht auf
+    `Matching` stellen.
