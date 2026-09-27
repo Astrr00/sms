@@ -10842,10 +10842,26 @@ nicht davor — sonst `addi r4,r1,0x10` statt **0x20**). Frame **0x30**,
 Locals bleiben **+8** versetzt. `TNerveDoroHaneHitWater`: Retail-Frame kleiner
 als unser Build — kein reines Trash-Pad.
 
+### R152 (Aufgabe B; 2 Vollmatches)
+
+**`TNerveFireWanwanFreeze::execute` (fireWanwan).** Explizites
+`JGeometry::TVec3<f32> zeroVel` vor `setVelocity`; `char trash[8];`
+**danach** (Frame **0x50**, Velocity-Temp auf **0x34**). **match 100 %**
+(368B). Commit `c45b99e5`.
+
+**`TMario::turnEnd` (MarioRun).** `char trash[4];` + `trash[0]=0` am
+Funktionsanfang (Frame **0x28**, inlined `considerRotateStart` /
+`checkStickRotate`-Local auf **0x18**). **match 100 %** (612B).
+
+`dtk shasum -c` OK.
+
+**Offen.** `TNerveTelesaFreeze`: Frame **0x40** passt, `TPathNode`-Stack noch
+**+4** versetzt. `TNerveHamuKuriBoundFreeze` / `TNervePoihanaThrow` unverändert.
+
 ### Nächster Schritt
 
 1. `BathtubKiller` death nerves: **0x1c**-Basis ohne Frame-Wachstum.
 2. Nerven mit Frame+Local-Drift: `trash` **nach** betroffenen Locals (vgl.
    `considerRotateStart`, PROGRESS-Methodik).
-3. `TCloset` / `initAndRegister` nur bei klarem 100 %-Pfad.
+3. `TCloset` / `initAndRegister` nur bei klarem 100 %-Pfad (Hands-off).
 4. Defer-Listen / Hands-off unverändert.
