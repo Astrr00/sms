@@ -1542,6 +1542,9 @@ DEFINE_NERVE(TNerveBPVomit, TLiveActor)
 
 DEFINE_NERVE(TNerveBPTornado, TLiveActor)
 {
+	char trash[8];
+	trash[0] = 0;
+
 	TBossPakkun* boss = static_cast<TBossPakkun*>(spine->getBody());
 	MActor* actor     = boss->mMActor;
 	if (spine->getTime() == 0) {
@@ -1582,6 +1585,9 @@ DEFINE_NERVE(TNerveBPPivot, TLiveActor)
 
 DEFINE_NERVE(TNerveBPSwallow, TLiveActor)
 {
+	char trash[0xc];
+	trash[0] = 0;
+
 	TBossPakkun* boss = static_cast<TBossPakkun*>(spine->getBody());
 	if (spine->getTime() == 0)
 		boss->changeBck(26);
@@ -1924,6 +1930,9 @@ DEFINE_NERVE(TNerveBPFlyCannon, TLiveActor)
 
 DEFINE_NERVE(TNerveBPFlyPivot, TLiveActor)
 {
+	char trash[4];
+	trash[0] = 0;
+
 	TBossPakkun* boss = static_cast<TBossPakkun*>(spine->getBody());
 	if (spine->getTime() == 0)
 		boss->changeBck(11);
@@ -1968,6 +1977,9 @@ DEFINE_NERVE(TNerveBPHover, TLiveActor)
 
 DEFINE_NERVE(TNerveBPFall, TLiveActor)
 {
+	char trash[0x28];
+	trash[0] = 0;
+
 	TBossPakkun* boss = static_cast<TBossPakkun*>(spine->getBody());
 	MActor* actor     = boss->mMActor;
 	if (spine->getTime() == 0) {
