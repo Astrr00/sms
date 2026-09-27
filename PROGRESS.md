@@ -6673,3 +6673,79 @@ Kein Matching-Flip. Kein Push in diesem Lauf.
    Frame `0x188` gegen `0x180`. Die Farb-Slots weichen
    um 12 Byte ab (`0x40` gegen `0x34`), der Frame nur
    um 8. Kein einheitlicher Shift.
+
+### Nach neunundsiebzigster Iterationsrunde (ein Match)
+
+**Beobachtung, vorher.** Stand Runde 78:
+47,61 % matched code, 1709416 / 3590088 Bytes,
+9172 / 12881 Funktionen.
+Game Code 35,28 %, 997268 / 2826784 Bytes,
+5207 / 8857 Funktionen.
+
+`TSilhouette::perform` nicht angefasst.
+`getUnk1CAlpha` lädt bei uns `0x1f` statt `0x1b`.
+Das ist ein Member-Offset, kein reiner Slot.
+
+**Match, `TNerveBPBreakSleep::execute`.**
+61 Instruktionen, 244 Bytes.
+Vorher Frame `0x28` bei uns, `0x30` im Original.
+Der Rumpf war sonst wortgleich.
+`int time = spine->getTime()` hebt den Frame auf `0x30`.
+Nach dem Rebuild: 61 Wörter, null Abweichungen.
+Dieselbe Schreibweise wie bei `TNerveBPJumpReact`.
+
+`validate-symbol-order.py -u mario/Enemy/bosspakkun`
+PASS. Zwei UNUSED-Größenwarnungen sind alt.
+Die TU bleibt `NonMatching`.
+
+**Gemessen und zurückgenommen.**
+
+- `TLightWithDBSet::addChildGroupObj`: benannte
+  `opa`/`xlu` lassen die Zeiger-Slots vertauscht
+  (`0x6c`/`0x70`) und schieben den ersten
+  Iterator um 4 Byte nach unten.
+- `TAmenbo::calcRootMatrix`: `TPosition3f` vor
+  `isTaken()` ändert nichts. Die Matrix bleibt
+  auf `0x3c` statt `0x40`. Frame beiderseits `0x90`.
+- `TSilhouette::loadAfter`: Faktorentausch
+  `m[1][0] * m[2][1]` ändert die Lade-Reihenfolge
+  nicht. Das zweite `fmuls` wird schlechter.
+- `SMS_AddDamageFogEffect`: eine Inline
+  `damageFogOsc` faltet `-400 - startBase` und
+  `800 - endBase` weiter zu einem `300 * s`.
+  Frame `0x88` auf `0x90`, Original `0xb8`.
+  `fsubs` und das zweite `fmuls` fehlen weiter.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,62 % matched code,
+1709660 / 3590088 Bytes, 9173 / 12881 Funktionen.
+Game Code 35,29 %, 997512 / 2826784 Bytes,
+5208 / 8857 Funktionen.
+
+Delta gegen Runde 78: +1 Funktion, +244 Bytes.
+
+`changes_all` meldet nur
+`execute__18TNerveBPBreakSleep...` von 99,89 % auf
+100 %. Keine Regression.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Kein Matching-Flip.
+
+### Nächster Schritt
+
+1. `bosspakkun` und `DrawUtil` nicht auf `Matching`
+   stellen.
+2. `getTime()` nicht pauschal benennen.
+   Bei `TNerveBEelTearsMoveUp` hat es nichts geändert.
+3. Nicht wiederholen: die vier zurückgenommenen
+   Versuche oben, dazu die bekannten Sackgassen
+   (`bind`, `setCallback`, `evLaunchEventClearDemo`,
+   `kickRoofEffect`, `perform` von `TSilhouette`).
+4. Nächster Kandidat: eine andere Nerve, deren Diff
+   nur ein zu kleiner Frame ist und deren Rumpf
+   schon wortgleich ist. Nicht `TCoin::appear` und
+   nicht `TItem::calc` als erstes: dort fehlen
+   `0x20` Byte ohne einen einzigen Stack-Zugriff.
