@@ -10908,6 +10908,22 @@ nur **+8** nach Frame-Fix und hohem Match-%: z. B. `TobiPukuDie` (explizite
 **Verify.** `ninja baseline` / `changes_all` ohne Code-Delta; `dtk shasum -c` → OK
 (Tip **`ea99f92d`**, Quellbaum unverändert).
 
+**R158 tight run (FireWanwanFreeze-Muster; keine Vollmatches).**
+
+**`TNerveTobiPukuDie`.** Bestes Teilbild: `zeroVel(0,0,0)` → `char trash[8]` →
+`velocity = mVelocity` → `zeroVel.y` / `mVelocity = zeroVel` (wie
+`TNerveFireWanwanFreeze`). Frame **0x50** OK; vier Operanden-`~` bleiben:
+Velocity-Temp **0x20–0x28** vs. Retail **0x28–0x30** (uniform **+8**).
+`volatile char trash[8]`, `getVelocity`/`setVelocity`, `stackPad`/`f64`-Pads,
+`stackHole[2]`, doppeltes Trash, `velocity` vor `zeroVel`: kein striktes Match.
+Kein weiterer Scan (Cap / Stop).
+
+**Tip.** Braucht vermutlich 8 B Reserve **zwischen** Saved-Regs und
+`velocity`-`TVec3` ohne Frame auf **0x58** zu blähen — evtl. UNUSED-Inline aus
+`mario.MAP` / Nachbar-TU, nicht nur `char trash[8]` nach `zeroVel`.
+
+**Vollmatch, strikt.** keine. Quellbaum = Tip **`d39c097d`**.
+
 ### R157 (Aufgabe B; Sweep, keine neuen Vollmatches)
 
 **`TNerveHamuKuriWallDie`.** `char trash[8];` am Eingang → Frame **0x80**;
