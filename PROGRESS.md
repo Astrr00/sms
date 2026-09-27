@@ -6233,3 +6233,94 @@ Funktionsprozent): 416 `Matching`, 321 `NonMatching`.
 4. Wenn der Split steht: `TCoasterEnemy::bind` (`0xDC`) als
    nächsten offenen Kandidaten. `receiveMessage` von
    `TMapObjGeneral` nicht wiederholen (Sackgasse Runde 68).
+
+
+### Nach dreiundsiebzigster Iterationsrunde (Referenz-DOL vorhanden, sechs Funktionen verifiziert, bind nicht geschlossen)
+
+**Beobachtung, Referenzdateien.** Entpackt nach
+`orig/GMSJ01/sys/main.dol` und `orig/GMSJ01/files/mario.MAP`.
+Nicht committet. `git check-ignore` trifft beide über
+`.gitignore` (`orig/*/*`, zusätzlich `*.dol` / `*.MAP`).
+
+SHA1, gemessen:
+
+- `main.dol`: `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`
+- `mario.MAP`: `1f7a9441e5fbb7fed12539559f9956d36cc6d2e2`
+
+Der DOL-SHA1 ist derselbe Wert wie in `config/GMSJ01/build.sha1`
+für das gelinkte `build/GMSJ01/mario.dol`.
+
+**Beobachtung, Baseline auf diesem Branch** (die sechs
+Runde-70/71-Ports sind schon im Quelltext). `python3 configure.py
+--version GMSJ01`, dann volles `ninja`. `dtk shasum -c
+config/GMSJ01/build.sha1`: `build/GMSJ01/mario.dol: OK`.
+`sha1sum build/GMSJ01/mario.dol` liefert denselben Hash
+`9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+`ninja`-Progress:
+
+- Gesamt: 47,57 % matched code, 1707908 / 3590088 Bytes,
+  9165 / 12881 Funktionen. Fuzzy 77,97 %. Linked 20,25 %
+  (415 / 736 Dateien). Daten 384651 / 640331 Bytes (60,07 %).
+- Game Code: 35,23 % matched, 995760 / 2826784 Bytes,
+  5200 / 8857 Funktionen. Linked 89 / 387 Dateien.
+- JSystem: 90,55 % matched code, 2953 / 3009 Funktionen.
+- SDK: 98,88 % matched code, 1012 / 1015 Funktionen.
+
+Das sind dieselben Funktions- und Prozentzahlen, die Runde 71
+berichtet hat. Diesmal aus diesem Build gemessen.
+
+**Beobachtung, sechs Funktionen.** objdiff-cli
+`functionRelocDiffs=data_value`, linke und rechte
+Instruktionswörter (Mnemonic und Operanden, Branchziele
+normalisiert) positionsweise verglichen. Null Abweichungen:
+
+| Funktion | Wörter | Größe | match |
+| --- | --- | --- | --- |
+| `TBathWaterManager::loadAfter` | 250 | 1000 | 100 % |
+| `TBossPakkun::setGroundCollision` | 57 | 228 | 100 % |
+| `TTrembleModelEffect::reset` | 120 | 480 | 100 % |
+| `TTrembleModelEffect::init` | 354 | 1416 | 100 % |
+| `THamuKuri::behaveToWater` | 143 | 572 | 100 % |
+| `TTamaNoko::calcRootMatrix` | 266 | 1064 | 100 % |
+
+Die Runde-72-Vermutung ist damit Beobachtung: die Nachher-Fassung
+ist wortgleich zum Originalobjekt. Die TUs bleiben `NonMatching`.
+Jede davon hat weitere nicht matchende Funktionen (Stichprobe:
+`TBathWaterManager::perform` 93,8 %, `TNerveBPWaitL::execute`
+98,1 %, `SMS_UnifyMaterial` 99,3 %, `TDangoHamuKuri::reset` 70,0 %,
+`TTamaNoko::landEffect` 62,5 %). Ein Flip würde das Originalobjekt
+durch unser Objekt ersetzen und den DOL-Hash ändern. Nicht geflippt.
+Zweiter `ninja` nach den zurückgenommenen `bind`-Versuchen:
+`dtk shasum` weiter OK.
+
+**Beobachtung, `TCoasterEnemy::bind`.** Offen. 55 Instruktionen,
+220 Bytes (`0xDC`), Frame beiderseits `0x40`. Einziger Unterschied:
+das By-Value-Temporary von `operator-` liegt im Original bei
+`r1+0x10` und bei uns bei `r1+0x1c`. `nextPos` bleibt beiderseits
+bei `0x28`. Dieselbe Klasse wie `TLiveActor::bind` (Runde 71:
+`0x10` gegen `0x20`). Drei Versuche, alle zurückgenommen:
+
+1. Unbenutztes `TVec3 gap` nach `nextPos`: Frame `0x40` → `0x48`,
+   `nextPos` wandert nach `0x34`, das Temporary bleibt bei `0x1c`.
+2. `mLinearVelocity = nextPos - mPosition` statt
+   `setLinearVelocity`: identischer Diff.
+3. `nextPos` erst deklarieren, dann zuweisen: identischer Diff.
+
+**Zusätzlich probiert und zurückgenommen:**
+`TMapObjBaseManager::makeObjAppear(float,float,float,u32,bool)`.
+Frame `0x58` stimmt. Nur `&checkData` ist `0x30` im Original und
+`0x34` bei uns. `checkData` vor den `if` zu ziehen ändert den
+Offset nicht.
+
+### Nächster Schritt
+
+1. `TCoasterEnemy::bind` nicht mit einem weiteren benannten
+   `TVec3` oder mit `operator=`-Umschreibung wiederholen.
+   Nächster Hebel wäre ein totes 12-Byte-Temporary *unter*
+   `nextPos`, das den `operator-`-Slot auf `0x10` drückt, ohne
+   den Frame über `0x40` wachsen zu lassen.
+2. `TMapObjBaseManager::makeObjAppear(f32,f32,f32,u32,bool)`:
+   4-Byte-Slot von `checkData` (`0x34` → `0x30`) bei gleichem Frame.
+3. Kein Matching-Flip der fünf TUs, solange dort andere
+   Funktionen abweichen.
