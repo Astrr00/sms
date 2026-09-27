@@ -9350,3 +9350,67 @@ Keine TU auf `Matching` gestellt.
    benanntes `y`, `save` oder `limit`.
 5. Vermeidungslisten aus Runde 81 bis 108 bleiben.
    Den Frame nicht polstern.
+
+### Nach hundertundzehnter Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 109:
+47,83 % matched code, 1717256 / 3590088 Bytes,
+9198 / 12881 Funktionen.
+Game Code 35,56 %, 1005108 / 2826784 Bytes,
+5233 / 8857 Funktionen.
+Daten 394595 / 640331 Bytes, 61,62 %.
+
+`TMapObjBaseManager::newAndRegisterObjByEventID`
+legte den Shine-Namen von Event 777 in `char buffer[64]`.
+`snprintf` bekam die Länge 64.
+Retail übergibt `0x100`.
+Der Frame war `0x1E8`, Retail `0x2A8`.
+Die Differenz ist 192 Bytes, also `0x100 - 64`.
+Zehn Instruktionen wichen ab, sonst stimmte der Rumpf.
+
+**Vollmatch.** Der Puffer ist 256 Bytes lang.
+`snprintf` nimmt `sizeof(buffer)`.
+
+```cpp
+char buffer[0x100];
+snprintf(buffer, sizeof(buffer), "シャイン（%s）", name);
+```
+
+0 Abweichungen unter `functionRelocDiffs=data_value`,
+1652 Bytes, 413 Instruktionen.
+`MapObjManager` bleibt `NonMatching`.
+Symbolordnung PASS.
+`loadMatTable` hat eine vorbestehende UNUSED-Größenwarnung.
+`newUniqueObjByName` bleibt bei 98,88 %.
+
+**Zähler.** `ninja changes_all`:
+`newAndRegisterObjByEventID__18TMapObjBaseManagerFUlPCc`
+99,98 % → 100 %.
+`MapObjManager` matched code 41,59 % → 57,97 %.
+Matched code 47,88 %, 1718908 / 3590088 Bytes,
+9199 / 12881 Funktionen.
+Das sind 1652 Bytes und eine Funktion mehr.
+Game Code 35,62 %, 1006760 / 2826784 Bytes,
+5234 / 8857 Funktionen.
+Daten unverändert, 394595 / 640331 Bytes, 61,62 %.
+Game-Daten 315371 / 556995 Bytes, 56,62 %.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+`TRedCoinSwitch::loadAfter` behält `coin`.
+`mHPMax` bleibt.
+
+### Nächster Schritt
+
+1. Event 777 behält `char buffer[0x100]`
+   und `snprintf` mit `sizeof(buffer)`.
+   `MapObjManager` nicht auf `Matching` stellen.
+2. `TRedCoinSwitch::loadAfter` behält `coin`.
+   `MapObjTown` nicht auf `Matching` stellen.
+3. `mHPMax` behält die Schreibweise `mHPMax`.
+4. `SMS_UnifyMaterial` und `execRoofCheck_` nicht
+   mit den Varianten aus Runde 108.
+5. Vermeidungslisten aus Runde 81 bis 109 bleiben.
+   Den Frame nicht polstern.
