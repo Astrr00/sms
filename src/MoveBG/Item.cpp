@@ -771,11 +771,12 @@ void TShine::kill()
 
 void TShine::makeMActors()
 {
+	MActor* result;
+	char trash[8];
 	mMActorKeeper                    = new TMActorKeeper(mManager, 1);
 	mMActorKeeper->mModelLoaderFlags = J3DMLF_MaterialPEFull
 	                                   | J3DMLF_UseUniqueMaterials
 	                                   | (2 << J3DMLF_TevStageNumShift);
-	MActor* result;
 	if (TFlagManager::smInstance->getShineFlag(mEventId)
 	    && strcmp("シャイン（マニ屋用）", getName()) != 0) {
 		result = initMActor("shine_empty.bmd", nullptr, getSDLModelFlag());

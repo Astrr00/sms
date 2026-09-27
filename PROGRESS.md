@@ -9739,3 +9739,50 @@ Keine TU auf `Matching` gestellt.
 4. `TFlagT`-Demo-Calls (`appearWithDemo`, `receiveMessage`):
    Flag-Slot `+4 B` bei korrektem `0x40`/`0x50`-Frame offen.
 5. Vermeidungslisten aus Runde 81 bis 115 bleiben.
+
+### Nach hundertundsiebzehnter Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 116:
+47,90 % matched code, 1720112 / 3590088 Bytes,
+9204 / 12881 Funktionen.
+Game Code 35,66 %, 1007964 / 2826784 Bytes,
+5239 / 8857 Funktionen.
+
+`TShine::makeMActors` war bei 99,86 %.
+Der Frame lag bei `0x20` statt retail `0x28` (−`0x8`).
+`MActor* result` stand nach dem `TMActorKeeper`-Setup.
+
+`TShine::loadBeforeInit`: `trash[8]` bringt Frame `0x50`,
+aber String-/Read-Slots bleiben 8 B zu tief — Partial, nicht shippen.
+
+`TObjManager::load` nicht erneut angefasst.
+
+**Vollmatch, strikt.**
+
+`MActor* result` und `char trash[8]` stehen vor dem
+`TMActorKeeper`-Setup; `result` wird wie zuvor in den Zweigen
+belegt und nach `mMActor` geschrieben.
+
+0 Abweichungen, 252 Bytes, 63 Instruktionen.
+`validate-symbol-order` für `mario/MoveBG/Item`: PASS.
+
+**Zähler.** `ninja changes_all` (gegen ältere Baseline ggf.
+mehrere Fn): `makeMActors__6TShineFv` 99,86 % → 100,00 %;
+`Item` matched_code 57,16 % → 60,21 % (+252 B für diese Fn).
+Gesamt matched code 47,90 % → 47,92 %.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `TShine::makeMActors` behält `result` und `trash[8]` vor
+   dem Keeper-Setup.
+2. `TCoin::appear` / `TRedCoinSwitch::load` / `TMapObjSwitch::load`
+   unverändert lassen.
+3. `TShine::loadBeforeInit`: Frame mit `trash[8]` ok, Locals +8 B
+   ohne falsche `eventId`/`v`-Reihenfolge — weiter offen.
+4. `TObjManager::load` / Demo-`TFlagT` wie Runde 116.
+5. Vermeidungslisten aus Runde 81 bis 116 bleiben.
