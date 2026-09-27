@@ -7048,3 +7048,74 @@ Kein Matching-Flip.
    oder ein `goto` zurückdrehen.
 3. Die Vermeidungsliste aus Runde 81 und die
    drei Fehlversuche aus Runde 82 bleiben.
+
+### Nach vierundachtzigster Iterationsrunde (ein Zähler-Match)
+
+**Beobachtung, vorher.** Stand Runde 83:
+47,71 % matched code, 1712824 / 3590088 Bytes,
+9182 / 12881 Funktionen.
+Game Code 35,40 %, 1000676 / 2826784 Bytes,
+5217 / 8857 Funktionen.
+
+**Match, `evCheckWoodBox`.**
+171 Instruktionen, 684 Bytes.
+Die Schleife läuft von `p2` bis `p1`.
+Der Zähler stand als `p2 - p1 + 1`.
+Das Ziel rechnet `subf r5, r6, r29`, also `p1 - p2`.
+`int count = p1 - p2 + 1` macht dieses eine Wort gleich.
+Null abweichende Wörter. Die TU bleibt `NonMatching`.
+
+**Diff sauber, zwei Nozzle-`movement`.**
+`TNozzleBase::movement` ist in
+`TNozzleDeform::movement` geinlined.
+Beide hatten nur zwei `lfs`: zuerst 256, dann 150.
+Das Ziel lädt 150 und danach 256.
+`150.0f * analog * 256.0f` dreht die Faktoren.
+Danach null abweichende Wörter.
+200 Bytes und 296 Bytes.
+Der Fortschrittszähler stand für beide schon auf 100 %,
+deshalb steigt `matched_code` hier nicht.
+
+**Diff sauber, `TEnemyMario::hitWater`.**
+Das eine abweichende `lfs` lädt die Poolkonstante 30, nicht 0.
+Das Literal ist jetzt `30.0f`.
+109 Instruktionen, 436 Bytes, null abweichende Wörter.
+Der Funktionszähler stand schon auf 100 %.
+`.sdata2` der TU geht von 99,5 % auf 100 %.
+
+`validate-symbol-order.py` schlägt bei allen drei TUs
+an vorbestehenden Fehlern fehl:
+`TVec3::set` fehlt in `EventWatcher`,
+UNUSED-Symbole fehlen in `WaterGun`,
+`getPoint` fehlt in `enemyMario`.
+Keine neue Nicht-weak-Reihenfolge.
+Kein Matching-Flip.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,73 % matched code,
+1713508 / 3590088 Bytes, 9183 / 12881 Funktionen.
+Game Code 35,42 %, 1001360 / 2826784 Bytes,
+5218 / 8857 Funktionen.
+
+Delta Code gegen Runde 83: +1 Funktion, +684 Bytes.
+Daten: 384651 auf 385643 Bytes,
+60,07 % auf 60,23 %.
+Das sind die 992 Bytes `.sdata2` von `enemyMario`.
+
+`changes_all` meldet `evCheckWoodBox` von 99,94 % auf 100 %.
+`enemyMario` matched data von 48,05 % auf 62,93 %.
+Keine Regression.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### Nächster Schritt
+
+1. `isDemo` nicht auf ein vierfaches Oder
+   oder ein `goto` zurückdrehen.
+2. `evCheckWoodBox` nicht wieder auf `p2 - p1` stellen.
+3. Die Nozzle-Faktoren nicht wieder mit 256 vor 150 schreiben.
+4. Die `hitWater`-Lautstärke nicht wieder auf `0.0f` setzen.
+5. Die Vermeidungslisten aus Runde 81 und 82 bleiben.
+   Die drei TUs nicht auf `Matching` stellen.
