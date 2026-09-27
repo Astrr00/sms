@@ -2648,7 +2648,7 @@ DEFINE_NERVE(TNerveFireHamuKuriRecover, TLiveActor)
 
 DEFINE_NERVE(TNerveDoroHaneRise, TLiveActor)
 {
-	char trash[0x10];
+	char trash[8];
 	trash[0] = 0;
 
 	TDoroHaneKuri* self = (TDoroHaneKuri*)spine->getBody();

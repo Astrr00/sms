@@ -10114,7 +10114,7 @@ Partielle Versuche (revertiert): `TLiveActor::initAnmSound`
 
 **Vollmatch, strikt.**
 
-`TNerveDoroHaneRise::execute`: `char trash[0x10]; trash[0] = 0;` am
+`TNerveDoroHaneRise::execute`: `char trash[8]; trash[0] = 0;` am
 Nerve-Anfang für Retail-Frame `0x58` (vorher `0x50`).
 
 0 Abweichungen, 412 Bytes, 103 Instruktionen.
