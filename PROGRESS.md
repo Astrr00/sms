@@ -6532,11 +6532,73 @@ SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
 Kein Matching-Flip. `git push` weiter abgelehnt
 (`Invalid username or token`). Die Commits bleiben lokal.
 
+### Nach siebenundsiebzigster Iterationsrunde (kein neues Match)
+
+**Beobachtung, vorher.** Stand Runde 76:
+47,60 % matched code, 1708784 / 3590088 Bytes,
+9170 / 12881 Funktionen.
+Game Code 35,26 %, 996636 / 2826784 Bytes,
+5205 / 8857 Funktionen.
+Quelle unverändert, daher kein neuer `ninja`-Lauf
+für die Gesamtzahlen.
+
+**`evLaunchEventClearDemo`, kein Match.**
+44 Instruktionen, 176 Bytes, Frame beiderseits `0x30`.
+Das `TSpcSlice` liegt im Original auf `r1+0x20`,
+bei `interp->push()` auf `r1+0x18`.
+Sonst gleiche Wörter. Der `SpcTrace`-Pool hat andere
+lokale Namen; `functionRelocDiffs=data_value` zählt
+ihn als gleich.
+
+Gemessen und zurückgenommen:
+
+- `interp->push(TSpcSlice())`, `push(TSpcSlice(0))`,
+  ein benanntes `TSpcSlice` und
+  `mProcessStack.push(TSpcSlice())` heben das Slice
+  auf `0x1c`. Frame bleibt `0x30`. Vier Byte unter
+  `0x20`. Die Wörter sonst gleich.
+- `gpMarDirector->getConsole()` statt
+  `SMSGetMarDirector()->getConsole()` schrumpft den
+  Frame auf `0x28`.
+- Ein benannter `TMarDirector*` tut dasselbe, weil
+  der Accessor dann entfällt.
+- `mConsole` statt `getConsole()` schrumpft den Frame
+  ebenfalls auf `0x28`.
+- `T x; x = getConsole();` ändert nichts.
+- Das Slice vor den Console-Aufrufen zu bauen
+  verschiebt die Stores vor den `bl`.
+
+**Weitere Kandidaten, kein Match, zurückgenommen.**
+
+`TNerveBEelTearsMoveUp::execute`: Frame `0x40` gegen
+`0x30`, sonst nur Prolog-Offsets.
+`int time = spine->getTime()` ändert nichts.
+`f32 speed = mSLTearsUpSpeed.get()` ändert nichts.
+
+`TMareEventWallRock::load`: Frame `0x88` gegen `0x80`,
+der Zeiger für `insert` liegt auf `0x68` gegen `0x64`.
+Ein benannter `TViewObj*` ändert nichts.
+
+Kein Matching-Flip. `git push` erneut abgelehnt
+(`Invalid username or token`).
+`~/.gitconfig` und `gh` `hosts.yml` stehen weiter auf
+dem Stand 03:59 UTC. Die lokalen Commits ab
+`7881cb78` sind nicht auf dem PR.
+
 ### Nächster Schritt
 
-1. `EventWatcher` und `bosspakkun` nicht auf `Matching` stellen.
-2. `setCallback`, `bind` und `kickRoofEffect` wie in Runde 75
-   nicht wiederholen.
-3. `evLaunchEventClearDemo` hat denselben Frame `0x30` und
-   einen 8-Byte-Slot (`0x20` gegen `0x18`). Nicht mit den
-   zwei wirkungslosen `evIsTalkModeNow`-Vorversuchen starten.
+1. Die fünf/sechs geprüften TUs nicht auf `Matching`
+   stellen.
+2. Nicht wiederholen: `setCallback` (vier Varianten),
+   `bind` mit `TVec3`/`operator=`, `kickRoofEffect`
+   bis der Member-Offset klar ist,
+   `evLaunchEventClearDemo` mit den oben gemessenen
+   Push- und Accessor-Schreibweisen,
+   `TNerveBEelTearsMoveUp` mit benanntem `getTime`
+   oder benanntem Speed,
+   `TMareEventWallRock::load` mit benanntem
+   `TViewObj*`.
+3. Nächster unangetasteter Kandidat:
+   `SMS_CountPolygonNumInShape`, Frame `0x48` gegen
+   `0x40`, die Tabelle vier Byte zu tief (`0x34`
+   gegen `0x30`).
