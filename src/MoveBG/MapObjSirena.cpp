@@ -830,10 +830,12 @@ void TDonchou::loadAfter()
 	TMapObjBase::loadAfter();
 	if (gpApplication.mCurrArea.getStage() == 14
 	    && gpMarDirector->getCurrentStage() == 0) {
-		unk144
+		TSlotDrum* drum
 		    = static_cast<TSlotDrum*>(JDrama::TNameRefGen::search("srotdram"));
-		unk148 = static_cast<TItemSlotDrum*>(
+		unk144 = drum;
+		TItemSlotDrum* itemDrum = static_cast<TItemSlotDrum*>(
 		    JDrama::TNameRefGen::search("itemsrotdram"));
+		unk148 = itemDrum;
 	}
 }
 
