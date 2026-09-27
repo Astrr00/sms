@@ -2035,6 +2035,7 @@ DEFINE_NERVE(TNerveFireWanwanHungTail, TLiveActor)
 	}
 
 	JGeometry::TVec3<f32> vec = self->mPosition;
+	char trash[8];
 	vec -= SMS_GetMarioPos();
 
 	self->mRotation.y = MsGetRotFromZaxisY(vec);

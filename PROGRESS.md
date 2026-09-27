@@ -10824,17 +10824,23 @@ nonmatching — ein Operanden-`~` (`addi r3,r1,0x18` vs. **0x1c**).
 **0x18** vs. **0x1c** (Inlining `setDeadBathtubKillerAnm`); `trash[0]` vor
 `mVelocity` vergrößert Frame. Closet / `initAndRegister` unverändert.
 
-### R151 (Aufgabe B; 1 Vollmatch)
+### R151 (Aufgabe B; 2 Vollmatches)
 
 **`TMario::considerRotateStart` (MarioRun).** `int direction` bleibt vor
 `checkStickRotate`; `char trash[0x10];` **danach** (Padding nach dem Local,
 nicht davor — sonst `addi r4,r1,0x10` statt **0x20**). Frame **0x30**,
-**match 100 %** (272B). `dtk shasum -c` OK.
+**match 100 %** (272B).
+
+**`TNerveFireWanwanHungTail::execute` (fireWanwan).** `char trash[8];`
+**nach** `JGeometry::TVec3<f32> vec` (Mario-Rel-Vektor auf **0x4c** statt
+**0x44** bei Frame **0x70**). **match 100 %** (616B).
+
+`dtk shasum -c` OK.
 
 **Versuche ohne Commit.** `TNerveTelesaFreeze` / `TNerveFireWanwanFreeze` /
-`TNerveHamuKuriBoundFreeze`: Frame per `trash[8]` oft OK, Struct-Locals
-bleiben **+8** versetzt. `TNerveDoroHaneHitWater`: Retail-Frame kleiner als
-unser Build — kein reines Trash-Pad.
+`TNerveHamuKuriBoundFreeze`: Frame per `trash[8]` am Anfang oft OK, weitere
+Locals bleiben **+8** versetzt. `TNerveDoroHaneHitWater`: Retail-Frame kleiner
+als unser Build — kein reines Trash-Pad.
 
 ### Nächster Schritt
 
