@@ -10842,6 +10842,23 @@ nicht davor — sonst `addi r4,r1,0x10` statt **0x20**). Frame **0x30**,
 Locals bleiben **+8** versetzt. `TNerveDoroHaneHitWater`: Retail-Frame kleiner
 als unser Build — kein reines Trash-Pad.
 
+### R157 (Aufgabe B; Sweep, keine neuen Vollmatches)
+
+**`TNerveHamuKuriWallDie`.** `char trash[8];` am Eingang → Frame **0x80**;
+`local_34` weiter **+4** (**0x50** vs. **0x4c**). Post-`local_34`-`trash[4]`
+(mit/ohne Write), `trashAfterSelf[4]`, `int padForVec` / `MtxPtr`-Hoist,
+`trashBeforeVec[4]`: Vec **+8** oder Frame kaputt — nicht committiert.
+
+**`TMario::warpRequest`.** Bestes Teilbild: `char trash[8];` + `offset = pos -
+mPosition;` + `char trashAfterOffset[4];` + `trashAfterOffset[0] = 0;` → Frame
+**0x68**, `sub`-Temp **0x28** OK; inlined `moveRequest` noch vier `~` (**0x38**
+vs. **0x44**). `trash[0x10]` / `trashBeforeMove[0xc]` / Komponenten-Zuweisung:
+kein Vollmatch. Nicht committiert.
+
+**Vollmatch, strikt.** keine.
+
+**Verify.** `ninja`, `dtk shasum -c` → OK (Quellbaum unverändert ggü. `695d6578`).
+
 ### R156 (Aufgabe B; Sweep, keine neuen Vollmatches)
 
 **`TNerveHamuKuriWallDie` (hamukuri).** `char trash[8];` am Nerv-Eingang
