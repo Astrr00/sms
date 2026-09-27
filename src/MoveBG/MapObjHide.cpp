@@ -29,6 +29,10 @@
 #include <MSound/MSoundBGM.hpp>
 #include <M3DUtil/InfectiousStrings.hpp>
 
+// rogue rodata needed for matching @2782/@2784 before @3113 (twin strings @0x164)
+static const char rogueRodata2782[0xc] = { 0 };
+static const f32 rogueRodata2784[3]     = { 1.0f, 1.0f, 1.0f };
+
 void THideObjBase::appearObj(f32 y_offset)
 {
 	JGeometry::TVec3<f32> pos;
@@ -590,25 +594,24 @@ void THideObjPictureTwin::afterFinishedAnim()
 
 void THideObjPictureTwin::loadAfter()
 {
+	char pad[8];
+	char nameBuf[0x40];
 	TWaterHitPictureHideObj::loadAfter();
 	char* wrapName = strstr(mName, "ふたご落書きＡ");
 	if (wrapName != nullptr) {
-		size_t len = strlen("ふたご落書きＡ");
-		char buffer[4];
-		buffer[0] = mName[len];
-		buffer[1] = mName[len + 1];
-		buffer[2] = mName[len + 2];
-		buffer[3] = mName[len + 3];
-
-		char buffer2[0x4C];
-		snprintf(buffer2, 0x40, "ふたご落書きＢ００");
-		buffer2[len]     = buffer[0];
-		buffer2[len + 1] = buffer[1];
-		buffer2[len + 2] = buffer[2];
-		buffer2[len + 3] = buffer[3];
+		size_t len     = strlen("ふたご落書きＡ");
+		char suffix0   = mName[len];
+		char suffix1   = mName[len + 1];
+		char suffix2   = mName[len + 2];
+		char suffix3   = mName[len + 3];
+		snprintf(nameBuf, 0x40, "ふたご落書きＢ００");
+		nameBuf[len]     = suffix0;
+		nameBuf[len + 1] = suffix1;
+		nameBuf[len + 2] = suffix2;
+		nameBuf[len + 3] = suffix3;
 
 		THideObjPictureTwin* hitActor = static_cast<THideObjPictureTwin*>(
-		    JDrama::TNameRefGen::search(buffer2));
+		    JDrama::TNameRefGen::search(nameBuf));
 		unk174         = hitActor;
 		unk174->unk174 = this;
 	}

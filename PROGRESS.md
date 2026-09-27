@@ -10856,6 +10856,23 @@ DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 **Nächste MoveBG:** `TDonchou::calcRootMatrix` (+0xc @ `-0x90`);
 `TMapObjTree::initMapObj` (`r25` vs `r26`); Switch `TFlagT` nur mit klarem Hebel.
 
+### R162 (`THideObjPictureTwin::loadAfter`)
+
+**Vollmatch, strikt (0 Marker in `decomp-diff`).**
+
+- Rogue `.rodata` vor `@3113`: `rogueRodata2782[0xc]` + `rogueRodata2784[3]`
+  (Twin-Strings `@1490+0x164` / `+0x174` statt `+0x14c`).
+- `char pad[8]; char nameBuf[0x40];` auf Funktions-Ebene vor Parent-`loadAfter`;
+  Suffix-Bytes als `char suffix0`–`suffix3`, `snprintf` + `stbx`-Patches wie Retail
+  → Frame `-0x90`, `nameBuf` @ `0x28`, `stmw` @ `0x74`.
+
+0 Abweichungen, 216 Bytes, 54 Instruktionen.
+`mario/MoveBG/MapObjHide` matched_data 91,07 % → 100,00 %.
+
+R160 `TCloset::calcRootMatrix` unverändert strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R161 (Round 71 — kein neuer strikter Vollmatch)
 
 **Kein neuer strikter Vollmatch** (Scope A). R160 `TCloset::calcRootMatrix` unverändert strikt.
