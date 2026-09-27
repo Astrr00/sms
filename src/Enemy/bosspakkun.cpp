@@ -1747,9 +1747,11 @@ DEFINE_NERVE(TNerveBPStompReact, TLiveActor)
 
 DEFINE_NERVE(TNerveBPJumpReact, TLiveActor)
 {
+	// Named: inlined into the if, the frame stays 0x20 instead of 0x28.
+	int time          = spine->getTime();
 	TBossPakkun* boss = static_cast<TBossPakkun*>(spine->getBody());
 	MActor* actor     = boss->mMActor;
-	if (spine->getTime() == 0)
+	if (time == 0)
 		boss->changeBck(17);
 	if (actor->curAnmEndsNext(0, nullptr))
 		return true;
