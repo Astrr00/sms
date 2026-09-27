@@ -10920,19 +10920,38 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R170 (`TMapObjGeneral::appearing` — strikt nachgezogen)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+R169-Quelltext (`mInitialScaling.x > mScaling.x`, plain `clampX`) erzeugte in
+dieser Toolchain weiterhin `bgt` + vertauschte Compare-Loads und kein
+`lfs`/`stfs`-Reload für X.
+
+- `if (mScaling.x < mInitialScaling.x) return;` → Retail `fcmpo f1,f0` +
+  `blt` (semantisch identisch zu `>`).
+- `f32 clampX = *(volatile f32*)&mInitialScaling.x;` + `mScaling.x = clampX`
+  erzwingt `lfs` aus `0x124` vor `stfs` nach `0x24` (MWCC würde sonst `f1`
+  recyceln).
+- `char trash[4]; trash[0]=0;` unverändert; kein `mScaling.set()`.
+
+0 Abweichungen, 196 Bytes, 49 Instruktionen.
+`decomp-diff -u mario/MoveBG/MapObjGeneral -d appearing`: 100 %.
+
+R169/R168/R167–R160: R168 `setGroundCollision` strikt; `mirror@0xa50` unberührt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R169 (`TMapObjGeneral::appearing`)
 
-**Vollmatch, strikt.**
+**Vollmatch (erste Landung; Compare/Clamp in R170 nachgeschärft).**
 
 - `char trash[4]; trash[0] = 0;` am Funktionskopf → Frame `-0x20` wie Retail
   (`-0x18` ohne Pad).
 - Inneren Scope/`mScaling.set` entfernt: Komponenten-`+=` / Vergleich /
   Einzelstores wie Retail (`lfs f1,0x24` + `lfs f0,0x124`, `fcmpo f1,f0`,
   `blt` zum Epilog).
-- `if (mInitialScaling.x > mScaling.x) return;` statt `mScaling.x <
-  mInitialScaling.x` — gleiche Semantik, korrekte `fcmpo f1,f0`-Operanden.
-- `f32 clampX` + `mScaling.x = clampX` im Block erzwingt `lfs`/`stfs` für X
-  nach dem Vergleich (kein Register-Reuse von `f1`).
+- Detailkorrektur: siehe **R170** (`<` + `volatile`-Reload für striktes Diff).
 
 0 Abweichungen, 196 Bytes, 49 Instruktionen.
 `decomp-diff -u mario/MoveBG/MapObjGeneral -d appearing`: 100 %.
