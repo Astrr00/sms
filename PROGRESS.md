@@ -8152,3 +8152,104 @@ Keine TU auf `Matching` gestellt.
     `MapObjGeneral`, `walkerEnemy`, `bossManta`,
     `fireWanwan`, `MapObjHide`, `EventWatcher` und
     `NpcWalkTurn` nicht auf `Matching` stellen.
+
+### Nach siebenundneunzigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 96:
+47,79 % matched code, 1715608 / 3590088 Bytes,
+9189 / 12881 Funktionen.
+Game Code 35,50 %, 1003460 / 2826784 Bytes,
+5224 / 8857 Funktionen.
+Daten 385811 / 640331 Bytes, 60,25 %.
+
+`TDolpicEventRiccoMammaGate`s Konstruktor
+schrieb dieselben sieben Null-Floats,
+aber in anderer Reihenfolge.
+Retail speichert zuerst 0x60,
+danach die Vektoren als z, y, x.
+
+**Ein neues Vollmatch.**
+
+`unk60` bleibt im Initialisierer.
+`unk48.zero()` und `unk54.zero()` stehen im Rumpf.
+`zero` ist `x = y = z = 0`,
+die Stores laufen also z, y, x.
+0 Abweichungen, 136 Bytes, 34 Instruktionen, 100 %.
+`MapEventDolpic` bleibt `NonMatching`.
+Symbolordnung PASS.
+
+Verworfen: ein benannter `MActor*` in
+`setDeadBathtubKillerAnm` ändert nichts.
+Ein benannter `TVec3` ersetzt `set<int>`
+durch `stfs` und fällt auf etwa 90 %.
+Der anonyme `TVec3(0, 0, 0)` bleibt.
+
+Kein Frame wurde aufgefüllt.
+`catching` behält `mRotBroadEnableV`.
+`perform` behält `char trash[16]`.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,79 % matched code,
+1715744 / 3590088 Bytes, 9190 / 12881 Funktionen.
+Game Code 35,50 %, 1003596 / 2826784 Bytes,
+5225 / 8857 Funktionen.
+Daten unverändert: 385811 / 640331 Bytes, 60,25 %.
+Game-Daten unverändert: 306587 / 556995 Bytes, 55,04 %.
+
+Delta Code gegen Runde 96: 1 Funktion, 136 Bytes.
+Delta Daten: 0 Bytes.
+
+`changes_all`: Konstruktor 99,79 % auf 100 %.
+Unit-Code `MapEventDolpic` 45,71 % auf 49,45 %.
+Unit-Fuzzy 99,78 % auf 99,79 %.
+Keine Regression.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. Der Ricco-Konstruktor behält `unk60` im
+   Initialisierer und `zero()` im Rumpf.
+   `MapEventDolpic` nicht auf `Matching` stellen.
+2. `catching` behält `mRotBroadEnableV`.
+   Den Frame 0x28 nicht auf 0x30 polstern.
+   `MarioRun` nicht auf `Matching` stellen.
+3. `TLiveManager::perform` behält `char trash[16]`.
+4. `isFindMarioFromParam` behält die drei `*= param_1`.
+   `smallEnemy` nicht auf `Matching` stellen.
+5. `walkEnd` behält `quarter` und `vel`.
+6. `registerEventWatcher` nicht noch einmal über
+   einen benannten `watcher` oder `getChildren()`.
+7. `setDeadBathtubKillerAnm` behält den anonymen
+   `TVec3(0, 0, 0)`. Den Vektor nicht benennen.
+8. `setUp` behält `u32 entrySize`.
+9. `sleep()` behalten. Frames nicht polstern.
+10. `TRedCoinSwitch::load` nicht über
+    `SMSGetMarDirector()`.
+11. `appearWithDemo`, `isTouchedOneWall`,
+    `joinToGroup` und `createAndKeepData`
+    nicht mit denselben Benennungen wiederholen.
+12. `TMapStaticObj::init` nicht über `setMtx`.
+13. Die sechs Rümpfe aus Runde 91 behalten.
+    `walkBehavior` behält `height`.
+14. Runde 90 und 89 bleiben.
+    `rotating` behält den `u16`-Cast.
+    Schadensradius 65 bleibt.
+    `changePlayerStatus` behält das Minimum aus
+    `mIntendedMag` und 8.
+    `thinkDirty` bleibt bei `- 200.0f`.
+    Die drei `makeRootMtxRot*` bleiben bei
+    `0.017453294f`.
+15. Runde 84 bleibt: `p1 - p2 + 1`,
+    `150 * analog * 256`, `hitWater` mit `30.0f`.
+    `isDemo` bleibt die Oder-Form mit `stateIs3Or4`.
+16. Vermeidungslisten aus Runde 81 bis 96 bleiben.
+    `MapEventMare`, `MapStaticObject`, `MarioRun`,
+    `smallEnemy`, `bosspakkun`, `hamukuri`, `poihana`,
+    `MapObjGeneral`, `walkerEnemy`, `bossManta`,
+    `fireWanwan`, `MapObjHide`, `EventWatcher` und
+    `NpcWalkTurn` nicht auf `Matching` stellen.
