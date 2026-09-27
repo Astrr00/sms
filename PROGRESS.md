@@ -9477,3 +9477,58 @@ Event 777 behält `buffer[0x100]`.
    mit den Varianten aus Runde 108.
 5. Vermeidungslisten aus Runde 81 bis 110 bleiben.
    Den Frame nicht polstern.
+
+### Nach hundertundzwölfter Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 111:
+47,88 % matched code, 1718908 / 3590088 Bytes,
+9199 / 12881 Funktionen.
+Game Code 35,62 %, 1006760 / 2826784 Bytes,
+5234 / 8857 Funktionen.
+Daten 394595 / 640331 Bytes, 61,62 %.
+
+`TMapObjBase::setUpCurrentMapCollision` war bei 99,83 %.
+Der Stack-Frame lag bei `0x78` statt retail `0x80`,
+die Matrix bei `addi r3,r1,0x28` statt `0x2c`.
+
+**Vollmatch, strikt.**
+
+Der lokale Zeiger `colman` war fabricated.
+Er drückte den Frame um acht Byte.
+Nach dem Entfernen ruft der Else-Zweig
+`mMapCollisionManager->setUpUnk8TRS` direkt auf,
+wie schon `setUpMapCollision`.
+
+0 Abweichungen, 216 Bytes, 54 Instruktionen.
+`functionRelocDiffs=data_value` ohne bad Relocs.
+Symbolordnung PASS bis auf vorbestehendes
+`setMtx__17TMapCollisionBaseFPA4_f` MISSING.
+
+**Zähler.** `ninja changes_all`:
+matched code 47,88 % → 47,89 %,
+1718908 → 1719124 Bytes (+216),
+9199 → 9200 Funktionen (+1).
+Game Code 35,62 % → 35,63 %,
+1006760 → 1006976 Bytes (+216),
+5234 → 5235 Funktionen (+1).
+`MapObjBase` matched_code 60,65 % → 63,21 %.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+Event 777 behält `buffer[0x100]`.
+`TRedCoinSwitch::loadAfter` behält `coin`.
+
+### Nächster Schritt
+
+1. `setUpCurrentMapCollision` behält keinen `colman`-Local.
+   `MapObjBase` nicht auf `Matching` stellen.
+2. Event 777 behält `char buffer[0x100]`
+   und `snprintf` mit `sizeof(buffer)`.
+3. `TRedCoinSwitch::loadAfter` behält `coin`.
+4. `isCollidMove` nicht über `f32 scale`.
+   `TNerveDoroHaneRise` nicht über `f32 step`.
+   `TMareEventWallRock::load` nicht über `view`.
+5. Vermeidungslisten aus Runde 81 bis 111 bleiben.
+   Den Frame nicht polstern.
