@@ -8618,3 +8618,130 @@ Keine TU auf `Matching` gestellt.
     `MapObjGeneral`, `walkerEnemy`, `bossManta`,
     `fireWanwan`, `MapObjHide`, `EventWatcher` und
     `NpcWalkTurn` nicht auf `Matching` stellen.
+
+### Nach hundertunderster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 100:
+47,79 % matched code, 1715744 / 3590088 Bytes,
+9190 / 12881 Funktionen.
+Game Code 35,50 %, 1003596 / 2826784 Bytes,
+5225 / 8857 Funktionen.
+Daten 385811 / 640331 Bytes, 60,25 %.
+
+`TMario::startVoice` matcht bis auf den Frame.
+Retail `0x28`, bei uns `0x20`.
+Im Rumpf keine Stack-Zugriffe.
+`SMSGetMSound()` liegt schon in r31,
+bevor `getVoiceStatus` läuft.
+
+**Vollmatch.**
+
+```cpp
+MSound* sound = SMSGetMSound();
+return sound->startMarioVoice(param_1, mHealth, getVoiceStatus());
+```
+
+0 Abweichungen, 124 Bytes, 31 Instruktionen.
+Die Reihenfolge der Loads bleibt.
+`startVoiceIfNoVoice` inlined dieselbe Funktion.
+Das `char trash[8]` dort war das alte Polster
+für genau diese acht Byte.
+Es ist entfernt.
+`startVoiceIfNoVoice` bleibt bei 100 %.
+`MarioSound` bleibt `NonMatching`:
+`soundTorocco` und `soundMovement` matchen nicht.
+Symbolordnung PASS.
+Die UNUSED-Größe von `startVoiceYoshi` ist alt.
+
+**Gemessen und zurückgenommen.**
+
+`turnEnd` mit benanntem `TWaterGun* gun`
+und aufgefaltetem `considerRotateStart`
+fällt von neun auf 48 Zeilen.
+`walkEnd` blieb 100 %, weil die gemeinsame
+Funktion nicht angefasst wurde.
+Zurückgenommen.
+`TelesaFreeze` nicht wiederholt.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,79 % matched code,
+1715868 / 3590088 Bytes, 9191 / 12881 Funktionen.
+Game Code 35,51 %, 1003720 / 2826784 Bytes,
+5226 / 8857 Funktionen.
+Daten unverändert: 385811 / 640331 Bytes, 60,25 %.
+Game-Daten unverändert: 306587 / 556995 Bytes, 55,04 %.
+
+Delta Code gegen Runde 100: +1 Funktion, +124 Bytes.
+Delta Daten: 0 Bytes.
+
+`changes_all`: `startVoice__6TMarioFUl`
+99,71 % auf 100 %.
+Unit-Code `MarioSound` 21,52 % auf 22,83 %.
+`soundTorocco` und `soundMovement` unverändert.
+Keine Regression.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `TMario::startVoice` behält `MSound* sound`.
+   `startVoiceIfNoVoice` behält kein `char trash[8]`.
+   `MarioSound` nicht auf `Matching` stellen.
+2. `turnEnd` nicht mit benanntem `TWaterGun*`
+   und aufgefaltetem `considerRotateStart`.
+   `walkEnd` bleibt bei `quarter` und `vel`.
+3. `TNerveTelesaFreeze` nicht über
+   `int time = getTime()` oder einen benannten
+   `TPathNode`.
+4. `TNerveBEelTearsMarioRecover` behält `marioPos`.
+   Den Frame nicht polstern.
+   `bosseel` nicht auf `Matching` stellen.
+5. `TCasinoPanelGate::touchWater` nicht mit
+   `span` und `baseY` wiederholen.
+6. `TNerveTobiPukuAttack` behält das `else`
+   mit `return true`.
+   Den Frame nicht polstern.
+   Keinen unbenutzten dritten `TVec3`.
+7. `initNeonMatColor` nicht mit benanntem `index`.
+8. Der Ricco-Konstruktor behält `zero()` im Rumpf.
+9. `catching` behält `mRotBroadEnableV`.
+   Den Frame nicht polstern.
+   `MarioRun` nicht auf `Matching` stellen.
+10. `setDeadBathtubKillerAnm` behält den anonymen
+    `TVec3(0, 0, 0)`.
+11. `TLiveManager::perform` behält `char trash[16]`.
+12. `isFindMarioFromParam` behält die drei `*= param_1`.
+13. `registerEventWatcher` nicht noch einmal über
+    einen benannten `watcher` oder `getChildren()`.
+14. `setUp` behält `u32 entrySize`.
+15. `sleep()` behalten. Frames nicht polstern.
+16. `TRedCoinSwitch::load` nicht über
+    `SMSGetMarDirector()`.
+17. `appearWithDemo`, `isTouchedOneWall`,
+    `joinToGroup` und `createAndKeepData`
+    nicht mit denselben Benennungen wiederholen.
+18. `TMapStaticObj::init` nicht über `setMtx`.
+19. Die sechs Rümpfe aus Runde 91 behalten.
+    `walkBehavior` behält `height`.
+20. Runde 90 und 89 bleiben.
+    `rotating` behält den `u16`-Cast.
+    Schadensradius 65 bleibt.
+    `changePlayerStatus` behält das Minimum aus
+    `mIntendedMag` und 8.
+    `thinkDirty` bleibt bei `- 200.0f`.
+    Die drei `makeRootMtxRot*` bleiben bei
+    `0.017453294f`.
+21. Runde 84 bleibt: `p1 - p2 + 1`,
+    `150 * analog * 256`, `hitWater` mit `30.0f`.
+    `isDemo` bleibt die Oder-Form mit `stateIs3Or4`.
+22. Vermeidungslisten aus Runde 81 bis 100 bleiben.
+    `MtxToQuat` nicht in Teilsummen zerlegen.
+    `MapEventMare`, `MapStaticObject`, `MarioRun`,
+    `smallEnemy`, `bosspakkun`, `hamukuri`, `poihana`,
+    `MapObjGeneral`, `walkerEnemy`, `bossManta`,
+    `fireWanwan`, `MapObjHide`, `EventWatcher` und
+    `NpcWalkTurn` nicht auf `Matching` stellen.
