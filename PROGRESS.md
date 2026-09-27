@@ -7253,3 +7253,68 @@ SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
    `stampModel` und `getRandVol` nicht wegen
    Registertausch jagen.
    `MarioMove` nicht auf `Matching` stellen.
+
+### Nach siebenundachtzigster Iterationsrunde (ein Datenwort)
+
+**Beobachtung, vorher.** Stand Runde 86:
+47,74 % matched code, 1713968 / 3590088 Bytes,
+9184 / 12881 Funktionen.
+Game Code 35,44 %, 1001820 / 2826784 Bytes,
+5219 / 8857 Funktionen.
+Daten 385739 / 640331 Bytes, 60,24 %.
+
+**`TKumokunManager::load`.**
+Der offizielle Zähler stand für die Funktion schon
+auf 100 %. `decomp-diff` zeigte ein `lwz` aus
+`.sdata`: Zielwert 65, Quelle 60.
+Das dritte `set` schreibt `mSLDamageRadius`.
+Die anderen drei bleiben 60, 50 und 70.
+122 Instruktionen, 488 Bytes, danach null
+abweichende Wörter.
+`Kumokun`-Daten von 2552 auf 2568 Bytes, 100 %.
+Die TU bleibt `NonMatching` (Code 43,40 %).
+`validate-symbol-order.py` bleibt PASS mit den
+alten UNUSED-Größenwarnungen.
+`changePlayerStatus` ist unverändert.
+
+**Angeschaut, nicht angefasst.**
+`stampModel` und `getRandVol` bleiben Registertausch.
+`TRoulette::moveObject` hat zusätzlich einen
+Frame-Abstand von 0x20.
+`setQuat` tauscht nur Float-Register bei gleichen
+Poolwerten.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Code unverändert: 47,74 % matched code,
+1713968 / 3590088 Bytes, 9184 / 12881 Funktionen.
+Game Code 35,44 %, 1001820 / 2826784 Bytes,
+5219 / 8857 Funktionen.
+
+Daten: 385755 / 640331 Bytes, 60,24 %.
+Game-Daten 306531 / 556995 Bytes, 55,03 %.
+Delta gegen Runde 86: +16 Datenbytes, kein neues
+Code-Symbol im Zähler.
+
+`changes_all` meldet nur `Kumokun` matched data
+von 99,38 % auf 100 %. Keine Regression.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### Nächster Schritt
+
+1. `mSLDamageRadius` in `TKumokunManager::load`
+   nicht wieder auf 60 stellen.
+2. `changePlayerStatus` behält das Minimum aus
+   `mIntendedMag` und 8.
+3. `thinkDirty` bleibt bei `- 200.0f`.
+   Die drei `makeRootMtxRot*` bleiben bei
+   `0.017453294f`.
+4. Runde 84 bleibt: `p1 - p2 + 1`,
+   `150 * analog * 256`, `hitWater` mit `30.0f`.
+5. `isDemo` bleibt die Oder-Form mit `stateIs3Or4`.
+6. Vermeidungslisten aus Runde 81 und 82 bleiben.
+   `stampModel` und `getRandVol` nicht wegen
+   Registertausch jagen.
+   `Kumokun` und `MarioMove` nicht auf `Matching` stellen.
