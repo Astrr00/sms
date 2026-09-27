@@ -10490,12 +10490,42 @@ SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
 
 Keine TU auf `Matching` gestellt.
 
+### Nach hundertsechsunddreißigster Iterationsrunde (Speed, 0 Vollmatches)
+
+**Beobachtung.** Stand Runde 135 unverändert (48,35 % / 9233 Fn).
+
+**1 — „Retail-Frame größer“-Korrektur.** `decomp-diff` zeigt für die
+priorisierten 100-%-Fuzzy-Funktionen **unseren** Frame oft **größer** als
+Retail (Padding würde verschlimmern):
+
+- `thinkSituation`: Retail `0xc8`, unser `0x2b0`.
+- `soundMovement`: Retail `0x2e0`, unser `0x340`.
+- `CardLoad::changeScene`: Retail `0x1e0`, unser `0x3b8`.
+
+Entry-`trash` `0x4`–`0x23c`: kein `match`.
+
+Globaler Scan (100 % fuzzy, Retail-`stwu` > unser, Gap ≥ 8): nur
+`MarDirectorPreEntry::preEntry`, `ModelWaterManager::drawRefracAndSpec`,
+`MarioWait::waitMain` — Entry-`trash` ohne Vollmatch.
+
+**2 — `Hino2Pollute`.** `changeBck(3)` → `changeBck(16)` / `17` an zwei
+Retail-Stellen (`li r4, 0x10` / `0x11`) behebt Operanden, bleibt aber
+~26 Diff-Zeilen (fehlendes Inline: Wasser/`rand`/Stack `0xe8` vs `0xa0`).
+**Nicht committet** (kein 100 %).
+
+**3 — Sonstiges.** `SampleCtrlMaterial` / `TMapObjManager::load`:
+Brute meldete fälschlich `trash[4]` (Retail-Frame kleiner). Bosseel/Walker
+unverändert defer.
+
+**Vollmatch.** keine.
+
+`ninja` / DOL-SHA1 unverändert OK.
+
 ### Nächster Schritt
 
-1. Runden 114–119 / 121–134 unverändert.
-2. `Hino2Pollute` / `bosseel` / `walkerEnemy` / `BGKAppear`: Operanden und
-   Stack-Locals, nicht Entry-`trash`.
-3. Weitere 100-%-Fuzzy-Nicht-Matches mit Retail-Frame **größer** als unser
-   (`thinkSituation`, `soundMovement`, …) — exakte `trash`-Größe pro Funktion.
-4. `initAnmSound` / `TNerveHino2Burst` / `BathtubKillerExplosion` defer.
-5. Vermeidungslisten aus Runde 81 bis 135 bleiben.
+1. Runden 114–119 / 121–135 unverändert.
+2. `Hino2Pollute`: Nerv-Body aus ASM/`m2c` (nicht nur `changeBck`-Konstanten).
+3. `thinkSituation` / `soundMovement` / `changeScene`: Frame **verkleinern**
+   (UNUSED-Inlines / Locals), nicht Entry-`trash`.
+4. `bosseel` / `walkerEnemy` / `BGKAppear` wie R135.
+5. Defer-Listen unverändert.
