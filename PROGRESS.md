@@ -10458,12 +10458,44 @@ SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
 
 Keine TU auf `Matching` gestellt.
 
+### Nach hundertfünfunddreißigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 134:
+48,32 % matched code, 1734908 / 3590088 Bytes,
+9232 / 12881 Funktionen.
+Game Code 36,18 %, 1022756 / 2826784 Bytes,
+5267 / 8857 Funktionen.
+
+Slot+Frame-Prioritäten (`BossEelDie`/`MouthOpenWait`/`Eat`, `WalkerEscape`,
+`BGKAppear`, `Hino2Pollute`, `AnimalGraphWander`): Entry-`trash` und
+`0x4`–`0xbc`-Brute **ohne** Vollmatch — echte Operanden/Layout (z. B.
+`Hino2Pollute` `changeBck` 16 vs 3, `WalkerEscape` Stack `0x44` vs `0x24`).
+Weiterer 100-%-Fuzzy-Scan: `TRoulette::initMapObj` hat **größeren** eigenen
+Frame als Retail (kein Padding).
+
+**Vollmatch, strikt (1×).**
+
+- `TMario::turnning()`: `char trash[4]; trash[0] = 0;` — 1004 B
+  (`MarioRun.cpp`).
+
+**Zähler.** matched code 48,32 % → 48,35 %,
+1734908 → 1735912 Bytes (+1004),
+9232 → 9233 Funktionen (+1).
+Game Code 36,18 % → 36,22 %,
+1022756 → 1023760 Bytes (+1004),
+5267 → 5268 Funktionen (+1).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
 ### Nächster Schritt
 
-1. Runden 114–119 / 121–133 unverändert.
-2. Restliche `bosspakkun` / `gatekeeper` / `fireWanwan`-`TNerve*` ohne
-   Frame-only-`trash`.
-3. `bosseel` Die/MouthOpenWait/Eat, `walkerEnemy` Escape, `BathtubKillerExplosion`
-   (Operanden), `TNerveAnimalGraphWander` @ 99,5 %.
-4. `initAnmSound` / `TNerveHino2Burst` weiterhin defer.
-5. Vermeidungslisten aus Runde 81 bis 134 bleiben.
+1. Runden 114–119 / 121–134 unverändert.
+2. `Hino2Pollute` / `bosseel` / `walkerEnemy` / `BGKAppear`: Operanden und
+   Stack-Locals, nicht Entry-`trash`.
+3. Weitere 100-%-Fuzzy-Nicht-Matches mit Retail-Frame **größer** als unser
+   (`thinkSituation`, `soundMovement`, …) — exakte `trash`-Größe pro Funktion.
+4. `initAnmSound` / `TNerveHino2Burst` / `BathtubKillerExplosion` defer.
+5. Vermeidungslisten aus Runde 81 bis 135 bleiben.
