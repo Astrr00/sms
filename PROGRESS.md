@@ -7672,3 +7672,98 @@ Keine TU auf `Matching` gestellt.
    `MapObjGeneral`, `walkerEnemy`, `bossManta`,
    `fireWanwan`, `MapObjHide`, `EventWatcher` und
    `NpcWalkTurn` nicht auf `Matching` stellen.
+
+### Nach zweiundneunzigster Iterationsrunde (kein Vollmatch)
+
+**Beobachtung, vorher.** Stand Runde 91:
+47,76 % matched code, 1714628 / 3590088 Bytes,
+9186 / 12881 Funktionen.
+Game Code 35,46 %, 1002480 / 2826784 Bytes,
+5221 / 8857 Funktionen.
+Daten 385811 / 640331 Bytes, 60,25 %.
+
+`TJointObj` legt `kill` auf VTable 0x18 und
+`sleep` auf 0x1c.
+`TMareWallRock::movement` und `loadAfter`
+riefen `unk104->kill()`.
+Retail lädt an beiden Stellen 0x1c.
+
+**Ein Partial, kein neues Vollmatch.**
+
+`movement` und `loadAfter` rufen `unk104->sleep()`.
+Der Slot 0x1c stimmt in beiden Funktionen.
+`movement` hat danach nur noch den Frame:
+0xd8 gegen retail 0xf0, fünfzehn Zeilen,
+alle Stack.
+`loadAfter` verliert nur diese eine Zeile.
+Die Min/Max-Register und der Frame bleiben.
+Unit-Fuzzy 99,24 % auf 99,25 %.
+`loadAfter` 99,41 % auf 99,42 %.
+`movement` bleibt bei 99,93 %.
+
+Kein Frame wurde aufgefüllt.
+`MapEventMare` nicht auf `Matching` gestellt.
+
+Verworfen, weil der Rumpf schlechter wurde:
+`TMapStaticObj::init` auf `setMtx` umschreiben.
+Der direkte Aufruf wird zu `PSMTXCopy` inlined,
+sobald `initMapCollision` selbst inlined wird,
+oder `init` ruft die Funktion nur noch auf
+und der Frame fällt von 0x118 auf 0xe0.
+`setUpUnk8TRS` im Header auf `setMtx` umzustellen
+zieht `MapObjBase` von 99,8 % auf 95,7 %.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,76 % matched code,
+1714628 / 3590088 Bytes, 9186 / 12881 Funktionen.
+Game Code 35,46 %, 1002480 / 2826784 Bytes,
+5221 / 8857 Funktionen.
+Daten unverändert: 385811 / 640331 Bytes, 60,25 %.
+Game-Daten unverändert: 306587 / 556995 Bytes, 55,04 %.
+
+Delta Code gegen Runde 91: keine Funktion, 0 Bytes.
+Delta Daten: 0 Bytes.
+
+`changes_all` listet keine Regression.
+Symbolordnung `MapEventMare` PASS,
+mit den alten UNUSED-Größenwarnungen.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `movement` und `loadAfter` behalten `sleep()`.
+   Den Frame von `movement` nicht mit einem
+   einzelnen `int` oder `trash` schliessen.
+2. Die sechs Rümpfe aus Runde 91 behalten.
+   Keinen davon auf Frame-Länge polstern.
+3. `walkBehavior` behält `height = unk230 + unk234`.
+4. Runde 90 bleibt: `mRotation` in `PoihanaThrow`,
+   `&sender->mPosition` im Dango-`receiveMessage`,
+   `mat[1][3]` in `recovering`.
+5. Runde 89 bleibt: `(u8*)boss + 1`,
+   Translationsspalte in `attackToMario`,
+   `CLBSquared(10.0f)`.
+   `set(dx, 0, dz)` in `isCanWalk` nicht wiederholen.
+6. `rotating` behält den `u16`-Cast.
+   `mSLDamageRadius` bleibt 65.
+   `changePlayerStatus` behält das Minimum aus
+   `mIntendedMag` und 8.
+7. `thinkDirty` bleibt bei `- 200.0f`.
+   Die drei `makeRootMtxRot*` bleiben bei
+   `0.017453294f`.
+8. Runde 84 bleibt: `p1 - p2 + 1`,
+   `150 * analog * 256`, `hitWater` mit `30.0f`.
+9. `isDemo` bleibt die Oder-Form mit `stateIs3Or4`.
+10. Vermeidungslisten aus Runde 81 bis 91 bleiben.
+    `TMapStaticObj::init` nicht noch einmal über
+    `setMtx` gegen `PSMTXCopy` drehen.
+    `MapEventMare`, `MapStaticObject`, `MarioRun`,
+    `bosspakkun`, `hamukuri`, `poihana`,
+    `MapObjGeneral`, `walkerEnemy`, `bossManta`,
+    `fireWanwan`, `MapObjHide`, `EventWatcher` und
+    `NpcWalkTurn` nicht auf `Matching` stellen.
