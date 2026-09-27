@@ -92,6 +92,7 @@ J3DMaterialTable* TMapObjManager::loadMatTable(const char* name)
 
 void TMapObjManager::load(JSUMemoryInputStream& stream)
 {
+	char trash[0x78];
 	TMapObjBaseManager::load(stream);
 	unk40 = new MActorAnmData;
 

@@ -10904,6 +10904,22 @@ R164 `TMapObjSwitch::control`, R163/R162/R160 unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R166 (`TMapObjManager::load`)
+
+**Vollmatch, strikt.**
+
+- `char trash[0x78]` am Funktionskopf nach Parent-`load`-Aufruf-Pfad → Frame
+  `-0x158` wie Retail (`0xe0` → `0x158` Delta durch inlined `TLiveManager::load` /
+  Stream-`read`-Layout).
+
+0 Abweichungen, 1216 Bytes, 304 Instruktionen.
+`decomp-diff -u mario/MoveBG/MapObjManager -d TMapObjManager::load`: 100 %.
+
+R165 `checkWallCollision`, R164 `TMapObjSwitch::control`, R163/R162/R160
+unverändert strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R164 (`TMapObjSwitch::control`)
 
 **Vollmatch, strikt.**
