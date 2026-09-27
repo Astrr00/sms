@@ -252,7 +252,8 @@ void TNozzleBase::movement(const TMarioControllerWork& controllerWork)
 	if (mFludd->mCurrentWater <= 0) {
 		return;
 	}
-	s32 var1 = 256.0f * controllerWork.mAnalogR * 150.0f;
+	// Retail multiplies the analog by 150, then by 256.
+	s32 var1 = 150.0f * controllerWork.mAnalogR * 256.0f;
 
 	if (var1 > unk372) {
 		unk378 = (var1 - unk372) * 0.000015258789f;
