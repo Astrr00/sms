@@ -1199,8 +1199,8 @@ BOOL TMario::slipBack()
 
 BOOL TMario::catching()
 {
-	// TODO: removeme
-	(void)0;
+	char trash[8];
+	trash[0] = 0;
 
 	if (!(mInput & 0x8) && (mInput & 0x2)) {
 		if (mForwardVel > mJumpParams.mRotBroadEnableV.get())
