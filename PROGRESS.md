@@ -8371,3 +8371,124 @@ Keine TU auf `Matching` gestellt.
     `MapObjGeneral`, `walkerEnemy`, `bossManta`,
     `fireWanwan`, `MapObjHide`, `EventWatcher` und
     `NpcWalkTurn` nicht auf `Matching` stellen.
+
+### Nach neunundneunzigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 98:
+47,79 % matched code, 1715744 / 3590088 Bytes,
+9190 / 12881 Funktionen.
+Game Code 35,50 %, 1003596 / 2826784 Bytes,
+5225 / 8857 Funktionen.
+Daten 385811 / 640331 Bytes, 60,25 %.
+
+`TNerveBEelTearsMarioRecover::execute` lud
+`gpMarioParticleManager` vor `gpMarioPos`.
+Retail lädt die Position nach r5
+und danach den Manager nach r3.
+
+**Partial, kein Vollmatch.**
+
+`JGeometry::TVec3<f32>* marioPos = gpMarioPos`
+steht vor `emitAndBindToPosPtr`.
+Die beiden Loads und `li r4, 0xd6` matchen.
+Übrig sind sieben Stack-Operanden:
+Frame 0x30 gegen 0x38.
+`bosseel` bleibt `NonMatching`.
+Symbolordnung PASS.
+Fünf UNUSED-Größen und die Weak-Reihenfolge
+sind vorbestehend.
+
+Verworfen: `int time = spine->getTime()`
+wird wegoptimiert, der Frame bleibt 0x30.
+`TCasinoPanelGate::touchWater` mit `span`
+und `baseY` zieht die Loads vor die Konstante
+und fällt von neun auf etwa fünfzig Zeilen.
+Zurückgenommen.
+`initNeonMatColor` nicht über einen benannten Index.
+Kein unbenutzter dritter `TVec3`.
+
+Kein Frame wurde aufgefüllt.
+Die Attack-Nerve behält das `else` mit `return true`.
+Der Ricco-Konstruktor behält `zero()`.
+`catching` behält `mRotBroadEnableV`.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher unverändert: 47,79 % matched code,
+1715744 / 3590088 Bytes, 9190 / 12881 Funktionen.
+Game Code 35,50 %, 1003596 / 2826784 Bytes,
+5225 / 8857 Funktionen.
+Daten unverändert: 385811 / 640331 Bytes, 60,25 %.
+Game-Daten unverändert: 306587 / 556995 Bytes, 55,04 %.
+
+Delta Code gegen Runde 98: 0 Funktionen, 0 Bytes.
+Delta Daten: 0 Bytes.
+
+`changes_all`: `TNerveBEelTearsMarioRecover::execute`
+99,81 % auf 99,92 %.
+Unit-Code `bosseel` bleibt 20008 Bytes.
+Unit-Fuzzy 99,17 % auf 99,17 %.
+Keine Regression.
+`MapObjSirena` wurde nur wegen des Zeitstempels
+neu gebaut und taucht in `changes_all` nicht auf.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `TNerveBEelTearsMarioRecover` behält `marioPos`.
+   Den Frame 0x30 nicht auf 0x38 polstern.
+   `getTime` dort nicht noch einmal benennen.
+   `bosseel` nicht auf `Matching` stellen.
+2. `TCasinoPanelGate::touchWater` nicht mit
+   `span` und `baseY` wiederholen.
+3. `TNerveTobiPukuAttack` behält das `else`
+   mit `return true` und das durchfallende
+   `return false`.
+   Den Frame nicht polstern.
+   Keinen unbenutzten dritten `TVec3`.
+   `tobiPuku` nicht auf `Matching` stellen.
+4. `initNeonMatColor` nicht mit benanntem `index`.
+5. Der Ricco-Konstruktor behält `zero()` im Rumpf.
+   `MapEventDolpic` nicht auf `Matching` stellen.
+6. `catching` behält `mRotBroadEnableV`.
+   Den Frame nicht polstern.
+   `MarioRun` nicht auf `Matching` stellen.
+7. `setDeadBathtubKillerAnm` behält den anonymen
+   `TVec3(0, 0, 0)`.
+8. `TLiveManager::perform` behält `char trash[16]`.
+9. `isFindMarioFromParam` behält die drei `*= param_1`.
+   `smallEnemy` nicht auf `Matching` stellen.
+10. `walkEnd` behält `quarter` und `vel`.
+11. `registerEventWatcher` nicht noch einmal über
+    einen benannten `watcher` oder `getChildren()`.
+12. `setUp` behält `u32 entrySize`.
+13. `sleep()` behalten. Frames nicht polstern.
+14. `TRedCoinSwitch::load` nicht über
+    `SMSGetMarDirector()`.
+15. `appearWithDemo`, `isTouchedOneWall`,
+    `joinToGroup` und `createAndKeepData`
+    nicht mit denselben Benennungen wiederholen.
+16. `TMapStaticObj::init` nicht über `setMtx`.
+17. Die sechs Rümpfe aus Runde 91 behalten.
+    `walkBehavior` behält `height`.
+18. Runde 90 und 89 bleiben.
+    `rotating` behält den `u16`-Cast.
+    Schadensradius 65 bleibt.
+    `changePlayerStatus` behält das Minimum aus
+    `mIntendedMag` und 8.
+    `thinkDirty` bleibt bei `- 200.0f`.
+    Die drei `makeRootMtxRot*` bleiben bei
+    `0.017453294f`.
+19. Runde 84 bleibt: `p1 - p2 + 1`,
+    `150 * analog * 256`, `hitWater` mit `30.0f`.
+    `isDemo` bleibt die Oder-Form mit `stateIs3Or4`.
+20. Vermeidungslisten aus Runde 81 bis 98 bleiben.
+    `MapEventMare`, `MapStaticObject`, `MarioRun`,
+    `smallEnemy`, `bosspakkun`, `hamukuri`, `poihana`,
+    `MapObjGeneral`, `walkerEnemy`, `bossManta`,
+    `fireWanwan`, `MapObjHide`, `EventWatcher` und
+    `NpcWalkTurn` nicht auf `Matching` stellen.
