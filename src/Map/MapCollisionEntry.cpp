@@ -203,7 +203,8 @@ void TMapCollisionWarp::setUp()
 		TMapCollisionBase::update();
 	}
 
-	mEntrySize = gpMapCollisionData->getEntrySize(mEntryId);
+	u32 entrySize = gpMapCollisionData->getEntrySize(mEntryId);
+	mEntrySize    = entrySize;
 }
 
 void TMapCollisionWarp::setUpTrans(const JGeometry::TVec3<f32>& param_1)
