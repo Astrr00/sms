@@ -10732,10 +10732,27 @@ R146 `joinToGroup`, R145 `drawLogic`, R143 `initNeonMatColor`, R142 `getDistance
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R148 (`initAndRegister` Teilstand)
+
+**Kein neuer Vollmatch** (Ziel war `initAndRegister` @ 100 %).
+
+- `TMapObjBase::initAndRegister`: Entry-`char trash[4]; trash[0]=0;` + verkettetes
+  `search`→`push_back` (kein `list`-Local) → Frame `-0x70` und `addi r31,r3,0x10`
+  wie Retail (**99,9 %**).
+- Verbleibend: drei `insert`-Spills +4 B zu hoch (`0x50`/`0x4c`/`0x50` vs
+  `0x4c`/`0x48`/`0x4c`).
+- Mid-Trash + `TNameRef* list` nach `search` fixiert die Spills, erzwingt aber
+  `addi r30,r3,0x10` (~99,7 %) — gleicher Trade-off wie in R147-Notizen.
+
+R147 `receiveMessage`, R146 `joinToGroup`, R145 `drawLogic`, R138 `initMirrorModel`
+unverändert @ 100 %.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### Nächster Schritt
 
-1. `initAndRegister`: Mid-Trash wie `joinToGroup` (~99,7 %, noch `r31`/`r30` nach
-   `search`).
+1. `initAndRegister`: Mid-Trash nach `search` **ohne** `list`-GPR (r3/r31 halten) oder
+   anderer Register-Hebel für die letzten +4 B bei Entry-Trash.
 2. `TRoulette::initMapObj`: Mid-Trash nach `new`/`search` (nicht Entry allein).
 3. `TCloset::calcRootMatrix` / `partsRollCallback`: nur bei klarem +4‑B-Hebel.
 4. Defer-Listen unverändert.
