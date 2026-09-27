@@ -10057,3 +10057,45 @@ Keine TU auf `Matching` gestellt.
 4. `TEggYoshi::control` / `perform` / Mare-`load` weiter vermeiden
    (trash-only).
 5. Vermeidungslisten aus Runde 81 bis 122 bleiben.
+
+### Nach hundertvierundzwanzigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 123:
+47,97 % matched code, 1722088 / 3590088 Bytes,
+9210 / 12881 Funktionen.
+Game Code 35,73 %, 1009940 / 2826784 Bytes,
+5245 / 8857 Funktionen.
+
+Partielle Versuche (revertiert): `MActorAnmData::MActorAnmData`
+(`trash[0x10]` verschob Frame auf `0x28` statt `0x20`).
+
+**Vollmatch, strikt.**
+
+`TMario::catching`: `char trash[8]; trash[0] = 0;` am
+Funktionsanfang für Retail-Frame `0x30` (vorher `0x28`).
+
+0 Abweichungen, 340 Bytes, 85 Instruktionen.
+`validate-symbol-order` `mario/Player/MarioRun`: bestehende
+UNUSED-Size-Warnungen unverändert.
+
+**Zähler.** matched code 47,97 % → 47,98 %,
+1722088 → 1722428 Bytes (+340),
+9210 → 9211 Funktionen (+1).
+Game Code 35,73 % → 35,74 %,
+1009940 → 1010280 Bytes (+340),
+5245 → 5246 Funktionen (+1).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. Runden 114–119 / 121–123 / `catching` unverändert.
+2. `checkWallCollision` / `execGroundCheck_` / `getRandomNextIndex`:
+   Slot+Frame ohne Operanden-Regression.
+3. `MActorAnmData`-Ctor: Frame hängt an `: unk0(0)`-Prolog, kein
+   Body-`trash` allein.
+4. `TEggYoshi::control` / `perform` / Mare-`load` weiter vermeiden.
+5. Vermeidungslisten aus Runde 81 bis 123 bleiben.
