@@ -86,7 +86,12 @@ void TSilhouette::loadAfter()
 
 void TSilhouette::setting(MtxPtr param_1)
 {
-	GXSetChanAmbColor(GX_COLOR0A0, (GXColor) { unk12.r, unk12.g, unk12.b, 0 });
+	// Built inside the call, the temporary and the argument swap:
+	// stores at 0x1c, copy at 0x20. Assigning into a local keeps
+	// the build at 0x20 and the copy at 0x1c.
+	GXColor amb;
+	amb = (GXColor) { unk12.r, unk12.g, unk12.b, 0 };
+	GXSetChanAmbColor(GX_COLOR0A0, amb);
 	GXLightObj GStack_54;
 	Vec local_60;
 	Vec local_6C = SMS_GetMarioPos();
@@ -632,6 +637,13 @@ BOOL ViewFrustumClipCheck(JDrama::TGraphics* gfx, Vec* position, f32 radius)
 
 void ViewFrustumRectClipCheck(JDrama::TGraphics*, Vec*, f32, f32) { }
 
+// The type has to be a local before the call. Passed as desc->type,
+// both arguments get a temporary and the table lands at 0x38.
+static inline int vtxAttrSize(const int* table, GXAttrType type)
+{
+	return table[type];
+}
+
 int SMS_CountPolygonNumInShape(J3DShape* shape)
 {
 	int sizeTable[4] = {
@@ -645,7 +657,8 @@ int SMS_CountPolygonNumInShape(J3DShape* shape)
 	int vtxSize = 0;
 	for (GXVtxDescList* desc = shape->getVtxDesc(); desc->attr != GX_VA_NULL;
 	     desc++) {
-		vtxSize += sizeTable[desc->type];
+		GXAttrType type = desc->type;
+		vtxSize += vtxAttrSize(sizeTable, type);
 	}
 
 	for (u16 i = 0; i < shape->getMtxGroupNum(); i++) {

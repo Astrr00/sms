@@ -6602,3 +6602,74 @@ dem Stand 03:59 UTC. Die lokalen Commits ab
    `SMS_CountPolygonNumInShape`, Frame `0x48` gegen
    `0x40`, die Tabelle vier Byte zu tief (`0x34`
    gegen `0x30`).
+
+### Nach achtundsiebzigster Iterationsrunde (zwei Matches in DrawUtil)
+
+**Beobachtung, vorher.** Stand Runde 77:
+47,60 % matched code, 1708784 / 3590088 Bytes,
+9170 / 12881 Funktionen.
+Game Code 35,26 %, 996636 / 2826784 Bytes,
+5205 / 8857 Funktionen.
+
+**Match, `SMS_CountPolygonNumInShape`.**
+55 Instruktionen, 220 Bytes.
+Vorher Frame `0x40` bei uns, `0x48` im Original.
+Die Größentabelle lag auf `r1+0x30` statt `r1+0x34`.
+Sonst gleiche Wörter.
+`vtxAttrSize(sizeTable, desc->type)` hebt den Frame
+auf `0x48`, die Tabelle aber auf `0x38`.
+`GXAttrType type = desc->type` vor dem Aufruf lässt
+ein Argument-Temporary weg. Tabelle dann auf `0x34`.
+Nur der benannte Typ, ohne die Inline, bleibt bei
+Frame `0x40`.
+Nach dem Rebuild: 55 Wörter, null Abweichungen.
+Pool-Namen von `@2195` und `@742` zählt
+`functionRelocDiffs=data_value` als gleich.
+Die Inline wird nicht emittiert.
+
+**Match, `TSilhouette::setting`.**
+103 Instruktionen, 412 Bytes, Frame beiderseits `0x90`.
+Vorher lagen die Farb-Stores auf `0x1c` und die Kopie
+auf `0x20`.
+`GXColor amb = { ... }` schrumpft den Frame auf `0x88`
+und baut die Farbe bei `0x74`. Zurückgenommen.
+`GXColor amb; amb = (GXColor){ ... };` trifft `0x20`
+und die Kopie auf `0x1c`.
+Nach dem Rebuild: 103 Wörter, null Abweichungen.
+
+`validate-symbol-order.py -u mario/MarioUtil/DrawUtil`
+meldet weiter das vorbestehende fehlende Weak-Symbol
+`identity33__Q29JGeometry64TRotation3<...>Fv`.
+Dasselbe fehlte vor dieser Änderung.
+14 UNUSED-Größenwarnungen sind ebenfalls alt.
+Die TU bleibt `NonMatching`.
+`SMS_UnifyMaterial` liegt bei 99,3 %.
+
+**Messung, `ninja` und `dtk shasum -c`.**
+
+Nachher: 47,61 % matched code,
+1709416 / 3590088 Bytes, 9172 / 12881 Funktionen.
+Game Code 35,28 %, 997268 / 2826784 Bytes,
+5207 / 8857 Funktionen.
+
+Delta gegen Runde 77: +2 Funktionen, +632 Bytes
+(220 + 412).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Kein Matching-Flip. Kein Push in diesem Lauf.
+
+### Nächster Schritt
+
+1. `DrawUtil` nicht auf `Matching` stellen.
+2. `TSilhouette::setting` nicht wieder in den Aufruf
+   falten und nicht als `GXColor amb = { ... }`
+   schreiben.
+3. `SMS_CountPolygonNumInShape` nicht auf den direkten
+   Index `sizeTable[desc->type]` zurückdrehen.
+4. Nächster Kandidat in derselben TU:
+   `TSilhouette::perform`, 254 Instruktionen, 1016 Bytes.
+   Frame `0x188` gegen `0x180`. Die Farb-Slots weichen
+   um 12 Byte ab (`0x40` gegen `0x34`), der Frame nur
+   um 8. Kein einheitlicher Shift.
