@@ -10099,3 +10099,45 @@ Keine TU auf `Matching` gestellt.
    Body-`trash` allein.
 4. `TEggYoshi::control` / `perform` / Mare-`load` weiter vermeiden.
 5. Vermeidungslisten aus Runde 81 bis 123 bleiben.
+
+### Nach hundertfünfundzwanzigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 124:
+47,98 % matched code, 1722428 / 3590088 Bytes,
+9211 / 12881 Funktionen.
+Game Code 35,74 %, 1010280 / 2826784 Bytes,
+5246 / 8857 Funktionen.
+
+Partielle Versuche (revertiert): `TLiveActor::initAnmSound`
+(`trash[8]` Frame `0x40`, zwei Spills @ `0x2c` vs `0x24` offen),
+`TMario::considerRotateStart` (`trash[0x10]`/`pad` — `direction`-Slot).
+
+**Vollmatch, strikt.**
+
+`TNerveDoroHaneRise::execute`: `char trash[0x10]; trash[0] = 0;` am
+Nerve-Anfang für Retail-Frame `0x58` (vorher `0x50`).
+
+0 Abweichungen, 412 Bytes, 103 Instruktionen.
+`validate-symbol-order` `mario/Enemy/hamukuri`: bestehende BINDING-Warnung
+`onHaveCap__13TDoroHamuKuriFv` unverändert.
+
+**Zähler.** matched code 47,98 % → 47,99 %,
+1722428 → 1722840 Bytes (+412),
+9211 → 9212 Funktionen (+1).
+Game Code 35,74 % → 35,76 %,
+1010280 → 1010692 Bytes (+412),
+5246 → 5247 Funktionen (+1).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. Runden 114–119 / 121–124 unverändert.
+2. `initAnmSound`: Frame mit `trash[8]` ok, NPC-Double-Spill +8 B offen.
+3. `considerRotateStart` / `turnEnd` / `turnning`: Slot+Frame (inlining).
+4. `checkWallCollision` / `execGroundCheck_` / `getRandomNextIndex`:
+   Slot+Frame ohne Operanden-Regression.
+5. Vermeidungslisten aus Runde 81 bis 124 bleiben.
