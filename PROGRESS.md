@@ -10317,10 +10317,43 @@ SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
 
 Keine TU auf `Matching` gestellt.
 
+### Nach hunderteinunddreißigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 130:
+48,07 % matched code, 1725816 / 3590088 Bytes,
+9219 / 12881 Funktionen.
+Game Code 35,87 %, 1013668 / 2826784 Bytes,
+5254 / 8857 Funktionen.
+
+Weiterer `bosspakkun`-Sweep: `BPPreDie`, `BPTakeOff`, `BPHover`, … — kein
+reines Frame-`trash`-Match (Slot/Operanden oder Frame zu groß).
+
+**Vollmatch, strikt (4×).**
+
+- `TNerveBPTornado::execute`: `char trash[8]; trash[0] = 0;` — 380 B.
+- `TNerveBPSwallow::execute`: `char trash[0xc]; trash[0] = 0;` — 496 B.
+- `TNerveBPFlyPivot::execute`: `char trash[4]; trash[0] = 0;` — 172 B.
+- `TNerveBPFall::execute`: `char trash[0x28]; trash[0] = 0;` — 1308 B.
+
+`validate-symbol-order` `mario/Enemy/bosspakkun`: PASS (UNUSED-Size-Warnungen
+unverändert).
+
+**Zähler.** matched code 48,07 % → 48,14 %,
+1725816 → 1728172 Bytes (+2356),
+9219 → 9223 Funktionen (+4).
+Game Code 35,87 % → 35,95 %,
+1013668 → 1016024 Bytes (+2356),
+5254 → 5258 Funktionen (+4).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
 ### Nächster Schritt
 
-1. Runden 114–119 / 121–129 unverändert.
-2. Weitere Boss-Pakkun-/`TNerve*`-Frames per exakter `trash`-Größe (Sweep).
-3. `initAnmSound`: NPC-Pfad / `MAnmSoundNPC`-Inline vs Retail-`0x2c`-Spill.
-4. `TNerveHino2Burst`: inline Wasser-Emit + Slot @ `0x78` (nicht nur Frame).
-5. Vermeidungslisten aus Runde 81 bis 129 bleiben.
+1. Runden 114–119 / 121–130 unverändert (Boss Pakkun jetzt 7× Frame-`trash`).
+2. Restliche `bosspakkun`-`TNerve*` (`BPPreDie`, `BPHover`, …) — Slot/Frame.
+3. Gleicher Sweep auf andere Enemy-TUs mit Retail-Frame > unserem Frame.
+4. `initAnmSound` / `TNerveHino2Burst` weiterhin defer.
+5. Vermeidungslisten aus Runde 81 bis 130 bleiben.
