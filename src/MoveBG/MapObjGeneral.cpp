@@ -412,6 +412,7 @@ void TMapObjGeneral::checkWallCollision(JGeometry::TVec3<f32>* param_1)
 
 	TBGWallCheckRecord check(*param_1, mBodyRadius, 4,
 	                         mMapObjData->mPhysical->mWallCheckFlags);
+	char trash[0x18];
 
 	bool touched = gpMap->isTouchedWallsAndMoveXZ(&check);
 

@@ -10888,6 +10888,22 @@ strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R165 (`TMapObjGeneral::checkWallCollision`)
+
+**Vollmatch, strikt.**
+
+- `TBGWallCheckRecord` zuerst, danach `char trash[0x18]` (Emissionsreihenfolge
+  bei `-inline deferred`) → Frame `-0x60`, Record/Spill @ `0x28` wie Retail.
+- Kein manuelles `set`/Skalar-Init nötig; Konstruktor + `isTouchedWallsAndMoveXZ`
+  unverändert.
+
+0 Abweichungen, 232 Bytes, 58 Instruktionen.
+`decomp-diff -u mario/MoveBG/MapObjGeneral -d checkWallCollision`: 100 %.
+
+R164 `TMapObjSwitch::control`, R163/R162/R160 unverändert strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R164 (`TMapObjSwitch::control`)
 
 **Vollmatch, strikt.**
