@@ -608,8 +608,10 @@ void TRedCoinSwitch::loadAfter()
 	for (int i = 0; i < 8; ++i) {
 		char buf[0x40];
 		snprintf(buf, 0x40, "赤コイン %d", i);
-		static_cast<TMapObjBase*>(JDrama::TNameRefGen::search(buf))
-		    ->makeObjDead();
+		// The named search result reserves the extra 4-byte slot.
+		TMapObjBase* coin
+		    = static_cast<TMapObjBase*>(JDrama::TNameRefGen::search(buf));
+		coin->makeObjDead();
 	}
 }
 
