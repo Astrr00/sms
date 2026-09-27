@@ -484,7 +484,15 @@ void TMapObjGeneral::checkGroundCollision(JGeometry::TVec3<f32>* param_1)
 
 void TMapObjGeneral::calcVelocity()
 {
-	if (checkLiveFlag2(LIVE_FLAG_AIRBORNE)) {
+	char trash[0x28];
+	trash[0] = 0;
+
+	int airborne;
+	if (mLiveFlag & LIVE_FLAG_AIRBORNE)
+		airborne = 1;
+	else
+		airborne = 0;
+	if (airborne != 0) {
 		f32 dVar5 = getGravityY();
 		mVelocity.y -= dVar5;
 
