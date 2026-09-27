@@ -662,10 +662,14 @@ f32 TMapObjBase::getDistance(const JGeometry::TVec3<f32>& param_1) const
 	f32 lenSq = dx * dx + dy * dy + dz * dz;
 	if (lenSq > 0.0f) {
 		f64 guess = __frsqrte((f64)lenSq);
-		volatile f32 y
-		    = (f32)((f64)lenSq
-		            * (0.5 * guess * -((f64)lenSq * (guess * guess) - 3.0)));
-		lenSq = y;
+		struct {
+			char pad[4];
+			volatile f32 y;
+		} sqrtTemp;
+		sqrtTemp.y = (f32)((f64)lenSq
+		                   * (0.5 * guess
+		                      * -((f64)lenSq * (guess * guess) - 3.0)));
+		lenSq = sqrtTemp.y;
 	}
 	return lenSq;
 }

@@ -10646,3 +10646,29 @@ Size-Warnung `getSlotResult` unverändert).
 3. `initMapObj`: Iterator @ `0x5c` ohne `0xa8`-Frame (nur `trash[4]` vor
    `push_back` reicht für ersten Spill, nicht für `0x7c`-Cluster).
 4. Defer-Listen unverändert.
+
+### Nach hunderte zweiundvierzigster Iterationsrunde
+
+**Vollmatch, strikt.**
+
+- `TMapObjBase::getDistance` (`MapObjLib.cpp`): `sqrtTemp` mit `pad[4]` +
+  `volatile f32 y` im `__frsqrte`-Block → Retail-Spill `stfs`/`lfs` @ `0x14`
+  bei unverändertem Frame `0x18` (**match**).
+
+**Teilfortschritt MapObjSirena (unverändert R141-Zielbild, näher).**
+
+- `TCloset::calcRootMatrix`: `trash[4]` + `{ pad[4]; TRotation3f mtx; }`
+  `local` → Mtx-Basis `0x14`, `ref(1,3)` @ `0x30`, Frame `0x70`; offen nur
+  `mr` vs `addi r31,r3,0` und `mr` vs `addi r3,r30,0` (~98,4 %).
+- `TItemSlotDrum::generateItem`: `mRotation.y` in `MsMtxSetRotY` (Teil).
+
+`initMirrorModel` 100 %; `TRoulette::moveObject` **match**; DOL-SHA1
+`9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### Nächster Schritt
+
+1. `TCloset::calcRootMatrix`: `mr`/`addi`-Paar nach `getModel` / vor
+   `MsMtxSetXYZRPH` (Register-Homing).
+2. `TRoulette::initMapObj`: Iterator `0x5c` + `0x7c`-Cluster ohne `0xa8`-Frame.
+3. Weitere `.x`→`.y`-Offsets wie Roulette.
+4. Defer-Listen unverändert.

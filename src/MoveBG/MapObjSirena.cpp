@@ -992,17 +992,19 @@ void TCloset::moveObject()
 
 void TCloset::calcRootMatrix()
 {
-	char trash[8];
-	trash[0] = 0;
+	char trash[4];
 
-	gpCurObject     = this;
+	gpCurObject = this;
+	struct {
+		char pad[4];
+		TRotation3f mtx;
+	} local;
 	J3DModel* model = getModel();
-	TRotation3f mtx;
-	MsMtxSetXYZRPH(mtx, mPosition.x, mPosition.y + unk14C, mPosition.z,
+	MsMtxSetXYZRPH(local.mtx, mPosition.x, mPosition.y + unk14C, mPosition.z,
 	               mRotation.x, mRotation.y, mRotation.z);
-	model->setBaseTRMtx(mtx);
+	model->setBaseTRMtx(local.mtx);
 	model->setBaseScale(mScaling);
-	mtx.ref(1, 3) += unk14C;
+	local.mtx.ref(1, 3) += unk14C;
 	if (unk16C != 0 && mMActor->checkCurAnm("closetopen", ANM_TYPE_BCK)
 	    && mMActor->curAnmEndsNext(ANM_TYPE_BCK, nullptr))
 		mMapCollisionWarp->remove();
