@@ -10707,9 +10707,22 @@ R143 `initNeonMatColor`, R142 `getDistance`, R140 `TRoulette::moveObject`, R138
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R146 (`joinToGroup`)
+
+**Vollmatch, strikt.**
+
+- `TMapObjBase::joinToGroup`: `char trash[4];`, `TNameRef* list = search(...);`,
+  `trash[0]=0;` vor `push_back` (nicht Entry-Trash allein) → Frame `-0x68`, Iterator-
+  und `insert`-Spills wie Retail (**match**).
+
+R145 `drawLogic`, R143 `initNeonMatColor`, R142 `getDistance`, R140 `moveObject`, R138
+`initMirrorModel`; Closet-Teilstand unverändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### Nächster Schritt
 
-1. `TMapObjBase::joinToGroup`: letzte +4 B unter `insert`-Temps bei Frame `-0x68`.
+1. Weitere Entry-/Mid-Trash-Muster wie `joinToGroup` / `drawLogic` (≥99,5 %).
 2. `TCloset::calcRootMatrix`: +4 B Mtx-Basis (ohne Frame `0x78`) — nur bei klarem Hebel.
 3. `partsRollCallback` / `TRoulette::initMapObj`: Stack +4 B ohne Frame-Wachstum.
 4. Defer-Listen unverändert.

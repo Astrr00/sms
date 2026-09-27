@@ -203,10 +203,13 @@ void TMapObjBase::startAllAnim(MActor* param_1, const char* param_2)
 
 void TMapObjBase::joinToGroup(const char* param_1, THitActor* param_2)
 {
+	char trash[4];
+
 	// TODO: The group type here is a wild guess
-	static_cast<JDrama::TViewObjPtrListT<THitActor>*>(
-	    JDrama::TNameRefGen::search(param_1))
-	    ->push_back(param_2);
+	JDrama::TNameRef* list = JDrama::TNameRefGen::search(param_1);
+	trash[0]               = 0;
+	static_cast<JDrama::TViewObjPtrListT<THitActor>*>(list)->push_back(
+	    param_2);
 }
 
 TMapCollisionWarp*
