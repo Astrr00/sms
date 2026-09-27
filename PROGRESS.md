@@ -9638,3 +9638,51 @@ Keine TU auf `Matching` gestellt.
 3. `TObjManager::load` nicht mit `JDrama::TNameRef* root`.
 4. `setUpCurrentMapCollision` ohne `colman`.
 5. Vermeidungslisten aus Runde 81 bis 113 bleiben.
+
+### Nach hundertundfünfzehnter Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 114:
+47,90 % matched code, 1719620 / 3590088 Bytes,
+9202 / 12881 Funktionen.
+Game Code 35,65 %, 1007472 / 2826784 Bytes,
+5237 / 8857 Funktionen.
+
+`TRedCoinSwitch::load` war bei 99,80 %.
+Der Frame lag bei `0x28` statt retail `0x30`,
+der `read`-Slot bei `0x18` statt `0x20`.
+
+`TObjManager::load`: erneut `u32 capacity` vor `buffer`
+bzw. `stream.read`/`>>` — Frame schrumpft auf `0x138`
+oder Puffer rutscht auf `0x24`; nicht shippen.
+`root`-Spill weiter verboten.
+
+**Vollmatch, strikt.**
+
+`u32 tmp` und `char trash[8]` stehen vor `TMapObjBase::load`,
+danach unverändert `stream >> tmp` und die übrige Logik.
+
+0 Abweichungen, 180 Bytes, 45 Instruktionen.
+Symbolordnung unverändert (vorbestehende UNUSED-Warnungen).
+`TMapObjSwitch::load` / `TCoin::loadAfter` unangetastet.
+
+**Zähler.** `ninja changes_all`:
+matched code 47,90 % (unverändert Prozentanzeige),
+1719620 → 1719800 Bytes (+180),
+9202 → 9203 Funktionen (+1).
+Game Code 35,65 %, 1007472 → 1007652 Bytes (+180),
+5237 → 5238 Funktionen (+1).
+`MapObjTown` matched_code 78,16 % → 79,91 %.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `TRedCoinSwitch::load` behält `tmp` und `trash[8]` vor
+   `TMapObjBase::load`.
+2. `TObjManager::load`: Puffer `0x2c` ohne `root`-Spill —
+   andere Strategie als `capacity` vor `buffer`.
+3. `setUpCurrentMapCollision` ohne `colman`.
+4. Vermeidungslisten aus Runde 81 bis 114 bleiben.
