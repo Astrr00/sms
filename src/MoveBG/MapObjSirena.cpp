@@ -999,14 +999,15 @@ void TCloset::calcRootMatrix()
 
 	gpCurObject = this;
 	J3DModel* model = getModel();
-	char pad2[4];
-	pad2[0] = 0;
-	TRotation3f mtx;
-	MsMtxSetXYZRPH(mtx, mPosition.x, mPosition.y + unk14C, mPosition.z,
+	struct {
+		char pad[4];
+		Mtx mtx;
+	} local;
+	MsMtxSetXYZRPH(local.mtx, mPosition.x, mPosition.y + unk14C, mPosition.z,
 	               mRotation.x, mRotation.y, mRotation.z);
-	model->setBaseTRMtx(mtx);
+	model->setBaseTRMtx(local.mtx);
 	model->setBaseScale(mScaling);
-	mtx.ref(1, 3) += unk14C;
+	local.mtx[1][3] += unk14C;
 	if (unk16C != 0 && mMActor->checkCurAnm("closetopen", ANM_TYPE_BCK)
 	    && mMActor->curAnmEndsNext(ANM_TYPE_BCK, nullptr))
 		mMapCollisionWarp->remove();

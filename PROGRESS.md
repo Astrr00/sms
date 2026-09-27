@@ -10840,6 +10840,22 @@ DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 **Nächste MoveBG:** `TMapObjSwitch::receiveMessage` (`TFlagT` @ `0x2c` vs `0x24`);
 `initMapObj` / `initDrawNear` nur mit neuem Hebel. Skip: Defer-Liste unverändert.
 
+### R160 (`TCloset::calcRootMatrix` — strikt nachgezogen)
+
+**Vollmatch, strikt (0 Marker in `decomp-diff`).**
+
+- R158 hatte fuzzy 100 % mit **3** `~` (`mtx` @ `0x10` vs Retail `0x14`).
+- Fix: nach `getModel()` `struct { char pad[4]; Mtx mtx; } local;` statt
+  freiem `TRotation3f` + Mid-`pad2[4]` → Basis @ `0x14`, `mtx[1][3]` @ `0x30`,
+  Frame `-0x70`, `mr r31`/`mr r3` wie Retail (**match**).
+
+`validate-symbol-order` `mario/MoveBG/MapObjSirena`: PASS (UNUSED-Size-Warnungen).
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+**Nächste MoveBG:** `TDonchou::calcRootMatrix` (+0xc @ `-0x90`);
+`TMapObjTree::initMapObj` (`r25` vs `r26`); Switch `TFlagT` nur mit klarem Hebel.
+
 ### R159 (Round 71 Agent — kein neuer Vollmatch)
 
 **Kein neuer strikter Vollmatch** in MoveBG (Scope A). Worktree ohne TU-Diffs.
