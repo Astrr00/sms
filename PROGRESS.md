@@ -6817,3 +6817,97 @@ Kein Matching-Flip.
    nicht.
 4. `TNerveBPDie` fehlt `0x20` ohne Stack-Zugriff,
    wie `TCoin::appear` und `TItem::calc`.
+
+### Nach einundachtzigster Iterationsrunde (fünf Matches)
+
+**Beobachtung, vorher.** Stand Runde 80:
+47,64 % matched code, 1710312 / 3590088 Bytes,
+9176 / 12881 Funktionen.
+Game Code 35,31 %, 998164 / 2826784 Bytes,
+5211 / 8857 Funktionen.
+
+**Match, fünf Nerves.**
+Der Rumpf war wortgleich, der Frame 8 Byte zu klein.
+Ein benanntes `int time = spine->getTime()` hebt den Frame.
+Null abweichende Wörter danach.
+
+- `TNerveBPCannonL::execute`, 78 Instruktionen, 312 Bytes.
+  Frame `0x30` auf `0x38`.
+  Nur ein `getTime()`, vor `setBck`.
+- `TNerveKumokunPostWalk::execute`, 112 Instruktionen,
+  448 Bytes. Frame `0x40` auf `0x48`.
+- `TNerveKumokunPostFreeze::execute`, 112 Instruktionen,
+  448 Bytes. Frame `0x40` auf `0x48`.
+- `TNerveTamaNokoWait::execute`, 98 Instruktionen,
+  392 Bytes. Frame `0x38` auf `0x40`.
+  Nur der erste `getTime()` ist benannt.
+  Der Vergleich ist `< 2`.
+  Der spätere `getTime()` nach `setBckAnm` bleibt
+  ein erneuter Aufruf.
+- `TNerveTamaNokoHitWater::execute`, 206 Instruktionen,
+  824 Bytes. Frame `0x50` auf `0x58`.
+  Dieselbe Schreibweise wie bei `TamaNokoWait`.
+
+`validate-symbol-order.py` für `mario/Enemy/bosspakkun`,
+`mario/Enemy/Kumokun` und `mario/Enemy/tamaNoko`:
+PASS.
+UNUSED-Größenwarnungen und die Weak-Reihenfolge
+in `tamaNoko` sind alt und kein Fehler.
+Keine TU auf `Matching` gestellt.
+
+**Gemessen und zurückgenommen.**
+
+- `TNerveSmallEnemyFreeze`: der benannte
+  `freezeTime` wurde entfernt, weil der Frame
+  8 Byte zu groß war (`0x40` gegen `0x38`).
+  Der virtuelle Aufruf wandert nach hinten,
+  der Rumpf stimmt nicht mehr.
+- `TNerveBGKLaunchGoro`: der erste von zwei
+  `getTime()` benannt ändert nichts.
+  Frame bleibt `0x38` gegen `0x40`.
+- `TNerveBGKAwakeDamage`: das einzige `getTime()`
+  benannt ändert nichts.
+  Frame bleibt `0x60` gegen `0x68`.
+  Ein Double im Rumpf wandert mit.
+- `TNerveDoroHaneRise`: `getTime()` vor dem
+  `MsClamp`-Produkt benannt.
+  Frame bleibt `0x50` gegen `0x58`.
+  Die Int-nach-Float-Folge wird schlechter.
+- `TNerveMantaDeath`: benanntes `getTime()`
+  ändert nichts. Frame bleibt `0x28` gegen `0x30`.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,71 % matched code,
+1712736 / 3590088 Bytes, 9181 / 12881 Funktionen.
+Game Code 35,40 %, 1000588 / 2826784 Bytes,
+5216 / 8857 Funktionen.
+
+Delta gegen Runde 80: +5 Funktionen, +2424 Bytes
+(312 + 448 + 448 + 392 + 824).
+
+`changes_all` meldet nur diese fünf Executes von
+unter 100 % auf 100 %. Keine Regression.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Kein Matching-Flip.
+
+### Nächster Schritt
+
+1. `bosspakkun`, `Kumokun` und `tamaNoko` nicht
+   auf `Matching` stellen.
+2. `getTime()` nicht pauschal benennen.
+   `LaunchGoro`, `AwakeDamage`, `DoroHaneRise`
+   und `MantaDeath` haben nicht reagiert.
+   `SmallEnemyFreeze` darf den Namen nicht verlieren.
+3. Nicht wiederholen: `TNerveBPTornado` (16 Byte,
+   kein Stack-Zugriff), `TNerveBPDie`,
+   `TCoin::appear`, `TItem::calc` (`0x20`),
+   `TumbleIn`, `FlyPivot`.
+4. `TNerveKumokunFreeze` ist ebenfalls 16 Byte
+   zu klein und hat nur Prolog-Unterschiede.
+   Ein einzelner `int` ist dort kein erster Versuch.
+5. `TNerveTamaNokoSink` ist 8 Byte zu groß
+   (`0x68` gegen `0x60`), nicht zu klein.
