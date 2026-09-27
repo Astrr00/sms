@@ -1998,7 +1998,9 @@ static s32 hoseiDiveCameraCallback(u32 actorAddress, u32 state)
 		    = reinterpret_cast<const TLiveActor*>(actorAddress);
 		JGeometry::TVec3<f32> position = actor->mPosition;
 		position.y += 12300.0f;
-		gpCamera->warpPosAndAt(position, *gpMarioPos);
+		// The name keeps gpMarioPos in r5 so the copy uses r6.
+		const JGeometry::TVec3<f32>* marioPos = gpMarioPos;
+		gpCamera->warpPosAndAt(position, *marioPos);
 	}
 	return 0;
 }
