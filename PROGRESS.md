@@ -7952,3 +7952,94 @@ Keine TU auf `Matching` gestellt.
     `MapObjGeneral`, `walkerEnemy`, `bossManta`,
     `fireWanwan`, `MapObjHide`, `EventWatcher` und
     `NpcWalkTurn` nicht auf `Matching` stellen.
+
+### Nach fünfundneunzigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 94:
+47,78 % matched code, 1715420 / 3590088 Bytes,
+9188 / 12881 Funktionen.
+Game Code 35,49 %, 1003272 / 2826784 Bytes,
+5223 / 8857 Funktionen.
+Daten 385811 / 640331 Bytes, 60,25 %.
+
+`TSmallEnemy::isFindMarioFromParam` hatte den
+passenden Frame 0x50.
+`mSLSearchLength` landete in `f0`, retail in `f1`,
+und `fmuls` multiplizierte von dort.
+
+**Ein neues Vollmatch.**
+
+Die drei Suchwerte werden erst geladen und dann
+mit `*= param_1` skaliert.
+0 Abweichungen, 188 Bytes, 47 Instruktionen, 100 %.
+`smallEnemy` bleibt `NonMatching`.
+Symbolordnung PASS.
+
+Verworfen: die Getter `getSLSearchLength` und
+Nachbarn machen den Frame 0x60.
+Die Produkte direkt im Aufruf fallen auf 87 %.
+`registerEventWatcher` mit benanntem `watcher`
+hat den Frame 0x50, der Zeiger bleibt bei 0x40
+gegen 0x3c.
+`getChildren().push_back` fällt auf 84 %.
+
+Kein Frame wurde aufgefüllt.
+`walkEnd` behält `quarter` und `vel`.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,79 % matched code,
+1715608 / 3590088 Bytes, 9189 / 12881 Funktionen.
+Game Code 35,50 %, 1003460 / 2826784 Bytes,
+5224 / 8857 Funktionen.
+Daten unverändert: 385811 / 640331 Bytes, 60,25 %.
+Game-Daten unverändert: 306587 / 556995 Bytes, 55,04 %.
+
+Delta Code gegen Runde 94: 1 Funktion, 188 Bytes.
+Delta Daten: 0 Bytes.
+
+`changes_all`: `isFindMarioFromParam` 99,79 % auf 100 %.
+Unit-Code `smallEnemy` 59,17 % auf 60,24 %.
+Keine Regression.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `isFindMarioFromParam` behält die drei `*= param_1`.
+   `smallEnemy` nicht auf `Matching` stellen.
+2. `walkEnd` behält `quarter` und `vel`.
+   `MarioRun` nicht auf `Matching` stellen.
+3. `registerEventWatcher` nicht noch einmal über
+   einen benannten `watcher` oder `getChildren()`
+   auf den Slot 0x3c bringen.
+4. `setUp` behält `u32 entrySize`.
+5. `TRedCoinSwitch::load` nicht über
+   `SMSGetMarDirector()`.
+6. `appearWithDemo`, `isTouchedOneWall`,
+   `joinToGroup` und `createAndKeepData`
+   nicht mit denselben Benennungen wiederholen.
+7. `sleep()` behalten. Frames nicht polstern.
+8. `TMapStaticObj::init` nicht über `setMtx`.
+9. Die sechs Rümpfe aus Runde 91 behalten.
+   `walkBehavior` behält `height`.
+10. Runde 90 und 89 bleiben.
+    `rotating` behält den `u16`-Cast.
+    Schadensradius 65 bleibt.
+    `changePlayerStatus` behält das Minimum aus
+    `mIntendedMag` und 8.
+    `thinkDirty` bleibt bei `- 200.0f`.
+    Die drei `makeRootMtxRot*` bleiben bei
+    `0.017453294f`.
+11. Runde 84 bleibt: `p1 - p2 + 1`,
+    `150 * analog * 256`, `hitWater` mit `30.0f`.
+    `isDemo` bleibt die Oder-Form mit `stateIs3Or4`.
+12. Vermeidungslisten aus Runde 81 bis 94 bleiben.
+    `MapEventMare`, `MapStaticObject`, `MarioRun`,
+    `smallEnemy`, `bosspakkun`, `hamukuri`, `poihana`,
+    `MapObjGeneral`, `walkerEnemy`, `bossManta`,
+    `fireWanwan`, `MapObjHide`, `EventWatcher` und
+    `NpcWalkTurn` nicht auf `Matching` stellen.
