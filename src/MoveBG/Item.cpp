@@ -93,6 +93,7 @@ void TItem::calcRootMatrix()
 
 void TItem::calc()
 {
+	char trash[0x20];
 	if (!checkMapObjFlag(MAP_OBJ_FLAG_UNK4000000) && !isState(STATE_HOLDING)) {
 		MtxPtr src = gpItemManager->unk40;
 
