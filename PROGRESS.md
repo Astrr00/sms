@@ -6400,3 +6400,82 @@ Objekt `0x38`. Diese Funktion ist nicht angefasst.
    Die drei Geschwister oben sind mehrere Wörter auseinander,
    kein einzelner 4-Byte-Slot. Die fünf bereits verifizierten
    TUs bleiben `NonMatching`.
+
+### Nach fünfundsiebzigster Iterationsrunde (zwei Frame-Matches, ein Slot offen)
+
+**Beobachtung, vorher.** Stand Runde 74:
+47,58 % matched code, 1708284 / 3590088 Bytes,
+9166 / 12881 Funktionen.
+Game Code 35,24 %, 996136 / 2826784 Bytes,
+5201 / 8857 Funktionen.
+
+**Match, `TRollBlock::setGroundCollision`.**
+24 Instruktionen, 96 Bytes.
+Vorher Frame `0x28` bei uns, `0x20` im Original.
+Einziger Unterschied waren die Frame-Offsets von `r31`.
+Ursache: der fabricierte Inline `getUnk8()`.
+Direktes `unk8` lässt die Loads gleich und setzt den
+Frame auf `0x20`.
+Nach dem Rebuild: 24 Wörter, Relocs gleich, null Abweichungen.
+`validate-symbol-order.py -u mario/MoveBG/MapObjRailBlock`: PASS.
+Die TU bleibt `NonMatching`
+(`TNormalLift::setGroundCollision` hat weiter den zusätzlichen
+`SMatrix34C`-Konstruktor beim Inlinen, 188 Bytes, Anzeige 95,7 %).
+
+**Match, `TCoinBlue::load`.**
+27 Instruktionen, 108 Bytes.
+Vorher Frame `0x20` bei uns, `0x28` im Original.
+Die übrigen Wörter stimmten schon.
+`u8 area = gpMarDirector->getCurrentMap()` und
+`u8 coin = getEventId()` vor `getBlueCoinFlag` heben den
+Frame auf `0x28`, ohne die Load-Reihenfolge zu ändern.
+Feldzugriffe statt der Accessors verschieben `smInstance`
+vor das `lbz` und sind zurückgenommen.
+Nach dem Rebuild: 27 Wörter, Relocs gleich, null Abweichungen.
+`validate-symbol-order.py -u mario/MoveBG/Item`: PASS.
+Die TU bleibt `NonMatching` (17 weitere Funktionen weichen ab).
+
+**Messung, `ninja` und `dtk shasum -c`.**
+
+Nachher: 47,59 % matched code,
+1708488 / 3590088 Bytes, 9168 / 12881 Funktionen.
+Game Code 35,25 %, 996340 / 2826784 Bytes,
+5203 / 8857 Funktionen.
+
+Delta gegen Runde 74: +2 Funktionen, +204 Bytes
+(96 + 108).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Kein Matching-Flip.
+
+**Sackgasse, zurückgenommen: `TDrawSyncManager::setCallback`.**
+13 Instruktionen, 52 Bytes, Frame beiderseits `0x30`.
+Das 8-Byte-Temporary von `TDrawSyncTokenRange` liegt im
+Original bei `r1+0x28` und bei uns bei `r1+0x24`.
+
+1. `mCallbacks.begin()[param_1] = ...`: Frame `0x30` → `0x28`,
+   Slot `0x24` → `0x20`.
+2. Benannte Referenz auf `mCallbacks`: kein Unterschied.
+3. Zeiger auf das Element, dann Zuweisung: kein Unterschied.
+4. Benanntes `TDrawSyncTokenRange`, dann Zuweisung:
+   Frame `0x28`, Slot `0x20`.
+
+Die direkte Zuweisung des Temporaries ist die Fassung mit
+dem richtigen Frame. Der Slot bleibt 4 Byte zu tief.
+
+**Angesehen, nicht geändert: `TMario::kickRoofEffect`.**
+Frame `0x38` gegen `0x30`, und zusätzlich
+`lbz` von `0x3cb` gegen `0x3cf`.
+Das ist ein Member-Offset, kein reiner Slot.
+
+### Nächster Schritt
+
+1. `MapObjRailBlock` und `Item` nicht auf `Matching` stellen.
+2. `TDrawSyncManager::setCallback`: Slot `0x24` → `0x28`
+   bei Frame `0x30`. Die vier Varianten oben nicht wiederholen.
+3. `TCoasterEnemy::bind` nicht mit benanntem `TVec3`
+   oder `operator=`.
+4. `kickRoofEffect` erst angehen, wenn der Member-Offset
+   `0x3cb`/`0x3cf` geklärt ist.
