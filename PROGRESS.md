@@ -10873,6 +10873,21 @@ R160 `TCloset::calcRootMatrix` unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R163 (`TRollBlock::load`)
+
+**Vollmatch, strikt.**
+
+- `TRollBlock::load`: `stream.read(&local_18, 4)` statt `operator>>` auf `s32`
+  (Retail `read` mit `li r5, 4`).
+
+0 Abweichungen, 168 Bytes, 42 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/MapObjRailBlock`: PASS.
+
+R162 `THideObjPictureTwin::loadAfter`, R160 `TCloset::calcRootMatrix` unverändert
+strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R161 (Round 71 — kein neuer strikter Vollmatch)
 
 **Kein neuer strikter Vollmatch** (Scope A). R160 `TCloset::calcRootMatrix` unverändert strikt.

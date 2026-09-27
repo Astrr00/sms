@@ -481,7 +481,7 @@ void TRollBlock::load(JSUMemoryInputStream& stream)
 	JDrama::TActor::load(stream);
 	unkF4 = stream.readString();
 	s32 local_18;
-	stream >> local_18;
+	stream.read(&local_18, 4);
 	unk13C = local_18 * 0.01f;
 	initMapObj();
 	makeObjAppeared();
