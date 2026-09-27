@@ -9971,3 +9971,46 @@ Keine TU auf `Matching` gestellt.
 5. `TShine::loadBeforeInit` / `TObjManager::load` / Demo-`TFlagT`
    weiter vermeiden.
 6. Vermeidungslisten aus Runde 81 bis 120 bleiben.
+
+### Nach hundertzweiundzwanzigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 121:
+47,94 % matched code, 1721072 / 3590088 Bytes,
+9208 / 12881 Funktionen.
+Game Code 35,70 %, 1008924 / 2826784 Bytes,
+5243 / 8857 Funktionen.
+
+`checkWallCollision`: `pad[0x18]` + Skalar-/`set`-Init verschlechterte
+Operanden (mr r30/r31) — zurückgesetzt auf `TBGWallCheckRecord`-Ctor
+(99,7 %, Record @ `0x10`).
+
+**Vollmatch, strikt.**
+
+`TEggYoshi::load`: `char trash[0x18]` am Funktionsanfang für Frame
+`0x50` (objdiff 100 %, nur Epilog-Offsets vorher abweichend).
+
+0 Abweichungen, 572 Bytes, 143 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/Item`: PASS.
+
+**Zähler.** matched code 47,94 % → 47,96 %,
+1721072 → 1721644 Bytes (+572),
+9208 → 9209 Funktionen (+1).
+Game Code 35,70 % → 35,71 %,
+1008924 → 1009496 Bytes (+572),
+5243 → 5244 Funktionen (+1).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `kickRoofEffect` / Runden 114–119 / `TEggYoshi::load` unverändert.
+2. `checkWallCollision`: Record @ `0x28` ohne Operanden-Regression
+   (manueller Store-Block oder UNUSED-Inline, kein trash-only).
+3. `TEggYoshi::control` / `TCoin::perform` / `TNozzleBox::load` /
+   `TMareEventWallRock::load`: Slot vor Padding.
+4. `TShine::loadBeforeInit` / `TObjManager::load` / Demo-`TFlagT`
+   weiter vermeiden.
+5. Vermeidungslisten aus Runde 81 bis 121 bleiben.

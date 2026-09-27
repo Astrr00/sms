@@ -1067,6 +1067,7 @@ BOOL TEggYoshi::receiveMessage(THitActor* sender, u32 message)
 
 void TEggYoshi::load(JSUMemoryInputStream& stream)
 {
+	char trash[0x18];
 	TMapObjBase::load(stream);
 
 	if (strcmp(unkF4, "eggYoshiEvent") == 0) {
