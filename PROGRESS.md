@@ -10350,10 +10350,86 @@ SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
 
 Keine TU auf `Matching` gestellt.
 
+### Nach hunderteundzweiunddreißigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 131:
+48,14 % matched code, 1728172 / 3590088 Bytes,
+9223 / 12881 Funktionen.
+Game Code 35,95 %, 1016024 / 2826784 Bytes,
+5258 / 8857 Funktionen.
+
+Enemy-weiter Sweep (`tobiPuku`, `hamukuri`, `telesa`, …): kein weiteres
+reines Frame-`trash`-Match in `0x4`–`0x8c` außer den sechs unten.
+
+**Vollmatch, strikt (6×).**
+
+`gatekeeper.cpp`:
+
+- `TNerveBGKLaunchGoro::execute`: `char trash[8]; trash[0] = 0;` — 468 B.
+- `TNerveBGKAwakeDamage::execute`: `char trash[8]; trash[0] = 0;` — 512 B.
+- `TNerveBGKWait2::execute`: `char trash[0x20]; trash[0] = 0;` — 964 B.
+- `TNerveBGKWait::execute`: `char trash[0x20]; trash[0] = 0;` — 1472 B.
+
+`fireWanwan.cpp`:
+
+- `TNerveFireWanwanAttack::execute`: `char trash[4]; trash[0] = 0;` — 688 B.
+- `TNerveFireWanwanRecover::execute`: `char trash[0x40]; trash[0] = 0;` — 580 B.
+
+`validate-symbol-order`: `mario/Enemy/gatekeeper` PASS;
+`mario/Enemy/fireWanwan` MISSING-Map-Symbole (vorbestehend, unverändert durch
+diese Runde).
+
+**Zähler.** matched code 48,14 % → 48,27 %,
+1728172 → 1732856 Bytes (+4684),
+9223 → 9229 Funktionen (+6).
+Game Code 35,95 % → 36,11 %,
+1016024 → 1020708 Bytes (+4684),
+5258 → 5264 Funktionen (+6).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nach hundertdreiunddreißigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 132:
+48,27 % matched code, 1732856 / 3590088 Bytes,
+9229 / 12881 Funktionen.
+Game Code 36,11 %, 1020708 / 2826784 Bytes,
+5264 / 8857 Funktionen.
+
+Sweep `bosseel`, `walkerEnemy`, `hamukuri`, `hinokuri2`, `poihana`, …:
+kein weiteres Frame-only-`trash` in `0x4`–`0x8c` außer Boss-Eel OutWait.
+`TNerveBossEelOutWait` war 100,0 % fuzzy aber `nonmatching` (nur Operanden
+an `stwu`/Spill-Offsets); `trash[0x30]` (Frame-Delta) overshootet —
+exakt `trash[0x28]`.
+
+**Vollmatch, strikt (1×).**
+
+- `TNerveBossEelOutWait::execute`: `char trash[0x28]; trash[0] = 0;` — 1460 B.
+
+`validate-symbol-order` `mario/Enemy/bosseel`: PASS (UNUSED-Size-Warnungen
+unverändert).
+
+**Zähler.** matched code 48,27 % → 48,31 %,
+1732856 → 1734320 Bytes (+1464),
+9229 → 9230 Funktionen (+1).
+Game Code 36,11 % → 36,16 %,
+1020708 → 1022168 Bytes (+1460),
+5264 → 5265 Funktionen (+1).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
 ### Nächster Schritt
 
-1. Runden 114–119 / 121–130 unverändert (Boss Pakkun jetzt 7× Frame-`trash`).
-2. Restliche `bosspakkun`-`TNerve*` (`BPPreDie`, `BPHover`, …) — Slot/Frame.
-3. Gleicher Sweep auf andere Enemy-TUs mit Retail-Frame > unserem Frame.
+1. Runden 114–119 / 121–132 unverändert.
+2. Restliche `bosspakkun` / `gatekeeper` / `fireWanwan`-`TNerve*` ohne
+   Frame-only-`trash`.
+3. Sweep weiterer Enemy-TUs (`bosseel` Die/MouthOpenWait/Eat, `walkerEnemy`
+   Escape, `BathtubKillerExplosion` @ 100 % fuzzy, …).
 4. `initAnmSound` / `TNerveHino2Burst` weiterhin defer.
-5. Vermeidungslisten aus Runde 81 bis 130 bleiben.
+5. Vermeidungslisten aus Runde 81 bis 133 bleiben.

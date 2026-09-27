@@ -2165,6 +2165,8 @@ DEFINE_NERVE(TNerveBossEelAppear, TLiveActor)
 
 DEFINE_NERVE(TNerveBossEelOutWait, TLiveActor)
 {
+	char trash[0x28];
+	trash[0] = 0;
 	TBossEel* eel = static_cast<TBossEel*>(spine->getBody());
 	++eel->mBattleTimer;
 	if (spine->getTime() == 0) {
