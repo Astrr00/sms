@@ -10014,3 +10014,46 @@ Keine TU auf `Matching` gestellt.
 4. `TShine::loadBeforeInit` / `TObjManager::load` / Demo-`TFlagT`
    weiter vermeiden.
 5. Vermeidungslisten aus Runde 81 bis 121 bleiben.
+
+### Nach hundertdreiundzwanzigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 122:
+47,96 % matched code, 1721644 / 3590088 Bytes,
+9209 / 12881 Funktionen.
+Game Code 35,71 %, 1009496 / 2826784 Bytes,
+5244 / 8857 Funktionen.
+
+Partielle Versuche (revertiert): `TEggYoshi::receiveMessage`
+(`trash[0x10]` + Slot), `TGraphWeb::getRandomNextIndex` (`pad[8]`),
+`CPolarSubCamera::execGroundCheck_` (`pad[4]`).
+
+**Vollmatch, strikt.**
+
+`TDoroHaneKuri::attackToMario`: `char trash[8]` und `trash[0] = 0`
+am Funktionsanfang für Retail-Frame `0x50` (vorher `0x48`).
+
+0 Abweichungen, 444 Bytes, 111 Instruktionen.
+`validate-symbol-order` `mario/Enemy/hamukuri`: bestehende BINDING-Warnung
+(`onHaveCap__13TDoroHamuKuriFv`) unverändert.
+
+**Zähler.** matched code 47,96 % → 47,97 %,
+1721644 → 1722088 Bytes (+444),
+9209 → 9210 Funktionen (+1).
+Game Code 35,71 % → 35,73 %,
+1009496 → 1009940 Bytes (+444),
+5244 → 5245 Funktionen (+1).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `TEggYoshi::load` / `kickRoofEffect` / Runden 114–119 unverändert.
+2. `TDoroHaneKuri::attackToMario` behält `trash[8]` + `trash[0]`.
+3. `checkWallCollision` / `execGroundCheck_` / `getRandomNextIndex`:
+   Slot+Frame ohne Operanden-Regression.
+4. `TEggYoshi::control` / `perform` / Mare-`load` weiter vermeiden
+   (trash-only).
+5. Vermeidungslisten aus Runde 81 bis 122 bleiben.
