@@ -8834,3 +8834,96 @@ Keine TU auf `Matching` gestellt.
     `MapObjGeneral`, `walkerEnemy`, `bossManta`,
     `fireWanwan`, `MapObjHide`, `EventWatcher` und
     `NpcWalkTurn` nicht auf `Matching` stellen.
+
+### Nach hundertunddritter Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 102:
+47,82 % matched code, 1716608 / 3590088 Bytes,
+9192 / 12881 Funktionen.
+Game Code 35,53 %, 1004460 / 2826784 Bytes,
+5227 / 8857 Funktionen.
+Daten 385811 / 640331 Bytes, 60,25 %.
+
+`TDonchou::loadAfter` war nur im Prolog
+acht Byte zu klein.
+Die beiden `search`-Ergebnisse gingen
+direkt in die Member.
+
+`getObjAppearPos` war ohne `const`.
+Die VTables zeigten auf das falsche Symbol.
+Retail ist `CFv`, acht Byte:
+`addi r3, r3, 0x10; blr`.
+
+**Vollmatch.**
+
+```cpp
+TSlotDrum* drum
+    = static_cast<TSlotDrum*>(JDrama::TNameRefGen::search("srotdram"));
+unk144 = drum;
+TItemSlotDrum* itemDrum = static_cast<TItemSlotDrum*>(
+    JDrama::TNameRefGen::search("itemsrotdram"));
+unk148 = itemDrum;
+```
+
+0 Abweichungen, 200 Bytes.
+Beide `getObjAppearPos` sind `const`.
+`TWaterHitPictureHideObj` matcht, 8 Bytes.
+`THideObjPictureTwin` matcht, 12 Bytes.
+Die VTables von `MapObjSirena` gehen auf 100 % Daten.
+`MapObjHide`-Daten 6,37 % auf 91,07 %.
+Beide TUs bleiben `NonMatching`.
+Symbolordnung `MapObjSirena` PASS.
+Die UNUSED-Größe von `getSlotResult` ist alt.
+
+**Gemessen und zurückgenommen.**
+
+`u32 se` in `TNerveMantaDeath` verschiebt
+die Sound-ID aus r31.
+Elf Zeilen, zurückgenommen.
+Ein benannter `TMActorKeeper*` in `makeMActors`
+ändert den Frame nicht.
+Zurückgenommen.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,82 % matched code,
+1716828 / 3590088 Bytes, 9195 / 12881 Funktionen.
+Game Code 35,54 %, 1004680 / 2826784 Bytes,
+5230 / 8857 Funktionen.
+Daten 394595 / 640331 Bytes, 61,62 %.
+Game-Daten 315371 / 556995 Bytes, 56,62 %.
+
+Delta Code gegen Runde 102: +3 Funktionen, +220 Bytes.
+Delta Daten: +8784 Bytes.
+
+`changes_all` nur diese drei Symbole,
+je von unter 100 % auf 100 %,
+plus die beiden Daten-Units.
+Keine Regression.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+`telesa` bleibt `NonMatching`.
+
+### Nächster Schritt
+
+1. `TDonchou::loadAfter` behält `drum` und `itemDrum`.
+   `MapObjSirena` nicht auf `Matching` stellen.
+2. `getObjAppearPos` bleibt `const`
+   an beiden Klassen.
+   `MapObjHide` nicht auf `Matching` stellen.
+3. `TNerveMantaDeath` nicht über ein benanntes `se`.
+   `makeMActors` nicht über einen benannten Keeper.
+4. `TTelesa::initAttacker` behält `TLiveActor* actor`.
+   `telesa` nicht auf `Matching` stellen.
+5. `TMario::startVoice` behält `MSound* sound`.
+   `startVoiceIfNoVoice` behält kein `char trash[8]`.
+6. `turnEnd` nicht mit benanntem `TWaterGun*`.
+   `TelesaFreeze` und `touchWater` liegen lassen.
+7. `catching` behält `mRotBroadEnableV`.
+   Den Frame nicht polstern.
+8. Vermeidungslisten aus Runde 81 bis 102 bleiben.
+   `initNeonMatColor` nicht mit benanntem `index`.
+   `MtxToQuat` nicht in Teilsummen zerlegen.
