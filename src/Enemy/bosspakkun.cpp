@@ -1998,8 +1998,10 @@ DEFINE_NERVE(TNerveBPSleep, TLiveActor)
 
 DEFINE_NERVE(TNerveBPBreakSleep, TLiveActor)
 {
+	// Named: inlined into the if, the frame stays 0x28 instead of 0x30.
+	int time          = spine->getTime();
 	TBossPakkun* boss = static_cast<TBossPakkun*>(spine->getBody());
-	if (spine->getTime() == 0) {
+	if (time == 0) {
 		boss->changeBck(14);
 		MSBgm::stopTrackBGMs(7, 10);
 	}
