@@ -10732,10 +10732,53 @@ R146 `joinToGroup`, R145 `drawLogic`, R143 `initNeonMatColor`, R142 `getDistance
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R148 Aufgabe B (Enemy-Nerven / Player; Cloud, 0 Vollmatches)
+
+**Basis.** Branch `cursor/aufgabe-b-round71-matches-d388` von PR-#2-Head
+`a45a1be` (`R147` `TMapObjSwitch::receiveMessage`). Partner-A-Locks unangetastet:
+`TMario::initMirrorModel` @ Mirror-Strings **0xa50**, `TMario::drawLogic`, kein
+`src/MoveBG/**`-Diff.
+
+**Umgebung.** Wie Runde 72 dokumentiert: `orig/GMSJ01/sys/main.dol` und
+`orig/GMSJ01/files/mario.MAP` fehlen (`dtk dol split` bricht ab). Lokal nur
+Tooling via `download_tool.py` (ninja, dtk, wibo, objdiff-cli, Compiler
+`20251118`) — nicht committet. **`decomp-diff.py` / `validate-symbol-order` /
+`ninja changes_all` / `dtk shasum -c` in dieser Session nicht ausführbar.**
+Kein striktes Byte-Match ohne Retail-`.o` committet.
+
+**Kandidaten (1–3, hohe Trefferwahrscheinlichkeit für B-Scope).**
+
+1. `Enemy/namekuri.cpp::TNerveNameKuriJumpAttack::execute` — R134-Sweep: 100 %-Fuzzy,
+   aber `nonmatching`; `trash[4]` im Brute-Skript **kein** Vollmatch (nicht nur
+   Frame-Padding). Nächster Hebel: `TPathNode`/`calcVelocityToJumpToY`-Stack oder
+   UNUSED aus `mario.MAP`, nicht Entry-`trash` allein.
+2. `Enemy/walkerEnemy.cpp::TNerveWalkerEscape::execute` — R135: Entry-/Mid-`trash`
+   scheitert; Retail-Stack `0x44` vs unser `0x24` (echtes Layout, defer-kompatibel
+   mit Bosseel/Walker-Notiz). Kein erneutes `trash`-Brute ohne MAP/ASM.
+3. `Player/MarioAccess.cpp::SMS_IsMarioOnWire` — `NONMATCHING`, ~94 % (ältere
+   PROGRESS-Notiz); B-Scope Player, aber kein klares `trash[4]`-Muster — erst mit
+   objdiff priorisieren.
+
+**Bewusst nicht angefasst (Defer / Sackgasse).**
+
+- `TNerveTelesaFreeze::execute` — R100: Frame mit `int time` OK, `TPathNode` +4 B;
+  nicht über benannten Knoten/`getTime` wiederholen.
+- `TNervePoihanaThrow::execute` — R89/R90: `mRotation` fix, 16-Byte-Frame **nicht**
+  mit einem `int` schließen.
+- `TNervePakkunAppear::execute` — ~98,55 %: MWCC materialisiert `checkPass`-bool
+  auch im leeren `if`; kein Source-Hebel.
+- `TNerveWalkerEscape` / `Hino2Pollute` / Boss-Eel-Slot-Prioritäten aus R135–136.
+
+**Vollmatch, strikt.** keine (Verifikation blockiert).
+
+**Verify (Session).** nur Quell-/PROGRESS-Review; DOL-SHA1
+`9f5a8caf56f5356aeac9d3ed28bf8de976a03625` **nicht** nachgemessen.
+
 ### Nächster Schritt
 
-1. `initAndRegister`: Mid-Trash wie `joinToGroup` (~99,7 %, noch `r31`/`r30` nach
-   `search`).
-2. `TRoulette::initMapObj`: Mid-Trash nach `new`/`search` (nicht Entry allein).
-3. `TCloset::calcRootMatrix` / `partsRollCallback`: nur bei klarem +4‑B-Hebel.
-4. Defer-Listen unverändert.
+1. `orig/GMSJ01` bereitstellen (mindestens `sys/main.dol` + `files/mario.MAP`), dann
+   `ninja baseline` → B-Kandidat 1–3 mit `decomp-diff.py` / ggf. `trash`-Brute.
+2. Partner A: `initAndRegister` Mid-Trash (~99,7 %, `r31`/`r30` nach `search`).
+3. `TRoulette::initMapObj`: Mid-Trash nach `new`/`search` (nicht Entry allein).
+4. `TCloset::calcRootMatrix` / `partsRollCallback`: nur bei klarem +4‑B-Hebel.
+5. Defer-Listen unverändert.
