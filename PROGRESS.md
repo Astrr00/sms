@@ -9532,3 +9532,62 @@ Event 777 behält `buffer[0x100]`.
    `TMareEventWallRock::load` nicht über `view`.
 5. Vermeidungslisten aus Runde 81 bis 111 bleiben.
    Den Frame nicht polstern.
+
+### Nach hundertunddreizehnter Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 112:
+47,89 % matched code, 1719124 / 3590088 Bytes,
+9200 / 12881 Funktionen.
+Game Code 35,63 %, 1006976 / 2826784 Bytes,
+5235 / 8857 Funktionen.
+
+`TCoin::loadAfter` war bei 99,84 %.
+Der Frame lag bei `0x20` statt retail `0x28`,
+`checkGround`-Out-Pointer bei `0x14` statt `0x1c`.
+
+**Vollmatch, strikt.**
+
+```cpp
+const TBGCheckData* checkData;
+char trash[8];
+```
+
+Die Reihenfolge `checkData` vor `trash[8]`
+reserviert den Frame `0x28` und den Slot `0x1c`.
+`checkData` wird in Map 2 für `checkGround` genutzt.
+
+0 Abweichungen, 232 Bytes, 58 Instruktionen.
+`functionRelocDiffs=data_value` ohne bad Relocs.
+Symbolordnung PASS für `mario/MoveBG/Item`.
+
+**Zurückgenommen.** `TObjManager::load` mit
+`JDrama::TNameRef* root` bringt den Puffer von
+`0x30` auf `0x2c`, verschiebt aber `readU32`
+nach `0x24` statt `0x28` — kein Vollmatch.
+
+**Zähler.** `ninja changes_all`:
+matched code 47,89 % → 47,89 %,
+1719124 → 1719356 Bytes (+232),
+9200 → 9201 Funktionen (+1).
+Game Code 35,63 % → 35,64 %,
+1006976 → 1007208 Bytes (+232),
+5235 → 5236 Funktionen (+1).
+`Item` matched_code 55,91 % → 57,16 %.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+`setUpCurrentMapCollision` ohne `colman`.
+Event 777 behält `buffer[0x100]`.
+`TRedCoinSwitch::loadAfter` behält `coin`.
+
+### Nächster Schritt
+
+1. `TCoin::loadAfter` behält `checkData` und `trash[8]`
+   in dieser Reihenfolge. `Item` nicht auf `Matching` stellen.
+2. `TObjManager::load`: Puffer `0x2c` ohne `root`-Spill
+   auf `0x24` — andere Benennung oder Reihenfolge testen.
+3. `setUpCurrentMapCollision` ohne `colman`.
+4. Vermeidungslisten aus Runde 81 bis 112 bleiben.
+   Den Frame nicht polstern.
