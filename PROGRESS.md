@@ -10521,11 +10521,35 @@ unverändert defer.
 
 `ninja` / DOL-SHA1 unverändert OK.
 
+### Nach hundertsiebenunddreißigster Iterationsrunde (Speed, 0 Vollmatches)
+
+**Beobachtung.** Stand Runde 135 unverändert (48,35 % / 9233 Fn).
+
+**Scan.** 25× 100-%-Fuzzy game-Funktionen; kein Kandidat mit nur
+`stwu`/Epilog-Diff und Retail-Frame > unser (automatischer Filter: 0 Treffer).
+Entry-`trash` brute: `thinkSituation` (aktuell oft **unser** Frame größer,
+z. B. `stwu -0xd0` vs Retail `-0xc8`), `getRandomNextIndex`,
+`execGroundCheck_`, `TMarDirector::TMarDirector` (ein Operand `addi r4,r1`
+für `OSInitStopwatch`, kein reines Padding).
+
+**`initMirrorModel`.** `.rodata`-Anfang per `DummyStrings`/`MtxCalcTypeName`
+vor `MarioAnimeData.hpp` angleichen (wie `MarioParticle.cpp`) — Spiegel-
+Strings bleiben **0x18** zu früh (`0xa38` vs `0xa50`); fehlendes
+0x18-Null-Pad zwischen `ma_sleep_end_tx.btp`-Cluster und folgendem
+`.rodata` (nicht committet, kein Vollmatch).
+
+**Vollmatch.** keine.
+
+`ninja` / `build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
 ### Nächster Schritt
 
 1. Runden 114–119 / 121–135 unverändert.
-2. `Hino2Pollute`: Nerv-Body aus ASM/`m2c` (nicht nur `changeBck`-Konstanten).
-3. `thinkSituation` / `soundMovement` / `changeScene`: Frame **verkleinern**
+2. `initMirrorModel`: 0x18-Pad in `.rodata`-Emissionsreihenfolge (nicht
+   Entry-`trash`).
+3. `Hino2Pollute`: Nerv-Body aus ASM/`m2c` (nicht nur `changeBck`-Konstanten).
+4. `thinkSituation` / `soundMovement` / `changeScene`: Frame **verkleinern**
    (UNUSED-Inlines / Locals), nicht Entry-`trash`.
-4. `bosseel` / `walkerEnemy` / `BGKAppear` wie R135.
-5. Defer-Listen unverändert.
+5. `bosseel` / `walkerEnemy` / `BGKAppear` wie R135.
+6. Defer-Listen unverändert.
