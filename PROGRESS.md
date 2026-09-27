@@ -10141,3 +10141,45 @@ Keine TU auf `Matching` gestellt.
 4. `checkWallCollision` / `execGroundCheck_` / `getRandomNextIndex`:
    Slot+Frame ohne Operanden-Regression.
 5. Vermeidungslisten aus Runde 81 bis 124 bleiben.
+
+### Nach hundertsechsundzwanzigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 125:
+47,99 % matched code, 1722840 / 3590088 Bytes,
+9212 / 12881 Funktionen.
+Game Code 35,76 %, 1010692 / 2826784 Bytes,
+5247 / 8857 Funktionen.
+
+Partielle Versuche (revertiert): `TLiveActor::initAnmSound`
+(`trash[8]` — zwei Spills @ `0x2c` vs `0x24` unverändert),
+`TNerveBathtubKillerExplosion` (`trash[4]` — Frame-Regression),
+`TSpcInterp::execadd` (`trash[4]`).
+
+**Vollmatch, strikt.**
+
+`TNerveHino2Squat::execute`: `char trash[0x20]; trash[0] = 0;` am
+Nerve-Anfang für Retail-Frame `0x58` (vorher `0x38`).
+
+0 Abweichungen, 336 Bytes, 84 Instruktionen.
+`validate-symbol-order` `mario/Enemy/hinokuri2`: PASS (UNUSED-Size-Warnungen
+unverändert).
+
+**Zähler.** matched code 47,99 % → 48,00 %,
+1722840 → 1723176 Bytes (+336),
+9212 → 9213 Funktionen (+1).
+Game Code 35,76 % → 35,78 %,
+1010692 → 1011028 Bytes (+336),
+5247 → 5248 Funktionen (+1).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. Runden 114–119 / 121–125 unverändert.
+2. `initAnmSound`: NPC-Pfad / `MAnmSoundNPC`-Inline vs Retail-`0x2c`-Spill.
+3. Weitere `TNerve*`-Frames (+0x20 wie Hino2Squat, +0x8 wie DoroHaneRise).
+4. `considerRotateStart` / `turnEnd` / `turnning`: Slot+Frame (inlining).
+5. Vermeidungslisten aus Runde 81 bis 125 bleiben.
