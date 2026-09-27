@@ -1295,8 +1295,10 @@ void TNozzleBox::loadAfter()
 
 void TNozzleBox::load(JSUMemoryInputStream& stream)
 {
-	TMapObjBase::load(stream);
 	char strBuf[0x20];
+	char trash[0x1c];
+	trash[0] = 0;
+	TMapObjBase::load(stream);
 	mContainedNozzleName = stream.readString();
 	stream.readString(strBuf, 0x20);
 	if (strcmp(strBuf, "valid") == 0)
