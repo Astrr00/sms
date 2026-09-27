@@ -1037,7 +1037,9 @@ BOOL TMario::walkEnd()
 		break;
 	}
 
-	f32 rate = 0.25f * mForwardVel;
+	f32 quarter = 0.25f;
+	f32 vel     = mForwardVel;
+	f32 rate    = vel * quarter;
 	if (rate < 0.1f)
 		rate = 0.1f;
 	setAnimation(ANIM_RUN1, rate);
