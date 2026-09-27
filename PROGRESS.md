@@ -10176,10 +10176,46 @@ SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
 
 Keine TU auf `Matching` gestellt.
 
+### Nach hundertssiebenundzwanzigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 126:
+48,00 % matched code, 1723176 / 3590088 Bytes,
+9213 / 12881 Funktionen.
+Game Code 35,78 %, 1011028 / 2826784 Bytes,
+5248 / 8857 Funktionen.
+
+Partielle Versuche (revertiert): `TNerveHino2Burst::execute`
+(`trash[0x20]` — Frame `0x90` OK, TVec-Spill-Cluster @ `0x58` vs `0x78`),
+`TNerveHino2Die` (`trash[0x18]`/`volatile`/`0x20` — kein sauberer Vollmatch),
+`TNerveHamuKuriWallDie` (`trash[8]` — Frame OK, Slot-Offsets +4),
+`TNerveHino2Stamp` mit `trash[0x40]` (Frame `0xd0` vs Retail `0xc8`),
+`volatile trash[0x40]` (Frame OK, Operanden-Regression).
+
+**Vollmatch, strikt.**
+
+`TNerveHino2Stamp::execute`: `char trash[0x3c]; trash[0] = 0;` am
+Nerve-Anfang für Retail-Frame `0xc8` (vorher `0x88`).
+
+0 Abweichungen, 628 Bytes, 157 Instruktionen.
+`validate-symbol-order` `mario/Enemy/hinokuri2`: PASS (UNUSED-Size-Warnungen
+unverändert).
+
+**Zähler.** matched code 48,00 % → 48,02 %,
+1723176 → 1723804 Bytes (+628),
+9213 → 9214 Funktionen (+1).
+Game Code 35,78 % → 35,80 %,
+1011028 → 1011656 Bytes (+628),
+5248 → 5249 Funktionen (+1).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
 ### Nächster Schritt
 
-1. Runden 114–119 / 121–125 unverändert.
+1. Runden 114–119 / 121–126 unverändert.
 2. `initAnmSound`: NPC-Pfad / `MAnmSoundNPC`-Inline vs Retail-`0x2c`-Spill.
-3. Weitere `TNerve*`-Frames (+0x20 wie Hino2Squat, +0x8 wie DoroHaneRise).
+3. Weitere `TNerve*`-Frames (`TNerveHino2Burst` Slot+Frame, `Hino2Squat`-Muster).
 4. `considerRotateStart` / `turnEnd` / `turnning`: Slot+Frame (inlining).
-5. Vermeidungslisten aus Runde 81 bis 125 bleiben.
+5. Vermeidungslisten aus Runde 81 bis 126 bleiben.

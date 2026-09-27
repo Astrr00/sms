@@ -1411,6 +1411,9 @@ DEFINE_NERVE(TNerveHino2Die, TLiveActor)
 
 DEFINE_NERVE(TNerveHino2Stamp, TLiveActor)
 {
+	char trash[0x3c];
+	trash[0] = 0;
+
 	THinokuri2* self = (THinokuri2*)spine->getBody();
 	if (spine->getTime() == 0) {
 		self->changeBck(0xB);
