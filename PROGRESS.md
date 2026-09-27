@@ -6911,3 +6911,78 @@ Kein Matching-Flip.
    Ein einzelner `int` ist dort kein erster Versuch.
 5. `TNerveTamaNokoSink` ist 8 Byte zu groß
    (`0x68` gegen `0x60`), nicht zu klein.
+
+### Nach zweiundachtzigster Iterationsrunde (kein neuer Vollmatch)
+
+**Beobachtung, vorher.** Stand Runde 81:
+47,71 % matched code, 1712736 / 3590088 Bytes,
+9181 / 12881 Funktionen.
+Game Code 35,40 %, 1000588 / 2826784 Bytes,
+5216 / 8857 Funktionen.
+
+**`TBossPakkun::receiveMessage`.**
+148 Instruktionen, 592 Bytes.
+Vorher war der Rumpf bis auf ein `cmplw` wortgleich,
+der Frame `0x50` gegen `0x60`.
+`&TNerveBPSleep::theNerve() == getLatestNerve()`
+lädt in derselben Reihenfolge, vergleicht aber
+`cmplw r0, r3`.
+`getLatestNerve() == &theNerve()` direkt hält den
+Nerv in `r28` und lädt den Spine ein zweites Mal.
+Diese Form matcht das `cmplw`:
+
+```
+const TNerveBase<TLiveActor>* sleep = &TNerveBPSleep::theNerve();
+if (mSpine->getLatestNerve() == sleep && ...)
+```
+
+Danach nur noch Prolog und Epilog, neun Zeilen,
+Frame weiter `0x50` gegen `0x60`.
+Kein Stack-Zugriff im Rumpf.
+Die Funktion zählt nicht als Match.
+
+`validate-symbol-order.py -u mario/Enemy/bosspakkun`
+PASS. Die zwei UNUSED-Größenwarnungen sind alt.
+Die TU bleibt `NonMatching`.
+
+**Gemessen und zurückgenommen.**
+
+- `MtxToQuat`: die Summe `m[0][0] + m[1][1] + m[2][2] + 1`
+  in drei Statements zerlegt. Das eine vertauschte
+  `fadds` wird nicht gerichtet. Die Register der
+  Spur wechseln, das `fmr` fällt weg.
+- `evStartSE`: `push(TSpcSlice())` ändert nichts.
+  Die beiden Slices bleiben 4 Byte zu tief
+  (`0x34`/`0x2c` gegen `0x38`/`0x30`),
+  das `stfd` bei `0x40` stimmt schon.
+  Ein benanntes `TSpcSlice` verkleinert den Frame
+  auf `0x40` und lässt den Typ-Store aus.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher unverändert: 47,71 % matched code,
+1712736 / 3590088 Bytes, 9181 / 12881 Funktionen.
+Game Code 35,40 %, 1000588 / 2826784 Bytes,
+5216 / 8857 Funktionen.
+
+`changes_all` meldet nur
+`receiveMessage__11TBossPakkun...` von 99,87 % auf
+99,94 % fuzzy. Keine Regression, kein neues
+100-%-Symbol.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Kein Matching-Flip.
+
+### Nächster Schritt
+
+1. `bosspakkun` nicht auf `Matching` stellen.
+2. `receiveMessage` nicht noch einmal über die
+   `==`-Reihenfolge drehen. Der Frame bleibt
+   16 Byte zu klein und ohne Stack-Zugriff.
+3. `MtxToQuat` nicht erneut in Teilsummen
+   zerlegen. `evStartSE` nicht mit
+   `push(TSpcSlice())` oder einem benannten
+   `TSpcSlice` wiederholen.
+4. Die Vermeidungsliste aus Runde 81 bleibt.
