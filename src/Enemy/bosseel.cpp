@@ -520,6 +520,8 @@ DEFINE_NERVE(TNerveBEelTearsGenerate, TLiveActor)
 
 DEFINE_NERVE(TNerveBEelTearsMoveUp, TLiveActor)
 {
+	char trash[0x10];
+
 	TBEelTears* tears = static_cast<TBEelTears*>(spine->getBody());
 	if (spine->getTime() == 0) {
 		tears->mMActor = tears->mMActorKeeper->getMActor("tears.bmd");

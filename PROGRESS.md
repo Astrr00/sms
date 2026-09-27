@@ -10813,12 +10813,20 @@ nonmatching — ein Operanden-`~` (`addi r3,r1,0x18` vs. **0x1c**).
 
 **Verify.** `dtk shasum -c` → `build/GMSJ01/mario.dol: OK`.
 
+### R150 (Aufgabe B; 1 Vollmatch)
+
+**`TNerveBEelTearsMoveUp::execute` (bosseel).** Frame **0x30** → **0x40** mit
+`char trash[0x10];` am Nerv-Anfang (gleiches Muster wie
+`TNerveBEelTearsWaterHit` mit `trash[0x18]`). `decomp-diff.py`: **match 100 %**
+(108B). DOL `dtk shasum -c` OK.
+
+**Offen.** `TNerveBathtubKillerExplosion` / `Break`: vier Operanden-`~` bei
+**0x18** vs. **0x1c** (Inlining `setDeadBathtubKillerAnm`); `trash[0]` vor
+`mVelocity` vergrößert Frame. Closet / `initAndRegister` unverändert.
+
 ### Nächster Schritt
 
-1. `TCloset`: Mtx **0x14** + Retail-`mr`-Homing gleichzeitig (Struct-Pad vs.
-   `getModel`-Scheduling; kein Frame **0x78**).
-2. `initAndRegister`: `list` in **r31** nach `search` trotz `initMapObj` (evtl.
-   Hilfsaufruf / Spill ohne `joinToGroup` zu ändern).
-3. `Hino2Pollute`: Frame **0xe8** + fehlende Inlines rekonstruieren.
-4. `BathtubKillerExplosion`: Stack-Basis **0x1c** für `TVec3::set`.
-5. Defer-Listen / Hands-off unverändert.
+1. `BathtubKiller` death nerves: **0x1c**-Basis ohne Frame-Wachstum.
+2. `TCloset` / `initAndRegister` nur bei klarem 100 %-Pfad.
+3. `Hino2Pollute` Frame/Inlines.
+4. Defer-Listen / Hands-off unverändert.
