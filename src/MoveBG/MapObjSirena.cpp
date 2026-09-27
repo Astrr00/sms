@@ -112,9 +112,12 @@ void TRoulette::perform(u32 cue, JDrama::TGraphics* graphics)
 
 void TRoulette::moveObject()
 {
+	char trash[0x20];
+	trash[0] = 0;
+
 	TLiveActor::moveObject();
 	if (unk142 != 0)
-		mRotation.x += unk13C;
+		mRotation.y += unk13C;
 
 	if (unk141 != 0 && unk140 != 0) {
 		gpMarioOriginal->mGamePad->onNeutralMarioKey();
