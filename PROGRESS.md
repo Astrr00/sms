@@ -9857,11 +9857,14 @@ Sound- und Matrix-Logik unverändert.
 0 Abweichungen, 276 Bytes, 69 Instruktionen.
 `validate-symbol-order` für `mario/MoveBG/MapObjGeneral`: PASS.
 
-**Zähler.** matched code 47,93 % → 47,94 % (changes_all),
-`recovering` 99,87 % → 100,00 %.
+**Zähler.** matched code 47,93 % → 47,94 %,
+1720648 → 1720924 Bytes (+276),
+9206 → 9207 Funktionen (+1).
+Game Code 35,68 % → 35,69 %,
+1008500 → 1008776 Bytes (+276),
+5241 → 5242 Funktionen (+1).
+`recovering` 99,87 % → 100,00 %;
 `MapObjGeneral` matched_code 47,56 % → 50,59 % (TU).
-Game Code unverändert in der Kategorie-Summe
-gegenüber Runde 118 bis Verifikation nach Rebuild.
 
 `build/GMSJ01/mario.dol: OK`.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
