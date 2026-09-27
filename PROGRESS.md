@@ -9414,3 +9414,66 @@ Keine TU auf `Matching` gestellt.
    mit den Varianten aus Runde 108.
 5. Vermeidungslisten aus Runde 81 bis 109 bleiben.
    Den Frame nicht polstern.
+
+### Nach hundertundelfter Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 110:
+47,88 % matched code, 1718908 / 3590088 Bytes,
+9199 / 12881 Funktionen.
+Game Code 35,62 %, 1006760 / 2826784 Bytes,
+5234 / 8857 Funktionen.
+Daten 394595 / 640331 Bytes, 61,62 %.
+
+Oberhalb von 90 % gibt es kein weiteres
+`snprintf`, dessen Längen-Immediate vom Puffer abweicht.
+`buffer[0x100]` bleibt.
+
+**Gemessen und zurückgenommen.**
+
+`TDoroHaneKuri::isCollidMove`: `f32 scale = -5.0f`
+nach der Geschwindigkeit trifft den Frame `0x38`.
+Der Vektor bleibt bei `0x20`, Retail liegt bei `0x24`.
+`scale` vor dem Vektor lässt ihn bei `0x1c`.
+
+`TNerveDoroHaneRise`: `f32 step = 0.01f`
+für die beiden Clamp-Grenzen ändert nichts.
+Der Frame bleibt `0x50` gegen Retail `0x58`.
+
+`TMareEventWallRock::load`: der Zeiger `view`
+für `push_back` verschiebt den Slot `0x64` nicht.
+Retail legt ihn bei `0x68` ab.
+Der Frame bleibt `0x80` gegen `0x88`.
+
+Alle drei Varianten zurückgenommen.
+
+**Zähler.** Kein neues Vollmatch.
+`ninja changes_all` ist leer.
+Matched code bleibt 47,88 %,
+1718908 / 3590088 Bytes,
+9199 / 12881 Funktionen.
+Game Code bleibt 35,62 %,
+1006760 / 2826784 Bytes,
+5234 / 8857 Funktionen.
+Daten unverändert.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+Event 777 behält `buffer[0x100]`.
+`TRedCoinSwitch::loadAfter` behält `coin`.
+
+### Nächster Schritt
+
+1. Event 777 behält `char buffer[0x100]`
+   und `snprintf` mit `sizeof(buffer)`.
+   `MapObjManager` nicht auf `Matching` stellen.
+2. `TRedCoinSwitch::loadAfter` behält `coin`.
+3. `isCollidMove` nicht über `f32 scale`.
+   `TNerveDoroHaneRise` nicht über `f32 step`.
+   `TMareEventWallRock::load` nicht über `view`.
+4. `mHPMax` bleibt.
+   `SMS_UnifyMaterial` und `execRoofCheck_` nicht
+   mit den Varianten aus Runde 108.
+5. Vermeidungslisten aus Runde 81 bis 110 bleiben.
+   Den Frame nicht polstern.
