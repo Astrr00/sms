@@ -10856,6 +10856,27 @@ DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 **Nächste MoveBG:** `TDonchou::calcRootMatrix` (+0xc @ `-0x90`);
 `TMapObjTree::initMapObj` (`r25` vs `r26`); Switch `TFlagT` nur mit klarem Hebel.
 
+### R161 (Round 71 — kein neuer strikter Vollmatch)
+
+**Kein neuer strikter Vollmatch** (Scope A). R160 `TCloset::calcRootMatrix` unverändert strikt.
+
+- `TDonchou::calcRootMatrix` (WIP im Branch, nicht strikt): `struct { char pad[0x10];
+  Mtx mtx; } local;` + `local.mtx[1][3]` statt `TRotation3f` → Frame `-0x90`,
+  `addi r29,r1,0x34`, `ref` @ `0x50` (**match**). Verbleibend **2** `~`:
+  `fireStartDemoCamera`-`TFlagT` @ `0x20` vs Retail `0x30` (`sth`/`addi`). Kein
+  Grid `trash`×`pad`, kein `camPad`/`flagLayout`/`rotMtx`/`demoFlag`-Local,
+  kein `post[]` im Struct ohne Frame-Regress. Hebel vermutlich +0x10 Stack-Slot
+  unter `mtx` ohne `-0x90` zu brechen (nicht Closet-`pad[4]` blind kopieren).
+- `TCloset::touchWater`: **7** `~` (f-Register `f1`/`f3` in `halfDepth`-Zweig);
+  explizite `f2`/`f3`-Locals verschlechterten.
+- `TRoulette::initMapObj`: **4** `~` (Iterator @ `0x58` vs `0x5c`); Retail nutzt
+  `insert`, `push_back` bleibt bester Stand; Entry-`trash[4]` regress.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+**Nächste MoveBG:** Donchou `TFlagT` `0x20`→`0x30`; weitere `calcRootMatrix`-Geschwister
+mit `pad+Mtx`; `initMapObj` `r25` nur mit neuem Hebel. Skip: SMS-B, Switch ohne Hebel.
+
 ### R159 (Round 71 Agent — kein neuer Vollmatch)
 
 **Kein neuer strikter Vollmatch** in MoveBG (Scope A). Worktree ohne TU-Diffs.

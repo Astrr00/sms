@@ -847,12 +847,15 @@ void TDonchou::loadAfter()
 void TDonchou::calcRootMatrix()
 {
 	J3DModel* model = getModel();
-	TRotation3f mtx;
-	MsMtxSetXYZRPH(mtx, mPosition.x, mPosition.y + unk140, mPosition.z,
+	struct {
+		char pad[0x10];
+		Mtx mtx;
+	} local;
+	MsMtxSetXYZRPH(local.mtx, mPosition.x, mPosition.y + unk140, mPosition.z,
 	               mRotation.x, mRotation.y, mRotation.z);
-	model->setBaseTRMtx(mtx);
+	model->setBaseTRMtx(local.mtx);
 	model->setBaseScale(mScaling);
-	mtx.ref(1, 3) += unk140;
+	local.mtx[1][3] += unk140;
 	if (unk144 != nullptr && unk144->unk194 && unk148->unk194)
 		unk13C = 1;
 	if (unk13C != 0) {
