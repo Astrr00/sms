@@ -7119,3 +7119,72 @@ SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
 4. Die `hitWater`-Lautstärke nicht wieder auf `0.0f` setzen.
 5. Die Vermeidungslisten aus Runde 81 und 82 bleiben.
    Die drei TUs nicht auf `Matching` stellen.
+
+### Nach fünfundachtzigster Iterationsrunde (sechs Diffs, Daten)
+
+**Beobachtung, vorher.** Stand Runde 84:
+47,73 % matched code, 1713508 / 3590088 Bytes,
+9183 / 12881 Funktionen.
+Game Code 35,42 %, 1001360 / 2826784 Bytes,
+5218 / 8857 Funktionen.
+Daten 385643 / 640331 Bytes, 60,23 %.
+
+**`TMario::thinkDirty`.**
+Das eine abweichende `lfs` subtrahiert 200, nicht 1,
+von `mFloorPosition.z`, bevor `mPosition.y` vergleicht.
+107 Instruktionen, 428 Bytes, null abweichende Wörter.
+Der Fortschrittszähler stand schon auf 100 %.
+
+**Wurzelmatrizen in `MapObjLib`.**
+`M_PI / 180.0f` ist ein Bit zu klein
+(`0x3c8efa35` gegen `0x3c8efa36`).
+Die Spielkonstante `0.017453294f` steht schon in
+`Sky.cpp`, `AnimalBase.cpp` und `cameralib.cpp`.
+Damit matchen:
+
+- `makeRootMtxRotX`, `makeRootMtxRotY`, `makeRootMtxRotZ`,
+  je 44 Instruktionen, 176 Bytes
+- `setRootMtxRotY` und `setRootMtxRotZ`,
+  je 45 Instruktionen, 180 Bytes
+
+Null abweichende Wörter. Keine Regression in den beiden TUs.
+
+`.sdata2` von `MapObjLib` matcht damit vollständig.
+`matched_data` der TU von 796 auf 892 Bytes, 100 %.
+
+`validate-symbol-order.py` bleibt rot an alten Fehlern:
+`MarioMove` fehlt UNUSED `setMissJumping`,
+`MapObjLib` fehlt `SMatrix33C::at` und die
+Nicht-weak-Reihenfolge weicht ab.
+Kein Matching-Flip. `isDemo` und die vier Formen
+aus Runde 84 sind unverändert.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Code unverändert: 47,73 % matched code,
+1713508 / 3590088 Bytes, 9183 / 12881 Funktionen.
+Game Code 35,42 %, 1001360 / 2826784 Bytes,
+5218 / 8857 Funktionen.
+
+Daten: 385739 / 640331 Bytes, 60,24 %.
+Game-Daten 306515 / 556995 Bytes, 55,03 %.
+Delta gegen Runde 84: +96 Datenbytes, kein neues
+Code-Symbol im Zähler.
+
+`changes_all` meldet nur `MapObjLib` matched data
+von 89,24 % auf 100 %. Keine Regression.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### Nächster Schritt
+
+1. `thinkDirty` nicht wieder auf `- 1.0f` stellen.
+2. Die drei `makeRootMtxRot*` nicht wieder auf
+   `M_PI / 180.0f` stellen.
+3. Runde 84 nicht zurückdrehen: `p1 - p2 + 1`,
+   `150 * analog * 256`, `hitWater` mit `30.0f`.
+4. `isDemo` nicht auf ein vierfaches Oder oder
+   ein `goto` zurückdrehen.
+5. Vermeidungslisten aus Runde 81 und 82 bleiben.
+   `MapObjLib` und `MarioMove` nicht auf `Matching` stellen.
