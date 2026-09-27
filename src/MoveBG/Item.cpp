@@ -238,6 +238,7 @@ void TCoin::appearWithoutSound()
 
 void TCoin::appear()
 {
+	char trash[0x20];
 	if (isActorType(0x20000010)) {
 		if (!TFlagManager::smInstance->getBlueCoinFlag(
 		        gpMarDirector->getCurrentMap(), mEventId))

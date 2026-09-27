@@ -9686,3 +9686,56 @@ Keine TU auf `Matching` gestellt.
    andere Strategie als `capacity` vor `buffer`.
 3. `setUpCurrentMapCollision` ohne `colman`.
 4. Vermeidungslisten aus Runde 81 bis 114 bleiben.
+
+### Nach hundertundsechzehnter Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 115:
+47,90 % matched code, 1719800 / 3590088 Bytes,
+9203 / 12881 Funktionen.
+Game Code 35,65 %, 1007652 / 2826784 Bytes,
+5238 / 8857 Funktionen.
+
+`TCoin::appear` war bei 99,94 %.
+Der Frame lag bei `0x28` statt retail `0x48` (−`0x20`).
+
+`TObjManager::load`: erneut `u32 capacity` vor/nach `buffer`
+mit `stream.read`/`>>` — Frame schrumpft oder Puffer/`readU32`-Slots
+verschieben sich; nicht shippen. `root`-Spill weiter verboten.
+
+`TShine::appearWithDemo` / `TMapObjSwitch::receiveMessage`:
+benannte `TFlagT<u16>`-Locals allein reichen nicht
+(Flag-Slot weiterhin 4 B zu niedrig); `tmp`+`trash[8]`+`flag`
+bläht den Frame über retail — Partial, nicht committet.
+
+**Vollmatch, strikt.**
+
+`char trash[0x20]` am Anfang von `TCoin::appear`,
+Logik unverändert (`appearWithoutSound` etc.).
+
+0 Abweichungen, 312 Bytes, 78 Instruktionen.
+`validate-symbol-order` für `mario/MoveBG/Item`: PASS.
+
+**Zähler.** `ninja changes_all`:
+matched code 47,90 % → 47,91 %,
+1719800 → 1720112 Bytes (+312),
+9203 → 9204 Funktionen (+1).
+Game Code 35,65 % → 35,66 %,
+1007652 → 1007964 Bytes (+312),
+5238 → 5239 Funktionen (+1).
+`Item` matched_code 57,16 % → 58,85 %.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `TCoin::appear` behält `trash[0x20]` am Funktionsanfang.
+2. `TRedCoinSwitch::load` behält `tmp`/`trash[8]` vor Base-`load`.
+3. `TObjManager::load`: Puffer `0x2c` — weiter ohne `root` und
+   ohne `capacity`-vor-`buffer`-Muster; ggf. UNUSED/`initObjArray`
+   oder Include-/Spill-Kontext prüfen.
+4. `TFlagT`-Demo-Calls (`appearWithDemo`, `receiveMessage`):
+   Flag-Slot `+4 B` bei korrektem `0x40`/`0x50`-Frame offen.
+5. Vermeidungslisten aus Runde 81 bis 115 bleiben.
