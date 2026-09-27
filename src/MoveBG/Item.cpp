@@ -301,14 +301,15 @@ void TCoin::perform(u32 cue, JDrama::TGraphics* graphics)
 
 void TCoin::loadAfter()
 {
+	const TBGCheckData* checkData;
+	char trash[8];
 	TItem::loadAfter();
 	if (!gpMirrorModelManager->isInMirror(mPosition))
 		return;
 
 	if (gpMarDirector->getCurrentMap() == 2) {
-		const TBGCheckData* check;
-		gpMap->checkGround(mPosition, &check);
-		if (!check->isWaterSurface())
+		gpMap->checkGround(mPosition, &checkData);
+		if (!checkData->isWaterSurface())
 			return;
 	}
 
