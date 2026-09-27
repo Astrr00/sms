@@ -10785,6 +10785,23 @@ DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 3. `initAndRegister`: SMS-B.
 4. Defer-Listen unverändert.
 
+### R154 (`TMapObjBillboard::touchWater`)
+
+**Vollmatch, strikt.**
+
+- `TMapObjBillboard::touchWater`: `JGeometry::TVec3<f32> rot` / `pos` am
+  Funktionskopf (Assign statt Block-Locals), danach `char trash[0x10]` vor
+  `swing`; Frame `-0x50`, TVec-Spills @ `0x38`/`0x2c` wie Retail.
+- Pivot-Kappen unverändert: `TFruitBasket::touchFruit` (2 `~` roof @ `0x28`),
+  `TShine::appearWithDemo` (`trash[8]` fixiert Frame, `TFlag` noch @ `0x34` vs
+  `0x38`), `TCoin::perform` / `TRoulette::initMapObj` / `loadBeforeInit`.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+**Nächste MoveBG:** `touchFruit` roof-Ptr; `appearWithDemo` `TFlag`-Slot;
+`newAndRegisterCoin` TVec-Stack. SMS-B: Closet / `initAndRegister` /
+`initModel`.
+
 ### R153 (Round 71 Agent — Pivot, kein Vollmatch)
 
 **Kein neuer strikter Vollmatch** (Scope A MoveBG).

@@ -291,10 +291,13 @@ void TMapObjBillboard::touchActor(THitActor* param_1) {
 
 u32 TMapObjBillboard::touchWater(THitActor* param_1)
 {
+	JGeometry::TVec3<f32> rot;
+	JGeometry::TVec3<f32> pos;
+	char trash[0x10];
 	swing(param_1);
 	if (mHiddenObj && mAllowReveal) {
-		JGeometry::TVec3<f32> rot = mRotation;
-		JGeometry::TVec3<f32> pos = mPosition;
+		rot = mRotation;
+		pos = mPosition;
 		rot.y -= 90.0f;
 		pos.y += mYOffset;
 		TMapObjBase* obj = mHiddenObj;
