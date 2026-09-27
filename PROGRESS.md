@@ -9591,3 +9591,50 @@ Event 777 behält `buffer[0x100]`.
 3. `setUpCurrentMapCollision` ohne `colman`.
 4. Vermeidungslisten aus Runde 81 bis 112 bleiben.
    Den Frame nicht polstern.
+
+### Nach hundertundvierzehnter Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 113:
+47,89 % matched code, 1719356 / 3590088 Bytes,
+9201 / 12881 Funktionen.
+Game Code 35,64 %, 1007208 / 2826784 Bytes,
+5236 / 8857 Funktionen.
+
+`TMapObjSwitch::load` war bei 99,80 %.
+Der Frame lag bei `0x28` statt retail `0x38`,
+die RGB-`read`-Slots bei `0x10`/`0x14`/`0x18`
+statt `0x20`/`0x24`/`0x28`.
+
+**Vollmatch, strikt.**
+
+`s32 r`, `g`, `b` und `char trash[0x10]` stehen
+vor `TMapObjBase::load`, danach unverändert
+`stream >>` in dieselben Locals.
+
+0 Abweichungen, 264 Bytes, 66 Instruktionen.
+Symbolordnung wie zuvor (vorbestehende UNUSED-Warnung).
+`TObjManager::load` nicht mit `root` angefasst.
+`TCoin::loadAfter` unverändert (`checkData`, dann `trash[8]`).
+
+**Zähler.** `ninja changes_all`:
+matched code 47,89 % → 47,90 %,
+1719356 → 1719620 Bytes (+264),
+9201 → 9202 Funktionen (+1).
+Game Code 35,64 % → 35,65 %,
+1007208 → 1007472 Bytes (+264),
+5236 → 5237 Funktionen (+1).
+`MapObjTown` matched_code 75,59 % → 78,16 %.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `TCoin::loadAfter` behält `checkData` vor `trash[8]`.
+2. `TMapObjSwitch::load` behält `r`/`g`/`b` und `trash[0x10]`
+   vor `TMapObjBase::load`. `MapObjTown` nicht auf `Matching` stellen.
+3. `TObjManager::load` nicht mit `JDrama::TNameRef* root`.
+4. `setUpCurrentMapCollision` ohne `colman`.
+5. Vermeidungslisten aus Runde 81 bis 113 bleiben.
