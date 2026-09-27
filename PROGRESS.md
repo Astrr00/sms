@@ -10963,6 +10963,43 @@ kaputt (**64 %**).
 **Verify.** `ninja baseline` / `changes_all` ohne Code-Delta; `dtk shasum -c` →
 OK (Tip **`679300d4`**, Quellbaum unverändert).
 
+**R160 (neuer Slice; erweiterte Skip-Liste; keine Vollmatches).**
+
+Frischer Scan (B-Scope, Skip inkl. R159-Defer + `BPHover`/`considerTake`/…):
+nach **~**-only + Retail-Frame **+4/+8/+16** praktisch leer; Fokus auf kleine
+Helfer (`getRumblePow`, `rumblePad`, `TGessoPolluteObj::loadInit`,
+`TBoxTelesa::load`, `MarioSwim`/`MarioSpecial`/`MarioAutodemo` — letztere
+größtenteils schon Match oder CFG-Diff).
+
+**`TNerveBPHover` (ein Versuch, dann Stop).** `trash[0x10]` Eingang +
+`pathAlign[4]` unmittelbar vor `TPathNode goal`: Frame **0xc0** (>**0xa8**),
+kein striktes Match — nicht weiter verfolgt.
+
+**Acht Probes (alle revertiert):**
+
+1. **`TBiancoGateKeeper::getRumblePow`** — `trash[4]` Eingang / vor `length()`:
+   Frame **0x30** oder Vec weiter versetzt (**0x20** vs. **0x1c**).
+2. **`TBossPakkun::rumblePad`** — `trash[4]` Eingang / zwischen `delta`-Load und
+   `-=`: Frame **0x48**, Vec **0x2c** vs. **0x24**.
+3. **`TGessoPolluteObj::loadInit`** — `trash[4]` Eingang: Frame **0x80** vs.
+   **0x78**, Locals **+8**.
+4. **`TBoxTelesa::load`** — `trash[4]` Eingang: Frame **0x40** OK, Float-Cluster
+   weiter **+4** (vermutlich inlined `TJuiceBlock`-Setup).
+5. **`TNerveBPStompReact`** — nur analysiert: Frame **0x68** vs. **0x48** (Δ**0x20**,
+   kein Trash-Pad).
+6. **`TNerveHino2Die`** — Frame **0x80** vs. **0x68** + Vec-Cluster, kein Pad.
+7. **`THinokuri2::changeBck`** — Frame **0x80** vs. **0x90** (unser Build größer).
+8. **`TNerveBGKAppear`** — Frame **0x2e0** vs. **0x100** (fehlende UNUSED-Inlines).
+
+Gemeinsames Muster: **Frame passt, TVec3/Float-Temp nur +4** — `char trash[4]`
+am Eingang bläht Frame oft mit, verschiebt Vec nicht auf Retail-Offset (evtl.
+Pad **zwischen** konkreten Locals / MAP-Größe, nicht Entry-Pad).
+
+**Vollmatch, strikt.** keine.
+
+**Verify.** `ninja baseline` / `changes_all` ohne Code-Delta; `dtk shasum -c` →
+OK (Tip **`e24eab6c`**, Quellbaum unverändert).
+
 ### R157 (Aufgabe B; Sweep, keine neuen Vollmatches)
 
 **`TNerveHamuKuriWallDie`.** `char trash[8];` am Eingang → Frame **0x80**;
