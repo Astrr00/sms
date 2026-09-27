@@ -1336,6 +1336,9 @@ DEFINE_NERVE(TNerveHino2Damage, TLiveActor)
 
 DEFINE_NERVE(TNerveHino2Squat, TLiveActor)
 {
+	char trash[0x20];
+	trash[0] = 0;
+
 	THinokuri2* self = (THinokuri2*)spine->getBody();
 
 	self->unk188 = 0;
