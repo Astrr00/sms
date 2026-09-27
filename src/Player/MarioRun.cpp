@@ -24,6 +24,7 @@ static const char cDirtyTexName[]  = "H_ma_rak_dummy";
 BOOL TMario::considerRotateStart()
 {
 	int direction;
+	char trash[0x10];
 	if (checkStickRotate(&direction) == 1 && mWaterGun != nullptr
 	    && mWaterGun->isEmitting()) {
 		if (direction > 0)

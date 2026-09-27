@@ -10824,9 +10824,22 @@ nonmatching — ein Operanden-`~` (`addi r3,r1,0x18` vs. **0x1c**).
 **0x18** vs. **0x1c** (Inlining `setDeadBathtubKillerAnm`); `trash[0]` vor
 `mVelocity` vergrößert Frame. Closet / `initAndRegister` unverändert.
 
+### R151 (Aufgabe B; 1 Vollmatch)
+
+**`TMario::considerRotateStart` (MarioRun).** `int direction` bleibt vor
+`checkStickRotate`; `char trash[0x10];` **danach** (Padding nach dem Local,
+nicht davor — sonst `addi r4,r1,0x10` statt **0x20**). Frame **0x30**,
+**match 100 %** (272B). `dtk shasum -c` OK.
+
+**Versuche ohne Commit.** `TNerveTelesaFreeze` / `TNerveFireWanwanFreeze` /
+`TNerveHamuKuriBoundFreeze`: Frame per `trash[8]` oft OK, Struct-Locals
+bleiben **+8** versetzt. `TNerveDoroHaneHitWater`: Retail-Frame kleiner als
+unser Build — kein reines Trash-Pad.
+
 ### Nächster Schritt
 
 1. `BathtubKiller` death nerves: **0x1c**-Basis ohne Frame-Wachstum.
-2. `TCloset` / `initAndRegister` nur bei klarem 100 %-Pfad.
-3. `Hino2Pollute` Frame/Inlines.
+2. Nerven mit Frame+Local-Drift: `trash` **nach** betroffenen Locals (vgl.
+   `considerRotateStart`, PROGRESS-Methodik).
+3. `TCloset` / `initAndRegister` nur bei klarem 100 %-Pfad.
 4. Defer-Listen / Hands-off unverändert.
