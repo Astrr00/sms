@@ -10757,6 +10757,31 @@ DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 3. `TCloset::calcRootMatrix` / `partsRollCallback`: nur bei klarem +4‑B-Hebel.
 4. Defer-Listen unverändert.
 
+### R151 (`TEggYoshi::control`)
+
+**Vollmatch, strikt.**
+
+- `TEggYoshi::control`: `JGeometry::TVec3<f32> pos`/`v` vor Entry-`char
+  trash[0x8]; trash[0]=0;`, Case `0xC` ruft `makeObjDead()` (vtable `0x104`)
+  statt `kill()`; Case `0xF` nutzt Top-Level-`v`.
+
+0 Abweichungen, 540 Bytes, 135 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/Item`: PASS.
+
+R150 `TNozzleBox::load`, R149 `TEggYoshi::receiveMessage`, R147
+`TMapObjSwitch::receiveMessage`, R146 `joinToGroup`, R145 `drawLogic`, R138
+`initMirrorModel` unverändert @ 100 %.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### Nächster Schritt (A)
+
+1. `TCoin::perform`: Entry-`trash[0x10]` bringt Frame `-0x50`; Request-Spills
+   noch `0x24` vs `0x34` (Buffer-vor-Trash-Muster wie R150/R151).
+2. `TRoulette::initMapObj`: Iterator-Spills `+4` B (kein joinToGroup-`list`+Trash).
+3. `initAndRegister`: SMS-B.
+4. Defer-Listen unverändert.
+
 ### R150 (`TNozzleBox::load`)
 
 **Vollmatch, strikt.**
@@ -10771,13 +10796,6 @@ R149 `TEggYoshi::receiveMessage`, R147 `TMapObjSwitch::receiveMessage`, R146
 `joinToGroup`, R145 `drawLogic`, R138 `initMirrorModel` unverändert @ 100 %.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
-
-### Nächster Schritt (A)
-
-1. `TEggYoshi::control` / `TCoin::perform`: Slot+Frame (NozzleBox erledigt).
-2. `TRoulette::initMapObj`: Iterator-Spills `+4` B (Mid-Trash nach `search`).
-3. `initAndRegister`: SMS-B (insert-Spills / r31 vs r30).
-4. Defer-Listen unverändert.
 
 ### R149 (`TEggYoshi::receiveMessage`)
 
