@@ -10785,27 +10785,40 @@ Verschiebung; (4) `Hino2Pollute`; (5) Frame-Shrink
 Hands-off: `initMirrorModel` @ **0xa50**, `drawLogic`, `joinToGroup`, `getDistance`,
 `TRoulette::moveObject`, `receiveMessage`, `initNeonMatColor`, weitere A-Locks.
 
-**Umgebung.** `orig/GMSJ01/sys/main.dol` weiterhin fehlend — `dtk split` /
-`decomp-diff.py` / `dtk shasum -c` nicht ausführbar. Kein Vollmatch ohne
-Retail-`.o` committet (Regel: Partials revertieren).
+**Umgebung (UNBLOCK).** `orig/GMSJ01/sys/main.dol` + `files/mario.MAP` aus
+Upload extrahiert; `sha1sum` main.dol =
+`9f5a8caf56f5356aeac9d3ed28bf8de976a03625`. `ninja baseline`, voller Build und
+`dtk shasum -c config/GMSJ01/build.sha1` → **OK** (nichts unter `orig/` committet).
 
-**Geplante erste Patches (lokal getestet, revertiert bis DOL da).**
+**`decomp-diff.py` (R149-Kandidaten, strikt).**
 
-1. **`TCloset::calcRootMatrix`:** `pad2[4]` + freies `TRotation3f mtx` → Struct
-   `{ char pad[4]; TRotation3f mtx; } local` (R142-Muster), Frame **0x70** halten.
-2. **`initAndRegister`:** `char trash[4];`, `TNameRef* list = search(...);`,
-   `trash[0]=0;` vor `push_back` (analog R146, ohne `joinToGroup`-Body anzufassen).
+1. **`TCloset::calcRootMatrix` (Baseline `pad2` + freies `mtx`).** STATUS
+   nonmatching, **100,0 % fuzzy** — nur Operanden-`~`: Mtx-Basis **0x10** statt
+   **0x14**, `lfs`/`stfs` um **0x2c** statt **0x30**; `mr r31,r3` / `mr r3,r30`
+   stimmen. Struct `{ char pad[4]; TRotation3f mtx; }` nach `getModel()`:
+   Basis **0x14** korrekt, Frame **0x70**, aber **98,4 %** — zwei Opcode-`|`:
+   Retail `mr` vs. Build `addi` für Modellzeiger und `MsMtxSetXYZRPH`-`r3`.
+   **Nicht committiert** (Partial).
+2. **`initAndRegister` (Mid-`trash` + `list` wie R146).** STATUS nonmatching,
+   **99,7 %** — unverändert ggü. Baseline: `addi r31,r3,0x10` vs. `r30` nach
+   `search` (weil `initMapObj()` `r30` für `mMapObjData->unkC` belegt;
+   `joinToGroup` ohne vorgelagerten `initMapObj` nutzt `r31`). **Nicht committiert.**
 
-**Vollmatch, strikt.** keine.
+**Weitere B-Checks (kurz).** `TNerveHino2Pollute::execute` **99,9 %** (Frame
+**0xa0** vs. **0xe8**, fehlende inlined `rand`-/Pollution-Pfade trotz BCK 16/17 im
+Quelltext). `TNerveBathtubKillerExplosion::execute` **100,0 % fuzzy**, STATUS
+nonmatching — ein Operanden-`~` (`addi r3,r1,0x18` vs. **0x1c**).
 
-**Verify.** nicht möglich (DOL fehlt). Erwarteter SHA1 unverändert
-`9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+**Vollmatch, strikt.** keine (keine Quelländerungen in diesem Lauf).
+
+**Verify.** `dtk shasum -c` → `build/GMSJ01/mario.dol: OK`.
 
 ### Nächster Schritt
 
-1. `orig/GMSJ01` bereitstellen (`sys/main.dol` + `files/mario.MAP`) → `ninja baseline`.
-2. Patches (1)–(2) oben anwenden, `decomp-diff.py` auf
-   `mario/MoveBG/MapObjSirena` / `mario/MoveBG/MapObjBase` — nur bei 100 % committen.
-3. Danach `initModel`-Gesamtpaket nur mit Mirror-**0xa50**-Check (`initMirrorModel` objdiff).
-4. Enemy: `Hino2Pollute`, Frame-Shrink-Kandidaten, `BathtubKillerExplosion`.
-5. Defer-Listen unverändert.
+1. `TCloset`: Mtx **0x14** + Retail-`mr`-Homing gleichzeitig (Struct-Pad vs.
+   `getModel`-Scheduling; kein Frame **0x78**).
+2. `initAndRegister`: `list` in **r31** nach `search` trotz `initMapObj` (evtl.
+   Hilfsaufruf / Spill ohne `joinToGroup` zu ändern).
+3. `Hino2Pollute`: Frame **0xe8** + fehlende Inlines rekonstruieren.
+4. `BathtubKillerExplosion`: Stack-Basis **0x1c** für `TVec3::set`.
+5. Defer-Listen / Hands-off unverändert.
