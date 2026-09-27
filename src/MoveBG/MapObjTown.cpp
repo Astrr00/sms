@@ -523,6 +523,10 @@ void TMapObjSwitch::registerObjInfo(THideObjInfo* info)
 
 void TMapObjSwitch::load(JSUMemoryInputStream& stream)
 {
+	s32 r;
+	s32 g;
+	s32 b;
+	char trash[0x10];
 	TMapObjBase::load(stream);
 	stream >> unk140;
 	if (unk140 <= 0)
@@ -530,9 +534,6 @@ void TMapObjSwitch::load(JSUMemoryInputStream& stream)
 	else
 		unk140 *= 10;
 
-	s32 r;
-	s32 g;
-	s32 b;
 	stream >> r;
 	stream >> g;
 	stream >> b;
