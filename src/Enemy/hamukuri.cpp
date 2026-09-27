@@ -1455,6 +1455,8 @@ void TDoroHaneKuri::reset()
 
 void TDoroHaneKuri::attackToMario()
 {
+	char trash[8];
+	trash[0] = 0;
 	if (!gpMarioOriginal->isWearingCap()) {
 		if (SMS_SendMessageToMario(this, HIT_MESSAGE_ATTACK))
 			SMSGetMSound()->startSoundActor(MSD_SE_EN_HANEKURI_ATTACK,
@@ -1467,10 +1469,6 @@ void TDoroHaneKuri::attackToMario()
 			mSpine->pushNerve(&TNerveDoroHaneRise::theNerve());
 			onHaveCap();
 			MtxPtr mtx = mMActor->getModel()->getAnmMtx(unk1AC);
-			// Translation column of the 3x4 joint matrix.
-			// TODO: frame is still 0x48 against retail 0x50. The body matches.
-			// A named bool, model, sound pointer, or nerve pointer does not
-			// add that slot without changing registers.
 			unk200.set(mtx[0][3], mtx[1][3], mtx[2][3]);
 			gpMarioParticleManager->emitAndBindToPosPtr(0xCD, &unk200, 0,
 			                                            nullptr);
