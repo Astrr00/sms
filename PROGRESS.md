@@ -10785,6 +10785,21 @@ DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 3. `initAndRegister`: SMS-B.
 4. Defer-Listen unverändert.
 
+### R156 (`TMapObjBase::throwObjToFront`)
+
+**Vollmatch, strikt.**
+
+- `throwObjToFront`: `char pre[8]`, dann `Mtx mtx`, dann `char trash[8]`;
+  `mMActor`-Zweig `MtxPtr anmMtx`. Frame `-0x90`, `MsMtxSetRotRPH`-Buffer @
+  `0x38` (reines `trash[8]`/`trash[0x10]` allein reichte nicht).
+- `throwObjToFrontFromPoint` (R155) unverändert matching.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+**Nächste MoveBG:** `rotateVecByAxisY` (Retail inlined, kein TRotation3-Stack);
+weitere hoist+trash-Kandidaten in MapObjLib. Skip: touchFruit / appearWithDemo /
+newAndRegisterCoin ohne klaren Hebel.
+
 ### R155 (`TMapObjBase::throwObjToFrontFromPoint`)
 
 **Vollmatch, strikt.**

@@ -106,16 +106,18 @@ void TMapObjBase::throwObjToOverhead(TMapObjBase* param_1, f32 param_2,
 void TMapObjBase::throwObjToFront(TMapObjBase* object, f32 y_offset, f32 speed,
                                   f32 vertical_speed) const
 {
+	char pre[8];
+	Mtx mtx;
+	char trash[8];
 	object->appear();
 	object->mPosition.set(mPosition.x, mPosition.y + y_offset, mPosition.z);
 	if (mMActor) {
-		MtxPtr mtx = getModel()->getAnmMtx(0);
-		object->mVelocity.set(mtx[0][2] * speed,
-		                      mtx[1][2] * speed + vertical_speed,
-		                      mtx[2][2] * speed);
+		MtxPtr anmMtx = getModel()->getAnmMtx(0);
+		object->mVelocity.set(anmMtx[0][2] * speed,
+		                      anmMtx[1][2] * speed + vertical_speed,
+		                      anmMtx[2][2] * speed);
 		object->offLiveFlag(LIVE_FLAG_UNK10);
 	} else {
-		Mtx mtx;
 		MsMtxSetRotRPH(mtx, mRotation.x, mRotation.y, mRotation.z);
 		object->mVelocity.set(mtx[0][2] * speed,
 		                      mtx[1][2] * speed + vertical_speed,
