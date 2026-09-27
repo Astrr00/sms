@@ -158,13 +158,12 @@ void TMapObjGeneral::holding()
 
 void TMapObjGeneral::recovering()
 {
+	char trash[0x28];
 	startSound(9);
 	if (hasModelOrAnimData(6)) {
 		J3DModel* model = getModel();
 		MtxPtr mat      = model->getAnmMtx(0);
 		// Translation Y of the 3x4 joint matrix is [1][3], not [3][1].
-		// TODO: frame is still 0x20 against retail 0x48. The body matches
-		// once this column is used.
 		f32 fVar1 = mat[1][3] - unk144;
 		mDamageHeight += fVar1;
 		calcEntryRadius();

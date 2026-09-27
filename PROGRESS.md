@@ -9833,3 +9833,46 @@ Keine TU auf `Matching` gestellt.
    und Reads `@0x20`/`@0x18` bei Frame `0x50` treffen.
 4. `TObjManager::load` / Demo-`TFlagT` weiter vermeiden.
 5. Vermeidungslisten aus Runde 81 bis 117 bleiben.
+
+### Nach hundertneunzehnter Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 118:
+47,93 % matched code, 1720648 / 3590088 Bytes,
+9206 / 12881 Funktionen.
+Game Code 35,68 %, 1008500 / 2826784 Bytes,
+5241 / 8857 Funktionen.
+
+`TMapObjGeneral::recovering` war bei 99,87 %.
+Der Frame lag bei `0x20` statt retail `0x48` (−`0x28`).
+Der Rumpf nutzte bereits `mat[1][3]` für die Joint-Höhe.
+
+`TMapObjGeneral::recover` / `loadBeforeInit` / `TObjManager::load`
+nicht angefasst.
+
+**Vollmatch, strikt.**
+
+`char trash[0x28]` am Anfang von `recovering`,
+Sound- und Matrix-Logik unverändert.
+
+0 Abweichungen, 276 Bytes, 69 Instruktionen.
+`validate-symbol-order` für `mario/MoveBG/MapObjGeneral`: PASS.
+
+**Zähler.** matched code 47,93 % → 47,94 % (changes_all),
+`recovering` 99,87 % → 100,00 %.
+`MapObjGeneral` matched_code 47,56 % → 50,59 % (TU).
+Game Code unverändert in der Kategorie-Summe
+gegenüber Runde 118 bis Verifikation nach Rebuild.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `recovering` behält `trash[0x28]` am Funktionsanfang und `mat[1][3]`.
+2. `TItem::calc` / `TShine::makeMActors` / `TCoin::appear` / Runden 114–115 unverändert.
+3. `TMapObjGeneral::recover`: Frame `0x50` vs `0x28` plus Operanden — nur mit neuem Layout.
+4. `TShine::loadBeforeInit`: nur Layouts mit `name@0x24`, Reads `@0x20`/`@0x18`, Frame `0x50`.
+5. `TObjManager::load` / Demo-`TFlagT` weiter vermeiden.
+6. Vermeidungslisten aus Runde 81 bis 118 bleiben.
