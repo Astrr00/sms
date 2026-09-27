@@ -565,6 +565,8 @@ DEFINE_NERVE(TNerveBEelTearsWaterHit, TLiveActor)
 
 DEFINE_NERVE(TNerveBEelTearsMarioRecover, TLiveActor)
 {
+	char trash[4];
+	trash[0] = 0;
 	TBEelTears* tears = static_cast<TBEelTears*>(spine->getBody());
 	if (!tears->mRecoverCollision->mRecovering) {
 		JGeometry::TVec3<f32>* marioPos = gpMarioPos;
