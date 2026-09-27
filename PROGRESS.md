@@ -8043,3 +8043,112 @@ Keine TU auf `Matching` gestellt.
     `MapObjGeneral`, `walkerEnemy`, `bossManta`,
     `fireWanwan`, `MapObjHide`, `EventWatcher` und
     `NpcWalkTurn` nicht auf `Matching` stellen.
+
+### Nach sechsundneunzigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 95:
+47,79 % matched code, 1715608 / 3590088 Bytes,
+9189 / 12881 Funktionen.
+Game Code 35,50 %, 1003460 / 2826784 Bytes,
+5224 / 8857 Funktionen.
+Daten 385811 / 640331 Bytes, 60,25 %.
+
+`TMario::catching` vergleicht `mForwardVel`
+mit einem Float.
+Retail lädt 0xcd0, unser Stand lud 0x8e8.
+0x8e8 ist `mDeParams.mClashSpeed`.
+Andere Aufrufer von `mClashSpeed` laden
+weiterhin 0x8e8 und treffen das Retail.
+0xcd0 ist der Wert von
+`mJumpParams.mRotBroadEnableV`.
+Der Sprung danach ist
+`MARIO_STATUS_ROTATE_BROAD_JUMP`.
+
+**Kein neues Vollmatch.**
+
+`catching` benutzt jetzt
+`mJumpParams.mRotBroadEnableV`.
+Der `lfs` trifft 0xcd0.
+Übrig sind fünf Stack-Zeilen.
+Der Frame bleibt 0x28 gegen retail 0x30.
+340 Bytes, 85 Instruktionen, 99,94 %.
+`MarioRun` bleibt `NonMatching`.
+`walkEnd` bleibt bei 0 Abweichungen.
+
+Verworfen: ein benanntes `enableV`
+wird wegoptimiert, der Frame bleibt 0x28.
+`TLiveManager::perform` ohne `char trash[16]`
+schrumpft den Frame auf 0x40,
+die Farbe bleibt bei 0x24 gegen 0x34.
+Der Trash-Block bleibt.
+
+Kein Frame wurde aufgefüllt.
+`isFindMarioFromParam` behält die drei
+`*= param_1`.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher unverändert: 47,79 % matched code,
+1715608 / 3590088 Bytes, 9189 / 12881 Funktionen.
+Game Code 35,50 %, 1003460 / 2826784 Bytes,
+5224 / 8857 Funktionen.
+Daten unverändert: 385811 / 640331 Bytes, 60,25 %.
+Game-Daten unverändert: 306587 / 556995 Bytes, 55,04 %.
+
+Delta Code gegen Runde 95: 0 Funktionen, 0 Bytes.
+Delta Daten: 0 Bytes.
+
+`changes_all`: `catching` 99,93 % auf 99,94 %.
+Unit-Fuzzy `MarioRun` bleibt 99,58 %.
+Keine Regression.
+Symbolordnung `MarioRun` FAIL ist vorbestehend:
+UNUSED `braking__6TMarioFv` fehlt.
+`walkEnd` bleibt 100 %.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `catching` behält `mRotBroadEnableV`.
+   Den Frame 0x28 nicht auf 0x30 polstern.
+   Nicht zurück zu `mClashSpeed`.
+   `MarioRun` nicht auf `Matching` stellen.
+2. `isFindMarioFromParam` behält die drei `*= param_1`.
+   `smallEnemy` nicht auf `Matching` stellen.
+3. `walkEnd` behält `quarter` und `vel`.
+4. `registerEventWatcher` nicht noch einmal über
+   einen benannten `watcher` oder `getChildren()`.
+5. `enableV` in `catching` nicht noch einmal benennen.
+6. `TLiveManager::perform` behält `char trash[16]`.
+   Wegnehmen schrumpft den Frame und
+   rückt die Farbe nicht auf 0x34.
+7. `setUp` behält `u32 entrySize`.
+8. `TRedCoinSwitch::load` nicht über
+   `SMSGetMarDirector()`.
+9. `appearWithDemo`, `isTouchedOneWall`,
+   `joinToGroup` und `createAndKeepData`
+   nicht mit denselben Benennungen wiederholen.
+10. `sleep()` behalten. Frames nicht polstern.
+11. `TMapStaticObj::init` nicht über `setMtx`.
+12. Die sechs Rümpfe aus Runde 91 behalten.
+    `walkBehavior` behält `height`.
+13. Runde 90 und 89 bleiben.
+    `rotating` behält den `u16`-Cast.
+    Schadensradius 65 bleibt.
+    `changePlayerStatus` behält das Minimum aus
+    `mIntendedMag` und 8.
+    `thinkDirty` bleibt bei `- 200.0f`.
+    Die drei `makeRootMtxRot*` bleiben bei
+    `0.017453294f`.
+14. Runde 84 bleibt: `p1 - p2 + 1`,
+    `150 * analog * 256`, `hitWater` mit `30.0f`.
+    `isDemo` bleibt die Oder-Form mit `stateIs3Or4`.
+15. Vermeidungslisten aus Runde 81 bis 95 bleiben.
+    `MapEventMare`, `MapStaticObject`, `MarioRun`,
+    `smallEnemy`, `bosspakkun`, `hamukuri`, `poihana`,
+    `MapObjGeneral`, `walkerEnemy`, `bossManta`,
+    `fireWanwan`, `MapObjHide`, `EventWatcher` und
+    `NpcWalkTurn` nicht auf `Matching` stellen.
