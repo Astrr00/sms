@@ -1464,10 +1464,12 @@ DEFINE_NERVE(TNerveBPWait, TLiveActor)
 
 DEFINE_NERVE(TNerveBPCannon, TLiveActor)
 {
+	// Named: inlined into the if, the frame stays 0x30 instead of 0x38.
+	int time          = spine->getTime();
 	TBossPakkun* boss = static_cast<TBossPakkun*>(spine->getBody());
 	MActor* actor     = boss->mMActor;
 
-	if (spine->getTime() == 0)
+	if (time == 0)
 		boss->changeBck(21);
 
 	if (actor->curAnmEndsNext(ANM_TYPE_BCK, nullptr)) {
@@ -1689,9 +1691,11 @@ DEFINE_NERVE(TNerveBPTumbleOut, TLiveActor)
 
 DEFINE_NERVE(TNerveBPGetUp, TLiveActor)
 {
+	// Named: inlined into the if, the frame stays 0x20 instead of 0x28.
+	int time          = spine->getTime();
 	TBossPakkun* boss = static_cast<TBossPakkun*>(spine->getBody());
 	MActor* actor     = boss->mMActor;
-	if (spine->getTime() == 0) {
+	if (time == 0) {
 		boss->changeBck(14);
 		gpCameraShake->startShake(static_cast<EnumCamShakeMode>(0x10), 1.0f);
 		boss->rumblePad(0, boss->mPosition);
@@ -1707,9 +1711,12 @@ DEFINE_NERVE(TNerveBPGetUp, TLiveActor)
 
 DEFINE_NERVE(TNerveBPSwing, TLiveActor)
 {
+	// Named once: the second getTime() is reloaded after changeBck.
+	// Folding both checks onto one local drops that reload.
+	int time          = spine->getTime();
 	TBossPakkun* boss = static_cast<TBossPakkun*>(spine->getBody());
 	MActor* actor     = boss->mMActor;
-	if (spine->getTime() == 0)
+	if (time == 0)
 		boss->changeBck(15);
 	if (spine->getTime() == 0) {
 		gpMarioParticleManager->emitAndBindToSRTMtxPtr(
