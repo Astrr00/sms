@@ -508,6 +508,9 @@ void TItemSlotDrum::calcRootMatrix()
 
 u32 TItemSlotDrum::touchWater(THitActor* water)
 {
+	char trash[4];
+	trash[0] = 0;
+
 	if (unk194 || !unk1A2)
 		return 1;
 

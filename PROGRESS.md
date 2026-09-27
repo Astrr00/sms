@@ -10920,6 +10920,25 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R167 (`TItemSlotDrum::touchWater`)
+
+**Vollmatch, strikt.**
+
+- `char trash[4]; trash[0] = 0;` am Funktionskopf → Frame `-0x88` wie Retail
+  (`-0x80` ohne Pad).
+- Frühabbruch `if (unk194 || !unk1A2) return 1;` (ein Prädikat) — getrennte
+  `if`s erzeugen invertierte `beq`-Verzweigung (+3 Marker).
+- `TMsRange<s32>` / `TMsRange<f32>` weiter vollständig inlined wie Retail.
+
+0 Abweichungen, 400 Bytes, 100 Instruktionen.
+`decomp-diff -u mario/MoveBG/MapObjSirena -d TItemSlotDrum::touchWater`: 100 %.
+
+R166 `TMapObjManager::load`, R165 `checkWallCollision`, R164
+`TMapObjSwitch::control`, R163/R162/R160 unverändert strikt.
+`TItemSlotDrum::calcRootMatrix` (Mirror @ `0xa50`) unverändert strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R164 (`TMapObjSwitch::control`)
 
 **Vollmatch, strikt.**
