@@ -10800,6 +10800,29 @@ DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 weitere hoist+trash-Kandidaten in MapObjLib. Skip: touchFruit / appearWithDemo /
 newAndRegisterCoin ohne klaren Hebel.
 
+### R157 (Round 71 Agent — kein Vollmatch)
+
+**Kein neuer strikter Vollmatch** (Scope A MoveBG).
+
+- `TMapObjTree::initMapObj`: `char buffer[64]` am Funktionskopf, danach
+  `char trash[4]; trash[0]=0;` → Frame `-0x90`, `snprintf`-Buffer @ `0x2c`
+  wie Retail; verbleibend **3** Operand-`~` (`mLeafNum` in `r26` statt `r25`
+  für `new[]` / `__construct_new_array`).
+- `TMapObjGrassManager::initDrawNear`: `Mtx` + `trash[0x10]` nach `Mtx` +
+  hoisted `vec.set()` hält Frame `0x98` und `viewItm` @ `0x44`; **4** `~` beim
+  `GXSetChanMatColor`-Spill (`0x34` vs `0x24`) — nicht committed.
+- `TMapObjSwitch::receiveMessage` / `TRoulette::initMapObj` / `initAndRegister`:
+  Iterator- bzw. `TFlagT`-Spills unverändert (Entry-/Mid-Trash reicht nicht).
+
+R156 `throwObjToFront`, R155 `throwObjToFrontFromPoint`, R154 `touchWater` unverändert.
+
+`validate-symbol-order` `mario/MoveBG/MapObjTree`: PASS.
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+**Nächste MoveBG:** `initMapObj` `r25`-Homing (Registerdruck `new`/`r25`-Collision);
+`initDrawNear` GX-Spill ohne Frame-Wachstum; `rotateVecByAxisY` nur bei inlined
+Retail-Pfad. Skip: touchFruit / appearWithDemo / newAndRegisterCoin.
+
 ### R155 (`TMapObjBase::throwObjToFrontFromPoint`)
 
 **Vollmatch, strikt.**
