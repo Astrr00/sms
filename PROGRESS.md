@@ -7385,3 +7385,89 @@ SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
    jagen. `startDisappearTimer` nicht wieder als
    gefaltete 525 oder als `targetY += 60` schreiben.
    `MarioRun` nicht auf `Matching` stellen.
+
+### Nach neunundachtzigster Iterationsrunde (kein Vollmatch)
+
+**Beobachtung, vorher.** Stand Runde 88:
+47,75 % matched code, 1714264 / 3590088 Bytes,
+9185 / 12881 Funktionen.
+Game Code 35,45 %, 1002116 / 2826784 Bytes,
+5220 / 8857 Funktionen.
+Daten 385755 / 640331 Bytes, 60,24 %.
+
+**Kein neues Vollmatch.** Drei belegte Konstanten,
+der Code-Zähler bleibt stehen.
+
+`TNerveBPSwallow::execute`: der zweite Emitter
+bekommt `(u8*)boss + 1`, wie die anderen
+Pakkun-Wasser-Partikel.
+Die `addi`-Immediate stimmt.
+Der Frame bleibt 0x50 gegen 0x60, ohne inneren
+Stack-Zugriff. 99,92 % auf 99,93 %.
+
+`TDoroHaneKuri::attackToMario`: die Joint-Position
+ist die Translationsspalte `mtx[0][3]`, `mtx[1][3]`,
+`mtx[2][3]`.
+Der Rumpf stimmt danach.
+Der Frame bleibt 0x48 gegen 0x50.
+Ein benanntes Bool, ein Model-Zeiger, ein Sound-Zeiger
+und ein Nerve-Zeiger verschieben den Frame nicht,
+ohne Register zu tauschen.
+99,93 % auf 99,95 %.
+
+`TBaseNPC::isCanWalk`: `CLBSquared` bekommt `10.0f`.
+`2.5625f` wählt ein anderes Pool-Float.
+`execWalk` 89,42 % auf 89,44 %.
+Die `sdata2` der TU geht von 0 % auf 100 %
+matched data, 56 Bytes.
+`set(dx, 0, dz)` statt der Subtraktion fiel auf
+83,5 % und bleibt draussen.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,75 % matched code,
+1714264 / 3590088 Bytes, 9185 / 12881 Funktionen.
+Game Code 35,45 %, 1002116 / 2826784 Bytes,
+5220 / 8857 Funktionen.
+Daten 385811 / 640331 Bytes, 60,25 %.
+Game-Daten 306587 / 556995 Bytes, 55,04 %.
+
+Delta Code gegen Runde 88: keine Funktion, 0 Bytes.
+Delta Daten: +56 Bytes, nur `NpcWalkTurn`.
+
+`changes_all` listet keine Regression.
+`bosspakkun` Symbolordnung PASS, alte UNUSED-Grössen.
+`hamukuri` und `NpcWalkTurn` bleiben an den alten
+Fehlern rot (`onHaveCap`-Linkage, fehlendes `set<f>`).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `rotating` behält den `u16`-Cast.
+2. `TNerveBPSwallow` behält `(u8*)boss + 1`.
+   Den 16-Byte-Frame nicht mit einem einzelnen `int`
+   auffüllen.
+3. `attackToMario` behält die Translationsspalte.
+   Den 8-Byte-Frame nicht mit `trash` schliessen.
+4. `isCanWalk` behält `CLBSquared(10.0f)`.
+   Die `set(dx, 0, dz)`-Form nicht wiederholen.
+5. `mSLDamageRadius` bleibt 65.
+   `changePlayerStatus` behält das Minimum aus
+   `mIntendedMag` und 8.
+6. `thinkDirty` bleibt bei `- 200.0f`.
+   Die drei `makeRootMtxRot*` bleiben bei
+   `0.017453294f`.
+7. Runde 84 bleibt: `p1 - p2 + 1`,
+   `150 * analog * 256`, `hitWater` mit `30.0f`.
+8. `isDemo` bleibt die Oder-Form mit `stateIs3Or4`.
+9. Vermeidungslisten aus Runde 81 und 82 bleiben.
+   `stampModel`, `getRandVol`, `setQuat` und
+   `TRoulette::moveObject` nicht wegen Registertausch
+   jagen. `startDisappearTimer` nicht wieder als
+   gefaltete 525 oder als `targetY += 60` schreiben.
+   `MarioRun`, `bosspakkun`, `hamukuri` und
+   `NpcWalkTurn` nicht auf `Matching` stellen.
