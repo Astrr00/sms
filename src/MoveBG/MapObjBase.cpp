@@ -121,8 +121,7 @@ void TMapObjBase::removeMapCollision()
 
 void TMapObjBase::setUpCurrentMapCollision()
 {
-	TMapCollisionManager* colman = mMapCollisionManager;
-	if (!colman)
+	if (!mMapCollisionManager)
 		return;
 
 	if (checkMapObjFlag(MAP_OBJ_FLAG_UNK8)) {
@@ -130,7 +129,7 @@ void TMapObjBase::setUpCurrentMapCollision()
 	} else {
 		JGeometry::TVec3<f32> pos(mPosition.x, mPosition.y - mYOffset,
 		                          mPosition.z);
-		colman->setUpUnk8TRS(pos, mRotation, mScaling);
+		mMapCollisionManager->setUpUnk8TRS(pos, mRotation, mScaling);
 	}
 }
 
