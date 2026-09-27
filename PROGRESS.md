@@ -11028,6 +11028,38 @@ vertieft (große Frame-Deltas, kein schneller 100 %-Pfad in diesem Slice).
 **Verify.** `ninja baseline` / `changes_all` ohne Code-Delta; `dtk shasum -c` →
 OK (Tip **`f48b5cc7`**, Quellbaum nur PROGRESS).
 
+### R162 (Aufgabe B; `initAndRegister` only; keine Vollmatches)
+
+Dedizierte Pass nur **`TMapObjBase::initAndRegister`**. Retail hat **kein**
+`trash[0]`-Store zwischen `search` und `addi r31,r3,0x10` (anders als R146
+`joinToGroup`).
+
+**Zwei inkompatible Teil-Lösungen (MWCC):**
+
+1. **`char trash[8]` + inline `search`/`push_back` (ohne `list`, ohne
+   `trash[0]`-Write):** **99,8 %** — `addi r31,r3,0x10` OK, `insert`-Args
+   **0x4c/0x48/0x4c** OK; Iterator-/Copy-Temps **−4** (**0x3c** vs. **0x40**,
+   **0x54** vs. **0x58**).
+2. **`char trash[8]` + `JDrama::TNameRef* list` + `trash[0]=0` nach `search`:**
+   **99,7 %** — Iterator **0x40** und `insert`-Offsets retail-korrekt, aber
+   **`addi r30,r3,0x10`** statt **`r31`** (Suchpfad inlined wie Retail
+   `lwz r31,4(r4)` während `this` noch als live gilt → `list` landet in **r30**).
+
+Jeder **`trash[0]`/`trash[4]`/`trash[7]`-Write** vor `push_back` verschiebt
+Iterator **+4**, bricht aber gleichzeitig die finale `insert`-Triple (**+4** auf
+**0x50/0x4c**). `THitActor* param_2=this`, `group`-Local, `TIdxGroupObj::add`,
+`getChildren().push_back`, `volatile`/`align[4]`: keine Kombination mit strikt
+100 %.
+
+**Nächster menschlicher Hebel:** Original-Quelle vermutlich ohne benanntes
+`list`; Padding nur im Iterator-Cluster (+4) ohne Store, der `insert`-Tail
+mitverschiebt — evtl. UNUSED-Helfer / explizite `iterator`-Locals aus MAP.
+
+**Vollmatch, strikt.** keine. Quellbaum unverändert ggü. `da040dc0`.
+
+**Verify.** `ninja baseline` / `changes_all` ohne Code-Delta; `dtk shasum -c` →
+OK.
+
 ### R157 (Aufgabe B; Sweep, keine neuen Vollmatches)
 
 **`TNerveHamuKuriWallDie`.** `char trash[8];` am Eingang → Frame **0x80**;
