@@ -259,6 +259,8 @@ void TSlotDrum::initMapObj()
 
 void TSlotDrum::initNeonMatColor()
 {
+	char trash[4];
+	trash[0] = 0;
 	const char* matNames[3] = { "_NEON_A", "_NEON_B", "_NEON_C" };
 	for (int i = 0; i < 3; i++) {
 		unk170[i].r = 120;
@@ -993,18 +995,17 @@ void TCloset::moveObject()
 void TCloset::calcRootMatrix()
 {
 	char trash[4];
+	trash[0] = 0;
+	char pad2[4];
 
 	gpCurObject = this;
-	struct {
-		char pad[4];
-		TRotation3f mtx;
-	} local;
 	J3DModel* model = getModel();
-	MsMtxSetXYZRPH(local.mtx, mPosition.x, mPosition.y + unk14C, mPosition.z,
+	TRotation3f mtx;
+	MsMtxSetXYZRPH(mtx, mPosition.x, mPosition.y + unk14C, mPosition.z,
 	               mRotation.x, mRotation.y, mRotation.z);
-	model->setBaseTRMtx(local.mtx);
+	model->setBaseTRMtx(mtx);
 	model->setBaseScale(mScaling);
-	local.mtx.ref(1, 3) += unk14C;
+	mtx.ref(1, 3) += unk14C;
 	if (unk16C != 0 && mMActor->checkCurAnm("closetopen", ANM_TYPE_BCK)
 	    && mMActor->curAnmEndsNext(ANM_TYPE_BCK, nullptr))
 		mMapCollisionWarp->remove();
