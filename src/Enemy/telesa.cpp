@@ -1269,10 +1269,17 @@ void TKageMarioModoki::init(TLiveManager* manager)
 DEFINE_NERVE(TNerveKageMarioModokiWait, TLiveActor)
 {
 	TKageMarioModoki* self = (TKageMarioModoki*)spine->getBody();
+	char trash[8];
+	trash[0] = 0;
+	char trashAfterSelf[4];
+	trashAfterSelf[0] = 0;
 
 	if (spine->getTime() == 0) {
 		self->getMActor()->setBck("ma_wait");
-		self->setGoalPath(TPathNode(SMS_GetMarioPos()));
+		TPathNode pathNode(SMS_GetMarioPos());
+		char trashPath[8];
+		trashPath[0] = 0;
+		self->setGoalPath(pathNode);
 	}
 
 	if (!self->checkLiveFlag(LIVE_FLAG_DEAD) && self->isFindMario(1.0f)) {
