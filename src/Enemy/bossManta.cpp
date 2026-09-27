@@ -1282,7 +1282,9 @@ void TBossMantaManager::createEnemies(int num)
 		num = getCapacity() - getObjNum();
 
 	if (unk38 != nullptr) {
-		u8 limit = unk38->mSLActiveEnemyNum.get();
+		// Retail loads mSLInstanceNum (value at 0x90), not the active count.
+		// TODO: frame is still 0xa8 against retail 0xb0. Do not pad it.
+		u8 limit = unk38->mSLInstanceNum.get();
 		if (num + getObjNum() > limit)
 			num = limit - getObjNum();
 	}

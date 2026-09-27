@@ -460,7 +460,9 @@ void TFireWanwanTailHit::behaveTaken(THitActor* param_1)
 
 	mCurTailLength  = unkA4->getLength();
 	mPrevTailLength = mCurTailLength;
-	moveRequest(mPosition);
+	// Retail passes the holder's position. r31 is the sender.
+	// TODO: receiveMessage's frame is still 0xa0 against retail 0xb0.
+	moveRequest(param_1->mPosition);
 }
 
 void TFireWanwanTailHit::behaveApart()

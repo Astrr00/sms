@@ -1644,9 +1644,12 @@ DEFINE_NERVE(TNerveBPTumble, TLiveActor)
 		boss->mWeakPoint = TBossPakkun::WEAK_POINT_NAVEL;
 	}
 
+	// Distinct bind key, eight bytes past the boss. Same scheme as the
+	// other Pakkun emitters.
+	// TODO: frame is still 0x40 against retail 0x50. Do not pad it.
 	gpMarioParticleManager->emitAndBindToMtxPtr(
 	    SCENE_BOSSPAKKUN_JPA_MS_BOPA_JITA, boss->getModel()->getAnmMtx(0), 1,
-	    boss);
+	    (u8*)boss + 8);
 	gpCameraShake->keepShake(static_cast<EnumCamShakeMode>(0x11), 1.0f);
 	if ((spine->getTime() / 60) % 2 != 0)
 		boss->rumblePad(0, boss->mPosition);

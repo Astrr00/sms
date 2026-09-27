@@ -700,10 +700,12 @@ void TWoodBox::kill()
 	SMSGetMSound()->startSoundActor(MSD_SE_IT_BARREL_CRASH, &mPosition, 0,
 	                                nullptr, 0, 4);
 
-	fabricatedGroundKillCheck(50.0f, 50.0f);
+	// Retail checks (-50,-50), (50,-50), (-50,50), then (50,50).
+	// TODO: frame is still 0x58 against retail 0xf0. Do not pad it.
+	fabricatedGroundKillCheck(-50.0f, -50.0f);
 	fabricatedGroundKillCheck(50.0f, -50.0f);
 	fabricatedGroundKillCheck(-50.0f, 50.0f);
-	fabricatedGroundKillCheck(-50.0f, -50.0f);
+	fabricatedGroundKillCheck(50.0f, 50.0f);
 }
 
 void TWoodBox::loadAfter()
