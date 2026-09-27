@@ -230,11 +230,11 @@ void TMapObjGeneral::appearing()
 	mScaling.x += mNormalAppearingScaleUp;
 	mScaling.y += mNormalAppearingScaleUp;
 	mScaling.z += mNormalAppearingScaleUp;
-	if (mInitialScaling.x > mScaling.x)
+	if (mScaling.x < mInitialScaling.x)
 		return;
 
 	{
-		f32 clampX = mInitialScaling.x;
+		f32 clampX = *(volatile f32*)&mInitialScaling.x;
 		mScaling.x = clampX;
 	}
 	mScaling.y = mInitialScaling.y;
