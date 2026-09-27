@@ -10212,10 +10212,45 @@ SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
 
 Keine TU auf `Matching` gestellt.
 
+### Nach hundertachtundzwanzigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 127:
+48,02 % matched code, 1723804 / 3590088 Bytes,
+9214 / 12881 Funktionen.
+Game Code 35,80 %, 1011656 / 2826784 Bytes,
+5249 / 8857 Funktionen.
+
+Partielle Versuche (revertiert): `TNerveHino2Burst::execute`
+(inline `emitWaterParticle` + `trash[0x24]` — Frame `0x90` OK, TVec
+@ `0x58` vs `0x78`), `TNerveHino2Pollute` (`trash[0x44]` — Operanden,
+kein Frame-only), `TNerveBathtubKillerExplosion` (`trash[4]` im
+`time==0`-Block — Frame-Regression `0x30`→`0x38`).
+
+**Vollmatch, strikt.**
+
+`TNerveKumokunFreeze::execute`: `char trash[8]; trash[0] = 0;` am
+Nerve-Anfang für Retail-Frame `0x50` (vorher `0x40`).
+
+0 Abweichungen, 624 Bytes, 156 Instruktionen.
+`validate-symbol-order` `mario/Enemy/Kumokun`: PASS (UNUSED-Size-Warnungen
+unverändert).
+
+**Zähler.** matched code 48,02 % → 48,03 %,
+1723804 → 1724428 Bytes (+624),
+9214 → 9215 Funktionen (+1).
+Game Code 35,80 % → 35,82 %,
+1011656 → 1012280 Bytes (+624),
+5249 → 5250 Funktionen (+1).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
 ### Nächster Schritt
 
-1. Runden 114–119 / 121–126 unverändert.
+1. Runden 114–119 / 121–127 unverändert.
 2. `initAnmSound`: NPC-Pfad / `MAnmSoundNPC`-Inline vs Retail-`0x2c`-Spill.
-3. Weitere `TNerve*`-Frames (`TNerveHino2Burst` Slot+Frame, `Hino2Squat`-Muster).
+3. `TNerveHino2Burst`: inline Wasser-Emit + Slot @ `0x78` (nicht nur Frame).
 4. `considerRotateStart` / `turnEnd` / `turnning`: Slot+Frame (inlining).
-5. Vermeidungslisten aus Runde 81 bis 126 bleiben.
+5. Vermeidungslisten aus Runde 81 bis 127 bleiben.
