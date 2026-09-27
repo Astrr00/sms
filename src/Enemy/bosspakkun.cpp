@@ -1596,8 +1596,10 @@ DEFINE_NERVE(TNerveBPSwallow, TLiveActor)
 	MtxPtr jointMtx = boss->getModel()->getAnmMtx(18);
 	gpMarioParticleManager->emitAndBindToMtxPtr(
 	    SCENE_BOSSPAKKUN_JPA_MS_BOPA_WATHIT, jointMtx, 1, boss);
+	// Distinct bind key. The water-hit variant is keyed one byte past the boss.
+	// TODO: frame is still 0x50 against retail 0x60. No interior stack access.
 	gpMarioParticleManager->emitAndBindToMtxPtr(
-	    SCENE_BOSSPAKKUN_JPA_MS_BOPA_WATHIT_W, jointMtx, 1, boss);
+	    SCENE_BOSSPAKKUN_JPA_MS_BOPA_WATHIT_W, jointMtx, 1, (u8*)boss + 1);
 
 	if (boss->unk170 != 0) {
 		boss->changeBck(26);
