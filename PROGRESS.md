@@ -10774,11 +10774,38 @@ Kein striktes Byte-Match ohne Retail-`.o` committet.
 **Verify (Session).** nur Quell-/PROGRESS-Review; DOL-SHA1
 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` **nicht** nachgemessen.
 
+### R149 (Partner-A-Prioritäten; Cloud, 0 Vollmatches)
+
+**Klarstellung Aufgabe B (Partner SMS).** Priorität laut PROGRESS (ohne A-Matches
+zu regressieren): (1) `TCloset::calcRootMatrix` Mtx-Basis **0x14** ohne Frame
+**0x78**; (2) `initAndRegister` Mid-`trash` + `list` nach `search` wie
+`joinToGroup` (R146); (3) `initModel` nur als Gesamtpaket ohne Mirror-**0xa50**-
+Verschiebung; (4) `Hino2Pollute`; (5) Frame-Shrink
+`thinkSituation`/`soundMovement`/`changeScene`; (6) `BathtubKillerExplosion`.
+Hands-off: `initMirrorModel` @ **0xa50**, `drawLogic`, `joinToGroup`, `getDistance`,
+`TRoulette::moveObject`, `receiveMessage`, `initNeonMatColor`, weitere A-Locks.
+
+**Umgebung.** `orig/GMSJ01/sys/main.dol` weiterhin fehlend — `dtk split` /
+`decomp-diff.py` / `dtk shasum -c` nicht ausführbar. Kein Vollmatch ohne
+Retail-`.o` committet (Regel: Partials revertieren).
+
+**Geplante erste Patches (lokal getestet, revertiert bis DOL da).**
+
+1. **`TCloset::calcRootMatrix`:** `pad2[4]` + freies `TRotation3f mtx` → Struct
+   `{ char pad[4]; TRotation3f mtx; } local` (R142-Muster), Frame **0x70** halten.
+2. **`initAndRegister`:** `char trash[4];`, `TNameRef* list = search(...);`,
+   `trash[0]=0;` vor `push_back` (analog R146, ohne `joinToGroup`-Body anzufassen).
+
+**Vollmatch, strikt.** keine.
+
+**Verify.** nicht möglich (DOL fehlt). Erwarteter SHA1 unverändert
+`9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
 ### Nächster Schritt
 
-1. `orig/GMSJ01` bereitstellen (mindestens `sys/main.dol` + `files/mario.MAP`), dann
-   `ninja baseline` → B-Kandidat 1–3 mit `decomp-diff.py` / ggf. `trash`-Brute.
-2. Partner A: `initAndRegister` Mid-Trash (~99,7 %, `r31`/`r30` nach `search`).
-3. `TRoulette::initMapObj`: Mid-Trash nach `new`/`search` (nicht Entry allein).
-4. `TCloset::calcRootMatrix` / `partsRollCallback`: nur bei klarem +4‑B-Hebel.
+1. `orig/GMSJ01` bereitstellen (`sys/main.dol` + `files/mario.MAP`) → `ninja baseline`.
+2. Patches (1)–(2) oben anwenden, `decomp-diff.py` auf
+   `mario/MoveBG/MapObjSirena` / `mario/MoveBG/MapObjBase` — nur bei 100 % committen.
+3. Danach `initModel`-Gesamtpaket nur mit Mirror-**0xa50**-Check (`initMirrorModel` objdiff).
+4. Enemy: `Hino2Pollute`, Frame-Shrink-Kandidaten, `BathtubKillerExplosion`.
 5. Defer-Listen unverändert.
