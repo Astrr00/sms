@@ -2056,10 +2056,12 @@ DEFINE_NERVE(TNerveBPWaitL, TLiveActor)
 
 DEFINE_NERVE(TNerveBPCannonL, TLiveActor)
 {
+	// Named: inlined into the if, the frame stays 0x30 instead of 0x38.
+	int time          = spine->getTime();
 	TBossPakkun* boss = static_cast<TBossPakkun*>(spine->getBody());
 	MActor* actor     = boss->mMActor;
 
-	if (spine->getTime() == 0)
+	if (time == 0)
 		actor->setBck("bosspaku_pollut_start");
 
 	if (actor->curAnmEndsNext(ANM_TYPE_BCK, nullptr)) {

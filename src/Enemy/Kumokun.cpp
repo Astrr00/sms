@@ -1081,8 +1081,10 @@ DEFINE_NERVE(TNerveKumokunWalk, TLiveActor)
 
 DEFINE_NERVE(TNerveKumokunPostWalk, TLiveActor)
 {
+	// Named: inlined into the if, the frame stays 0x40 instead of 0x48.
+	int time       = spine->getTime();
 	TKumokun* self = (TKumokun*)spine->getBody();
-	if (spine->getTime() == 0)
+	if (time == 0)
 		self->changeBck("kumo_run1_end");
 
 	if (self->checkCurAnmEnd(0)) {
@@ -1169,8 +1171,10 @@ DEFINE_NERVE(TNerveKumokunFreeze, TLiveActor)
 
 DEFINE_NERVE(TNerveKumokunPostFreeze, TLiveActor)
 {
+	// Named: inlined into the if, the frame stays 0x40 instead of 0x48.
+	int time       = spine->getTime();
 	TKumokun* self = (TKumokun*)spine->getBody();
-	if (spine->getTime() == 0)
+	if (time == 0)
 		self->changeBck("kumo_hit_end");
 
 	if (self->checkCurAnmEnd(0)) {
