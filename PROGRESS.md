@@ -10924,6 +10924,45 @@ Kein weiterer Scan (Cap / Stop).
 
 **Vollmatch, strikt.** keine. Quellbaum = Tip **`d39c097d`**.
 
+**R159 Fortsetzung (Scanner + Cap 8; keine Vollmatches).**
+
+`objdiff`-Scan (Enemy `TNerve*::execute` + `TMario::*`, Skip-Liste): **18**
+Symbole mit Retail-Frame größer als unser Build um **4 / 8 / 16**; davon **5**
+nur Operanden-`~` (kein `|`, `<`, `>`): `hangonCheck` Δ8, `soundTorocco` Δ8
+(skip `torocco`), `isTakeSituation` / `slipFalling` / `NameKuriJumpAttack` Δ16.
+
+Zusätzlich **≤12** Diff-Zeilen bei ≥99,9 %: `considerTake` (5× `~`, Frame
+**0x30** vs. **0x28**), `thinkSituation` (Frame **0xc8** vs. **0x70** — kein
+Trash-Pad).
+
+**Probes (alle revertiert, kein striktes Match):**
+
+1. **`TNerveBPHover`** — `char trash[0x10]` Eingang: Frame **0xa8** OK;
+   `TPathNode goal`-Spill weiter **−4** (**0x68–0x74** vs. **0x6c–0x78**).
+   `trashPath[8]` / `pathPad[4]` im `if` oder nach `boss`: Frame **0xb0**.
+2. **`TMario::considerTake`** — `trash[0x18]`→`0x20` / `0xc` / `trash[8]`:
+   MWCC-Frame springt **0x28** / **0x30** / **0x38** nicht linear; kein
+   Vollmatch.
+3. **`TMario::isTakeSituation`** — `trash[0x10]` Eingang: Frame oft **0x60**,
+   `length()`-`TVec3` weiter **+0xc**; `delta`+`trashVec[8]`: CFG/`|`-Diff.
+4. **`TMario::hangonCheck`** — `trash[8]`: Frame **0x60** OK, `fsubs`/`lfs`-
+   Register-Umbenennung (`|`-frei aber kein Pad-Thema).
+5. **`TMario::slideProcess`** — `trash[0x10]`: Frame **0x90** vs. **0x88**
+   (Overshoot).
+6. **`TMario::jumpCatch`** — `trash[8]`: strukturelles `|` (`mr` vs. `li`).
+7. **`TNerveNameKuriJumpAttack` / `slipFalling`** — `trash[0x10]` Eingang: kein
+   Match (viele `~`).
+8. **`TNerveBPTakeOff`** — `goal.y` ohne `TVec3 goal`: Frame kleiner, Vec-Spill
+   weg, neue `|`-Cluster.
+
+Kurz: **`TNerveSmallEnemyFreeze`** — `freezeTime` inline entfernt: Frame/CFG
+kaputt (**64 %**).
+
+**Vollmatch, strikt.** keine.
+
+**Verify.** `ninja baseline` / `changes_all` ohne Code-Delta; `dtk shasum -c` →
+OK (Tip **`679300d4`**, Quellbaum unverändert).
+
 ### R157 (Aufgabe B; Sweep, keine neuen Vollmatches)
 
 **`TNerveHamuKuriWallDie`.** `char trash[8];` am Eingang → Frame **0x80**;
