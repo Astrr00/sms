@@ -10842,6 +10842,21 @@ nicht davor — sonst `addi r4,r1,0x10` statt **0x20**). Frame **0x30**,
 Locals bleiben **+8** versetzt. `TNerveDoroHaneHitWater`: Retail-Frame kleiner
 als unser Build — kein reines Trash-Pad.
 
+### R155 (Aufgabe B; Sweep, keine neuen Vollmatches)
+
+**BathtubKiller death.** `TNerveBathtubKillerExplosion` / `Break`: Frame **0x30**
+passt; inlined `setDeadBathtubKillerAnm` — Velocity-Temp **0x18** vs. **0x1c**
+(four `~`). `trash[4]` vor `mVelocity`-Zuweisung (mit/ohne Write), `zeroVel`+
+`trash`, Komponenten-Zuweisung, `#pragma dont_inline` auf `setDeadBathtubKillerAnm`:
+kein striktes Match (dont_inline verschlechtert Explosion stark).
+
+**Weitere Probes (kurz).** `TNerveMantaAppearDemo`, `TNerveWalkerEscape`,
+`TNerveTamaNokoSink`, `TNerveMameGessoJitabata`, `TNerveHamuKuriGoForSearchActor`:
+Frame-/Local-Lücken **>8 B** — nicht weiter verfolgt. `TMario::warpRequest`:
+`trash[0x10]` am Eingang wirkte nicht (Pad offenbar wegoptimiert).
+
+**Unverändert WIP.** `TNervePoihanaThrow`, `TNerveHamuKuriBoundFreeze` (siehe R154).
+
 ### R154 (Aufgabe B; 1 Vollmatch)
 
 **`TNerveKageMarioModokiWait::execute` (telesa).** `char trash[8];` +
