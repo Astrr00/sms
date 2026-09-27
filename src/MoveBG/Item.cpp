@@ -1033,6 +1033,9 @@ void TEggYoshi::startFruit()
 
 BOOL TEggYoshi::receiveMessage(THitActor* sender, u32 message)
 {
+	char trash[4];
+	trash[0] = 0;
+
 	if (message == HIT_MESSAGE_TAKE) {
 		hold((TTakeActor*)sender);
 		return TRUE;
@@ -1046,7 +1049,11 @@ BOOL TEggYoshi::receiveMessage(THitActor* sender, u32 message)
 	}
 
 	if (message == HIT_MESSAGE_UNK10) {
+		char unk10Trash[4];
+		unk10Trash[0] = 0;
 		JGeometry::TVec3<f32> v = mVelocity;
+		char midTrash[4];
+		midTrash[0] = 0;
 		makeObjAppeared();
 		mVelocity.y = v.y;
 		offLiveFlag(LIVE_FLAG_UNK10);

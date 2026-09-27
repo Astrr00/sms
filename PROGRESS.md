@@ -10756,3 +10756,27 @@ DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 2. `TRoulette::initMapObj`: Mid-Trash nach `new`/`search` (nicht Entry allein).
 3. `TCloset::calcRootMatrix` / `partsRollCallback`: nur bei klarem +4‑B-Hebel.
 4. Defer-Listen unverändert.
+
+### R149 (`TEggYoshi::receiveMessage`)
+
+**Vollmatch, strikt.**
+
+- `TEggYoshi::receiveMessage`: Entry-`char trash[4]; trash[0]=0;`, im
+  `HIT_MESSAGE_UNK10`-Zweig `unk10Trash[4]` vor `TVec3 v = mVelocity` und
+  `midTrash[4]` nach dem Copy vor `makeObjAppeared()` → Frame `-0x38`,
+  Velocity-Spills `0x1c`/`0x20`/`0x24`, `lfs` von `0x20` (**match**).
+
+0 Abweichungen, 620 Bytes, 155 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/Item`: PASS.
+
+R147 `TMapObjSwitch::receiveMessage`, R146 `joinToGroup`, R145 `drawLogic`, R138
+`initMirrorModel` unverändert @ 100 %.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### Nächster Schritt (A)
+
+1. `TEggYoshi::control` / `TCoin::perform` / `TNozzleBox::load`: Slot+Frame.
+2. `TRoulette::initMapObj`: Iterator-Spills `+4` B (Mid-Trash nach `search`).
+3. `initAndRegister`: SMS-B (insert-Spills / r31 vs r30).
+4. Defer-Listen unverändert.
