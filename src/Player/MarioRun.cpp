@@ -806,6 +806,8 @@ BOOL TMario::rotating()
 
 BOOL TMario::turnning()
 {
+	char trash[4];
+	trash[0] = 0;
 	if (isThrowStart())
 		return 1;
 
