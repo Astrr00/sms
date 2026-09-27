@@ -10840,6 +10840,29 @@ DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 **Nächste MoveBG:** `TMapObjSwitch::receiveMessage` (`TFlagT` @ `0x2c` vs `0x24`);
 `initMapObj` / `initDrawNear` nur mit neuem Hebel. Skip: Defer-Liste unverändert.
 
+### R159 (Round 71 Agent — kein neuer Vollmatch)
+
+**Kein neuer strikter Vollmatch** in MoveBG (Scope A). Worktree ohne TU-Diffs.
+
+- `TDonchou::calcRootMatrix`: Entry-`char trash[0x10]; trash[0]=0;` → Frame
+  `-0x90` wie Retail, aber **5** verbleibende `~` (+0xc: `mtx` @ `0x28` vs `0x34`,
+  `ref(1,3)` @ `0x44` vs `0x50`, `TFlagT` @ `0x24` vs `0x30`). Mid-`pad2` nach
+  `getModel()` oder `camPad` vor `fireStartDemoCamera` verschiebt `mtx` nicht ohne
+  Frame-Wachstum.
+- `TMapObjSwitch::receiveMessage`: unverändert **2** `~` (`TFlagT` @ `0x2c` vs
+  `0x24`); `trash[0xc]` / Mid-Pad / `demoFlag`-Local vergrößert nur Frame.
+- `TCloset::calcRootMatrix` (R158): `decomp-diff` zeigt weiter **3** `~`
+  (`mtx` @ `0x10` vs `0x14`) — fuzzy 100 % ≠ strikt; Closet nicht angefasst.
+- `TSakuCasino::calcRootMatrix`: bereits strikt **0** Marker (kein neuer Ship).
+- `TMapObjTree::initMapObj`: **3** `~` (`mLeafNum` in `r26` vs Retail `r25`).
+
+**Nächste SMS-B / MoveBG:** `TDonchou` — +0xc-Homing für `mtx`/`TFlag` bei
+`-0x90` (evtl. UNUSED/Whole-function-Layout, nicht nur Entry-Trash); Switch nur
+bei klarem Hebel; Tree `r25` via `new[]`-/Iterator-Shape. Skip: `initDrawNear` /
+`initMapObj` ohne Idee.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R155 (`TMapObjBase::throwObjToFrontFromPoint`)
 
 **Vollmatch, strikt.**
