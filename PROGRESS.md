@@ -7568,3 +7568,107 @@ Keine TU auf `Matching` gestellt.
     `MarioRun`, `bosspakkun`, `hamukuri`, `poihana`,
     `MapObjGeneral` und `NpcWalkTurn` nicht auf
     `Matching` stellen.
+
+### Nach einundneunzigster Iterationsrunde (kein Vollmatch)
+
+**Beobachtung, vorher.** Stand Runde 90:
+47,76 % matched code, 1714628 / 3590088 Bytes,
+9186 / 12881 Funktionen.
+Game Code 35,46 %, 1002480 / 2826784 Bytes,
+5221 / 8857 Funktionen.
+Daten 385811 / 640331 Bytes, 60,25 %.
+
+**Kein neues Vollmatch.** Sechs Rümpfe stimmen.
+Die Frames bleiben offen und werden nicht gepolstert.
+Der Code-Zähler bleibt bei Runde 90.
+
+`TNerveBPTumble::execute`: der Jita-Emitter hängt an
+`(u8*)boss + 8`.
+Die `addi` stimmt.
+Der Frame bleibt 0x40 gegen 0x50.
+99,29 % auf 99,93 %.
+
+`evInsertTimer`: der erste Zweig ist `p2 == 1`.
+Danach `p2 == 2`, sonst `startDisappearTimer`.
+Der Frame bleibt 0x98 gegen 0xa0.
+99,77 % auf 99,78 %.
+
+`TFireWanwanTailHit::behaveTaken`: `moveRequest`
+bekommt `param_1->mPosition`.
+Im inlined `receiveMessage` stimmt der Rumpf.
+Der Frame bleibt 0xa0 gegen 0xb0.
+99,89 % auf 99,92 %.
+
+`TWoodBox::kill`: die vier Bodenprüfungen laufen
+`(-50,-50)`, `(50,-50)`, `(-50,50)`, `(50,50)`.
+Die beiden Pool-Loads stimmen.
+Der Frame bleibt 0x58 gegen 0xf0.
+Live-Diff 99,88 % auf 99,93 %.
+`changes_all` listet die Funktion nicht extra,
+der Report-Fuzzy bleibt 99,93 %.
+
+`TBossMantaManager::createEnemies`: das Limit ist
+`mSLInstanceNum` (Wert bei 0x90).
+Der Frame bleibt 0xa8 gegen 0xb0.
+99,78 % auf 99,79 %.
+
+`TWalkerEnemy::moveObject`: `mPosition.y += 5.0f`.
+Der Yaw-Load davor bleibt `mRotation.y`.
+Der Frame bleibt 0x60 gegen 0x88.
+99,80 % auf 99,82 %.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,76 % matched code,
+1714628 / 3590088 Bytes, 9186 / 12881 Funktionen.
+Game Code 35,46 %, 1002480 / 2826784 Bytes,
+5221 / 8857 Funktionen.
+Daten unverändert: 385811 / 640331 Bytes, 60,25 %.
+Game-Daten unverändert: 306587 / 556995 Bytes, 55,04 %.
+
+Delta Code gegen Runde 90: keine Funktion, 0 Bytes.
+Delta Daten: 0 Bytes.
+
+`changes_all` listet keine Regression.
+Live-Vergleich der sechs TUs: 6 Gewinne, 0 Verluste.
+`bosspakkun` und `walkerEnemy` Symbolordnung PASS.
+`EventWatcher`, `fireWanwan`, `MapObjHide` und
+`bossManta` bleiben an den alten Fehlern rot.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `walkBehavior` behält `height = unk230 + unk234`.
+2. Die sechs Rümpfe dieser Runde behalten.
+   Keinen davon mit einem einzelnen `int` oder
+   `trash` auf Frame-Länge bringen.
+3. Runde 90 bleibt: `mRotation` in `PoihanaThrow`,
+   `&sender->mPosition` im Dango-`receiveMessage`,
+   `mat[1][3]` in `recovering`.
+4. Runde 89 bleibt: `(u8*)boss + 1`,
+   Translationsspalte in `attackToMario`,
+   `CLBSquared(10.0f)`.
+   `set(dx, 0, dz)` in `isCanWalk` nicht wiederholen.
+5. `rotating` behält den `u16`-Cast.
+   `mSLDamageRadius` bleibt 65.
+   `changePlayerStatus` behält das Minimum aus
+   `mIntendedMag` und 8.
+6. `thinkDirty` bleibt bei `- 200.0f`.
+   Die drei `makeRootMtxRot*` bleiben bei
+   `0.017453294f`.
+7. Runde 84 bleibt: `p1 - p2 + 1`,
+   `150 * analog * 256`, `hitWater` mit `30.0f`.
+8. `isDemo` bleibt die Oder-Form mit `stateIs3Or4`.
+9. Vermeidungslisten aus Runde 81 bis 89 bleiben.
+   `stampModel`, `getRandVol`, `setQuat` und
+   `TRoulette::moveObject` nicht wegen Registertausch
+   jagen. `startDisappearTimer` nicht wieder als
+   gefaltete 525 oder als `targetY += 60` schreiben.
+   `MarioRun`, `bosspakkun`, `hamukuri`, `poihana`,
+   `MapObjGeneral`, `walkerEnemy`, `bossManta`,
+   `fireWanwan`, `MapObjHide`, `EventWatcher` und
+   `NpcWalkTurn` nicht auf `Matching` stellen.
