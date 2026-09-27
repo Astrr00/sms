@@ -853,6 +853,9 @@ DEFINE_NERVE(TNerveTobiPukuAttack, TLiveActor)
 			self->unk194                   = 0;
 			JGeometry::TVec3<f32> velocity = self->mVelocity;
 			JGeometry::TVec3<f32> newVelocity;
+			// TODO: retail frame is 0x50 and these vecs sit 12 bytes
+			// higher. An unused TVec3 here reserves that slot and
+			// matches, but it is only a stack reservation.
 			newVelocity.x   = 0.0f;
 			newVelocity.y   = velocity.y;
 			newVelocity.z   = 0.0f;
@@ -865,9 +868,10 @@ DEFINE_NERVE(TNerveTobiPukuAttack, TLiveActor)
 			spine->pushAfterCurrent(&TNerveTobiPukuFall::theNerve());
 			return true;
 		}
-		return false;
+	} else {
+		return true;
 	}
-	return true;
+	return false;
 }
 
 DEFINE_NERVE(TNerveTobiPukuHitWater, TLiveActor)
