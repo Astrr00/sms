@@ -10920,6 +10920,27 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R169 (`TMapObjGeneral::appearing`)
+
+**Vollmatch, strikt.**
+
+- `char trash[4]; trash[0] = 0;` am Funktionskopf → Frame `-0x20` wie Retail
+  (`-0x18` ohne Pad).
+- Inneren Scope/`mScaling.set` entfernt: Komponenten-`+=` / Vergleich /
+  Einzelstores wie Retail (`lfs f1,0x24` + `lfs f0,0x124`, `fcmpo f1,f0`,
+  `blt` zum Epilog).
+- `if (mInitialScaling.x > mScaling.x) return;` statt `mScaling.x <
+  mInitialScaling.x` — gleiche Semantik, korrekte `fcmpo f1,f0`-Operanden.
+- `f32 clampX` + `mScaling.x = clampX` im Block erzwingt `lfs`/`stfs` für X
+  nach dem Vergleich (kein Register-Reuse von `f1`).
+
+0 Abweichungen, 196 Bytes, 49 Instruktionen.
+`decomp-diff -u mario/MoveBG/MapObjGeneral -d appearing`: 100 %.
+
+R168 `setGroundCollision`, R167–R160 unverändert strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R168 (`TMapObjBase::setGroundCollision`)
 
 **Vollmatch, strikt.**

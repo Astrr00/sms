@@ -218,24 +218,29 @@ void TMapObjGeneral::breaking()
 
 void TMapObjGeneral::appearing()
 {
-	// TODO: uuuuuuuh...
+	char trash[4];
+	trash[0] = 0;
+
 	if (hasAnim(1)) {
 		if (animIsFinished())
-			goto uuuh;
+			goto appearing_finish;
 		return;
 	}
 
+	mScaling.x += mNormalAppearingScaleUp;
+	mScaling.y += mNormalAppearingScaleUp;
+	mScaling.z += mNormalAppearingScaleUp;
+	if (mInitialScaling.x > mScaling.x)
+		return;
+
 	{
-		mScaling.x += mNormalAppearingScaleUp;
-		mScaling.y += mNormalAppearingScaleUp;
-		mScaling.z += mNormalAppearingScaleUp;
-		if (mScaling.x < mInitialScaling.x)
-			return;
-
-		mScaling.set(mInitialScaling);
+		f32 clampX = mInitialScaling.x;
+		mScaling.x = clampX;
 	}
+	mScaling.y = mInitialScaling.y;
+	mScaling.z = mInitialScaling.z;
 
-uuuh:
+appearing_finish:
 	if (!checkLiveFlag(LIVE_FLAG_UNK10))
 		return;
 
