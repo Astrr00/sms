@@ -10842,6 +10842,24 @@ nicht davor — sonst `addi r4,r1,0x10` statt **0x20**). Frame **0x30**,
 Locals bleiben **+8** versetzt. `TNerveDoroHaneHitWater`: Retail-Frame kleiner
 als unser Build — kein reines Trash-Pad.
 
+### R153 (Aufgabe B; 2 Vollmatches)
+
+**`TNerveTelesaFreeze::execute` (telesa).** `char trash[4];` + `trash[0]=0`
+**nach** `self`; explizites `TPathNode pathNode` + `char trashPath[4];`
+**danach** vor `setGoalPath` (Frame **0x40**, Goal-Path-Stack **0x24**).
+**match 100 %** (544B).
+
+**`TNerveBossEelWaitAppear::execute` (bosseel).** `char trashVec[0x14];`
+**nach** `marioPosition = *gpMarioPos` (Frame **0x68**, Vec-Temp **0x4c**).
+**match 100 %** (496B).
+
+`dtk shasum -c` OK.
+
+**Offen.** `TNervePoihanaThrow`: `trash[0x10]` am Nerv-Eingang richtet Frame
+**0xb0**, Mtx/`local_58` noch **+0xc** versetzt — inneres Pad vergrößert Frame
+falsch. `TNerveHamuKuriBoundFreeze`: `thing`-TVec3 weiter **+8** trotz
+`trash[8]` am Eintritt (ohne Write).
+
 ### R152 (Aufgabe B; 2 Vollmatches)
 
 **`TNerveFireWanwanFreeze::execute` (fireWanwan).** Explizites
