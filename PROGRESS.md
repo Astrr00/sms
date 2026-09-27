@@ -9926,3 +9926,48 @@ SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
 4. `TShine::loadBeforeInit` / `TObjManager::load` / Demo-`TFlagT`
    weiter vermeiden.
 5. Vermeidungslisten aus Runde 81 bis 119 bleiben.
+
+### Nach hunderteinundzwanzigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 120:
+47,94 % matched code, 1720924 / 3590088 Bytes,
+9207 / 12881 Funktionen.
+Game Code 35,69 %, 1008776 / 2826784 Bytes,
+5242 / 8857 Funktionen.
+
+Runde 120: Frame-only/`trash`-Only bei `checkWallCollision`,
+`TCoin::perform`, `TMareEventWallRock::load` — keine Vollmatches.
+
+**Vollmatch, strikt.**
+
+`TMario::kickRoofEffect`: `getAnmMtx(mJointIdChnFootR)` statt
+`mJointIdHead` (Retail `lbz` @ `0x3cb`); `char trash[8]` am
+Funktionsanfang für Frame `0x38`.
+
+0 Abweichungen, 148 Bytes, 37 Instruktionen.
+`validate-symbol-order` `mario/Player/MarioParticle`: ORDER/LINKAGE OK
+(bestehende fehlende UNUSED-Stubs unverändert).
+
+**Zähler.** matched code 47,94 % → 47,94 %,
+1720924 → 1721072 Bytes (+148),
+9207 → 9208 Funktionen (+1).
+Game Code 35,69 % → 35,70 %,
+1008776 → 1008924 Bytes (+148),
+5242 → 5243 Funktionen (+1).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `kickRoofEffect` behält `mJointIdChnFootR` und `trash[8]`.
+2. `recovering` / Runden 114–119 unverändert.
+3. `checkWallCollision`: `pad[0x18]` vor Record reicht für Frame,
+   Record-Slot `0x28` noch offen (kein trash-only).
+4. `TMareEventWallRock::load` / `TCoin::perform` / `TNozzleBox::load`:
+   Slot-Layout vor erneutem Padding.
+5. `TShine::loadBeforeInit` / `TObjManager::load` / Demo-`TFlagT`
+   weiter vermeiden.
+6. Vermeidungslisten aus Runde 81 bis 120 bleiben.
