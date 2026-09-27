@@ -7767,3 +7767,87 @@ Keine TU auf `Matching` gestellt.
     `MapObjGeneral`, `walkerEnemy`, `bossManta`,
     `fireWanwan`, `MapObjHide`, `EventWatcher` und
     `NpcWalkTurn` nicht auf `Matching` stellen.
+
+### Nach dreiundneunzigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 92:
+47,76 % matched code, 1714628 / 3590088 Bytes,
+9186 / 12881 Funktionen.
+Game Code 35,46 %, 1002480 / 2826784 Bytes,
+5221 / 8857 Funktionen.
+Daten 385811 / 640331 Bytes, 60,25 %.
+
+`TMapCollisionWarp::setUp` hatte einen passenden
+Rumpf und einen Frame von 0x30 gegen retail 0x38.
+Die `TVec3` lag vier Bytes zu tief.
+`getEntrySize` ist inline und liefert `u32`.
+
+**Ein neues Vollmatch.**
+
+`mEntrySize` kommt aus einem benannten
+`u32 entrySize = getEntrySize(mEntryId)`.
+0 Abweichungen, 208 Bytes, 52 Instruktionen, 100 %.
+`MapCollisionEntry` bleibt `NonMatching`,
+weil `moveSRT` noch abweicht.
+Die fehlende UNUSED-Ctor von `TMapCollisionBase`
+war schon vorher weg.
+
+Verworfen: `TRedCoinSwitch::load` über
+`SMSGetMarDirector()`.
+Der `u32`-Slot rückte nur um 4, der Frame blieb
+0x28 gegen 0x30.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,77 % matched code,
+1714836 / 3590088 Bytes, 9187 / 12881 Funktionen.
+Game Code 35,47 %, 1002688 / 2826784 Bytes,
+5222 / 8857 Funktionen.
+Daten unverändert: 385811 / 640331 Bytes, 60,25 %.
+Game-Daten unverändert: 306587 / 556995 Bytes, 55,04 %.
+
+Delta Code gegen Runde 92: 1 Funktion, 208 Bytes.
+Delta Daten: 0 Bytes.
+
+`changes_all`: `setUp` 99,83 % auf 100 %.
+Unit-Code 84,30 % auf 91,65 %.
+Keine Regression.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `setUp` behält `u32 entrySize`.
+   `MapCollisionEntry` nicht auf `Matching` stellen.
+2. `TRedCoinSwitch::load` nicht noch einmal über
+   `SMSGetMarDirector()` auf den Frame bringen.
+3. `movement` und `loadAfter` behalten `sleep()`.
+   Den Frame von `movement` nicht polstern.
+4. `TMapStaticObj::init` nicht über `setMtx`
+   gegen `PSMTXCopy` drehen.
+5. Die sechs Rümpfe aus Runde 91 behalten.
+   `walkBehavior` behält `height`.
+6. Runde 90 bleibt: `mRotation`,
+   `&sender->mPosition`, `mat[1][3]`.
+7. Runde 89 bleibt: `(u8*)boss + 1`,
+   Translationsspalte, `CLBSquared(10.0f)`.
+   `set(dx, 0, dz)` nicht wiederholen.
+8. `rotating` behält den `u16`-Cast.
+   Schadensradius 65 bleibt.
+   `changePlayerStatus` behält das Minimum aus
+   `mIntendedMag` und 8.
+9. `thinkDirty` bleibt bei `- 200.0f`.
+   Die drei `makeRootMtxRot*` bleiben bei
+   `0.017453294f`.
+10. Runde 84 bleibt: `p1 - p2 + 1`,
+    `150 * analog * 256`, `hitWater` mit `30.0f`.
+    `isDemo` bleibt die Oder-Form mit `stateIs3Or4`.
+11. Vermeidungslisten aus Runde 81 bis 92 bleiben.
+    `MapEventMare`, `MapStaticObject`, `MarioRun`,
+    `bosspakkun`, `hamukuri`, `poihana`,
+    `MapObjGeneral`, `walkerEnemy`, `bossManta`,
+    `fireWanwan`, `MapObjHide`, `EventWatcher` und
+    `NpcWalkTurn` nicht auf `Matching` stellen.
