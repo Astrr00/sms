@@ -10870,6 +10870,44 @@ HamuKuriBoundFreeze, BathtubKiller death.
 
 **Verify.** `ninja`, `dtk shasum -c` → OK (Quellbaum = `185dd5cb`).
 
+**R158 Fortsetzung (Scanner + Cap 6; keine Vollmatches).**
+
+`objdiff`-Scan (Enemy `::execute` + `TMario::*`, Skip-Liste): **43** Symbole mit
+Retail-Frame größer als unser Build um **4 / 8 / 16** B (Top: `waitMain` Δ8
+99,98 %, `TNerveBPHover` Δ16, `jumpProcess` Δ16, `TobiPukuDie` Δ8, …).
+
+**Sechs Probes (alle revertiert):**
+
+1. **`TMario::jumpProcess`** — `trash[0x10]` Eingang: Frame **0x48** OK; `Vec next`
+   weiter **+0xc** (`0x1c` vs. `0x28`). `trashAfterSpeed[0x10]`: Frame **0x58**.
+2. **`TMario::emitSweat`** — `trash[8]` / `trashPos[8]`+Write vor `pos`: Frame
+   wächst oder `pos` bleibt **+8**.
+3. **`TNerveTobiPukuDie`** — `trash[8]`: Frame **0x50** OK; Velocity-`TVec3` **+8**
+   (`0x2c` vs. `0x34`).
+4. **`TMario::waitMain`** — `trash[8]`: Frame **0x48** OK; erster Rest-Mismatch
+   **vtable**-Load **`0xc4` vs. `0xd8`** (kein reines Local-Pad).
+5. **`TNerveBPFly`** — `trash[8]`: Frame **0xb8** OK; zwei Vec-Cluster (**+4** /
+   **−4** relativ), kein einheitliches Pad.
+6. **`TMario::toroccoEffect` / `soundTorocco`** — `trash[8]` (+ ein
+   `trashBeforeDist`-Versuch): Frame oft OK; inlined `TVec3`-Diff **+8** bzw.
+   **+0xc** durchgängig.
+
+Kurz geprüft, nicht im Cap: `TNerveSmallEnemyJump` (CFG `|`), `GessoTurn`
+(`fadds`-Operanden), `GessoFreeze`/`Hino2PrePol` (große Local-Verschiebung),
+`oilRun` (Frame OK, `gpPollution`-Reihenfolge wie `oilSlip`), `startJumpWall`
+(`trash` ohne/mit Write: Frame **0x20** bzw. Overshoot **0x30** vs. **0x28**).
+
+**Tip nächster Lauf.** Scanner nutzen, dann nur Symbole wählen, bei denen
+`decomp-diff` **ausschließlich** einheitliche `{r1+…}`-`~`-Drift zeigt (kein
+`|`, kein vtable-Offset, keine `gpPollution`/Load-Reorder). Kandidaten mit
+nur **+8** nach Frame-Fix und hohem Match-%: z. B. `TobiPukuDie` (explizite
+`TVec3`-Locals wie `FireWanwanFreeze`), nicht erneut Manta/Hamu-Defer-Liste.
+
+**Vollmatch, strikt (Fortsetzung).** keine.
+
+**Verify.** `ninja baseline` / `changes_all` ohne Code-Delta; `dtk shasum -c` → OK
+(Tip **`ea99f92d`**, Quellbaum unverändert).
+
 ### R157 (Aufgabe B; Sweep, keine neuen Vollmatches)
 
 **`TNerveHamuKuriWallDie`.** `char trash[8];` am Eingang → Frame **0x80**;
