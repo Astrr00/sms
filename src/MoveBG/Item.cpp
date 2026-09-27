@@ -399,8 +399,11 @@ void TCoinBlue::loadBeforeInit(JSUMemoryInputStream& stream)
 void TCoinBlue::load(JSUMemoryInputStream& stream)
 {
 	TCoin::load(stream);
-	if (TFlagManager::getInstance()->getBlueCoinFlag(
-	        gpMarDirector->getCurrentMap(), getEventId()))
+	// The two call results need names. Inlined into the call,
+	// the frame stays 0x20 instead of the retail 0x28.
+	u8 area = gpMarDirector->getCurrentMap();
+	u8 coin = getEventId();
+	if (TFlagManager::getInstance()->getBlueCoinFlag(area, coin))
 		makeObjDead();
 }
 
