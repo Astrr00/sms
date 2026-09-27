@@ -2088,7 +2088,9 @@ void TMario::drawSpecial(JDrama::TGraphics* graphics)
 
 void TMario::drawLogic()
 {
-	// volatile u32 padding[2];
+	char trash[4];
+	trash[0] = 0;
+
 	j3dSys.mFlags |= 2;
 	j3dSys.unk4C = 7;
 	SMS_DrawInit();

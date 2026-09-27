@@ -10690,8 +10690,26 @@ Size-Warnung `getSlotResult` unverändert).
 R142 `getDistance` **match**; R140 `TRoulette::moveObject`; R138 `initMirrorModel`;
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R145 (Pivot: `drawLogic`, Closet unangetastet)
+
+**Vollmatch, strikt.**
+
+- `TMario::drawLogic`: `char trash[4]; trash[0]=0;` am Funktionsanfang → Frame
+  `-0x28` und Iterator-Spill @ `0x18` (**match**).
+
+**Teilfortschritt (nur notiert, nicht committed).**
+
+- `TMapObjBase::joinToGroup`: gleiches `trash[4]`-Muster bringt Frame `-0x68`, verbleibend
+  `insert`-Spills `0x48` vs `0x4c` (~99,9 %).
+
+R143 `initNeonMatColor`, R142 `getDistance`, R140 `TRoulette::moveObject`, R138
+`initMirrorModel`; `TCloset::calcRootMatrix` Teilstand unverändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### Nächster Schritt
 
-1. `TCloset::calcRootMatrix`: letzte +4 B Mtx-Basis (ohne Frame `0x78`).
-2. `TRoulette::initMapObj`: Iterator-/Stack-Cluster bei Frame `0xa0`.
-3. Defer-Listen unverändert.
+1. `TMapObjBase::joinToGroup`: letzte +4 B unter `insert`-Temps bei Frame `-0x68`.
+2. `TCloset::calcRootMatrix`: +4 B Mtx-Basis (ohne Frame `0x78`) — nur bei klarem Hebel.
+3. `partsRollCallback` / `TRoulette::initMapObj`: Stack +4 B ohne Frame-Wachstum.
+4. Defer-Listen unverändert.
