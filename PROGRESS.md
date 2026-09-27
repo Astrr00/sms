@@ -9288,3 +9288,65 @@ Keine TU auf `Matching` gestellt.
    `MSRandVol` behält `half`.
 5. Vermeidungslisten aus Runde 81 bis 107 bleiben.
    Den Frame nicht polstern.
+
+### Nach hundertundneunter Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 108:
+47,83 % matched code, 1717092 / 3590088 Bytes,
+9197 / 12881 Funktionen.
+Game Code 35,55 %, 1004944 / 2826784 Bytes,
+5232 / 8857 Funktionen.
+Daten 394595 / 640331 Bytes, 61,62 %.
+
+`TRedCoinSwitch::loadAfter` suchte jede rote Münze
+und rief `makeObjDead` am unbenannten Cast auf.
+Der Frame war `0x70`, Retail `0x78`.
+Der Namenspuffer lag bei `0x20` statt `0x24`.
+Der übrige Rumpf stimmte.
+
+**Vollmatch.** Das Suchergebnis heißt `coin`.
+
+```cpp
+TMapObjBase* coin
+    = static_cast<TMapObjBase*>(JDrama::TNameRefGen::search(buf));
+coin->makeObjDead();
+```
+
+0 Abweichungen unter `functionRelocDiffs=data_value`,
+164 Bytes, 41 Instruktionen.
+`MapObjTown` bleibt `NonMatching`.
+Die Symbolreihenfolge stimmt.
+Zwei UNUSED-Destruktoren von `TShadowObj` fehlen vorbestehend.
+Eine UNUSED-Größe weicht vorbestehend ab.
+
+**Zähler.** `ninja changes_all`:
+`loadAfter__14TRedCoinSwitchFv` 99,71 % → 100 %.
+`MapObjTown` matched code 73,99 % → 75,59 %.
+Matched code 1717256 / 3590088 Bytes,
+9198 / 12881 Funktionen.
+Das sind 164 Bytes und eine Funktion mehr.
+Die Anzeige bleibt 47,83 %,
+weil 47,8287 % und 47,8333 % gleich runden.
+Game Code 35,56 %, 1005108 / 2826784 Bytes,
+5233 / 8857 Funktionen.
+Daten unverändert, 394595 / 640331 Bytes, 61,62 %.
+Game-Daten 315371 / 556995 Bytes, 56,62 %.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+`mHPMax` bleibt.
+`SMS_UnifyMaterial` und `execRoofCheck_` nicht angefasst.
+
+### Nächster Schritt
+
+1. `TRedCoinSwitch::loadAfter` behält `coin`.
+   `MapObjTown` nicht auf `Matching` stellen.
+2. `mHPMax` behält die Schreibweise `mHPMax`.
+3. `SMS_UnifyMaterial` nicht über die
+   Deklarationsreihenfolge und nicht mit beiden Zeigern in der Schleife.
+4. `execRoofCheck_` nicht über `roofHeight -=`,
+   benanntes `y`, `save` oder `limit`.
+5. Vermeidungslisten aus Runde 81 bis 108 bleiben.
+   Den Frame nicht polstern.
