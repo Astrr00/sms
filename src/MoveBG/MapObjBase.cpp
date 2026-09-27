@@ -470,39 +470,48 @@ void TMapObjBase::control()
 
 void TMapObjBase::setGroundCollision()
 {
-	if (!mMapCollisionManager)
-		return;
-	if (mMapCollisionManager->unk8->mKind != TMapCollisionBase::KIND_MOVE)
+	JGeometry::TVec3<f32> pos;
+	char trash[0x24];
+	trash[0] = 0;
+
+	if (mMapCollisionManager == nullptr)
 		return;
 
-	if (checkMapObjFlag(MAP_OBJ_FLAG_UNK2)) {
-		if (mColCount == 0 && unk102 == 0)
-			return;
-		--unk102;
-		if (mColCount != 0)
-			unk102 = 4;
-	}
-
-	if (checkMapObjFlag(MAP_OBJ_FLAG_UNK8)) {
-		MtxPtr mtx = getModel()->getAnmMtx(0);
-		if (mMapCollisionManager->unk8)
-			mMapCollisionManager->unk8->moveMtx(mtx);
-	} else {
-		JGeometry::TVec3<f32> pos(mPosition.x, mPosition.y - mYOffset,
-		                          mPosition.z);
-		if (checkMapObjFlag(MAP_OBJ_FLAG_UNK4)) {
-			mMapCollisionManager->unk8->offFlag(
-			    TMapCollisionBase::FLAG_UNK8000);
-			mMapCollisionManager->unk8->offFlag(
-			    TMapCollisionBase::FLAG_UNK4000);
-			if (mMapCollisionManager->unk8)
-				mMapCollisionManager->unk8->moveSRT(pos, mRotation, mScaling);
-		} else {
-			mMapCollisionManager->unk8->offFlag(
-			    TMapCollisionBase::FLAG_UNK4000);
-			if (mMapCollisionManager->unk8)
-				mMapCollisionManager->unk8->moveTrans(pos);
+	switch (mMapCollisionManager->unk8->mKind) {
+	case TMapCollisionBase::KIND_MOVE:
+		if (checkMapObjFlag(MAP_OBJ_FLAG_UNK2)) {
+			if (mColCount == 0 && unk102 == 0)
+				return;
+			--unk102;
+			if (mColCount != 0)
+				unk102 = 4;
 		}
+
+		if (checkMapObjFlag(MAP_OBJ_FLAG_UNK8)) {
+			MtxPtr mtx = getModel()->getAnmMtx(0);
+			if (mMapCollisionManager->unk8 != nullptr)
+				mMapCollisionManager->unk8->moveMtx(mtx);
+		} else {
+			pos.set(mPosition.x, mPosition.y - mYOffset, mPosition.z);
+
+			if (checkMapObjFlag(MAP_OBJ_FLAG_UNK4)) {
+				mMapCollisionManager->unk8->offFlag(
+				    TMapCollisionBase::FLAG_UNK8000);
+				mMapCollisionManager->unk8->offFlag(
+				    TMapCollisionBase::FLAG_UNK4000);
+				if (mMapCollisionManager->unk8 != nullptr)
+					mMapCollisionManager->unk8->moveSRT(pos, mRotation,
+					                                    mScaling);
+			} else {
+				mMapCollisionManager->unk8->offFlag(
+				    TMapCollisionBase::FLAG_UNK4000);
+				if (mMapCollisionManager->unk8 != nullptr)
+					mMapCollisionManager->unk8->moveTrans(pos);
+			}
+		}
+		break;
+	default:
+		break;
 	}
 }
 

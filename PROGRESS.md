@@ -10920,6 +10920,25 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R168 (`TMapObjBase::setGroundCollision`)
+
+**Vollmatch, strikt.**
+
+- `JGeometry::TVec3<f32> pos` vor `char trash[0x24]; trash[0]=0;` → Frame
+  `-0x60`, Spill @ `0x4c` (mit `trash[0x28]` + `pos.set` war `pos` @ `0x50`).
+- `switch (unk8->mKind)` / `case KIND_MOVE` statt `!= KIND_MOVE` + `return`
+  (Retail `beq` + `b` statt alleiniges `bne`).
+- `pos.set(mPosition.x, mPosition.y - mYOffset, mPosition.z)` statt
+  Komponenten-Zuweisungen oder `TVec3`-Ctor — korrekte `fsubs f1,f2,f1`-Kette
+  ohne verfrühtes `stfs` nach `lfs f0,0x10`.
+
+0 Abweichungen, 388 Bytes, 97 Instruktionen.
+`decomp-diff -u mario/MoveBG/MapObjBase -d TMapObjBase::setGroundCollision`: 100 %.
+
+R167 `touchWater` / `calcRootMatrix` @ `0xa50`, R166–R160 unverändert strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R167 (`TItemSlotDrum::touchWater`)
 
 **Vollmatch, strikt.**
