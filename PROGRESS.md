@@ -10424,12 +10424,46 @@ SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
 
 Keine TU auf `Matching` gestellt.
 
+### Nach hundertvierunddreißigster Iterationsrunde (Speed-Sweep)
+
+**Beobachtung, vorher.** Stand Runde 133:
+48,31 % matched code, 1734320 / 3590088 Bytes,
+9230 / 12881 Funktionen.
+Game Code 36,16 %, 1022168 / 2826784 Bytes,
+5265 / 8857 Funktionen.
+
+Breiter `DEFINE_NERVE`-Sweep (alle `src/Enemy/*.cpp`, `NpcNerve`, …,
+`0x4`–`0xbc`, ≥ 99,5 % fuzzy): kein weiteres Treffer außer den zwei
+unten (u. a. `NameKuriJumpAttack` `trash[4]` im Brute-Skript, im
+Quellstand **kein** Vollmatch — nicht committet).
+
+**Vollmatch, strikt (2×).**
+
+- `TNerveBEelTearsMarioRecover::execute`: `char trash[4]; trash[0] = 0;` — 352 B.
+- `TNerveMantaDeath::execute`: `char trash[4]; trash[0] = 0;` — 236 B.
+
+`validate-symbol-order`: `mario/Enemy/bosseel` PASS;
+`mario/Enemy/bossManta` ORDER-FAIL an `theNerve__*`-Schwachsymbolen
+(vorbestehend, unverändert durch diese Runde).
+
+**Zähler.** matched code 48,31 % → 48,32 %,
+1734320 → 1734908 Bytes (+588),
+9230 → 9232 Funktionen (+2).
+Game Code 36,16 % → 36,18 %,
+1022168 → 1022756 Bytes (+588),
+5265 → 5267 Funktionen (+2).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
 ### Nächster Schritt
 
-1. Runden 114–119 / 121–132 unverändert.
+1. Runden 114–119 / 121–133 unverändert.
 2. Restliche `bosspakkun` / `gatekeeper` / `fireWanwan`-`TNerve*` ohne
    Frame-only-`trash`.
-3. Sweep weiterer Enemy-TUs (`bosseel` Die/MouthOpenWait/Eat, `walkerEnemy`
-   Escape, `BathtubKillerExplosion` @ 100 % fuzzy, …).
+3. `bosseel` Die/MouthOpenWait/Eat, `walkerEnemy` Escape, `BathtubKillerExplosion`
+   (Operanden), `TNerveAnimalGraphWander` @ 99,5 %.
 4. `initAnmSound` / `TNerveHino2Burst` weiterhin defer.
-5. Vermeidungslisten aus Runde 81 bis 133 bleiben.
+5. Vermeidungslisten aus Runde 81 bis 134 bleiben.
