@@ -10616,3 +10616,33 @@ Size-Warnung `getSlotResult` unverändert).
 2. Weitere MoveBG/Enemy-Kandidaten mit klarem Member-Offset (wie `0x34` Ry).
 3. `initModel` nur mit kombiniertem Frame+Compound+`++j`-Cluster.
 4. Defer-Listen unverändert.
+
+### Nach hunderteinundvierzigster Iterationsrunde
+
+**Beobachtung.** R141: mehrere 99,9 %-Kandidaten (u. a.
+`TMapObjBase::getDistance`, `TSpineEnemy::resetToPosition`,
+`TRoulette::initMapObj` Iterator-Spill, `TCloset::calcRootMatrix` Mtx-Basis
+0x14 vs 0x10) — noch keine strikte Byte-Identität.
+
+**Vollmatch, strikt.** keine (R140 `TRoulette::moveObject` unverändert).
+
+**Teilfortschritt MapObjSirena.**
+
+- `TCloset::calcRootMatrix`: `char trash[8]; trash[0]=0;` → Retail-Frame
+  `0x70` (Fuzzy ~99,96 %); verbleibend `addi r30,r1,0x14` vs `0x10` und
+  `mtx.ref(1,3)`-Spill 0x30 vs 0x2c.
+- `TItemSlotDrum::generateItem`: `MsMtxSetRotY` nutzt `mRotation.y` statt
+  `.x` (ASM `lfs` @ 0x34) — `generateItem` gesamt noch ~90 %.
+
+`initMirrorModel` 100 %; `TRoulette::moveObject` **match**; DOL-SHA1
+`9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### Nächster Schritt
+
+1. `TCloset::calcRootMatrix`: Mtx-Stack-Basis +4 B ohne Frame-Wachstum (evtl.
+   `TRotation3f`-Layout / lokale Reihenfolge).
+2. `getDistance`: Retail-Reihenfolge `pos.y−yOffset` vor `dx` hält `0x18`-Frame,
+   Register/Spill 0x14 noch offen.
+3. `initMapObj`: Iterator @ `0x5c` ohne `0xa8`-Frame (nur `trash[4]` vor
+   `push_back` reicht für ersten Spill, nicht für `0x7c`-Cluster).
+4. Defer-Listen unverändert.
