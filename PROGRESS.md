@@ -10842,16 +10842,31 @@ nicht davor — sonst `addi r4,r1,0x10` statt **0x20**). Frame **0x30**,
 Locals bleiben **+8** versetzt. `TNerveDoroHaneHitWater`: Retail-Frame kleiner
 als unser Build — kein reines Trash-Pad.
 
+### R154 (Aufgabe B; 1 Vollmatch)
+
+**`TNerveKageMarioModokiWait::execute` (telesa).** `char trash[8];` +
+`trashAfterSelf[4]` am Nerv-Anfang; explizites `TPathNode pathNode` +
+`char trashPath[8];` vor `setGoalPath` (Frame **0x68**, Path-Stack **0x44**).
+**match 100 %** (412B). Commit `da4987f2`.
+
+`dtk shasum -c` OK.
+
+**Offen / WIP.** `TNervePoihanaThrow`: `trash[0x10]` + an Funktionsanfang
+gehobene `backThrowVal` / `afStack_4c` / `local_58` → Frame **0xb0**, aber
+`MsMtxSetRotRPH`-`Mtx` noch **+0xc** (`r1+0x58` vs. **0x64**); extra
+`trash[0xc]` nach `Mtx` bläht Frame auf **0xc0**. `TNerveHamuKuriBoundFreeze`:
+`thing` weiter **+8** mit `trash[8]` am Eintritt (Frame **0x68**).
+
 ### R153 (Aufgabe B; 2 Vollmatches)
 
 **`TNerveTelesaFreeze::execute` (telesa).** `char trash[4];` + `trash[0]=0`
 **nach** `self`; explizites `TPathNode pathNode` + `char trashPath[4];`
 **danach** vor `setGoalPath` (Frame **0x40**, Goal-Path-Stack **0x24**).
-**match 100 %** (544B).
+**match 100 %** (544B). Commit `06112e5d`.
 
 **`TNerveBossEelWaitAppear::execute` (bosseel).** `char trashVec[0x14];`
 **nach** `marioPosition = *gpMarioPos` (Frame **0x68**, Vec-Temp **0x4c**).
-**match 100 %** (496B).
+**match 100 %** (496B). Commit `2ef862a9`.
 
 `dtk shasum -c` OK.
 
