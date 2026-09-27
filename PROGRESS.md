@@ -10842,6 +10842,30 @@ nicht davor — sonst `addi r4,r1,0x10` statt **0x20**). Frame **0x30**,
 Locals bleiben **+8** versetzt. `TNerveDoroHaneHitWater`: Retail-Frame kleiner
 als unser Build — kein reines Trash-Pad.
 
+### R156 (Aufgabe B; Sweep, keine neuen Vollmatches)
+
+**`TNerveHamuKuriWallDie` (hamukuri).** `char trash[8];` am Nerv-Eingang
+(ohne Write) richtet Frame **0x80**; `local_34` / `emitWithRotate`-Vec bleibt
+**+4** (**0x50** vs. **0x4c**). `trash[0]=0`, `trashVec[4]` vor/nach
+`local_34`: Vec **+8** oder Frame bricht. Nicht committiert.
+
+**`TMario::warpRequest` (MarioMove).** `trash[0x10]` am Eingang → Frame
+**0x68** OK; `offset`-Temp weiter **0x24** vs. **0x28**. Kombinationen mit
+`trashOffset[4]` / getrennte Zuweisung: kein striktes Match. Nicht committiert.
+
+**`TNerveMantaSpawn` / `AppearDemo` (bossManta).** Spawn: `trash[8]` nur Frame;
+`emitAndBindToPosPtr`-Stack **0x34** vs. **0x3c**. AppearDemo: Frame **+0x10**
+(epilogue-`~` nur) — Local-Reorder ohne Effekt.
+
+**BathtubKiller death.** `trash[4]` vor `setDeadBathtubKillerAnm` in Explosion:
+unverändert **0x18** vs. **0x1c**. `set()` + `trash` in `setDead…`: verschlechtert.
+
+**Defer unverändert.** `TNervePoihanaThrow`, `TNerveHamuKuriBoundFreeze`.
+
+**Vollmatch, strikt.** keine.
+
+**Verify.** `ninja`, `dtk shasum -c` → OK.
+
 ### R155 (Aufgabe B; Sweep, keine neuen Vollmatches)
 
 **BathtubKiller death.** `TNerveBathtubKillerExplosion` / `Break`: Frame **0x30**
