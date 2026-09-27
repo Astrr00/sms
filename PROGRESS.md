@@ -10920,6 +10920,24 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R172 (`TManhole::touchPlayer`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+- `char trash[0x48];` am Funktionskopf → Frame `-0x90` wie Retail (`-0x48` ohne Pad).
+- Down-Stop-Zweig: `f32* initY = &mInitialPosition.y;` +
+  `initY = (f32*)(volatile void*)initY;` erzwingt `addi r3,r31,0x110` vor
+  `lfs mDownHeight@sda21` / `lfs 0x110(r31)` (kein SDA-Hoist vor Pointer).
+- `downHeight` / `initYVal` temporaries + `unk14C = *initY - mPosition.y` →
+  `lfs f1,0(r3)` für `unk14C` wie Retail.
+
+0 Abweichungen, 788 Bytes, 197 Instruktionen.
+`decomp-diff -u mario/MoveBG/MapObjTown -d TManhole::touchPlayer`: 100 %.
+
+R171 `calcVelocity`, R170 `appearing`, R168–R160 unverändert strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R171 (`TMapObjGeneral::calcVelocity`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

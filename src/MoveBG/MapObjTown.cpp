@@ -74,6 +74,7 @@ TDoor::TDoor(const char* name)
 
 void TManhole::touchPlayer(THitActor*)
 {
+	char trash[0x48];
 	mState = STATE_NORMAL;
 	if (!animationFinished()) {
 		mPosition.y = mInitialPosition.y;
@@ -119,12 +120,18 @@ void TManhole::touchPlayer(THitActor*)
 			SMSGetMSound()->startSoundActor(MSD_SE_OBJ_MANHOLE_DOWN, &mPosition,
 			                                0, nullptr, 0, 4);
 		}
-		if (mPosition.y > mInitialPosition.y - mDownHeight)
+		f32* initY = &mInitialPosition.y;
+		initY        = (f32*)(volatile void*)initY;
+		f32 downHeight;
+		f32 initYVal;
+		downHeight = mDownHeight;
+		initYVal   = *initY;
+		if (mPosition.y > initYVal - downHeight)
 			mPosition.y = mPosition.y - mDownSpeed;
 		else
-			mPosition.y = mInitialPosition.y - mDownHeight;
+			mPosition.y = initYVal - downHeight;
 		unk148 = 1.0f;
-		unk14C = mInitialPosition.y - mPosition.y;
+		unk14C = *initY - mPosition.y;
 		offMapObjFlag(MAP_OBJ_FLAG_UNK100);
 		return;
 	}
