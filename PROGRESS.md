@@ -10776,11 +10776,30 @@ DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
 ### Nächster Schritt (A)
 
-1. `TCoin::perform`: Entry-`trash[0x10]` bringt Frame `-0x50`; Request-Spills
-   noch `0x24` vs `0x34` (Buffer-vor-Trash-Muster wie R150/R151).
-2. `TRoulette::initMapObj`: Iterator-Spills `+4` B (kein joinToGroup-`list`+Trash).
+1. `TCoin::perform`: Frame `-0x50` bereits auf HEAD; nur noch vier Operanden
+   beim `request`-Spill (`addi`/`stw` @ `0x34`/`0x38`/`0x3c` vs `0x24`/`0x28`/`0x2c`).
+   Entry-/Mid-`trash`, `reqPos`, Trash nach `LIVE_FLAG_DEAD` (+ `0x8`…`0x10`)
+   und Dual-Trash ändern den Spill nicht.
+2. `TRoulette::initMapObj`: Iterator-Spills `+4` B (kein joinToGroup-`list`+Trash;
+   explizites `insert`/`list`-Local verschlechtert).
 3. `initAndRegister`: SMS-B.
 4. Defer-Listen unverändert.
+
+### R152 (Round 71 Agent — kein neuer Vollmatch)
+
+**Kein neuer strikter Vollmatch** in MoveBG (Scope A).
+
+- `TCoin::perform`: objdiff 100 % / 608 B, **4** verbleibende `~` nur beim
+  `gpQuestionManager->request`-TVec3-Spill (+0x10 B zu tief).
+- `TRoulette::initMapObj`: **4** `~` (Iterator @ `0x5c`/`0x58` vs `0x58`/`0x54`).
+- `TShine::loadBeforeInit`: Locals-Reorder + Entry-Trash → min. **10** `~`
+  (Retail: `name` @ `0x24`, `eventId` @ `0x20`, `v` @ `0x18`).
+
+R151 `TEggYoshi::control`, R150 `TNozzleBox::load`, R149 `TEggYoshi::receiveMessage`,
+R147 `TMapObjSwitch::receiveMessage`, R146 `joinToGroup`, R145 `drawLogic`, R138
+`initMirrorModel` unverändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
 ### R150 (`TNozzleBox::load`)
 
