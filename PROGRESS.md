@@ -7318,3 +7318,70 @@ SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
    `stampModel` und `getRandVol` nicht wegen
    Registertausch jagen.
    `Kumokun` und `MarioMove` nicht auf `Matching` stellen.
+
+### Nach achtundachtzigster Iterationsrunde (ein Spin)
+
+**Beobachtung, vorher.** Stand Runde 87:
+47,74 % matched code, 1713968 / 3590088 Bytes,
+9184 / 12881 Funktionen.
+Game Code 35,44 %, 1001820 / 2826784 Bytes,
+5219 / 8857 Funktionen.
+Daten 385755 / 640331 Bytes, 60,24 %.
+
+**Match, `TMario::rotating`.**
+Die positive Drehung speichert `mStatusTimer * 4096`
+mit `extsh` in das `s16` `mModelFaceAngle`.
+Die negative Drehung hat nur `neg` und `sth`.
+Ein `u16`-Cast auf der Negation entfernt das
+zusätzliche `extsh`.
+74 Instruktionen, 296 Bytes, null abweichende Wörter.
+Vorher 98,65 %. Die TU bleibt `NonMatching`.
+
+`validate-symbol-order.py` bleibt rot am alten
+fehlenden UNUSED `braking`. Keine neue Reihenfolge.
+Nur diese Funktion gewinnt. Der Schadensradius 65
+und `changePlayerStatus` sind unverändert.
+
+**Zurückgenommen.**
+`startDisappearTimer` als `465 - y1 + 60` faltet
+weiter zu einem `subfic` von 525.
+`s32 targetY; targetY += 60` zieht die `addi` nach,
+der Rest der Funktion fällt auf 82 %.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,75 % matched code,
+1714264 / 3590088 Bytes, 9185 / 12881 Funktionen.
+Game Code 35,45 %, 1002116 / 2826784 Bytes,
+5220 / 8857 Funktionen.
+Daten unverändert: 385755 / 640331 Bytes, 60,24 %.
+
+Delta Code gegen Runde 87: +1 Funktion, +296 Bytes.
+
+`changes_all` meldet nur `rotating` von 98,65 %
+auf 100 %. `MarioRun` matched code von 26,38 %
+auf 27,86 %. Keine Regression.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### Nächster Schritt
+
+1. Die negative Drehung in `rotating` behält den
+   `u16`-Cast.
+2. `mSLDamageRadius` in `TKumokunManager::load`
+   bleibt 65.
+3. `changePlayerStatus` behält das Minimum aus
+   `mIntendedMag` und 8.
+4. `thinkDirty` bleibt bei `- 200.0f`.
+   Die drei `makeRootMtxRot*` bleiben bei
+   `0.017453294f`.
+5. Runde 84 bleibt: `p1 - p2 + 1`,
+   `150 * analog * 256`, `hitWater` mit `30.0f`.
+6. `isDemo` bleibt die Oder-Form mit `stateIs3Or4`.
+7. Vermeidungslisten aus Runde 81 und 82 bleiben.
+   `stampModel`, `getRandVol`, `setQuat` und
+   `TRoulette::moveObject` nicht wegen Registertausch
+   jagen. `startDisappearTimer` nicht wieder als
+   gefaltete 525 oder als `targetY += 60` schreiben.
+   `MarioRun` nicht auf `Matching` stellen.
