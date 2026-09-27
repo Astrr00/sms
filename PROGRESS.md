@@ -10785,6 +10785,25 @@ DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 3. `initAndRegister`: SMS-B.
 4. Defer-Listen unverändert.
 
+### R153 (Round 71 Agent — Pivot, kein Vollmatch)
+
+**Kein neuer strikter Vollmatch** (Scope A MoveBG).
+
+- `TFruitBasket::touchFruit`: `f32 rotX` (Assign aus `mRotation.x`) +
+  `const TBGCheckData* roofPlane` im Funktionskopf; Frame `-0x38` und Epilog
+  stimmen; nur noch **2** Operand-`~` (`checkRoof`-Out-Ptr @ `0x28` vs `0x2c`).
+  `rotX` reserviert 4 B Stack ohne Store — ohne `rotX` Frame `-0x40`.
+- Pivot-Kappen: `TCoin::perform` / `TRoulette::initMapObj` / `TShine::loadBeforeInit`
+  unverändert (eine Idee je: Spill +0x10 / Iterator +4 / Retail-Locals).
+- `TItemManager::newAndRegisterCoin`: TVec3-Inline-Spill weiter +0xc tief
+  (Entry-`trash[8]` hält Frame, verschiebt Spill nicht).
+- `TMapObjSwitch::receiveMessage`: `TFlagT` weiter @ `0x24` vs `0x2c` (2 `~`).
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+**Nächste SMS-B / MoveBG:** `touchFruit` roof @ `0x28` ohne `rotX`-Slot;
+`newAndRegisterCoin` TVec-Stack; Closet/`initAndRegister`/`initModel` off-limits.
+
 ### R152 (Round 71 Agent — kein neuer Vollmatch)
 
 **Kein neuer strikter Vollmatch** in MoveBG (Scope A).

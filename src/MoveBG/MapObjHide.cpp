@@ -214,14 +214,17 @@ void TFruitBasket::countFruit(THitActor* param_1)
 
 void TFruitBasket::touchFruit(THitActor* param_1)
 {
-	if (fabsf(mRotation.x) < 45.0f) {
+	f32 rotX;
+	const TBGCheckData* roofPlane;
+
+	rotX = mRotation.x;
+	if (fabsf(rotX) < 45.0f) {
 		// Upwards facing basket -- check that the fruit's on top of us
 		if (((TLiveActor*)param_1)->getGroundPlane()->getActor() != this)
 			return;
 	} else {
 		// Basket lying on it's side -- check that the fruit rolled inside
 		// enough to be under our side
-		const TBGCheckData* roofPlane;
 		gpMap->checkRoof(param_1->mPosition.x, param_1->mPosition.y,
 		                 param_1->mPosition.z, &roofPlane);
 		if (roofPlane->getActor() != this)
