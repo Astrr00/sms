@@ -6479,3 +6479,64 @@ Das ist ein Member-Offset, kein reiner Slot.
    oder `operator=`.
 4. `kickRoofEffect` erst angehen, wenn der Member-Offset
    `0x3cb`/`0x3cf` geklärt ist.
+
+### Nach sechsundsiebzigster Iterationsrunde (zwei weitere Matches)
+
+**Beobachtung, vorher.** Stand Runde 75:
+47,59 % matched code, 1708488 / 3590088 Bytes,
+9168 / 12881 Funktionen.
+Game Code 35,25 %, 996340 / 2826784 Bytes,
+5203 / 8857 Funktionen.
+
+**Match, `evIsTalkModeNow`.**
+49 Instruktionen, 196 Bytes, Frame beiderseits `0x30`.
+Vorher lag das `TSpcSlice` bei uns auf `r1+0x14`, im Original
+auf `r1+0x18`. Sonst gleiche Wörter.
+`push(int)` baut das Slice eine Inline-Stufe tiefer.
+`interp->push(TSpcSlice(value))` setzt es auf `0x18`.
+Zwei Vorversuche ohne Wirkung, zurückgenommen:
+benannter `TMarDirector*` und benanntes `bool`.
+Nach dem Rebuild: 49 Wörter, Reloc-Typen gleich,
+null abweichende Wörter. Der String-Pool von `SpcTrace`
+hat andere lokale Namen, `functionRelocDiffs=data_value`
+zählt ihn als gleich.
+
+`validate-symbol-order.py -u mario/System/EventWatcher`
+meldet weiterhin `set__Q29JGeometry8TVec3<f>FRC3Vec` als
+MISSING. Das fehlt schon vor dieser Änderung. Nicht von
+diesem Match verursacht. Die TU bleibt `NonMatching`.
+
+**Match, `TNerveBPJumpReact::execute`.**
+25 Instruktionen, 100 Bytes.
+Vorher Frame `0x20` bei uns, `0x28` im Original.
+Nur die Frame-Offsets von `r31` wichen ab.
+`int time = spine->getTime()` hebt den Frame auf `0x28`.
+Nach dem Rebuild: 25 Wörter, null Abweichungen.
+`validate-symbol-order.py -u mario/Enemy/bosspakkun`:
+PASS, zwei vorbestehende UNUSED-Größenwarnungen.
+Die TU bleibt `NonMatching`.
+
+**Messung, `ninja` und `dtk shasum -c`.**
+
+Nachher: 47,60 % matched code,
+1708784 / 3590088 Bytes, 9170 / 12881 Funktionen.
+Game Code 35,26 %, 996636 / 2826784 Bytes,
+5205 / 8857 Funktionen.
+
+Delta gegen Runde 75: +2 Funktionen, +296 Bytes
+(196 + 100).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Kein Matching-Flip. `git push` weiter abgelehnt
+(`Invalid username or token`). Die Commits bleiben lokal.
+
+### Nächster Schritt
+
+1. `EventWatcher` und `bosspakkun` nicht auf `Matching` stellen.
+2. `setCallback`, `bind` und `kickRoofEffect` wie in Runde 75
+   nicht wiederholen.
+3. `evLaunchEventClearDemo` hat denselben Frame `0x30` und
+   einen 8-Byte-Slot (`0x20` gegen `0x18`). Nicht mit den
+   zwei wirkungslosen `evIsTalkModeNow`-Vorversuchen starten.
