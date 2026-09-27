@@ -10543,13 +10543,30 @@ Strings bleiben **0x18** zu früh (`0xa38` vs `0xa50`); fehlendes
 `ninja` / `build/GMSJ01/mario.dol: OK`.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
 
+### Nach hundertachtunddreißigster Iterationsrunde (Speed, 1 Vollmatch)
+
+**Vollmatch.** `TMario::initMirrorModel` (284 B, `mario/Player/MarioDraw`).
+
+**Ursache.** Compound-Literale für `setInfo[0/1]` in `initModel` landeten in
+`.rodata` vor dem Foot-Null-Cluster; Spiegel-Strings bei **0xa38** statt
+**0xa50** (`addi r4, r28, …` −0x18).
+
+**Fix.** `DummyStrings`/`MtxCalcTypeName` vor `MarioAnimeData.hpp`;
+nach `MarioFootDirLCtrl` zwei **0xc**-Nullblöcke plus
+`marioInitModelSetInfoRo0`/`Ro1` (je 0xa); `initModel` kopiert aus Rodata und
+setzt `setInfo[1].unk0 = mJointIdChnChest`.
+
+**Nebenwirkung.** `initModel` fuzzy 95,46 % → 94,28 % (erwartet: andere
+Relocs); MarioDraw matched_data 11,92 % → 48,36 %.
+
+`ninja` / DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+`changes_all`: Total matched_code 48,35 % → 48,36 %.
+
 ### Nächster Schritt
 
-1. Runden 114–119 / 121–135 unverändert.
-2. `initMirrorModel`: 0x18-Pad in `.rodata`-Emissionsreihenfolge (nicht
-   Entry-`trash`).
-3. `Hino2Pollute`: Nerv-Body aus ASM/`m2c` (nicht nur `changeBck`-Konstanten).
-4. `thinkSituation` / `soundMovement` / `changeScene`: Frame **verkleinern**
-   (UNUSED-Inlines / Locals), nicht Entry-`trash`.
+1. Runden 114–119 / 121–135 / R138 unverändert (R114–R135 `turnning` trash).
+2. `initModel` fuzzy zurück (Relocs nach setInfo-Rodata-Move).
+3. `Hino2Pollute`: Nerv-Body aus ASM/`m2c`.
+4. `thinkSituation` / `soundMovement` / `changeScene`: Frame verkleinern.
 5. `bosseel` / `walkerEnemy` / `BGKAppear` wie R135.
 6. Defer-Listen unverändert.

@@ -1,3 +1,12 @@
+#include <System/DummyStrings.hpp>
+
+static const char* MtxCalcTypeName[] = {
+	"MActorMtxCalcType_Basic クラシックスケールＯＮ",
+	"MActorMtxCalcType_Softimage クラシックスケールＯＦＦ",
+	"MActorMtxCalcType_MotionBlend モーションブレンド",
+	"MActorMtxCalcType_User ユーザー定義",
+};
+
 #include <Player/Mario.hpp>
 #include <Player/MarioAnimeData.hpp>
 #include <Player/MarioCap.hpp>
@@ -28,7 +37,6 @@
 // rogue includes needed for matching sinit & bss
 #include <MSound/MSSetSound.hpp>
 #include <MSound/MSoundBGM.hpp>
-#include <M3DUtil/InfectiousStrings.hpp>
 
 TMario* gpMarioForCallBack;
 
@@ -763,6 +771,14 @@ static int MarioFootDirLCtrl(J3DNode* param_1, int param_2)
 	return 1;
 }
 
+static const char marioDrawFootRodataZeroA[0xc] = { 0 };
+static const char marioDrawFootRodataZeroB[0xc] = { 0 };
+
+static const SomeModelMarioStruct marioInitModelSetInfoRo0
+    = { 0, 2, 0, { 0x14, 0x41 }, 0 };
+static const SomeModelMarioStruct marioInitModelSetInfoRo1
+    = { 0, 2, 1, { 0, 0 }, 1 };
+
 void TMario::getJumpIntoWaterModelData() { }
 
 void TMario::getHeadRot() { }
@@ -1262,8 +1278,9 @@ void TMario::initModel()
 	frameCtrl[2].setRate(SMSGetAnmFrameRate());
 
 	SomeModelMarioStruct* setInfo = new SomeModelMarioStruct[2];
-	setInfo[0] = (SomeModelMarioStruct) { 0, 2, 0, 0x14, 0x41, 0 };
-	setInfo[1] = (SomeModelMarioStruct) { mJointIdChnChest, 2, 1, 0, 0, 1 };
+	setInfo[0]          = marioInitModelSetInfoRo0;
+	setInfo[1]          = marioInitModelSetInfoRo1;
+	setInfo[1].unk0     = mJointIdChnChest;
 	modelMario->unk10 = 2;
 	modelMario->unk24 = setInfo;
 
