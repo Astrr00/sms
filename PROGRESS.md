@@ -8745,3 +8745,92 @@ Keine TU auf `Matching` gestellt.
     `MapObjGeneral`, `walkerEnemy`, `bossManta`,
     `fireWanwan`, `MapObjHide`, `EventWatcher` und
     `NpcWalkTurn` nicht auf `Matching` stellen.
+
+### Nach hundertundzweiter Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 101:
+47,79 % matched code, 1715868 / 3590088 Bytes,
+9191 / 12881 Funktionen.
+Game Code 35,51 %, 1003720 / 2826784 Bytes,
+5226 / 8857 Funktionen.
+Daten 385811 / 640331 Bytes, 60,25 %.
+
+`TTelesa::initAttacker` wich nur in einer
+Instruktion ab.
+Retail kopiert den Treffer-Aktor mit
+`addi r3, r30, 0` vor `getModel`.
+Bei uns stand `mr r3, r30`.
+Der Rest, 184 Instruktionen, stimmte.
+
+**Vollmatch.**
+
+```cpp
+TLiveActor* actor = static_cast<TLiveActor*>(param_1);
+MtxPtr mtx = actor->getModel()->getAnmMtx(5);
+```
+
+0 Abweichungen, 740 Bytes, 185 Instruktionen.
+`initItemAttacker` bleibt bei 100 %.
+`TNerveTelesaAttackMario::execute` bleibt
+bei 83 abweichenden Zeilen, 97,04 %.
+`telesa` bleibt `NonMatching`.
+Symbolordnung PASS.
+Die Weak-Reihenfolge und die zwei UNUSED-Größen
+sind vorbestehend.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,82 % matched code,
+1716608 / 3590088 Bytes, 9192 / 12881 Funktionen.
+Game Code 35,53 %, 1004460 / 2826784 Bytes,
+5227 / 8857 Funktionen.
+Daten unverändert: 385811 / 640331 Bytes, 60,25 %.
+Game-Daten unverändert: 306587 / 556995 Bytes, 55,04 %.
+
+Delta Code gegen Runde 101: +1 Funktion, +740 Bytes.
+Delta Daten: 0 Bytes.
+
+`changes_all`: `initAttacker__7TTelesaFP9THitActor`
+99,68 % auf 100 %.
+Unit-Code `telesa` 66,76 % auf 70,35 %.
+Unit-Fuzzy 99,60 % auf 99,61 %.
+Keine Regression.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `TTelesa::initAttacker` behält
+   `TLiveActor* actor`.
+   `telesa` nicht auf `Matching` stellen.
+2. `TMario::startVoice` behält `MSound* sound`.
+   `startVoiceIfNoVoice` behält kein `char trash[8]`.
+   `MarioSound` nicht auf `Matching` stellen.
+3. `turnEnd` nicht mit benanntem `TWaterGun*`
+   und aufgefaltetem `considerRotateStart`.
+4. `TNerveTelesaFreeze` nicht über
+   `int time = getTime()` oder einen benannten
+   `TPathNode`.
+5. `TCasinoPanelGate::touchWater` nicht mit
+   `span` und `baseY` wiederholen.
+6. `TNerveBEelTearsMarioRecover` behält `marioPos`.
+   Den Frame nicht polstern.
+7. `TNerveTobiPukuAttack` behält das `else`
+   mit `return true`.
+   Den Frame nicht polstern.
+   Keinen unbenutzten dritten `TVec3`.
+8. `catching` behält `mRotBroadEnableV`.
+   Den Frame nicht polstern.
+   `MarioRun` nicht auf `Matching` stellen.
+9. `walkEnd` behält `quarter` und `vel`.
+10. Vermeidungslisten aus Runde 81 bis 101 bleiben.
+    `MtxToQuat` nicht in Teilsummen zerlegen.
+    `initNeonMatColor` nicht mit benanntem `index`.
+    `MapEventMare`, `MapStaticObject`, `MarioRun`,
+    `smallEnemy`, `bosspakkun`, `hamukuri`, `poihana`,
+    `MapObjGeneral`, `walkerEnemy`, `bossManta`,
+    `fireWanwan`, `MapObjHide`, `EventWatcher` und
+    `NpcWalkTurn` nicht auf `Matching` stellen.
