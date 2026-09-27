@@ -9102,3 +9102,76 @@ Keine TU auf `Matching` gestellt.
    Den Frame nicht polstern.
    `MtxToQuat` nicht in Teilsummen zerlegen.
    `turnEnd`, `TelesaFreeze` und `touchWater` liegen lassen.
+
+### Nach hundertundsechster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 105:
+47,83 % matched code, 1717092 / 3590088 Bytes,
+9197 / 12881 Funktionen.
+Game Code 35,55 %, 1004944 / 2826784 Bytes,
+5232 / 8857 Funktionen.
+Daten 394595 / 640331 Bytes, 61,62 %.
+
+`THino2Params::THino2Params` hatte drei falsche
+`PARAM_INIT`-Floats.
+Die Instruktionswörter waren schon identisch,
+weil jedes `lfs` nur über eine SDA21-Relokation
+den Pool trifft.
+`functionRelocDiffs=data_value` zeigte
+99,96 % und genau drei abweichende `lfs`.
+
+**Vollmatch, strikt.**
+
+```cpp
+PARAM_INIT(mSLBodyHitR0, 100.0f)
+PARAM_INIT(mSLBodyHitH0, 200.0f)
+PARAM_INIT(mSLBankProp, 0.5f)
+```
+
+Retail legt an `0x248` den Wert 100,
+an `0x25c` den Wert 200 und an `0x270` den Wert 0,5.
+0 Abweichungen, 1648 Bytes, 412 Instruktionen.
+Sonst ändert sich in `hinokuri2` kein Prozent.
+`hinokuri2` bleibt `NonMatching`.
+Symbolordnung PASS.
+Sechs UNUSED-Größen sind vorbestehend.
+
+**Zähler.** `ninja changes_all` bleibt leer.
+Der Report vergleicht die Relokationswerte nicht,
+darum war der Konstruktor dort schon mitgezählt.
+Matched code bleibt 1717092 / 3590088 Bytes,
+9197 / 12881 Funktionen.
+Game Code bleibt 1004944 / 2826784 Bytes,
+5232 / 8857 Funktionen.
+Daten unverändert.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+`isUpperThanMirrorPlane`, `changeXluJoint` und
+`entryMirrorDrawBufferAlways` nicht erneut angefasst.
+
+### Nächster Schritt
+
+1. `THino2Params` behält 100, 200 und 0,5
+   für `mSLBodyHitR0`, `mSLBodyHitH0` und `mSLBankProp`.
+   `hinokuri2` nicht auf `Matching` stellen.
+2. `hoseiDiveCameraCallback` behält `marioPos`.
+   `bosseel` nicht auf `Matching` stellen.
+3. `MSRandVol::MSRandVol` behält `f32 half`.
+   `MSoundSE` nicht auf `Matching` stellen.
+4. `isUpperThanMirrorPlane` nicht ohne `dot`.
+   `changeXluJoint` nicht mit einem gemeinsamen `int i`.
+   `entryMirrorDrawBufferAlways` nicht mit
+   gefalteten Draw-Buffer-Suchen.
+5. `TShine::loadBeforeInit` nicht über ein benanntes `next`.
+   `TMario::catching` nicht über `MSound* sound`.
+   `stampModel` nicht über ein vorgezogenes `mMinX`.
+6. `TNerveMantaDeath` nicht über ein benanntes `se`.
+   `makeMActors` nicht über einen benannten Keeper.
+7. `TDonchou::loadAfter` behält `drum` und `itemDrum`.
+   `getObjAppearPos` bleibt `const`.
+   `initAttacker` behält `actor`, `startVoice` behält `sound`.
+8. Vermeidungslisten aus Runde 81 bis 105 bleiben.
+   Den Frame nicht polstern.
