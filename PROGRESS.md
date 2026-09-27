@@ -11000,6 +11000,34 @@ Pad **zwischen** konkreten Locals / MAP-Größe, nicht Entry-Pad).
 **Verify.** `ninja baseline` / `changes_all` ohne Code-Delta; `dtk shasum -c` →
 OK (Tip **`e24eab6c`**, Quellbaum unverändert).
 
+### R161 (Aufgabe B; Pivot konkrete Ziele; keine Vollmatches)
+
+Kein Entry-Trash-Scan. Fokus: `initAndRegister`, Stack-Shrink-Hinweise,
+`TBoxTelesa::load` (max. 2 Versuche). `Hino2Pollute` übersprungen (kein
+begrenzter Pfad).
+
+**`TMapObjBase::initAndRegister` (MapObjBase).** Ausgang **~99,7 %** (Frame
+**0x68** vs. Retail **0x70**, Iterator-Locals **−4**). R146-Analog
+(`joinToGroup`): Mid-`list` + `trash[0]` nach `search` mit `char trash[8]`
+Eingang → Frame **0x70** und Iterator **0x40** OK, aber **`addi r30` vs.
+`r31`** nach `search` (weil `this` in **r31** bis `push_back` inlined).
+Variante `trash[8]` + `trash[0]` vor inline-`search` (ohne `list`): **99,9 %**,
+nur `insert`-Stack **+4** (**0x50/0x4c** vs. **0x4c/0x48**). `THitActor* self`,
+`volatile list`, `TViewObjPtrListT`-Cast: kein striktes Match. Nicht committiert.
+
+**`TBoxTelesa::load` (telesa).** Versuch 1: explizite `TVec3`-Args an
+`newAndRegisterObj` statt `mPosition`/`mScaling.set` → **86,8 %** (CFG). Versuch
+2: `char align[4]` zwischen `unk150` und `if` → Frame **0x48** (Retail **0x40**).
+Revertiert.
+
+**Stack-Shrink** (`thinkSituation` / `soundMovement` / `changeScene`): nicht
+vertieft (große Frame-Deltas, kein schneller 100 %-Pfad in diesem Slice).
+
+**Vollmatch, strikt.** keine.
+
+**Verify.** `ninja baseline` / `changes_all` ohne Code-Delta; `dtk shasum -c` →
+OK (Tip **`f48b5cc7`**, Quellbaum nur PROGRESS).
+
 ### R157 (Aufgabe B; Sweep, keine neuen Vollmatches)
 
 **`TNerveHamuKuriWallDie`.** `char trash[8];` am Eingang → Frame **0x80**;
@@ -11110,5 +11138,6 @@ Funktionsanfang (Frame **0x28**, inlined `considerRotateStart` /
 1. `BathtubKiller` death nerves: **0x1c**-Basis ohne Frame-Wachstum.
 2. Nerven mit Frame+Local-Drift: `trash` **nach** betroffenen Locals (vgl.
    `considerRotateStart`, PROGRESS-Methodik).
-3. `TCloset` / `initAndRegister` nur bei klarem 100 %-Pfad (Hands-off).
+3. `initAndRegister`: **r30/r31** vs. **insert +4** (siehe R161); `TCloset`
+   Hands-off.
 4. Defer-Listen / Hands-off unverändert.
