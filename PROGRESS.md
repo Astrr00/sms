@@ -9233,3 +9233,58 @@ Die Hino2-Defaults 100, 200 und 0,5 bleiben.
    `makeMActors` nicht über einen benannten Keeper.
 7. Vermeidungslisten aus Runde 81 bis 106 bleiben.
    Den Frame nicht polstern.
+
+### Nach hundertundachter Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 107:
+47,83 % matched code, 1717092 / 3590088 Bytes,
+9197 / 12881 Funktionen.
+Game Code 35,55 %, 1004944 / 2826784 Bytes,
+5232 / 8857 Funktionen.
+Daten 394595 / 640331 Bytes, 61,62 %.
+
+Oberhalb von 99 % gibt es keinen weiteren
+Konstruktor, dessen einzige Abweichung ein
+falscher `PARAM_INIT`-Name oder ein falsches
+Float-Default ist.
+`mHPMax` bleibt.
+
+**Gemessen und zurückgenommen.**
+
+`SMS_UnifyMaterial`: `mat` vor `unifier` zu
+deklarieren lässt r27 und r28 vertauscht.
+Beide Zeiger in die Schleife zu legen fällt
+von 99,3 % auf 62,4 %.
+`execRoofCheck_`: `roofHeight -= mSLRoofHeight`
+trifft die Float-Register.
+Der Frame fällt von `0x48` auf `0x40`.
+Ein benanntes `y` schiebt nur einen Slot um 4.
+Ein benanntes `TCamSaveEx* save` schrumpft den
+Frame weiter auf `0x38`.
+Ein benanntes `limit` lässt denselben Frame
+`0x40`.
+Alle Varianten zurückgenommen.
+
+**Zähler.** Kein neues Vollmatch.
+Matched code bleibt 1717092 / 3590088 Bytes,
+9197 / 12881 Funktionen.
+Game Code und Daten bleiben unverändert.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `mHPMax` behält die Schreibweise `mHPMax`.
+2. `SMS_UnifyMaterial` nicht über die
+   Deklarationsreihenfolge von `mat` und `unifier`
+   und nicht mit beiden Zeigern in der Schleife.
+3. `execRoofCheck_` nicht über `roofHeight -=`,
+   benanntes `y`, `save` oder `limit`.
+4. `THino2Params` behält 100, 200 und 0,5.
+   `hoseiDiveCameraCallback` behält `marioPos`.
+   `MSRandVol` behält `half`.
+5. Vermeidungslisten aus Runde 81 bis 107 bleiben.
+   Den Frame nicht polstern.
