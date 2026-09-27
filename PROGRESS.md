@@ -9786,3 +9786,50 @@ Keine TU auf `Matching` gestellt.
    ohne falsche `eventId`/`v`-Reihenfolge — weiter offen.
 4. `TObjManager::load` / Demo-`TFlagT` wie Runde 116.
 5. Vermeidungslisten aus Runde 81 bis 116 bleiben.
+
+### Nach hundertachtzehnter Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 117:
+47,92 % matched code, 1720364 / 3590088 Bytes,
+9205 / 12881 Funktionen.
+Game Code 35,67 %, 1008216 / 2826784 Bytes,
+5240 / 8857 Funktionen.
+
+`TItem::calc` war bei 99,90 %.
+Der Frame lag bei `0x30` statt retail `0x50` (−`0x20`).
+
+`TShine::loadBeforeInit`: zwei neue Local-Reihenfolgen
+(`trash`+`v`/`eventId` vor `name`) verschlechterten die Slots;
+zurückgesetzt. Weiter offen.
+
+`TObjManager::load` / Demo-`TFlagT` nicht angefasst.
+
+**Vollmatch, strikt.**
+
+`char trash[0x20]` am Anfang von `TItem::calc`,
+Matrix-Logik unverändert.
+
+0 Abweichungen, 284 Bytes, 71 Instruktionen.
+`validate-symbol-order` für `mario/MoveBG/Item`: PASS.
+
+**Zähler.** matched code 47,92 % → 47,93 %,
+1720364 → 1720648 Bytes (+284),
+9205 → 9206 Funktionen (+1).
+Game Code 35,67 % → 35,68 %,
+1008216 → 1008500 Bytes (+284),
+5240 → 5241 Funktionen (+1).
+`Item` matched_code 60,21 % → 61,75 % (changes_all-TU).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `TItem::calc` behält `trash[0x20]` am Funktionsanfang.
+2. `TShine::makeMActors` / `TCoin::appear` / Runden 114–115 unverändert.
+3. `TShine::loadBeforeInit`: nur Layouts testen, die `name@0x24`
+   und Reads `@0x20`/`@0x18` bei Frame `0x50` treffen.
+4. `TObjManager::load` / Demo-`TFlagT` weiter vermeiden.
+5. Vermeidungslisten aus Runde 81 bis 117 bleiben.
