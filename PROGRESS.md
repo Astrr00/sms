@@ -10672,3 +10672,26 @@ Size-Warnung `getSlotResult` unverändert).
 2. `TRoulette::initMapObj`: Iterator `0x5c` + `0x7c`-Cluster ohne `0xa8`-Frame.
 3. Weitere `.x`→`.y`-Offsets wie Roulette.
 4. Defer-Listen unverändert.
+
+### Nach hunderte dreiundvierzigster Iterationsrunde
+
+**Vollmatch, strikt.**
+
+- `TSlotDrum::initNeonMatColor`: `char trash[4]; trash[0]=0;` → Frame
+  `0x58` und Mat-Name-Stack @ `0x28` (**match**).
+
+**Teilfortschritt.**
+
+- `TCloset::calcRootMatrix`: `trash[4]` + `pad2[4]`, dann
+  `getModel()` vor `TRotation3f mtx` (Saku-Reihenfolge) → `mr r31,r3` /
+  `mr r3,r30` OK; verbleibend Mtx-Basis `0x10` vs `0x14` und
+  `ref(1,3)`-Spill `0x2c` vs `0x30` (~99,8 %).
+
+R142 `getDistance` **match**; R140 `TRoulette::moveObject`; R138 `initMirrorModel`;
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### Nächster Schritt
+
+1. `TCloset::calcRootMatrix`: letzte +4 B Mtx-Basis (ohne Frame `0x78`).
+2. `TRoulette::initMapObj`: Iterator-/Stack-Cluster bei Frame `0xa0`.
+3. Defer-Listen unverändert.
