@@ -10920,6 +10920,22 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R171 (`TMapObjGeneral::calcVelocity`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+- `char trash[0x28]; trash[0]=0;` → Frame `-0x58` wie Retail.
+- `LIVE_FLAG_AIRBORNE`: `int airborne` + `mLiveFlag & flag` → `li`/`cmpwi`
+  statt `checkLiveFlag2` (`clrlwi.`).
+- `mMapObjData->mPhysical`-Zweig unverändert (`piVar4 ? (u8)1 : (u8)0`).
+
+0 Abweichungen, 420 Bytes, 105 Instruktionen.
+`decomp-diff -u mario/MoveBG/MapObjGeneral -d calcVelocity`: 100 %.
+
+R170 `appearing`, R168–R160 / `mirror@0xa50` unverändert strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R170 (`TMapObjGeneral::appearing` — strikt nachgezogen)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
