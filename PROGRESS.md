@@ -13131,6 +13131,26 @@ spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%
 
 **Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
 
+### R285v (Enemy/Player B; defer wire, 0× ship)
+
+**Hunt.** Defer **`SMS_IsMarioOnWire`**; **~6** fresh MAP; skip **R285 thrash**, spill **≥99.7%**, Closet/MoveBG; strict **100%** only; no frame fakematch.
+
+**Ship.** none.
+
+**Probes (~6).**
+
+- **`enemymanager` / `TEnemyManager::createEnemies`**: ary **`0x10`/`0x14`** iterator **`lwz`** order vs clamp — **~98.8%** (340B) — deferred.
+- **`launcher` / `TCommonLauncher::init`**: **`@1664`** pool + **`lwz 0x168(r31)`** before **`rand`/`xoris`** — **~98.1%** (748B) — deferred.
+- **`Amenbo` / `TNerveAmenboTurn::execute`**: velocity **`stw`** block **`r1+0x44`** vs **`+0x30`** — **~98.9%** (704B) — deferred.
+- **`bossgesso` / `TBGBeakHit::moveRequest`**: Mario angle **`lfs`**/`**`Vec`** home **`−0x78`** — **~98.6%** (416B) — deferred.
+- **`Yoshi` / `TYoshi::appearFromEgg`**: egg appear / scale — **~97.6%** (392B) — deferred.
+- **`hamukuri` / `THamuKuri::getTakingMtx`**: taking mtx **`−0x`** frame vs **`TDangoHamuKuri`** — **~92.2%** (256B) — deferred.
+- **`graph` / `TGraphWeb::getEscapeFromMarioIndex`**: path index walk — **~97.2%** (592B) — deferred.
+
+**Tip (R285v).** **`TCommonLauncher::init`**: retail **`lwz r29,0x168(r31)`** sits **before** **`bl rand`** and pairs with **`xoris r0,r29`** for the **`f64` scale** — hoisting **`rand`** above that load breaks the **`lfd`/`stw`** schedule (~98%).
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
 ### R258 (Aufgabe B; defer GraphGroup/ColumSand pool + diversify, 0× ship)
 
 **Hunt.** Post-R257 dry; **defer `TGraphGroup::perform`** (empty **`TGraphWeb::perform` DCE**) and
