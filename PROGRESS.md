@@ -11077,6 +11077,31 @@ Pad-Δ **4/8/0x10** mit uniform `~` only in dieser Runde; Top-Kandidaten u. a.
 
 **Verify.** `ninja baseline` / `changes_all`; `dtk shasum -c` → OK.
 
+### R165 (Aufgabe B; keine neuen Vollmatches)
+
+**Pollution `stamp`.** Keine weiteren Retail-Symbole mit bare
+`gpPollution->stamp(1, …)` außer bereits gematchten / Skip (`setStatusToJumping`,
+`emJumping`/`emWalkAround`, `updatePollute`, `oilSlope` extra, `seedPollute`
+UNUSED). `TNerveSmallEnemyDie::execute` bereits **100 %**.
+
+**Scanner (frame Δ 4/8/0x10, uniform `~`).** Treffer u. a.
+`TMario::toroccoEffect` / `soundTorocco` (**need +8**), `TMario::isTakeSituation`
+(**+0x10**), `TNerveNKFollowMario::execute` (**+0x10**): `char trash[N]` am
+Eingang richtet **nur** `stwu` aus; `TVec3::length()`-Spills bleiben **−8** bis
+**−0x18** (gleiches Muster wie R163 `torocco` nach Frame-Fix).
+
+**Probes revertiert (8):** `toroccoEffect`/`soundTorocco` (`trash[8]` vor/nach
+`dist`/`len`), `isTakeSituation` (`trash[0x10]`), `TNerveNKFollowMario`
+(`trash[0x10]`), `TPakkunSeed::loadInit` (`trash[8]` → **99,9 %**, String-
+Cluster `~`), `TNerveBPPreDie` (`trash[0x18]`, Frame OK, Vec **−0x18**),
+`TMario::toroccoEffect` Komponenten-`sqrtf` (Regress), `BathtubKillerBreak` /
+`SmallEnemyFreeze` skip.
+
+**Vollmatch, strikt.** keine. Quellbaum unverändert ggü. **`5c5f4542`**.
+
+**Verify.** `ninja baseline` / `changes_all` ohne Code-Delta; `dtk shasum -c` →
+OK.
+
 ### R162 (Aufgabe B; `initAndRegister` only; keine Vollmatches)
 
 Dedizierte Pass nur **`TMapObjBase::initAndRegister`**. Retail hat **kein**
