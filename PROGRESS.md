@@ -10920,6 +10920,33 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R213 (`MapObjBianco`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TBiancoMiniWindmill::initMapObj` ohne `SMatrix34C`-Leer-Konstruktor.
+`TRevolvingFenceInner::setGroundCollision` bleibt geparkt.
+
+- `TBiancoMiniWindmill::initMapObj` setzt `mAppearSpeed` auf 0.
+  `unk15C` ist `new TMapObjMessenger("地形オブジェメッセンジャー")` (Größe `0x6C`).
+  `initHitActor(0, 1, 0, 0, 0, 300, 500)`.
+  Messenger-Position ist `x + sMessengerPosZ * MsSin(rot.y)`, `y + sMessengerPosY`, `z + sMessengerPosZ * MsCos(rot.y)`.
+  `sMessengerPosZ` ist 200, `sMessengerPosY` ist 6400.
+  284 Bytes, 71 Instruktionen.
+  Konstruktor, `control` und `__sinit_MapObjBianco_cpp` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBianco`: PASS.
+Fünf bestehende UNUSED-Größenwarnungen.
+`MapObjBase.hpp` unverändert.
+
+`ninja changes_all`: fuzzy 78.94513 % -> 78.95292 %, matched code 49.66764 % -> 49.675552 % (1783112 -> 1783396, +284).
+Matched data bleibt 65.2486 % (417807).
+Funktionen matched 9580 -> 9581.
+`MapObjBianco` 4732 -> 5016 (+284).
+Kein R170-R212-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R212 (`MapObjMamma`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

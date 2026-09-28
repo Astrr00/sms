@@ -1,4 +1,5 @@
 #include <MoveBG/MapObjBianco.hpp>
+#include <MoveBG/MapObjMessenger.hpp>
 #include <MarioUtil/MathUtil.hpp>
 #include <MarioUtil/DrawUtil.hpp>
 #include <MarioUtil/PacketUtil.hpp>
@@ -99,7 +100,21 @@ void TBiancoMiniWindmill::control()
 	unk150 = MsWrap(unk150, 0.0f, 360.0f);
 }
 
-void TBiancoMiniWindmill::initMapObj() { }
+static f32 sMessengerPosZ = 200.0f;
+static f32 sMessengerPosY = 6400.0f;
+
+void TBiancoMiniWindmill::initMapObj()
+{
+	TMapObjBase::initMapObj();
+	mAppearSpeed = 0.0f;
+	unk15C       = new TMapObjMessenger("地形オブジェメッセンジャー");
+	unk15C->initHitActor(0, 1, 0, 0.0f, 0.0f, 300.0f, 500.0f);
+	unk15C->mPosition.x
+	    = mPosition.x + sMessengerPosZ * MsSin(mRotation.y);
+	unk15C->mPosition.y = mPosition.y + sMessengerPosY;
+	unk15C->mPosition.z
+	    = mPosition.z + sMessengerPosZ * MsCos(mRotation.y);
+}
 
 TBiancoMiniWindmill::TBiancoMiniWindmill(const char* name)
     : THideObjBase(name)

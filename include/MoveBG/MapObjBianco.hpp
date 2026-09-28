@@ -7,6 +7,7 @@
 // TODO: mark remaining virtual methods as such
 
 struct TBGWallCheckRecord;
+class TMapObjMessenger;
 
 class TWoodLog : public TMapObjFloatOnSea {
 public:
@@ -136,7 +137,7 @@ public:
 	/* 0x150 */ f32 unk150;
 	/* 0x154 */ f32 unk154;
 	/* 0x158 */ f32 unk158;
-	/* 0x15C */ u32 unk15C;
+	/* 0x15C */ TMapObjMessenger* unk15C;
 	/* 0x160 */ u32 unk160;
 };
 
