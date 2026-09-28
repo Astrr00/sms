@@ -10920,6 +10920,33 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R258 (`MapObjPinna`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TViking::reset` und `THorizontalViking::reset`.
+
+- Beide kopieren `unk140` nach `unk144` und setzen `unk148` auf 0.
+  `TViking` testet das neu geladene `unk140 > 0`.
+  `THorizontalViking` testet die Kopie `unk144 > 0`.
+  Der `>`-Test ist `fcmpo`+`ble`.
+  Wahr setzt `mState` auf 1, sonst auf 2.
+  Je 52 Bytes, 13 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjPinna`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.17877 % -> 79.17900 %, matched code 49.91153 % -> 49.91443 % (1791868 -> 1791972, +104).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9630 -> 9632.
+`MapObjPinna` 5164 -> 5268 (+104).
+Kein R170–R257-Unit hat matched code verloren.
+Nur `MapObjPinna` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R257 (`MapObjFence`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

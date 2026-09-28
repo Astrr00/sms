@@ -60,15 +60,14 @@ void THorizontalViking::moveNormal() { }
 
 void THorizontalViking::control() { }
 
-// TODO: retail is fcmpo + ble. MWCC emits cror + bne for this <= test.
 void THorizontalViking::reset()
 {
 	unk144 = unk140;
 	unk148 = 0.0f;
-	if (unk144 <= 0.0f)
-		mState = 2;
-	else
+	if (unk144 > 0.0f)
 		mState = 1;
+	else
+		mState = 2;
 }
 
 void THorizontalViking::initMapObj()
@@ -94,15 +93,14 @@ void TViking::roll() { }
 
 void TViking::control() { }
 
-// TODO: same ble/cror mismatch as THorizontalViking::reset.
 void TViking::reset()
 {
 	unk144 = unk140;
 	unk148 = 0.0f;
-	if (unk140 <= 0.0f)
-		mState = 2;
-	else
+	if (unk140 > 0.0f)
 		mState = 1;
+	else
+		mState = 2;
 }
 
 void TViking::loadAfter()
