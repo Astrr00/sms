@@ -2431,6 +2431,9 @@ DEFINE_NERVE(TNerveHamuKuriBoundFreeze, TLiveActor)
 
 DEFINE_NERVE(TNerveHamuKuriWallDie, TLiveActor)
 {
+	char trash[8];
+	trash[0] = 0;
+
 	THamuKuri* self = (THamuKuri*)spine->getBody();
 
 	if (spine->getTime() == 0) {
