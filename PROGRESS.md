@@ -11766,6 +11766,29 @@ Closet/MoveBG, **`getNowGravity`**, **`DebuTelesa` bastable**, **`bossManta` `@2
 
 **Verify.** `ninja changes_all` ggü. **`dd2fc0b3`**: **+0** matched functions (**9270** unchanged).
 
+### R236 (Aufgabe B; float temp / reg order, 2× ship)
+
+**Hunt.** Post-**`97545385`**; diversify (PARAM/string/vtable/small ASM) — not large **`TVec3`** trash; cap ~8.
+
+**Ship.**
+
+- **`TBossManta::getPolluteRadius`** (124 B): **`f32 pollute`** temp after **`getSaveParams()->mSLPolluteRadius.get()`**
+  before **`* mScaling.x`** — fixes post-**`blrl`** **`lfs`** operand order → **100%**.
+- **`TGessoPolluteObj::getNowGravity`** (32 B): cache **`TGesso* gesso = unk16C`** so **`getSaveParams()`** loads use
+  **`r3`** like retail → **100%**.
+
+**Probes (~8, no-ship).**
+
+- **`TBubbleCallBack`**, **`warpRequest`**, **`emitCommon`**, **`getRumblePow`**, **`MarioFootPosRCtrl`** — unchanged
+  (deferred per R235).
+- **`calcGunAngle` `unused1[17]`** — 99.9% only (frame + **`lha`** reg).
+
+**Tip (R236).** One-liner **`return virt()->param.get() * member`** often needs a scalar temp or cached **`this`**
+  pointer — not stack **`char`** pads.
+
+**Verify.** `ninja changes_all` ggü. **`97545385`**: **+2** matched functions (**9270 → 9272**), **+156 B**
+  matched code.
+
 ### R225 (Aufgabe B; bossManta rodata + EP diversify, 0× ship)
 
 **Hunt.** Post-**`385107f3`**; optional **`bossManta` `@2805`/`@2807`** lead (Amenbo
