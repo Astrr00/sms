@@ -11321,6 +11321,41 @@ unverändert ggü. **`63f8cdc0`**.
 
 **Verify.** `ninja baseline` / `changes_all` ohne Code-Delta.
 
+### R196 (Aufgabe B; emit/load entry-pad + Eel-Tears, keine Vollmatches)
+
+**Hunt.** B-scope Enemy/Player ≤600 B; Skip R195-Liste + User (`TPakkun::load`, `TBubbleCallBack`,
+`THinokuri2::perform`-Trash-Experimente, R194/R193-Prior); Präferenz **entry-pad-only** (`trash[8]`
++ `trash[0]=0`) oder **`emit*`/`load`/`receiveMessage`**; Cap ~8; strikt 100 %.
+
+**Probes (~8, revertiert).**
+
+1. **`TBEelTearsDrop::perform`:** Retail **−0xc8** OK mit `trash[0x10]`; einzig **`addi r28,0x6c` vs
+`0x60`** (+12 B `Mtx`). `trash[4]` → Frame **−0xc0**; `mtxPad[0xc]` vor `Mtx` — Spill unverändert.
+2. **`TBEelTears::perform`:** Entry `trash[8]; trash[0]=0` → **`stwu −0x90`** OK; Rest **vtable/
+`effectMtx` @ 0x40 vs 0x44** + **`lwz` 0xd0/0xf4** (Layout, kein reines Pad).
+3. **`TNozzleBase::emitCommon`:** `trash[0x18]` → Frame **−0x78** OK; **`TVec3` pos/dir/speed**
+weiter **+0xc**; `vecPad[0xc]`/`trash[0x24]` → Frame **−0x88** (overshoot).
+4. **`TOneShotGenerator::receiveMessage`:** `trash[4]` → Frame **−0x78** (war **−0x70**); Spill
++8 (schlechter).
+5. **`TMario::toroccoEffect`:** `trash[8]` → Frame **−0x90** OK; temporäres **`TVec3`**-Diff **+4**
+(0x60 vs 0x5c); `trash[0xc]` → **−0x98**.
+6. **`TBoxTelesa::load`:** `trash[4]` — inlined `TTelesa::load`-Spill **+4** bleibt, Frame **−0x40**
+→ **−0x48** (overshoot).
+7. **`TTamaNokoManager::load`:** `trash[4]` — Frame/Spill + **`addi r30,0x384` vs `0x380`** (inlined
+`TSmallEnemyManager::load`, kein isoliertes Pad).
+8. **`TNerveSmallEnemyFreeze`:** nur Diff — Frame **−0x38** vs **−0x40** (8 B zu groß, kein Cut).
+
+**Vollmatch, strikt.** keine (letzter Ship: R189 `emitGetWaterEffect`).
+
+**Tip (R196).** **Entry-pad-only** reicht wenn **nur `stwu`/`addi r1` driftet** (z. B.
+`toroccoEffect` **`trash[8]`**). Scheitert wenn (a) **Frame schon passt** aber Spill **+4** in
+**inlined Parent-`load`** (`TBoxTelesa`/`TTamaNokoManager` — `trash[4]` verschiebt **`PARAM`-`addi`**
+um **0x4**), oder (b) **`Mtx`/`TVec3` innerhalb gleicher Frame-Größe** (`TBEelTearsDrop` **0x6c**,
+`emitCommon` **+0xc**). Dann **Slot-Pad an der Spill-Stelle** oder **Parent-TU** — nicht weiteres
+Entry-Trash.
+
+**Verify.** `ninja baseline` / `changes_all` ohne Code-Delta ggü. **`eb1089f9`**.
+
 ### R195 (Aufgabe B; Pakkun + Bubble/Hino2-Spill, keine Vollmatches)
 
 **Hunt.** B-scope Enemy/Player ≤600 B außer User-Skips (`isReachedToGoalXZ`, `getNowGravity`,
