@@ -13,6 +13,13 @@ public:
 	void control();
 	void load(JSUMemoryInputStream&);
 	TCraneRotY(const char* name = "Ｙ軸回転クレーン");
+
+public:
+	/* 0x138 */ f32 unk138;
+	/* 0x13C */ f32 unk13C;
+	/* 0x140 */ f32 unk140;
+	/* 0x144 */ f32 unk144;
+	/* 0x148 */ u32 unk148;
 };
 
 class TCraneUpDown : public TMapObjBase {

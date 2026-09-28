@@ -1,6 +1,9 @@
 #include <MoveBG/MapObjRicco.hpp>
 #include <JSystem/J3D/J3DGraphAnimator/J3DModel.hpp>
 #include <Map/MapCollisionManager.hpp>
+#include <MSound/SoundEffects.hpp>
+#include <stdlib.h>
+#include <string.h>
 
 static JGeometry::TVec3<f32> submarineCranePos_forSound(1956.0f, 1000.0f,
                                                         6425.0f);
@@ -18,7 +21,18 @@ void TCraneRotY::calc() { setRootMtxRotY(); }
 
 void TCraneRotY::control() { }
 
-void TCraneRotY::load(JSUMemoryInputStream&) { }
+void TCraneRotY::load(JSUMemoryInputStream& stream)
+{
+	TMapObjBase::load(stream);
+	stream.read(&unk140, 4);
+	unk138 = mRotation.y;
+	unk144 = 0.05f + 0.1f * ((f32)rand() * 0.000030517578f);
+	if (strcmp(mName, "crane90 0") == 0)
+		unk148 = MSD_SE_OBJ_CRANE_SIDEMOVE1;
+	else
+		unk148 = MSD_SE_OBJ_CRANE_SIDEMOVE2;
+	mState = 0;
+}
 
 void TCraneUpDown::control() { }
 

@@ -10920,6 +10920,42 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R202 (`MapObjRicco` / `MapObjBianco` / `MapObjMamma`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+Drei kurze Fills ohne `SMatrix34C`-Leer-Konstruktor.
+Zurückgenommen, nur String-Addends:
+`TBiancoWatermillVertical::loadAfter` (fünf `~` auf `addi`, Frame beide `-0x50`).
+Zurückgenommen, nur Frame:
+`TGoalFlag::touchActor` (`-0x20` statt `-0x28`).
+Zurückgenommen, Ablauf:
+`TSandBombBase::expanded` (zweites `getFrameCtrl` vor dem Add, Frame `-0x28` statt `-0x40`).
+Zurückgenommen, ein fehlendes `b` in der Switch-Kette:
+`TGoalWatermelon::control`.
+
+- `TCraneRotY::load` liest 4 Bytes nach `unk140`, kopiert `mRotation.y` nach `unk138`, setzt `unk144` auf `0.05 + 0.1 * (rand() * 0.000030517578)` und wählt `MSD_SE_OBJ_CRANE_SIDEMOVE1` oder `2` per `strcmp(mName, "crane90 0")`.
+  `mState` wird 0.
+  188 Bytes, 47 Instruktionen.
+- `TBiancoMiniWindmill::control` bremst `unk154` mit `mFriction`, wenn es über `unk158` liegt, addiert es auf `unk150` und wickelt mit `MsWrap` auf `[0, 360)`.
+  112 Bytes, 28 Instruktionen.
+- `TGoalWatermelon::loadAfter` setzt `HIT_FLAG_CANNOT_GET_HIT`, sucht `シャイン（お化けスイカ用）` nach `unk138`, kopiert `unk140` in dessen `mPosition` und ruft virtuell `appear`.
+  176 Bytes, 44 Instruktionen.
+
+`validate-symbol-order` für Ricco, Bianco und Mamma: PASS.
+Dieselben UNUSED-Größenwarnungen wie zuvor.
+
+`ninja changes_all`: fuzzy 78.8174 % -> 78.83033 %, matched code 49.520348 % -> 49.533607 % (1777824 -> 1778300, +476).
+Matched data bleibt 65.18551 %.
+Funktionen matched 9545 -> 9548.
+MapObjRicco matched code 2148 -> 2336.
+MapObjBianco matched code 4188 -> 4300.
+MapObjMamma matched code 4860 -> 5036.
+Monte, `MapObjManager` und `MarNameRefGen_MapObj` unverändert.
+Kein R170-R201-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R201 (`MapObjMonte` / `MapObjRicco`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

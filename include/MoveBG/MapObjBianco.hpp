@@ -113,6 +113,13 @@ public:
 	virtual void calc();
 	virtual u32 touchWater(THitActor*);
 	TBiancoMiniWindmill(const char* name = "風車（ビアンコ小）");
+
+	static f32 mFriction;
+
+public:
+	/* 0x150 */ f32 unk150;
+	/* 0x154 */ f32 unk154;
+	/* 0x158 */ f32 unk158;
 };
 
 class TBiancoWatermillVertical : public TMapObjBase {

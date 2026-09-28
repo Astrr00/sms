@@ -1,4 +1,5 @@
 #include <MoveBG/MapObjBianco.hpp>
+#include <MarioUtil/MathUtil.hpp>
 #include <MarioUtil/DrawUtil.hpp>
 #include <MarioUtil/PacketUtil.hpp>
 #include <M3DUtil/MActor.hpp>
@@ -85,7 +86,17 @@ u32 TBiancoMiniWindmill::touchWater(THitActor*) { return 0; }
 
 void TBiancoMiniWindmill::calc() { }
 
-void TBiancoMiniWindmill::control() { }
+f32 TBiancoMiniWindmill::mFriction = 0.01f;
+
+void TBiancoMiniWindmill::control()
+{
+	if (unk154 > unk158)
+		unk154 -= mFriction;
+	else
+		unk154 = unk158;
+	unk150 += unk154;
+	unk150 = MsWrap(unk150, 0.0f, 360.0f);
+}
 
 void TBiancoMiniWindmill::initMapObj() { }
 

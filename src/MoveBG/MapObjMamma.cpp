@@ -328,7 +328,15 @@ void TGoalWatermelon::touchActor(THitActor*) { }
 
 void TGoalWatermelon::control() { }
 
-void TGoalWatermelon::loadAfter() { }
+void TGoalWatermelon::loadAfter()
+{
+	TMapObjBase::loadAfter();
+	onHitFlag(HIT_FLAG_CANNOT_GET_HIT);
+	unk138 = (TMapObjBase*)JDrama::TNameRefGen::search(
+	    "シャイン（お化けスイカ用）");
+	unk138->mPosition.set(unk140);
+	unk138->appear();
+}
 
 void TGoalWatermelon::load(JSUMemoryInputStream&) { }
 
