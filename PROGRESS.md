@@ -10920,6 +10920,35 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R278 (`MapObjBall`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjBall::control`.
+
+- `TMapObjGeneral::control`.
+  Wenn `unk194` als `s32` nicht 0 ist, wird es um 1 kleiner.
+  Bei `STATE_HOLDING` kopiert `MTXCopy` `mHolder->getTakingMtx` in eine lokale Matrix.
+  Translation Y bekommt `unk190` dazu.
+  Die Matrix geht per `MTXCopy` nach `getModel()->getAnmMtx(0)`.
+  Sonst: wenn `mVelocity.squared()` nicht `<= epsilon()` ist oder `mGroundPlane->mActor` nicht null ist, virtuelles `calcCurrentMtx`.
+  `char trash[0x14]` hält das Frame bei `-0x70`.
+  272 Bytes, 68 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.272896 % -> 79.280365 %, matched code 50.030643 % -> 50.03822 % (1796144 -> 1796416, +272).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9651 -> 9652.
+`MapObjBall` 5920 -> 6192 (+272).
+Kein R170–R277-Unit hat matched code verloren.
+Nur `MapObjBall` hat matched code gewonnen.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R277 (`MapObjBall`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

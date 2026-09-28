@@ -97,7 +97,26 @@ void TMapObjBall::makeObjAppeared()
 	trash[0] = 0;
 }
 
-void TMapObjBall::control() { }
+void TMapObjBall::control()
+{
+	TMapObjGeneral::control();
+	if ((s32)unk194 != 0)
+		unk194 -= 1;
+	if (isState(TMapObjGeneral::STATE_HOLDING)) {
+		Mtx mtx;
+		MTXCopy(mHolder->getTakingMtx(), mtx);
+		mtx[1][3] += unk190;
+		MTXCopy(mtx, getModel()->getAnmMtx(0));
+	} else {
+		JGeometry::TVec3<f32> vel = mVelocity;
+		if (!(vel.squared() <= JGeometry::TUtil<f32>::epsilon()
+		      && mGroundPlane->mActor == nullptr))
+			calcCurrentMtx();
+	}
+	// Dead slot so MWCC keeps the frame at -0x70.
+	char trash[0x14];
+	trash[0] = 0;
+}
 
 BOOL TMapObjBall::receiveMessage(THitActor* sender, u32 message)
 {
