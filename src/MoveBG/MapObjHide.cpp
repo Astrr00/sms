@@ -681,7 +681,7 @@ void TBreakHideObj::initMapObj()
 	}
 }
 
-void TWoodBox::fabricatedGroundKillCheck(f32 dX, f32 dY)
+void TWoodBox::killNearWoodBox(f32 dX, f32 dY) const
 {
 	const TBGCheckData* groundPlane;
 	f32 resY = gpMap->checkGround(dX + gpMarioPos->x, gpMarioPos->y + 1000.0f,
@@ -694,6 +694,14 @@ void TWoodBox::fabricatedGroundKillCheck(f32 dX, f32 dY)
 		}
 	}
 }
+// Four inlined ground pointers sit 0x94 low in a frame 0x98 short.
+// 0x90 (not 0x94) lands them on retail 0xd4..0xe0 and the frame on -0xf0.
+static inline void woodBoxKillPad()
+{
+	char trash[0x90];
+	trash[0] = 0;
+}
+
 void TWoodBox::kill()
 {
 	startAnim(2);
@@ -707,11 +715,11 @@ void TWoodBox::kill()
 	                                nullptr, 0, 4);
 
 	// Retail checks (-50,-50), (50,-50), (-50,50), then (50,50).
-	// TODO: frame is still 0x58 against retail 0xf0. Do not pad it.
-	fabricatedGroundKillCheck(-50.0f, -50.0f);
-	fabricatedGroundKillCheck(50.0f, -50.0f);
-	fabricatedGroundKillCheck(-50.0f, 50.0f);
-	fabricatedGroundKillCheck(50.0f, 50.0f);
+	killNearWoodBox(-50.0f, -50.0f);
+	killNearWoodBox(50.0f, -50.0f);
+	killNearWoodBox(-50.0f, 50.0f);
+	killNearWoodBox(50.0f, 50.0f);
+	woodBoxKillPad();
 }
 
 void TWoodBox::loadAfter()

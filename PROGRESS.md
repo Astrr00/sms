@@ -10920,6 +10920,28 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R177 (`TWoodBox::kill`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+- Die vier `checkGround`-Out-Pointer aus inlined `killNearWoodBox(f32, f32) const`
+  lagen bei `0x40`–`0x4c` statt `0xd4`–`0xe0`, Frame `-0x58` statt `-0xf0`.
+- `static inline woodBoxKillPad()` mit `char trash[0x90]` am Funktionsende
+  hebt die Pointer und den Frame. `0x94` überschießt die Pointer um 4.
+  Store ist DCE, kein Extra-Symbol.
+- Map-Name `killNearWoodBox__8TWoodBoxCFff` (UNUSED, `0xbc`) statt
+  `fabricatedGroundKillCheck`. `const` ändert das Inlining in `kill` nicht.
+
+0 Abweichungen, 744 Bytes, 186 Instruktionen.
+`decomp-diff -u mario/MoveBG/MapObjHide -d TWoodBox::kill`: 100 %.
+`validate-symbol-order -u mario/MoveBG/MapObjHide`: PASS (UNUSED-Größe stimmt).
+
+R176 `receiveMessage`, R175 `touchGround`, R174 `perform`,
+R173 `startControlAnim`, R172 `TManhole::touchPlayer`, R171 `calcVelocity`,
+R170 `appearing` unverändert strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R176 (`TMapObjGeneral::receiveMessage`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

@@ -165,7 +165,7 @@ public:
 	virtual void kill();
 
 	// Fabricated
-	void fabricatedGroundKillCheck(f32, f32);
+	void killNearWoodBox(f32, f32) const;
 };
 
 #endif
