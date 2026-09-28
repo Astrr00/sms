@@ -958,8 +958,9 @@ DEFINE_NERVE(TNerveTobiPukuDie, TLiveActor)
 			self->onHitFlag(HIT_FLAG_NO_COLLISION);
 			JGeometry::TVec3<f32> zero(0.0f, 0.0f, 0.0f);
 			JGeometry::TVec3<f32> velocity = self->mVelocity;
-			zero.y                         = velocity.y;
-			self->mVelocity                = zero;
+			char trashAfterVel[8];
+			zero.y          = velocity.y;
+			self->mVelocity = zero;
 			self->setDownAirAnm();
 		} else if (self->unk1AD) {
 			self->onHitFlag(HIT_FLAG_NO_COLLISION);
