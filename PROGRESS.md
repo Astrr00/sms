@@ -10920,6 +10920,26 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R176 (`TMapObjGeneral::receiveMessage`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+- `isActorType(0x10000025)` und `isActorType(0x80000001)` liefen auf `this`
+  (`r29`). Retail liest `0x4c` vom Sender (`r30`): `sender->isActorType`.
+- `TVec3(mVelocity)`-Kopie lag bei `0x20` statt `0x38`, Frame `-0x40` statt
+  `-0x58`. `static inline receiveMessageFramePad()` mit `char trash[0x14]`
+  am Funktionsende hebt die Kopie auf `0x38` und den Frame auf `-0x58`.
+  `0x18` überschießt die Kopie um 4. Store ist DCE, kein Extra-Symbol.
+
+0 Abweichungen, 776 Bytes, 194 Instruktionen.
+`decomp-diff -u mario/MoveBG/MapObjGeneral -d TMapObjGeneral::receiveMessage`: 100 %.
+
+R175 `touchGround`, R174 `perform`, R173 `startControlAnim`,
+R172 `TManhole::touchPlayer`, R171 `calcVelocity`, R170 `appearing`
+unverändert strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R175 (`TMapObjGeneral::touchGround`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

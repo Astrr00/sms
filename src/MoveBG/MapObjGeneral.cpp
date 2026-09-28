@@ -639,6 +639,15 @@ void TMapObjGeneral::perform(u32 cue, JDrama::TGraphics* graphics)
 	TMapObjBase::perform(cue, graphics);
 }
 
+// Velocity copy sits 0x18 low in a frame that is 0x18 short. Inlined
+// storage lands under that temp. 0x14 is the size that reaches 0x38/0x58;
+// 0x18 overshoots the copy by 4.
+static inline void receiveMessageFramePad()
+{
+	char trash[0x14];
+	trash[0] = 0;
+}
+
 BOOL TMapObjGeneral::receiveMessage(THitActor* sender, u32 message)
 {
 	int ret = TMapObjBase::receiveMessage(sender, message);
@@ -654,7 +663,7 @@ BOOL TMapObjGeneral::receiveMessage(THitActor* sender, u32 message)
 		return true;
 	}
 
-	if (message == HIT_MESSAGE_TAKE && isActorType(0x10000025)
+	if (message == HIT_MESSAGE_TAKE && sender->isActorType(0x10000025)
 	    && (isState(STATE_APPEARING) || isState(STATE_NORMAL))) {
 		hold((TTakeActor*)sender);
 		return 1;
@@ -677,7 +686,7 @@ BOOL TMapObjGeneral::receiveMessage(THitActor* sender, u32 message)
 		return true;
 	}
 
-	if (isActorType(0x80000001)
+	if (sender->isActorType(0x80000001)
 	    && (message == HIT_MESSAGE_TRAMPLE
 	        || message == HIT_MESSAGE_HIP_DROP)) {
 		receiveMessageFromPlayer();
@@ -689,6 +698,7 @@ BOOL TMapObjGeneral::receiveMessage(THitActor* sender, u32 message)
 		kill();
 	}
 
+	receiveMessageFramePad();
 	return false;
 }
 
