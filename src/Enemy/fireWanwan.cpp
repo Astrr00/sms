@@ -733,6 +733,7 @@ void TFireWanwan::init(TLiveManager* manager)
 	unk150     = 1;
 	mSpine->initWith(&TNerveFireWanwanGraphWander::theNerve());
 	TPosition3f mtx;
+	char trashAfterMtx[8];
 	mtx.translation(mPosition);
 	getModel()->setBaseTRMtx(mtx);
 	getModel()->setBaseScale(mScaling);

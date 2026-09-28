@@ -1292,7 +1292,11 @@ void TBossEelCollision::initCollision()
 
 void TBossEelCollision::behaveToMario()
 {
-	JGeometry::TVec3<f32> marioTarget(0.0f, TBossEel::mForcePow, 0.0f);
+	JGeometry::TVec3<f32> marioTarget;
+	char trashAfterMarioTarget[8];
+	marioTarget.x = 0.0f;
+	marioTarget.y = TBossEel::mForcePow;
+	marioTarget.z = 0.0f;
 	marioTarget += SMS_GetMarioPos();
 	SMS_MarioMoveRequest(marioTarget);
 
@@ -1362,7 +1366,11 @@ void TBossEelBarrierCollision::initCollision()
 
 void TBossEelBarrierCollision::behaveToMario()
 {
-	JGeometry::TVec3<f32> marioTarget(0.0f, TBossEel::mForcePow, 0.0f);
+	JGeometry::TVec3<f32> marioTarget;
+	char trashAfterMarioTarget[8];
+	marioTarget.x = 0.0f;
+	marioTarget.y = TBossEel::mForcePow;
+	marioTarget.z = 0.0f;
 	marioTarget.add(*gpMarioPos);
 	SMS_MarioMoveRequest(marioTarget);
 }

@@ -1514,6 +1514,7 @@ bool TDoroHaneKuri::isCollidMove(THitActor* param_1)
 
 		if (mSpine->getCurrentNerve() == &TNerveWalkerAttack::theNerve()) {
 			JGeometry::TVec3<f32> vel = mLinearVelocity;
+			char trashAfterVel[8];
 			vel.x *= -5.0f;
 			vel.z *= -5.0f;
 			mPosition.x += vel.x;
