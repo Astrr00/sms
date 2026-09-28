@@ -37,11 +37,15 @@ bool TMapObjGeneral::isPollutedGround(const JGeometry::TVec3<f32>& v) const
 	return false;
 }
 
-inline f32 distToMario(const JGeometry::TVec3<f32>& v)
+inline f32 addRadius(f32 mario, f32 damage) { return mario + damage; }
+
+inline f32 distToMario(const TMapObjGeneral* self,
+                        const JGeometry::TVec3<f32>* mario)
 {
-	f32 l = (v.x - gpMarioPos->x) * (v.x - gpMarioPos->x)
-	        + (v.y - gpMarioPos->y) * (v.y - gpMarioPos->y)
-	        + (v.z - gpMarioPos->z) * (v.z - gpMarioPos->z);
+	const JGeometry::TVec3<f32>& home = self->mInitialPosition;
+	f32 l = (home.x - mario->x) * (home.x - mario->x)
+	        + (home.y - mario->y) * (home.y - mario->y)
+	        + (home.z - mario->z) * (home.z - mario->z);
 	return JGeometry::TUtil<f32>::sqrt(l);
 }
 
@@ -50,15 +54,20 @@ void TMapObjGeneral::waitingToAppear()
 	if (isStateTimerEngaged())
 		return;
 
+	// Actor 0x4000005a keeps (mario + damage) in f1 so +100 lands in f0.
+	// The other arm's add stays in f0. gpMarioPos is the second pointer, so
+	// the load is r4 while mInitialPosition folds through self.
 	if (isActorType(0x4000005a)) {
 		f32 damageRadius = getDamageRadius();
-		if (SMS_GetMarioDamageRadius() + damageRadius + 100.0f
-		    > distToMario(mInitialPosition))
+		f32 dist         = distToMario(this, gpMarioPos);
+		f32 mario        = SMS_GetMarioDamageRadius();
+		mario += damageRadius;
+		if (dist > 100.0f + mario)
 			appear();
 	} else {
 		f32 damageRadius = getDamageRadius();
-		if (SMS_GetMarioDamageRadius() + damageRadius
-		    > distToMario(mInitialPosition))
+		if (distToMario(this, gpMarioPos)
+		    > addRadius(SMS_GetMarioDamageRadius(), damageRadius))
 			appear();
 	}
 }

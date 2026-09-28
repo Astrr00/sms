@@ -10920,6 +10920,29 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R179 (`TMapObjGeneral::waitingToAppear`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+- Retail erscheint, wenn die Distanz größer als der Radius ist.
+- `distToMario(this, gpMarioPos)` legt `gpMarioPos` in r4;
+  `mInitialPosition` faltet auf `0x10c(r31)`.
+- Actor `0x4000005a`: `mario += damageRadius`, dann `100 + mario`
+  (`fadds f1, f1, f30`, Konstante in f0).
+- Der andere Arm nutzt `addRadius`, Ergebnis bleibt in f0.
+- Frame `-0x48`.
+
+0 Abweichungen, 352 Bytes, 88 Instruktionen.
+`decomp-diff -u mario/MoveBG/MapObjGeneral -d waitingToAppear`: 100 %.
+`validate-symbol-order -u mario/MoveBG/MapObjGeneral`: PASS.
+
+R178 `initDrawNear`, R177 `TWoodBox::kill`, R176 `receiveMessage`,
+R175 `touchGround`, R174 `perform`, R173 `startControlAnim`,
+R172 `TManhole::touchPlayer`, R171 `calcVelocity`, R170 `appearing`
+unverändert strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R178 (`TMapObjGrassManager::initDrawNear`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
