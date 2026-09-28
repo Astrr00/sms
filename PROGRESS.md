@@ -12122,6 +12122,31 @@ must codegen as **`lwz` at `0x180`** off the **`getSaveParam`** pointer (same ob
 **Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged). Tip
 **`c5442021`**.
 
+### R250 (Aufgabe B; Mario ride + diversified EP scan, 0× ship)
+
+**Hunt.** Post-R249; **diversify** — Player helpers + non-Pakkun/BossPakkun/Hino2 TUs; skip **Hino2PrePol** +
+R244–R248 failures/stuck; string/PARAM/float where clear opcode path; empty/Closet/MoveBG off;
+**`ninja baseline`** + **`report.json`** + **`changes_all`**; cap ~8.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~7, reverted / no-ship).**
+
+- **`TMario::checkRideMovement`** (**99.9%**, **720→180 B**): drop **`wall != nullptr`** on first
+  ground-ride branch; **`groundActor != nullptr`** + jump + **`isTouchGround4cm`** per
+  **`MarioMove.s`** (**`lwz 0x44(r4)`/`cmplwi r5`** before wall **`r3`** use); opcode cluster fixed,
+  **`stwu -0xd0` vs `-0xb8`** remains; reverted.
+- **EP scan (frame / reg-only):** **`TYoshi::thinkHoldOut`** (**`r3`/`r4`** pos ptr),
+  **`TMario::warpRequest`**, **`TMario::thinkSituation`** (100.0% fuzzy, stack),
+  **`TBoxTelesa::load`**, **`TNerveTamaNokoDown`**, **`calcFarthestVertex`**.
+
+**Tip (R250).** **`checkRideMovement`** first assign is **`groundActor`-gated only** (retail never
+**`cmplwi r3`** there); matching the branch is separate from fixing the **`-0xd0`** vec/Mtx locals
+(**`0xb0`/`0x3c`/`0x80`** spill layout).
+
+**Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged). Tip
+(pending commit).
+
 ### R225 (Aufgabe B; bossManta rodata + EP diversify, 0× ship)
 
 **Hunt.** Post-**`385107f3`**; optional **`bossManta` `@2805`/`@2807`** lead (Amenbo
