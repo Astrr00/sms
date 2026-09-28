@@ -11282,6 +11282,45 @@ posZ/Y/X → Frame/Operanden), `emWalkAround` (z/y/x), `TFireWanwan::updatePollu
 
 **Verify.** `ninja baseline` / `changes_all` ohne Code-Delta.
 
+### R187 (Aufgabe B; thinkSituation ground spill, Scanner dry; keine Vollmatches)
+
+**Hunt.** (1) Bounded Stack-Shrink/Align: `thinkSituation` / `soundMovement` /
+`changeScene` nur wenn PROGRESS klaren Local-Pfad zeigt. (2) Scanner B-scope
+`≥99 %` mit **ausschließlich** `stwu`/`addi r1`-`~` (keine weiteren `~`):
+**0** Treffer (Volllauf ~404 Units). (3) Enemy `receiveMessage`/`perform`
+`≤600 B`, `≥99,5 %`, Frame-Δ exakt **8/0x10/0x20/0x28**, nur `stwu`-`~`:
+**0** Treffer.
+
+**Skip (User + R186).** `TObjManager::perform`, `TNerveHino2Pollute` /
+Hino2-ASM, `initAndRegister`, Pollution-Reste (`emJumping`, `updatePollute`, …),
+Prior-Pad-Skips.
+
+**`TMario::thinkSituation`.** Entry `char trash[0x58]` (revertiert): Retail
+`stwu −0xc8` match, Epilog/`r30`/`r31` match; **`const TBGCheckData* ground`**
+bleibt **0x64** statt **0xbc** (`addi r4`/`lwz` nach `stopBGM`). Pad vor/nach
+`ground`, Pad nur vor `checkGround`, Early-`ground`+Entry-Pad: **Offset unverändert**
+— fehlende ~0x58 Locals in der Mitte der Funktion, nicht entry-padbar.
+
+**`soundMovement` / `changeScene`.** Nur vermessen: Retail `stwu −0x2e0` vs. unser
+`−0x100` (Δ **0x1e0**); `changeScene` **0x1e0** vs. **0x178** (Δ **0x68**).
+Kein Shrink-Versuch (Thrashing-Risiko ohne ASM-Local-Map).
+
+**Probes (~8, revertiert).** `TGraphWeb::getRandomNextIndex`: `stwu` bereits
+match; `TRailNode tmp` @ **0x1c** vs. **0x24** — `trash[8]` nach/vor `tmp` →
+Frame **−0x98** oder Tmp **0x28** (schlechter). `TNerveHamuKuriWallDie`:
+`trash[8]` nach `local_34` → Spill **+0x10** (Entry-`trash[8]` aus R177 belassen).
+
+**Tip (R187).** Wenn `stwu`/`addi r1` schon matchen, aber ein Struct-Spill
+**konstant ~0x58** daneben liegt, ist Entry-`trash` oft wirkungslos — die
+Lücke sitzt **zwischen** bereits allokierten Slots (vgl. `thinkSituation` /
+`ground` @ **0xbc** in Retail-ASM `MarioMove.s` ~`0x8012EFF8`).
+
+**Vollmatch, strikt.** keine (unverändert: R177 `TNerveHamuKuriWallDie`, R180
+`TBEelTearsDrop::perform`, R181 `TDangoHamuKuri::receiveMessage`). Quellbaum
+unverändert ggü. **`63f8cdc0`**.
+
+**Verify.** `ninja baseline` / `changes_all` ohne Code-Delta.
+
 ### R181 (Aufgabe B; receiveMessage entry +0x28, 1 Vollmatch)
 
 **Hunt.** `perform` / `receiveMessage` / `init` entry frame-pad (8/0x10/0x20/0x28) +
