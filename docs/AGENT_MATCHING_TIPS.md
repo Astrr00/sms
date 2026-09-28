@@ -219,6 +219,10 @@ temp** both get DCE’d; assigning **`BOOL bckPass`** adds stack (**`−0x30`**)
 
 **`TBossMantaManager::TMantaBattleState::update`**: opens with **`lis`/`addi @1490` string pool** into **`r30`** before state **`switch`** — same **rodata-before-work** pattern as other managers; **`−0xe0` vs `−0xd8`** is spill layout, not missing logic.
 
+**`TYoshi::getEmitPosDir`**: **`getAnmMtx` → `mr`/chain leaves matrix in **`r6`**; all **`lfs` column/row loads** use **`(r6)`** offsets — reloading **`lwz r3`** between **`0`/`0x10`/`0x20`** breaks match (~76B).
+
+**`TEffectObjBase::perform`**: **`clrlwi. r4`** runs **before** **`stwu`** (draw-cue early path); **`stw r31`** only on the **non-trivial** path — not a uniform **`−0x20`** frame.
+
 **`TTamaNoko::isReachedToGoal`** (and **`TTelesa`**): retail inlines **`TPathNode`** at **`this+0x104`** — **`unk0` ? `unk0+0x10` : `&unk4`** — not an out-of-line **`getPoint()`** call; **`TVec3` assign from `mPosition`** breaks the **`addi r5,r4,4`** branch.
 
 **`TEnemyAttachment::sendMessage`** walks **`mCollisions`** with **`lwz r3, 0x44(r29)`** then
