@@ -5,6 +5,7 @@
 
 struct TBGWallCheckRecord;
 
+class TCannon;
 class TCogwheel;
 
 class TCogwheelScale : public TMapObjBase {
@@ -158,6 +159,11 @@ public:
 	virtual MtxPtr getTakingMtx();
 	virtual void drawObject(JDrama::TGraphics*);
 	TMareCork(const char* name = "マーレコルク");
+
+	/* 0x138 */ TCannon* unk138;
+	/* 0x13C */ JGeometry::TVec3<f32> unk13C;
+	/* 0x148 */ JGeometry::TVec3<f32> unk148;
+	/* 0x154 */ u8 unk154;
 };
 
 class TMareEventPoint : public THitActor {

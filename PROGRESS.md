@@ -10920,6 +10920,42 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R194 (`MapObjMare` / `MapObjMamma` / `MapObjBianco`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+Sieben kurze Stubs, alle ohne `ble`/`bge`/`lfsu`.
+`TCogwheelScale::touchWater`, `control` und `receiveMessage` bleiben geparkt.
+`MapObjBase.hpp` bleibt unangetastet.
+`TMapObjPuncher::load` bleibt Stub: gleicher Code, Frame `-0x30` statt `-0x28`.
+
+- `TMareEventPoint::load` ruft `JDrama::TActor::load` und `initHitActor(0x40000236, 0, 0, 0, 0, 300, 600)`.
+  84 Bytes, 21 Instruktionen.
+- `TMareFall::load` ruft `TMapObjBase::load` und `SMS_LoadParticle` für `0x149` und `0x14A`.
+  144 Bytes, 36 Instruktionen.
+- `TMareCork::moveObject` startet `marecork`, wenn `TCannon::isObject` wahr ist und `unk154` noch 0 ist.
+  116 Bytes, 29 Instruktionen.
+- `TWireBell::control` holt die Drahtposition, setzt `mPosition` und kopiert `MsMtxSetTRS` in `setAnmMtx(0)`.
+  160 Bytes, 40 Instruktionen.
+- `TSandBird::nameIsObj` gibt wahr zurück, wenn `strstr(name, "none")` leer ist.
+  60 Bytes, 15 Instruktionen.
+- `TLampSeesawMain::touchPlayer` ruft virtuell `pushDown(unk140)`, wenn `marioIsOn` wahr ist.
+  76 Bytes, 19 Instruktionen.
+- `TLampSeesaw::touchPlayer` ruft virtuell `pushDown(-unk140)` auf `unk138`.
+  80 Bytes, 20 Instruktionen.
+  `unk138` ist jetzt `TLampSeesaw*`.
+  Der Konstruktor bleibt 100 %.
+
+`validate-symbol-order` für Mare, Mamma und Bianco: PASS, nur die bisherigen UNUSED-Größenwarnungen.
+
+`ninja changes_all`: fuzzy 78.70 % → 78.72 %, matched code 49.40 % → 49.42 %, matched data bleibt 65.19 %.
+Kein R170–R193-Unit hat matched code verloren.
+`MarNameRefGen_MapObj` tickt fuzzy 81.450584 → 81.450806, matched code bleibt 2348.
+`getNameRef_MapObj` bleibt 86.49 %.
+`MapObjManager` unverändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R193 (`MapObjMare`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

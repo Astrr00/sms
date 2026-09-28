@@ -44,7 +44,7 @@ public:
 	TLampSeesaw(const char* name = "ランプシーソー（従）");
 
 public:
-	/* 0x138 */ void* unk138;
+	/* 0x138 */ TLampSeesaw* unk138;
 	/* 0x13C */ f32 unk13C;
 	/* 0x140 */ f32 unk140;
 };

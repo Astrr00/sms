@@ -2,6 +2,15 @@
 #include <JSystem/J3D/J3DGraphAnimator/J3DModel.hpp>
 #include <M3DUtil/MActor.hpp>
 #include <Map/MapWireManager.hpp>
+#include <System/Particles.hpp>
+
+extern void MsMtxSetTRS(MtxPtr result, f32 x, f32 y, f32 z, f32 r, f32 p, f32 h,
+                        f32 sx, f32 sy, f32 sz);
+
+class TCannon {
+public:
+	bool isObject();
+};
 
 static JGeometry::TVec3<f32> fall_upper_pos(2827.0f, 8604.0f, 7202.0f);
 
@@ -129,7 +138,18 @@ void TWireBell::initDraw() const { }
 
 void TWireBell::draw() const { }
 
-void TWireBell::control() { }
+void TWireBell::control()
+{
+	gpMapWireManager->getPointPosInNthWire(unk138, mPosition, &unk14C);
+	mPosition.x = unk14C.x;
+	mPosition.y = unk14C.y - unk13C;
+	mPosition.z = unk14C.z;
+
+	Mtx mtx;
+	MsMtxSetTRS(mtx, mPosition.x, mPosition.y, mPosition.z, mRotation.x,
+	            mRotation.y, mRotation.z, mScaling.x, mScaling.y, mScaling.z);
+	getModel()->setAnmMtx(0, mtx);
+}
 
 void TWireBell::loadAfter()
 {
@@ -209,11 +229,24 @@ TMuddyBoat::TMuddyBoat(const char* name)
 
 void TMareFall::calc() { }
 
-void TMareFall::load(JSUMemoryInputStream&) { }
+void TMareFall::load(JSUMemoryInputStream& stream)
+{
+	TMapObjBase::load(stream);
+	SMS_LoadParticle("/scene/mapObj/mareFallSplash.jpa", 0x149);
+	SMS_LoadParticle("/scene/mapObj/mareFallSmoke.jpa", 0x14A);
+}
 
 void TMareCork::loadAfter() { }
 
-void TMareCork::moveObject() { }
+void TMareCork::moveObject()
+{
+	if (unk138->isObject() && unk154 == 0) {
+		mMActor->setBck("marecork");
+		setAnmSound("/scene/mapObj/marecork.bas");
+		removeMapCollision();
+		unk154 = 1;
+	}
+}
 
 void TMareCork::calcRootMatrix() { }
 
@@ -226,4 +259,8 @@ void TMareCork::drawObject(JDrama::TGraphics*) { }
 
 BOOL TMareEventPoint::receiveMessage(THitActor*, u32) { return FALSE; }
 
-void TMareEventPoint::load(JSUMemoryInputStream&) { }
+void TMareEventPoint::load(JSUMemoryInputStream& stream)
+{
+	JDrama::TActor::load(stream);
+	initHitActor(0x40000236, 0, 0, 0.0f, 0.0f, 300.0f, 600.0f);
+}

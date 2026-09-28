@@ -1,6 +1,7 @@
 #include <MoveBG/MapObjMamma.hpp>
 #include <MoveBG/MapObjBall.hpp>
 #include <Map/Map.hpp>
+#include <string.h>
 
 // rogue includes needed for matching sinit & bss
 #include <MSound/MSSetSound.hpp>
@@ -243,7 +244,10 @@ TMapObjBase* TSandBird::makeObjFromJointName(const char*, unsigned short)
 	return nullptr;
 }
 
-bool TSandBird::nameIsObj(const char*) { return false; }
+bool TSandBird::nameIsObj(const char* name)
+{
+	return strstr(name, "none") == nullptr ? true : false;
+}
 
 void TSandBird::initMapObj() { }
 

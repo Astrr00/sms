@@ -118,7 +118,11 @@ TLeafBoatRotten::TLeafBoatRotten(const char* name)
 {
 }
 
-void TLampSeesaw::touchPlayer(THitActor*) { }
+void TLampSeesaw::touchPlayer(THitActor*)
+{
+	if (marioIsOn())
+		unk138->pushDown(-unk140);
+}
 
 void TLampSeesaw::load(JSUMemoryInputStream&) { }
 
@@ -138,7 +142,11 @@ void TLampSeesawMain::pushDown(f32 param_1)
 // UNUSED
 void TLampSeesawMain::move() { }
 
-void TLampSeesawMain::touchPlayer(THitActor*) { }
+void TLampSeesawMain::touchPlayer(THitActor*)
+{
+	if (marioIsOn())
+		pushDown(unk140);
+}
 
 void TLampSeesawMain::control() { }
 
