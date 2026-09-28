@@ -589,10 +589,19 @@ BOOL TWoodBlock::calcRecycle()
 	return 0;
 }
 
+extern "C" void load__11TRailMapObjFR20JSUMemoryInputStream(
+    TRailMapObj*, JSUMemoryInputStream&);
+
 void TWoodBlock::load(JSUMemoryInputStream& stream)
 {
-	TNormalLift::load(stream);
-
+	load__11TRailMapObjFR20JSUMemoryInputStream(this, stream);
+	stream >> unk154;
+	if (unk154 > 0.0f && mMapCollisionManager) {
+		TMapCollisionBase* col = mMapCollisionManager->getUnk8();
+		col->setAllBGType(7);
+		col->setAllActor(this);
+		col->setAllData(unk154);
+	}
 	s32 local_20, local_24, local_28, local_2C;
 	stream >> local_20 >> local_24 >> local_28 >> local_2C;
 	unk164.r = local_20 & 0xff;

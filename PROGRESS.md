@@ -10920,6 +10920,33 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R296 (`MapObjRailBlock`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TWoodBlock::load`.
+
+- `TRailMapObj::load` bleibt ein direktes `bl`.
+  `extern "C"` auf das gemanglete Symbol unterdrückt das Inlining.
+  `dont_inline` an der Definition würde `TNormalLift::load` mitreißen.
+  Danach `unk154` und die Collision-Folge von `TNormalLift::load`.
+  Vier `s32`-Reads.
+  RGB aus den unteren 8 Bit, Alpha fest `0xFF`.
+  `unk15C = unk164`.
+  `SMS_InitPacket_OneTevColor` mit `GX_TEVREG0`.
+  308 Bytes, 77 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjRailBlock`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.37558 % -> 79.38034 %, matched code 50.147408 % -> 50.155987 % (1800336 -> 1800644, +308).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9667 -> 9668.
+`MapObjRailBlock` 5544 -> 5852 (+308).
+Kein R170–R294-Unit hat matched code verloren.
+
 ### R294 (`MapObjMamma`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
