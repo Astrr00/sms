@@ -30,6 +30,9 @@ void TFerrisWheel::initMapObj() { }
 
 TFerrisWheel::TFerrisWheel(const char* name)
     : TMapObjBase(name)
+    , unk138(0)
+    , unk13C(0)
+    , unk140(0.0f)
 {
 }
 
@@ -61,6 +64,11 @@ void THorizontalViking::initMapObj()
 
 THorizontalViking::THorizontalViking(const char* name)
     : TMapObjBase(name)
+    , unk138(0.0f)
+    , unk13C(0.0f)
+    , unk140(0.0f)
+    , unk144(0.0f)
+    , unk148(0.0f)
 {
 }
 
@@ -109,6 +117,10 @@ void TViking::initMapObj()
 
 TViking::TViking(const char* name)
     : THorizontalViking(name)
+    , unk14C(0)
+    , unk150(0.0f)
+    , unk154(0.0f)
+    , unk158(0.0f)
 {
 }
 
@@ -240,5 +252,7 @@ void TPinnaCoaster::initMapObj() { }
 
 TPinnaCoaster::TPinnaCoaster(const char* name)
     : TMapObjBase(name)
+    , unk138(0)
 {
+	unk140.zero();
 }

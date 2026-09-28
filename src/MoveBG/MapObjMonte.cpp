@@ -87,6 +87,10 @@ void THangingBridge::loadAfter() { }
 
 THangingBridge::THangingBridge(const char* name)
     : JDrama::TViewObj(name)
+    , unk10(0)
+    , unk14(0)
+    , unk38(0)
+    , unk3C(0.0f)
 {
 }
 
@@ -172,5 +176,13 @@ void TFluffManager::load(JSUMemoryInputStream&) { }
 
 TFluffManager::TFluffManager(const char* name)
     : TMapObjBase(name)
+    , unk138(0.0f)
+    , unk144(0)
+    , unk154(0.0f)
+    , unk158(0)
+    , unk15C(0)
+    , unk160(0)
+    , unk164(0)
 {
+	unk148.setAll(0.0f);
 }

@@ -15,6 +15,11 @@ public:
 	void control();
 	void initMapObj();
 	TFerrisWheel(const char* name = "観覧車");
+
+public:
+	/* 0x138 */ u32 unk138;
+	/* 0x13C */ u32 unk13C;
+	/* 0x140 */ f32 unk140;
 };
 
 class THorizontalViking : public TMapObjBase {
@@ -168,6 +173,11 @@ public:
 	void control();
 	void initMapObj();
 	TPinnaCoaster(const char* name = "コースター");
+
+public:
+	/* 0x138 */ u32 unk138;
+	/* 0x13C */ u32 unk13C;
+	/* 0x140 */ JGeometry::TVec3<f32> unk140;
 };
 
 class TMerryPole : public TMapObjBase {

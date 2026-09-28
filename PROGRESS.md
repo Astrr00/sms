@@ -10920,6 +10920,42 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R207 (`MapObjPinna` / `MapObjMonte` / `MapObjFence`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+Sechs Konstruktoren ohne `SMatrix34C`-Leer-Konstruktor.
+`THorizontalViking::THorizontalViking` ist UNUSED (92 Bytes, Größe passt) und wird in `TViking` geinlined.
+
+- `TFerrisWheel::TFerrisWheel` nullt `unk138`, `unk13C` und `unk140`.
+  88 Bytes, 22 Instruktionen.
+- `TViking::TViking` läuft durch den geinlined `THorizontalViking`-Konstruktor und nullt `unk14C` sowie die Floats bei `0x150`, `0x154` und `0x158`.
+  132 Bytes, 33 Instruktionen.
+- `TPinnaCoaster::TPinnaCoaster` nullt `unk138` und ruft `unk140.zero()` auf (Stores `0x148`, `0x144`, `0x140`).
+  Die Lücke `unk13C` bleibt ungeschrieben.
+  92 Bytes, 23 Instruktionen.
+- `THangingBridge::THangingBridge` baut `TViewObj` und nullt `unk10`, `unk14`, `unk38` und `unk3C`.
+  `unk18` der Größe `0x20` bleibt ungeschrieben.
+  132 Bytes, 33 Instruktionen.
+- `TFluffManager::TFluffManager` nullt `unk138`, `unk144`, `unk154` und die Wörter ab `0x158`.
+  `unk148.setAll(0.0f)` steht im Rumpf, damit die drei Stores zuletzt kommen.
+  124 Bytes, 31 Instruktionen.
+- `TRailFence::TRailFence` legt `new TGraphTracer` in `unk13C` ab und setzt `unk140` auf `0.0f`.
+  140 Bytes, 35 Instruktionen.
+
+`validate-symbol-order` für Pinna, Monte und Fence: PASS.
+Pinna hat sechs bestehende UNUSED-Größenwarnungen, Monte zwölf, Fence zwei plus die bestehende Weak-Order-Warnung.
+`THorizontalViking::THorizontalViking` ist nicht unter den Größenwarnungen.
+
+`ninja changes_all`: fuzzy 78.90318 % -> 78.90978 %, matched code 49.608032 % -> 49.627754 % (1780972 -> 1781680, +708).
+Matched data bleibt 65.2486 % (417807).
+Funktionen matched 9567 -> 9573.
+`MapObjFence` 2364 -> 2504 (+140), `MapObjMonte` 2436 -> 2692 (+256), `MapObjPinna` 3888 -> 4200 (+312).
+`MapObjManager` und `MarNameRefGen_MapObj` wurden neu gebaut, matched code unverändert.
+Kein R170-R206-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R206 (`MapObjFlag`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

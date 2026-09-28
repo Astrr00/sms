@@ -49,6 +49,13 @@ public:
 	void initMonte();
 	void loadAfter();
 	THangingBridge(const char* name = "つり橋");
+
+public:
+	/* 0x10 */ u32 unk10;
+	/* 0x14 */ u32 unk14;
+	/* 0x18 */ u8 unk18[0x20];
+	/* 0x38 */ u32 unk38;
+	/* 0x3C */ JGeometry::TVec3<f32> unk3C;
 };
 
 class TSwingBoard : public TMapObjBase {
@@ -101,6 +108,16 @@ public:
 	void loadAfter();
 	void load(JSUMemoryInputStream&);
 	TFluffManager(const char* name = "特別な綿毛");
+
+public:
+	/* 0x138 */ JGeometry::TVec3<f32> unk138;
+	/* 0x144 */ u32 unk144;
+	/* 0x148 */ JGeometry::TVec3<f32> unk148;
+	/* 0x154 */ f32 unk154;
+	/* 0x158 */ u32 unk158;
+	/* 0x15C */ u32 unk15C;
+	/* 0x160 */ u32 unk160;
+	/* 0x164 */ u32 unk164;
 };
 
 #endif

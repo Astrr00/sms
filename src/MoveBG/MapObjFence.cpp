@@ -147,5 +147,7 @@ void TRailFence::load(JSUMemoryInputStream& stream)
 
 TRailFence::TRailFence(const char* name)
     : TFence(name)
+    , unk13C(new TGraphTracer)
+    , unk140(0.0f)
 {
 }
