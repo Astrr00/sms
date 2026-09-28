@@ -10920,6 +10920,30 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R298 (`MapObjFence`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TRevolvingFenceInner::controlGroundRoof`.
+
+- Zustände 3 und 5: wenn die Animation endet, `setState(2)`.
+  Frame-Rate und Frame auf 0, dann `calc` und `MAP_OBJ_FLAG_UNK100`.
+- Zustände 4 und 6: dieselbe Folge mit `setState(1)`.
+- Vergleichsbaum `cmpwi 4` / `bge` / `cmpwi 3` / `cmpwi 6`.
+- `char trash[0x10]` hält den Frame auf `-0x28`.
+- 260 Bytes, 65 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjFence`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.38034 % -> 79.38747 %, matched code 50.155987 % -> 50.163227 % (1800644 -> 1800904, +260).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9668 -> 9669.
+`MapObjFence` 3812 -> 4072 (+260).
+Kein R170–R296-Unit hat matched code verloren.
+
 ### R296 (`MapObjRailBlock`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

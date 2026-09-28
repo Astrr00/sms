@@ -1,4 +1,5 @@
 #include <MoveBG/MapObjFence.hpp>
+#include <JSystem/J3D/J3DGraphAnimator/J3DAnimation.hpp>
 
 #include <Enemy/Conductor.hpp>
 #include <Enemy/Graph.hpp>
@@ -64,10 +65,47 @@ void TRevolvingFenceInner::controlWall()
 }
 #pragma dont_inline off
 
-// Empty here. dont_inline keeps the call in control().
+extern "C" BOOL curAnmEndsNext__6MActorFiPc(MActor*, int, char*);
+extern "C" void setFrameRate__6MActorFfi(MActor*, f32, int);
+extern "C" J3DFrameCtrl* getFrameCtrl__6MActorFi(MActor*, int);
+extern "C" void calc__6MActorFv(MActor*);
+
 #pragma dont_inline on
-void TRevolvingFenceInner::controlGroundRoof() { }
-#pragma dont_inline off
+void TRevolvingFenceInner::controlGroundRoof()
+{
+	int state = mState;
+	if (state == 4)
+		goto state46;
+	if (state >= 4)
+		goto high;
+	if (state >= 3)
+		goto state35;
+	return;
+high:
+	if (state == 6)
+		goto state46;
+	if (state >= 6)
+		return;
+state35:
+	if (curAnmEndsNext__6MActorFiPc(getMActor(), 0, nullptr)) {
+		setState(2);
+		setFrameRate__6MActorFfi(getMActor(), 0.0f, 0);
+		getFrameCtrl__6MActorFi(getMActor(), 0)->setFrame(0.0f);
+		calc__6MActorFv(getMActor());
+		onMapObjFlag(MAP_OBJ_FLAG_UNK100);
+	}
+	return;
+state46:
+	if (curAnmEndsNext__6MActorFiPc(getMActor(), 0, nullptr)) {
+		setState(1);
+		setFrameRate__6MActorFfi(getMActor(), 0.0f, 0);
+		getFrameCtrl__6MActorFi(getMActor(), 0)->setFrame(0.0f);
+		calc__6MActorFv(getMActor());
+		onMapObjFlag(MAP_OBJ_FLAG_UNK100);
+	}
+	char trash[0x10];
+	trash[0] = 0;
+}
 
 void TRevolvingFenceInner::setGroundCollision() { }
 
