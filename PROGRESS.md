@@ -11488,6 +11488,28 @@ als Member-Name. Check: **`decomp-diff -u … -t object -s nonmatching`**.
 **Verify.** `ninja changes_all` ggü. **`cf903cfc`**; **`namekuri` matched_data
 70.86% → 100%**; **`build.sha1` OK**.
 
+### R214 (Aufgabe B; Enemy inline vtable slot, 1× data)
+
+**Hunt.** Player `@4827`/`@2843` switch **`.rel`**; boss/hino **`.ctors`**
+vtables; **`TBEelTearsDrop`**; **`TRiccoHook::init`**; cap ~8.
+
+**Ship (data, 1).**
+
+- **`TBEelTearsDrop::__vtable`** (`bosseel`, 164 B `.ctors`): drop header
+  **`receiveMessage`** override that only forwarded to **`THitActor`** — retail
+  vtable slot is **`receiveMessage__9THitActor`** (no
+  **`receiveMessage__14TBEelTearsDrop`** in MAP).
+
+**Probes (~5, no-ship).** **`@4827`** still **66.7%** (jump-table labels;
+  case‑7 braces noop); **`@2843`** **81.2%**; **`THinokuri2`/`TBossGesso`**
+  **`.ctors`** vtables ~99%; **`TRiccoHook::init`** ~99.9% stack.
+
+**Tip (R214).** Inlined **`virtual`** that merely calls the base can still emit
+**`Class::method`** and steal a vtable slot — same MAP rule as R212 **`perform`**.
+
+**Verify.** `ninja changes_all` ggü. **`ba4a4657`**; **`TBEelTearsDrop` vtable
+100%**.
+
 ### R213 (Aufgabe B; MAP/vtable cross-check, 0× ship)
 
 **Hunt.** Enemy/Player B-scope: **vtable vs MAP** (spurious `virtual perform`
