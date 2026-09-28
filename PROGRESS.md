@@ -12533,6 +12533,25 @@ spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%
 
 **Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0** (**bind** epilogue **`addi r3`** **0x24 → 0x14**).
 
+### R276 (Aufgabe B; diversify PolluteModel perform frame, 0× ship)
+
+**Hunt.** Post-R275 dry (**9275**); **defer `TEnemyAttachment::bind`**; diversify Enemy/Player; skip Dango/setGoal,
+spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%** only.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~2).**
+
+- **`TEnemyPolluteModel::perform`**: **`char trash[0x38]`** — **`stwu -0x80`** matches retail (was **`-0x48`**),
+  **~91.6% → ~91.8%**; **`r30=this` / `r31=cue`** swap + early **`cue`** guard regressed — **kept** frame pad only.
+- **`TWireBinder::init`**: **99.6%** frame/spill — skipped (spill tier).
+
+**Tip (R276).** **`TEnemyPolluteModel::perform`** needs **`-0x80`** like **`TEnemyAttachment::perform`**’s pad pattern, but
+**`trash[0x38]`** alone does not fix **`mr r30,r3` / `addi r31,r4`** — need codegen steer without fakematch **`cue`**
+guards.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
 ### R258 (Aufgabe B; defer GraphGroup/ColumSand pool + diversify, 0× ship)
 
 **Hunt.** Post-R257 dry; **defer `TGraphGroup::perform`** (empty **`TGraphWeb::perform` DCE**) and

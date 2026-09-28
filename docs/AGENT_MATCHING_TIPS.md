@@ -166,6 +166,10 @@ Open: **`local_10@0x10`** — decl-top **`trash[0x10]`** (before **`local_48`**)
 (**`local_10.sub`** folds **`~85.6%`** even at **`@0x14`**); use **`enemyAttachmentBindSub`** until **`@0x10`**.
 **`behaveToHitWall`**: retail **`lwz r12`** before **`mr r3`/`lwz r4, 0x4c(r1)`** — **`wallHit`** temp did not fix.
 
+**`TEnemyPolluteModel::perform`**: retail **`stwu -0x80`**, **`mr r30,r3`**, **`addi r31,r4,0`** (cue in **r31**).
+**`char trash[0x38]`** at prologue matches **`-0x80`**; **`r30`/`r31`** swap remains. Do not use dead **`cue`**
+comparisons to steer regs — breaks **`addi r31,r4`**.
+
 **`TEnemyAttachment::sendMessage`** walks **`mCollisions`** with **`lwz r3, 0x44(r29)`** then
 **`lwzx r4, r3, r31`** (byte offset in **`r31`**, index in **`r30`**). For collisions that are not Mario
 and not **`unk160`**, retail calls **`TEnemyAttachment::kill()`** via **`this`**'s vtable **`+0xe4`**, not
