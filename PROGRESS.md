@@ -12281,6 +12281,34 @@ frame (**100%**, 156 B).
 
 **Verify.** `ninja changes_all` ggü. baseline (**9274**): **+1** (**9275**).
 
+### R264 (Aufgabe B; holder virtual hunt + probes, 0× ship)
+
+**Hunt.** Post-R263 (**9275**); prefer holder virtuals / **`char trash[8]`** frame pads with clear asm, plus
+string/PARAM/vtable; skip R251–R262 thrash, spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG;
+**DebuTelesa `entry$2835`** only as coupled **`const` + `createModelData`** both **100%**; cap ~8; strict
+**100%** only.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8).**
+
+- **`TDangoHamuKuri::calcRootMatrix`**: **87.7% → 88.6%** — **`setBaseScale(mScaling)`** (not **`mPosition`**),
+  **`mHolder->getTakingMtx()`** + **`getHeldObject()`** (retail holder **`blrl`**); frame still **`-0xa8`/`f31`**
+  class — not pursued to **100%**.
+- **`TEnemyAttachment::sendMessage`**: **97.1% → 99.7%** probe — **`lwzx r4`/`r31` byte walk**, **`kill()`**
+  on attachment vs **`TLiveActor::kill`** on collision; register naming / **`addi`** order still **`~`** at
+  **99.7%** — reverted loop body.
+- **`TGraphWeb::startIsEnd`**: **98.8%** — **`r4`/`r5`** locals fix first **`lwz`**; **`r4[idx].unk0`** vs
+  **`lwzx`** / **`r6`** index — reverted.
+- **`TDebuTelesa` `entry$2835`**: non-const **`entry[]`** still trades **`createModelData`** **99.2%** — skipped.
+- Spill **≥99.7%** (**`TBubbleCallBack`**, **`TConductor::*`**, etc.): skipped.
+
+**Tip (R264).** **`TDangoHamuKuri::calcRootMatrix`** prologue stores **`mScaling`** (**`0x24`/`0x28`/`0x2c`**) into
+the model base scale, not **`mPosition`**; held path uses **`mHolder->getTakingMtx()`** like
+**`TSpineEnemy::calcRootMatrix`**.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0** (**9275** unchanged).
+
 ### R258 (Aufgabe B; defer GraphGroup/ColumSand pool + diversify, 0× ship)
 
 **Hunt.** Post-R257 dry; **defer `TGraphGroup::perform`** (empty **`TGraphWeb::perform` DCE**) and

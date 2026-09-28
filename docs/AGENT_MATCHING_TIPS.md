@@ -121,6 +121,9 @@ enemy. Use **`mHolder->getTakingMtx()`**. A **`char trash[8]`** prologue (same p
 **`TSpineEnemy::perform`** in this TU) may be required for the **`-0x30`** frame / **`stw r31`/`r30`**
 homes after the virtual **`blrl`**.
 
+**`TDangoHamuKuri::calcRootMatrix`** follows the same holder **`getTakingMtx`** rule after
+**`setBaseScale(mScaling)`** (three **`lwz`** from **`this+0x24`** into the model, not **`mPosition`**).
+
 `TCoasterEnemy::bind` (and similar short **`bind`** overrides) already match retail math when written as
 **`nextPos = mPosition; nextPos += mLinearVelocity; nextPos += mVelocity; mLinearVelocity = nextPos -
 mPosition`**. Remaining diffs are usually **`TVec3` spill slots** (**`r1+0x10`** vs **`+0x1c`**) on a
