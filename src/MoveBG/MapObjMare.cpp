@@ -178,7 +178,35 @@ TWireBell::TWireBell(const char* name)
 
 void TMapObjPuncher::touchPlayer(THitActor*) { }
 
-void TMapObjPuncher::control() { }
+void TMapObjPuncher::control()
+{
+	// gap sits above the scale vec; trash below it.
+	// Together they keep frame -0x38 and the vec at r1+0x20.
+	char gap[4];
+	gap[0] = 0;
+	TMapObjBase::control();
+	// Empty case 1 keeps the bge/b pair. A lone case 2 folds it away.
+	switch (mState) {
+	case STATE_NORMAL:
+		break;
+	case 2: {
+		J3DFrameCtrl* ctrl = mMActor->getFrameCtrl(ANM_TYPE_BCK);
+		soundBas(MSD_SE_OBJ_PUNCHER_RETURN, 101.0f, ctrl->getRate());
+		if (animIsFinished()) {
+			JGeometry::TVec3<f32> scale(2.0f);
+			emitAndScale(PARTICLE_MS_ENM_DISAP_A_W, 0, &mPosition, scale);
+			emitAndScale(PARTICLE_MS_ENM_DISAP_B, 0, &mPosition, scale);
+			if (gpMSound->gateCheck(MSD_SE_SMOKE_EFFECT))
+				MSoundSESystem::MSoundSE::startSoundActor(
+				    MSD_SE_SMOKE_EFFECT, &mPosition, 0, nullptr, 0, 4);
+			kill();
+		}
+		break;
+	}
+	}
+	char trash[0x10];
+	trash[0] = 0;
+}
 
 void TMapObjPuncher::load(JSUMemoryInputStream& stream)
 {

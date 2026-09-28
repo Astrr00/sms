@@ -10920,6 +10920,38 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R282 (`MapObjMare`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjPuncher::control`.
+
+- `TMapObjBase::control`.
+  Der `switch` auf `mState` hat ein leeres `STATE_NORMAL`.
+  Das hält das `bge`/`b`-Paar.
+  Ein einzelner Fall `2` faltet es weg.
+  Fall `2` ruft `soundBas(MSD_SE_OBJ_PUNCHER_RETURN, 101.0f, getRate())`.
+  Ist die Animation fertig, kommt eine Skala `(2, 2, 2)`.
+  Dann `emitAndScale` mit `PARTICLE_MS_ENM_DISAP_A_W` und `PARTICLE_MS_ENM_DISAP_B`.
+  `MSD_SE_SMOKE_EFFECT` läuft über `gateCheck` und `startSoundActor`.
+  Danach virtuelles `kill`.
+  `char gap[4]` liegt über dem Skalenvektor.
+  `char trash[0x10]` liegt darunter.
+  Das Frame bleibt `-0x38`.
+  Der Vektor liegt bei `r1+0x20`.
+  244 Bytes, 61 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMare`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.303986 % -> 79.31067 %, matched code 50.062283 % -> 50.06908 % (1797280 -> 1797524, +244).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9655 -> 9656.
+`MapObjMare` 4488 -> 4732 (+244).
+Kein R170–R281-Unit hat matched code verloren.
+
 ### R281 (`MapObjRicco`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
