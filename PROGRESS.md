@@ -12552,6 +12552,25 @@ guards.
 
 **Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
 
+### R277 (Aufgabe B; PolluteModel r30/r31 probes, 0× ship)
+
+**Hunt.** Post-R276 dry (**9275**); **`TEnemyPolluteModel::perform`** (**~91.8%**, **`-0x80`** kept); defer **bind**/Dango/setGoal;
+spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%** only.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~4).**
+
+- **`TEnemyPolluteModel* self = this`**: no **`r30`/`r31`** fix — reverted.
+- Nested **`unk5D`/`unk5C`**: **~89.8%** — reverted.
+- **`#pragma dont_inline`** **`pollutePerformUseCue`/`UseGfx`**: fuzzy **~94.1%** but wrong **`addi r31,r3`** + extra **`bl`** — reverted.
+- **`(void)graphics`**: kept (harmless); still **`mr r31,r3` / `addi r30,r4`**.
+
+**Tip (R277).** Retail **`perform`** wants **`addi r31,r4`** before **`mr r30,r3`**; prologue **`bl`** hints do not restore
+retail order — need cue touched without a call (compare **`TEnemyAttachment::perform`**, which uses **`graphics`** on live paths).
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
 ### R258 (Aufgabe B; defer GraphGroup/ColumSand pool + diversify, 0× ship)
 
 **Hunt.** Post-R257 dry; **defer `TGraphGroup::perform`** (empty **`TGraphWeb::perform` DCE**) and

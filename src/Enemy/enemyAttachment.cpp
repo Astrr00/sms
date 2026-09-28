@@ -279,6 +279,7 @@ TEnemyPolluteModel::TEnemyPolluteModel(TLiveActor* param_1, int param_2,
 void TEnemyPolluteModel::perform(u32 cue, JDrama::TGraphics* graphics)
 {
 	char trash[0x38]; // matching: -0x80 frame (r30/r31 swap still open)
+	(void)graphics;
 	if (!unk5D || unk5C)
 		return;
 
