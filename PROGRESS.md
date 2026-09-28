@@ -10920,6 +10920,36 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R277 (`MapObjBall`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TBigWatermelon::appearing`.
+
+- `TMapObjGeneral::appearing`.
+  Die Animationsmatrix kommt aus `getModel()->getAnmMtx(0)`, dann virtuelles `calcRootMatrix` und `getModel()->calc`.
+  Translation Y wird `mBodyRadius * (mScaling.y / mInitialScaling.y) + mPosition.y`.
+  `mScaledBodyRadius` und `mDamageRadius` werden je `50 * mScaling.x`, dann `calcEntryRadius`.
+  Bei `isState(1)` wird `mActorType` `0x400000D0` und `mAttackRadius` `50 * mScaling.x`.
+  Sonst wird `mActorType` `0x400000DB` und `mAttackRadius` `0`.
+  Beide Zweige rufen noch einmal `calcEntryRadius`.
+  `char trash[0x18]` hält das Frame bei `-0x38`.
+  272 Bytes, 68 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.26543 % -> 79.272896 %, matched code 50.02306 % -> 50.030643 % (1795872 -> 1796144, +272).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9650 -> 9651.
+`MapObjBall` 5648 -> 5920 (+272).
+Kein R170–R276-Unit hat matched code verloren.
+Nur `MapObjBall` hat matched code gewonnen.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R276 (`MapObjBall`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

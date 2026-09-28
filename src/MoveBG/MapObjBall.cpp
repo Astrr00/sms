@@ -441,7 +441,29 @@ void TBigWatermelon::touchActor(THitActor*) { }
 
 void TBigWatermelon::kill() { }
 
-void TBigWatermelon::appearing() { }
+void TBigWatermelon::appearing()
+{
+	// Dead slot so MWCC keeps the frame at -0x38.
+	char trash[0x18];
+	trash[0] = 0;
+	TMapObjGeneral::appearing();
+	MtxPtr mtx = getModel()->getAnmMtx(0);
+	calcRootMatrix();
+	getModel()->calc();
+	mtx[1][3] = mBodyRadius * (mScaling.y / mInitialScaling.y) + mPosition.y;
+	mScaledBodyRadius = 50.0f * mScaling.x;
+	mDamageRadius     = 50.0f * mScaling.x;
+	calcEntryRadius();
+	if (isState(1)) {
+		mActorType    = 0x400000D0;
+		mAttackRadius = 50.0f * mScaling.x;
+		calcEntryRadius();
+	} else {
+		mActorType    = 0x400000DB;
+		mAttackRadius = 0.0f;
+		calcEntryRadius();
+	}
+}
 
 void TBigWatermelon::control() { }
 
