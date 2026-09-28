@@ -89,6 +89,15 @@ Inside **`TEffectObjBase::perform`**, a direct **`moveObject()`** call on implic
 devirtualized to a direct **`bl`** (or inlined) in the same TU. Retail loads **`vtable+0xb0`** and uses
 **`blrl`**. Assign **`TEffectObjBase* self = this`** and call **`self->moveObject()`** to force the
 virtual dispatch pattern; fixing **`stwu -0x20`** / **`stw r31`** is a separate stack-layout issue.
+Retail allocates **`-0x20`** and **`stw r31, 0x1c(r1)`** before the **`CUE_MOVE`** **`beq`** even though
+the function body never assigns **`r31`** (it only preserves the incoming callee-saved value). Keeping
+**`graphics`** in a local, **`goto`** epilogues, or similar did not coerce **`-0x8`** → **`-0x20`** in
+tests — do not assume spill-padding fixes this one.
+
+In **`TEffectObjBase::moveObject`**, retail inlines **`JPABaseEmitter::setGlobalScale`** as three
+**`lfs`** from the **`VECScale`** temp (**`f0`/`f1`/`f2`** at **`0x3c`/`0x40`/`0x44`**) followed by six
+**`stfs`** to **`0x154`/`0x174`**. Calling the header **`setGlobalScale(const TVec3&)`** can permute the
+**`lfs`** order (**`f2,f0,f1`**) even when the math is equivalent.
 
 `TCoasterEnemy::bind` (and similar short **`bind`** overrides) already match retail math when written as
 **`nextPos = mPosition; nextPos += mLinearVelocity; nextPos += mVelocity; mLinearVelocity = nextPos -

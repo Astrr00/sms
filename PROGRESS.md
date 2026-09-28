@@ -12176,6 +12176,36 @@ stack-home problem ( **`volatile` padding did not move `-0x8`** ).
 
 **Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged).
 
+### R260 (Aufgabe B; perform frame + opcode probes, 0× ship)
+
+**Hunt.** Post-R259 dry; optional finish **`TEffectObjBase::perform`** **`stwu -0x20` / `stw r31`** ( **`blrl`**
+already kept); prefer real opcode / data wins; skip spill-only **≥99.7%** and R251–R259 thrash; **`ninja
+baseline`** + **`changes_all`**; cap ~8; strict 100% only.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8).**
+
+- **`TEffectObjBase::perform`**: **90.8%** — **`self->moveObject()`** **`blrl`** unchanged; tried
+  **`JDrama::TGraphics* keptGraphics`**, **`goto done`**, **`pGraphics` live across **`blrl`**: still
+  **`stwu -0x8`** (retail **`stwu -0x20`** before **`beq`**, **`stw r31`** with no **`mr r31`** in body).
+- **`TEffectObjBase::moveObject`**: **98.8%** — retail inlines **`setGlobalScale`** as **`lfs f0/f1/f2`**
+  from **`local_1c`** then six **`stfs`**; **`setGlobalScale(local_1c)`** permutes to **`f2,f0,f1`**
+  loads; per-field **`dyn.x`/`prt.x`** assign did not build (**`getGlobalParticleScale`** is out-param only).
+- **`TNerveHino2Landing`**: **87.4%** — retail **`getFrameCtrl`** + **`lfs 0x10`** + **`mLiveFlag`**
+  **`rlwinm` bit 29** + **`fctiwz`/`stfd`**; our **`getFrame()`/`checkLiveFlag`** DCE’d; **`volatile`**
+  locals worsened frame (**82%**), reverted.
+- **`TEffectColumWater::generate`**: **91.9%** — **`TVec3`** temp **`r1+0x18`** vs **`+0x14`** + emit
+  scheduling; not pursued to 100%.
+- **`GessoBodyCallback`**, **`TEffectColumSand::reset`**, spill-only **≥99.7%**: skipped per scope.
+
+**Tip (R260).** Retail **`TEffectObjBase::perform`** always opens a **`-0x20`** frame ( **`stw r31`**
+saves the **incoming** callee-saved **`r31`**, not **`this`**) before the **`CUE_MOVE`** **`beq`**; MWCC
+still emits **`-0x8`** here despite **`graphics`** / **`goto`** tricks — treat as open stack-home problem
+separate from the **`self`/`blrl`** fix.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged).
+
 ### R258 (Aufgabe B; defer GraphGroup/ColumSand pool + diversify, 0× ship)
 
 **Hunt.** Post-R257 dry; **defer `TGraphGroup::perform`** (empty **`TGraphWeb::perform` DCE**) and
