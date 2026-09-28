@@ -10920,6 +10920,36 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R270 (`MapObjBall`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TResetFruit::appearing`.
+
+- `MTXScale` skaliert mit `mScaleUpSpeed` auf allen Achsen.
+  `concatOnlyRotFromLeft` schreibt die Rotation in die Anm-Matrix.
+  `mScaling.y` wird mit `mScaleUpSpeed` multipliziert.
+  `mScaledBodyRadius` ist `mBodyRadius * mScaling.y`.
+  Translation Y ist `mBodyRadius * mScaling.y + mPosition.y`.
+  Wenn `mScaling.y >= mInitialScaling.y`, kommt die Initial-Scale zurück.
+  Danach virtuelles `calc`, `HIT_FLAG_NO_COLLISION` aus, virtuelles `makeObjAppeared`, `mState` wird 1.
+  `char trash[10]` hält die Matrix bei `r1+0x20` und das Frame bei `-0x58`.
+  256 Bytes, 64 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.212 % -> 79.219 %, matched code 49.968803 % -> 49.975933 % (1793924 -> 1794180, +256).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9643 -> 9644.
+`MapObjBall` 3700 -> 3956 (+256).
+Kein R170–R269-Unit hat matched code verloren.
+Nur `MapObjBall` hat matched code gewonnen.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R269 (`MapObjBall`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

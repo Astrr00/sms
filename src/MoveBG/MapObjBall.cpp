@@ -73,7 +73,7 @@ void TMapObjBall::makeObjDefault()
 	mtx[2][3] = mPosition.z;
 
 	// Dead slot so MWCC keeps frame -0x28.
-	char trash[1];
+	char trash[8];
 	trash[0] = 0;
 }
 
@@ -193,7 +193,31 @@ void TResetFruit::rotting() { }
 
 void TResetFruit::breaking() { }
 
-void TResetFruit::appearing() { }
+void TResetFruit::appearing()
+{
+	Mtx scaleMtx;
+	// Dead slot so MWCC keeps the matrix at r1+0x20 and the frame at -0x58.
+	char trash[10];
+	trash[0] = 0;
+	MTXScale(scaleMtx, mScaleUpSpeed, mScaleUpSpeed, mScaleUpSpeed);
+
+	MtxPtr anmMtx = getModel()->getAnmMtx(0);
+	concatOnlyRotFromLeft(scaleMtx, anmMtx, anmMtx);
+
+	mScaling.y *= mScaleUpSpeed;
+	mScaledBodyRadius = mBodyRadius * mScaling.y;
+	anmMtx[1][3]       = mBodyRadius * mScaling.y + mPosition.y;
+
+	if (mScaling.y >= mInitialScaling.y) {
+		mScaling.x = mInitialScaling.x;
+		mScaling.y = mInitialScaling.y;
+		mScaling.z = mInitialScaling.z;
+		getModel()->calc();
+		offHitFlag(HIT_FLAG_NO_COLLISION);
+		makeObjAppeared();
+		mState = 1;
+	}
+}
 
 void TResetFruit::control() { }
 
