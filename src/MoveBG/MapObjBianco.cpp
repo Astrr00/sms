@@ -230,7 +230,18 @@ void TLampSeesaw::touchPlayer(THitActor*)
 		unk138->pushDown(-unk140);
 }
 
-void TLampSeesaw::load(JSUMemoryInputStream&) { }
+void TLampSeesaw::load(JSUMemoryInputStream& stream)
+{
+	f32 height;
+	s32 pad;
+	TMapObjBase::load(stream);
+	stream.read(&height, 4);
+	unk13C = mInitialPosition.y - height;
+	stream.read(&unk140, 4);
+	unk140 *= 0.0001f;
+	// Dead s32 so the height spill stays at r1+0x14 (frame stays -0x20).
+	pad = 0;
+}
 
 TLampSeesaw::TLampSeesaw(const char* name)
     : TMapObjBase(name)

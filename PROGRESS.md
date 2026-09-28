@@ -10920,6 +10920,32 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R238 (`MapObjBianco`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TLampSeesaw::load`.
+
+- `TMapObjBase::load` liest den Stream zuerst.
+  Ein `f32` kommt per `read` von 4 Bytes.
+  `unk13C` ist `mInitialPosition.y` minus diesen Wert.
+  `unk140` wird ebenfalls per `read` geladen und mit `0.0001f` multipliziert.
+  Ein totes `s32` hält den Float-Spill auf `r1+0x14` und den Frame auf `-0x20`.
+  120 Bytes, 30 Instruktionen.
+  Die übrigen 55 Matches in `MapObjBianco` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBianco`: PASS.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.07234 % -> 79.07557 %, matched code 49.80301 % -> 49.80636 % (1787972 -> 1788092, +120).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9609 -> 9610.
+`MapObjBianco` 6108 -> 6228 (+120).
+Kein R170–R237-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R237 (`MapObjMonte`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
