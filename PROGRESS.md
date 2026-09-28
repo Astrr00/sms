@@ -10920,6 +10920,34 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R289 (`MapObjPinna`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TViking::control`.
+
+- `switch (unk14C)` behandelt `0` und `1`.
+  Zustand `0` nutzt denselben `mState`-`1`/`2`-Lauf wie `THorizontalViking::control`.
+  Zustand `1` ruft `roll`.
+  `#pragma dont_inline` auf dem leeren `roll` hält das `bl`.
+  `mPosition.x` ist `unk138 * sinf(3.14 * (unk148 / 180)) + mInitialPosition.x`.
+  `mPosition.y` addiert `mYOffset` und `unk138 * (1 - cosf(...))`.
+  `mRotation.z` wird `unk148`.
+  Danach virtuelles `updateObjMtx`.
+  `char trash[4]` hält das Frame bei `-0x28`.
+  356 Bytes, 89 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjPinna`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.33502 % -> 79.344826 %, matched code 50.106293 % -> 50.11621 % (1798860 -> 1799216, +356).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9662 -> 9663.
+`MapObjPinna` 5812 -> 6168 (+356).
+Kein R170–R288-Unit hat matched code verloren.
+
 ### R288 (`MapObjPinna`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

@@ -115,9 +115,45 @@ THorizontalViking::THorizontalViking(const char* name)
 {
 }
 
+#pragma dont_inline on
 void TViking::roll() { }
+#pragma dont_inline off
 
-void TViking::control() { }
+void TViking::control()
+{
+	switch (unk14C) {
+	case 0:
+		switch (mState) {
+		case 1:
+			unk144 -= unk13C;
+			unk148 += unk144;
+			if (unk148 < 0.0f)
+				mState = 2;
+			break;
+		case 2:
+			unk144 += unk13C;
+			unk148 += unk144;
+			if (unk148 > 0.0f)
+				mState = 1;
+			break;
+		}
+		break;
+	case 1:
+		roll();
+		break;
+	}
+	mPosition.x
+	    = unk138 * sinf(3.14f * (unk148 / 180.0f)) + mInitialPosition.x;
+	f32 yOff = mYOffset;
+	mPosition.y
+	    = yOff
+	      + (unk138 * (1.0f - cosf(3.14f * (unk148 / 180.0f)))
+	         + mInitialPosition.y);
+	mRotation.z = unk148;
+	updateObjMtx();
+	char trash[4];
+	trash[0] = 0;
+}
 
 void TViking::reset()
 {
