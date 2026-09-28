@@ -11488,6 +11488,33 @@ als Member-Name. Check: **`decomp-diff -u … -t object -s nonmatching`**.
 **Verify.** `ninja changes_all` ggü. **`cf903cfc`**; **`namekuri` matched_data
 70.86% → 100%**; **`build.sha1` OK**.
 
+### R213 (Aufgabe B; MAP/vtable cross-check, 0× ship)
+
+**Hunt.** Enemy/Player B-scope: **vtable vs MAP** (spurious `virtual perform`
+pattern from R212), data objects, small text; cap ~8.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, no-ship).**
+
+- **MAP scan:** per-class `perform__*Manager` vs `__vt__*` — **no further**
+  spurious manager `perform` (post-R212); sampled **`.data` vtables** (gesso,
+  hamukuri, fireWanwan, telesa, gatekeeper) **100%**.
+- **Remaining EP data gaps:** **`.ctors`** **`THinokuri2`/`TBossGesso` vtables**
+  (~99%); **`TBEelTearsDrop::__vtable`** (`.ctors`); Player **`@4827`/`@2843`**
+  switch **`.rel`** (WaterGun/Tongue); **`WaterGun`/`Yoshi`/`MarioMove`** ctor
+  blobs.
+- **Text:** **`TRiccoHook::init`** ~99.9% (stack / **`THookTake`** ctor); **`gesso`**
+  nerves/`getNowGravity` skipped; no EP **≤64 B** text ≥99.5%.
+- **Literals:** repo **4 B `.sdata2`/`.rodata`** scan (B-scope + game) **dry**
+  post-R211.
+
+**Tip (R213).** After one manager-vtable fix, automate **MAP closure**: for each
+`__vt__NClass`, confirm every overridden slot’s **`perform__NClass…`** (or base
+thunk) is **linked or absent** — absence ⇒ **do not declare** `virtual perform`.
+
+**Verify.** `ninja changes_all` ggü. **`7e1babd2`** — **no diff** (baseline only).
+
 ### R212 (Aufgabe B; Enemy manager vtable, 1× data)
 
 **Hunt.** Enemy/Player B-scope text+data; other TUs only for clear `.sdata2`
