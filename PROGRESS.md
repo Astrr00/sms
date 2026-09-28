@@ -10920,6 +10920,35 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R248 (`MapObjWave`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjWave::perform`.
+
+- Wenn `unk94` gesetzt ist und `CUE_MOVE` anliegt, `updateTime`.
+  Danach `getCurrentMap`: Karte 4 oder 6 ruft `updateHeightAndAlpha`.
+  `CUE_DRAW` ruft `initDraw` und `draw`.
+  `char trash[0x18]` hält den Frame bei `-0x40`.
+  Die vier Callees sind noch Stubs und stehen unter `#pragma dont_inline`,
+  sonst inlined MWCC sie weg.
+  136 Bytes, 34 Instruktionen.
+  Dtor, `noWave` und `__sinit_MapObjWave_cpp` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjWave`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+`MarNameRefGen_MapObj` matched code bleibt 2348.
+
+`ninja changes_all`: fuzzy 79.10304 % -> 79.10671 %, matched code 49.83454 % -> 49.83833 % (1789104 -> 1789240, +136).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9620 -> 9621.
+`MapObjWave` 920 -> 1056 (+136).
+Kein R170–R247-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R247 (`MapObjCorona`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
