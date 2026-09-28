@@ -11589,6 +11589,35 @@ check **`objdump -t`** — writable **`entry[]` in `.data`** vs retail **`.rodat
 **Verify.** `ninja changes_all` ggü. **`cbe35e73`**: **+1** matched function (**9263 → 9264**), **+1252 B** matched code;
 **`mario/Enemy/bossgesso`** **`.rodata` ~95.3% → ~99.7%**.
 
+### R229 (Aufgabe B; `createModelData` const sweep, 0× ship)
+
+**Hunt.** Post-**`f1650c05`**; repeat R228 **`static const` / `entry$` / `objdump`** pattern on remaining
+**`static TModelDataLoadEntry entry[]`** in Enemy/Player; string/PARAM/float/vtable; skip stuck lists, empty TUs,
+Closet/MoveBG; cap ~8.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, no-ship).**
+
+- **EP `createModelData`:** all **100%** — no remaining nonmatching managers.
+- **`.data` vs `.rodata` `entry$` scan (all EP `.o`):** no TU left with **more src `.data` / fewer tgt `.rodata`**
+  pools (**`bossgesso`** was the sole ship in R228).
+- **`TBEelTearsManager::createModelData` (`bosseel`):** **`static const`** → tears **`entry$`** moves to **`.rodata`** but
+  **`matched_code`/`matched_data` regress** — retail tears table stays **writable `.data`** (reverted).
+- **`TTamaNokoManager` / `TBathtubKillerManager`:** same **`const`** experiment → **`.rodata`** pool + **large
+  `matched_data` / `matched_code` regress**; retail keeps **`.data`** (reverted).
+- **`TBossPakkunManager::initJParticle`:** **UNUSED** (0x280) in **`mario.MAP`** — our TU emits **extra 640 B** (inlined
+  at **`load`** in retail); not a one-line MAP fix.
+- **`tamaNoko` `.rodata` ~98.6% (section aggregate):** no **`-t object`** nonmatching symbols — padding/anonymous bytes.
+- **99.9% band (`BathtubKillerBreak`, `TCoasterEnemy::bind`, …):** stack **`r1`/`local` offsets** — skip band.
+- **Player `WaterGun` / `ModelWaterManager` rodata ~98–99%:** out of scope for **`entry$`** pattern this round.
+
+**Tip (R229).** **`static const` on `TModelDataLoadEntry` only when `objdump -t` shows your **`entry$` in `.data`**
+  **and** retail’s matching pool is **`.rodata`** (**`bossgesso`**). If **both** sides use **`.data`** (most EP managers),
+  **`const` moves the pool and usually regresses** neighbors that share the load table.
+
+**Verify.** `ninja baseline` + `ninja changes_all` ggü. **`f1650c05`** — **no diff**.
+
 ### R225 (Aufgabe B; bossManta rodata + EP diversify, 0× ship)
 
 **Hunt.** Post-**`385107f3`**; optional **`bossManta` `@2805`/`@2807`** lead (Amenbo
