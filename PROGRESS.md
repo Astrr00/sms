@@ -10920,6 +10920,35 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R195 (`MapObjMamma` / `MapObjBall`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+Drei kurze Fills ohne `ble`/`bge`/`lfsu`.
+`TMapObjPuncher::load` bleibt geparkt (Frame).
+`TMareFall::calc` bleibt Stub: gleicher Code, Frame `-0x18` statt `-0x28`.
+`TMapObjBall::makeObjDefault` bleibt Stub: gleicher Code, Frame `-0x20` statt `-0x28`.
+`TSandCastle::findTriggerActor` bleibt Stub (`return nullptr`), nur die Signatur ist jetzt `TMapObjBase*`.
+
+- `TSandBomb::makeObjAppeared` ruft `TMapObjBase::makeObjAppeared` und `startControlAnim(1)` dann `startControlAnim(2)`.
+  68 Bytes, 17 Instruktionen.
+- `TSandBombBase::findTriggerActor` registriert `"SandBomb"` mit `mPosition`, `mRotation` und Skala `TVec3(1.0f)`.
+  72 Bytes, 18 Instruktionen.
+- `TCoverFruit::loadAfter` ruft `TMapObjBase::loadAfter` und virtuell `makeObjDead`, wenn `getBool(0x1038B)` wahr ist.
+  88 Bytes, 22 Instruktionen.
+
+`validate-symbol-order` für Mamma und Ball: PASS.
+Dieselben UNUSED-Größenwarnungen wie zuvor, plus die bestehende weak-only Order-Warnung in Ball.
+
+`ninja changes_all`: fuzzy 78.71754 % → 78.723595 %, matched code 49.415947 % → 49.4223 % (1774076 → 1774304, +228).
+Matched data bleibt 65.18551 %.
+MapObjMamma matched code 4024 → 4164.
+MapObjBall matched code 2340 → 2428.
+Kein R170–R194-Unit hat matched code verloren.
+`MarNameRefGen_MapObj` und `MapObjManager` unverändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R194 (`MapObjMare` / `MapObjMamma` / `MapObjBianco`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

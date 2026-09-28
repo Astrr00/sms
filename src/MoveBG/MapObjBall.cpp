@@ -4,6 +4,7 @@
 // rogue includes needed for matching sinit & bss
 #include <MSound/MSSetSound.hpp>
 #include <MSound/MSoundBGM.hpp>
+#include <System/FlagManager.hpp>
 
 // -inline deferred: source order is the reverse of mario.MAP emission order.
 
@@ -166,7 +167,12 @@ void TCoverFruit::calcRootMatrix() { }
 
 BOOL TCoverFruit::receiveMessage(THitActor*, u32) { return 0; }
 
-void TCoverFruit::loadAfter() { }
+void TCoverFruit::loadAfter()
+{
+	TMapObjBase::loadAfter();
+	if (TFlagManager::smInstance->getBool(0x1038B))
+		makeObjDead();
+}
 
 void TBigWatermelon::touchWaterSurface() { }
 

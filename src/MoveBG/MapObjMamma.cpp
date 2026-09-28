@@ -6,6 +6,7 @@
 // rogue includes needed for matching sinit & bss
 #include <MSound/MSSetSound.hpp>
 #include <MSound/MSoundBGM.hpp>
+#include <MoveBG/MapObjManager.hpp>
 
 // -inline deferred: source order is the reverse of mario.MAP emission order.
 
@@ -65,7 +66,12 @@ void TSandLeafBase::control() { }
 
 void TSandLeafBase::initMapObj() { }
 
-void TSandBomb::makeObjAppeared() { }
+void TSandBomb::makeObjAppeared()
+{
+	TMapObjBase::makeObjAppeared();
+	startControlAnim(1);
+	startControlAnim(2);
+}
 
 u32 TSandBomb::touchWater(THitActor*) { return 0; }
 
@@ -96,7 +102,12 @@ void TSandBombBase::grow() { mState = 5; }
 
 void TSandBombBase::control() { }
 
-void TSandBombBase::findTriggerActor() { }
+TMapObjBase* TSandBombBase::findTriggerActor()
+{
+	JGeometry::TVec3<f32> scale(1.0f);
+	return TMapObjBaseManager::newAndRegisterObj("SandBomb", mPosition,
+	                                             mRotation, scale);
+}
 
 void TSandBombBase::loadAfter() { }
 
@@ -127,7 +138,8 @@ void TSandCastle::calcRootMatrix()
 		TMapObjBase::calcRootMatrix();
 }
 
-void TSandCastle::findTriggerActor() { }
+// Retail is a name-ref lookup (96B). Stub so the override signature matches.
+TMapObjBase* TSandCastle::findTriggerActor() { return nullptr; }
 
 void TSandCastle::loadAfter() { }
 

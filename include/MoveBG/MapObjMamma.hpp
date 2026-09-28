@@ -76,7 +76,7 @@ public:
 	virtual void exploding();
 	virtual void expanded();
 	virtual void withered();
-	virtual void findTriggerActor();
+	virtual TMapObjBase* findTriggerActor();
 	TSandBombBase(const char* name = "すなやま爆弾の土台");
 
 	static f32 mFiringFrameSpeed;
@@ -101,7 +101,7 @@ public:
 	virtual void waitBeforeExplode();
 	virtual void explode();
 	virtual void expanded();
-	virtual void findTriggerActor();
+	virtual TMapObjBase* findTriggerActor();
 	TSandCastle(const char* name = "砂の城");
 
 	static f32 mCollisionRate;
