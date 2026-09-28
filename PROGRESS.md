@@ -12835,6 +12835,27 @@ spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%
 
 **Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
 
+### R285g (Enemy/Player B; near-miss focus, 0× ship)
+
+**Hunt.** Defer **`consider` monolith**; prefer **`checkController`** / **≤200B** opcode fixes; skip R285–R285f thrash, spill **≥99.7%**, Closet/MoveBG; strict **100%** only.
+
+**Ship.** none.
+
+**Trial (reverted).** **`TEnemyMario::emWaiting`**: inlined **0.2f** stick, direct **`mEMDoing*`**, **`emario`+`mPrevIdx=-1`** graph — peaked **~99.6%** (**`fmuls` operand order** on sin/cos); reverted.
+
+**Probes (~6).**
+
+- **`TEnemyMario::checkController`**: **`−0x78`** frame; **`frsqrte` NR** dist + **`stfs` spill `0x50`** before **`mDistanceToMario`** — **~99.1%** — deferred.
+- **`TEnemyMario::emWaiting`**: **280B**; post-trial note above — **~99.5–99.6%** — deferred.
+- **`PakkunRootCallback2`**: **`TRotation3f` `−0x90`**; **`fdivs`/matrix spill `0x5c`** — **~98.1%** (180B) — deferred.
+- **`TRotation3::setQuat` (fireWanwan TU)**: **`fmuls`/`fsubs` register swap** on quat — **~98.5%** (160B) — deferred.
+- **`TEnemyMario::drawHPMeter`**: GX quad cluster frame — **~99.2%** — deferred.
+- **`TMario::doRunningAnimation`**: Player run anim — **~98.7%** — deferred.
+
+**Tip (R285g).** **`emWaiting`**: graph arm needs **`lwz r4, 0x124(emario)`** then **`stw -1, 8(r4)`** with **`r3` still `mEMario` for `goToShortestNextGraphNode`** — keep a **`TEMario* emario`** local; inlined stick still wants **`fmuls f0,f0,f1`** not **`f1,f0`**.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
 ### R258 (Aufgabe B; defer GraphGroup/ColumSand pool + diversify, 0× ship)
 
 **Hunt.** Post-R257 dry; **defer `TGraphGroup::perform`** (empty **`TGraphWeb::perform` DCE**) and
