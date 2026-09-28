@@ -10920,6 +10920,36 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R263 (`Item`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TShine::loadBeforeInit`.
+
+- `readString` füllt `name[0x20]`.
+  `strcmp("normal")` setzt `unk154` auf 0, `strcmp("quickly")` auf 2, sonst 1.
+  Das erste `stream >>` ist `eventId`; `-1` wird 120, danach `setEventId`.
+  Das zweite Int steckt in einer Union mit `double`, damit der Slot bei `r1+0x18` 8-byte-aligned liegt.
+  `eventId = slot.v`.
+  `slot.v + 1 >= 2` setzt `eventId` auf -1.
+  `unk190 = eventId + 1`.
+  240 Bytes, 60 Instruktionen.
+  `appearSimple` bleibt 100 %.
+
+`validate-symbol-order` `mario/MoveBG/Item`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.18936 % -> 79.18938 %, matched code 49.93204 % -> 49.93872 % (1792604 -> 1792844, +240).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9636 -> 9637.
+`Item` 14120 -> 14360 (+240).
+Kein R170–R262-Unit hat matched code verloren.
+Nur `Item` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R262 (`Item`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

@@ -833,10 +833,15 @@ void TShine::loadBeforeInit(JSUMemoryInputStream& stream)
 		eventId = 120;
 	setEventId(eventId);
 
-	s32 v;
-	stream >> v;
-	eventId = v;
-	if (v + 1 >= 2)
+	// The second streamed int sits at r1+0x18, 8-byte aligned, with the
+	// next int 8 bytes later. The double member is what forces that slot.
+	union {
+		s32 v;
+		double align;
+	} slot;
+	stream >> slot.v;
+	eventId = slot.v;
+	if (slot.v + 1 >= 2)
 		eventId = -1;
 	unk190 = eventId + 1;
 }
