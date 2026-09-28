@@ -56,7 +56,28 @@ void TMapObjBall::hold(TTakeActor*) { }
 
 void TMapObjBall::kicked() { }
 
-u32 TMapObjBall::touchWater(THitActor*) { return 0; }
+u32 TMapObjBall::touchWater(THitActor* actor)
+{
+	char trash[4];
+	trash[0] = 0;
+	if (isState(TMapObjGeneral::STATE_HOLDING)
+	    || isState(TMapObjGeneral::STATE_APPEARING))
+		return 1;
+
+	JGeometry::TVec3<f32> work;
+	work.set(JGeometry::TVec3<f32>(mVelocity));
+	const JGeometry::TVec3<f32>& water = getWaterSpeed(actor);
+	register f32 w = water.x;
+	register f32 s = unk17C;
+	work.x = w * s + work.x;
+	w = water.y;
+	work.y = w * s + work.y;
+	w = water.z;
+	work.z = w * s + work.z;
+	mVelocity = work;
+	offLiveFlag(LIVE_FLAG_UNK10);
+	return 1;
+}
 
 void TMapObjBall::boundByActor(THitActor*) { }
 

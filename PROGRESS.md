@@ -10920,6 +10920,29 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R299 (`MapObjBall`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjBall::touchWater`.
+
+- `STATE_HOLDING` oder `STATE_APPEARING` liefert 1.
+  Sonst kommt `getWaterSpeed` auf eine Kopie von `mVelocity`, skaliert mit `unk17C`.
+  Danach `offLiveFlag(LIVE_FLAG_UNK10)`.
+- `char trash[4]` hält den Frame auf `-0x38`.
+- 256 Bytes, 64 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.38747 % -> 79.39437 %, matched code 50.163227 % -> 50.170357 % (1800904 -> 1801160, +256).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9669 -> 9670.
+`MapObjBall` 6816 -> 7072 (+256).
+Kein R170–R298-Unit hat matched code verloren.
+
 ### R298 (`MapObjFence`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
