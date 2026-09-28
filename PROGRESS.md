@@ -12795,6 +12795,25 @@ spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%
 
 **Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
 
+### R285e (Enemy/Player B; post-R285d, 0× ship)
+
+**Hunt.** Skip R285–R285d thrash, spill **≥99.7%**, Closet/MoveBG; strict **100%** only.
+
+**Ship.** none.
+
+**Probes (~6).**
+
+- **`TEnemyMario::consider`**: giant **`switch(mEMDoing)`**; stick paths use **`enemyMario` `.sdata2` `@4108`/`@4291`** + inlined **`fctiwz`** (not **`setStickToAngle` call**) — **~94.0%** — deferred.
+- **`TEnemyMario::findRunAwayNearestNode`**: graph scan **`−0x138`**; **`getPoint` spill `0x104`** + manual dist vs **`f31`** — **~98.8%** — deferred.
+- **`TSmallEnemy::moveObject`**: **`−0xb0`** spine/`perform` cluster; early **`clrlwi` live flag** branch — **~83.5%** — deferred.
+- **`TPakkunSeed::rebirth`**: pollution **`stamp`** prep **`stw`/`lfd` @`0x68`**; frame **`−0x78`** — **~98.4%** — deferred.
+- **`TNerveTelesaImitate::execute`**: **`gpApplication` stage `lbz`** gate; **`r31`/`r30` swap** on **`0x1c4` load** — **~97.9%** — deferred.
+- **`TMario::jumpingBasic`**: **`−0xa0`/`stmw r27`** vs **`−0x58`**; arg save **`r28–r29`/`r27` reorder** — **~98.7%** — deferred.
+
+**Tip (R285e).** **`TEnemyMario::consider`**: each stick branch inlines **`JMASSin`/`JMASCos`×`@4108`×power** into **`unk108->mStick*`** — mirror **`emWaiting`/`emWalkAround`**, not **`setStickToAngle`**.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
 ### R258 (Aufgabe B; defer GraphGroup/ColumSand pool + diversify, 0× ship)
 
 **Hunt.** Post-R257 dry; **defer `TGraphGroup::perform`** (empty **`TGraphWeb::perform` DCE**) and
