@@ -12474,6 +12474,25 @@ strict **100%** only.
 
 **Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0** (**bind** fuzzy **82.9% → 85.5%**).
 
+### R273 (Aufgabe B; bind local order → 94.5%, 0× ship)
+
+**Hunt.** Post-R272 dry (**9275**); **`TEnemyAttachment::bind`** (**~85.5%**); skip Dango/setGoal, spill **≥99.7%**,
+stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%** only.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8).**
+
+- **`TEnemyAttachment::bind`**: decl order **`local_1C` → `local_48` → `local_10`** + **`enemyAttachmentBindSub`**
+  (**`#pragma dont_inline`**) — **~94.5%** (was **~85.5%**); **`0x5c`** position spills + wall **`0x30`** align; open:
+  **`local_10@0x10`**, retail **`TVec3::sub`** BL, epilogue **`lwz`/`stw`** cluster, **`behaveToHitWall`** arg order;
+  **`wallPad`/`subPad`**, **`local_10` first** regressed.
+
+**Tip (R273).** **`bind`**: MWCC stack order **`local_1C`**, **`TBGWallCheckRecord`**, **`local_10`** — not
+**`local_10`** first — fixes **`local_1C@0x5c`**; keep **`trash[0x10]`** after **`operator+=`**.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0** (**bind** fuzzy **85.5% → 94.5%**).
+
 ### R258 (Aufgabe B; defer GraphGroup/ColumSand pool + diversify, 0× ship)
 
 **Hunt.** Post-R257 dry; **defer `TGraphGroup::perform`** (empty **`TGraphWeb::perform` DCE**) and

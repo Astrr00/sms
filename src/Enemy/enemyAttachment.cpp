@@ -65,11 +65,19 @@ void TEnemyAttachment::recoverScale()
 	}
 }
 
+#pragma dont_inline on
+static void enemyAttachmentBindSub(JGeometry::TVec3<f32>& dst,
+                                   const JGeometry::TVec3<f32>& src)
+{
+	dst.sub(src);
+}
+#pragma dont_inline off
+
 void TEnemyAttachment::bind()
 {
-	JGeometry::TVec3<f32> local_10;
-	TBGWallCheckRecord local_48;
 	JGeometry::TVec3<f32> local_1C = mPosition;
+	TBGWallCheckRecord local_48;
+	JGeometry::TVec3<f32> local_10;
 	local_1C += mLinearVelocity;
 	local_1C += mVelocity;
 	char trash[0x10]; // matching: spill local_1C @0x5c
@@ -96,7 +104,7 @@ void TEnemyAttachment::bind()
 
 	local_10                       = local_1C;
 	mPosition                      = local_1C;
-	local_10.sub(mPosition);
+	enemyAttachmentBindSub(local_10, mPosition);
 	mLinearVelocity                = local_10;
 
 	setBehavior();

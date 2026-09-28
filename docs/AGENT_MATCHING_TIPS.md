@@ -159,7 +159,10 @@ Declare **`JGeometry::TVec3<f32> local_10`** first ( **`addi r3, r1, 0x10`** epi
 **`TBGWallCheckRecord local_48`** before **`local_1C`**; **`local_48.set(...)`** matches **`0x30`** wall buffer better
 than a mid-function ctor.
 **`char trash[0x10]`** immediately after integrating **`local_1C`** (not before) helps **`-0x78`** with **`f31`** live;
-still open: **`local_1C`** spill **`0x5c`** vs **`0x50`**, explicit **`TVec3::sub`** vs folded **`fsubs`**.
+Declare locals **`local_1C`**, then **`TBGWallCheckRecord local_48`**, then **`local_10`**, then integrate
+**`local_1C`** and **`char trash[0x10]`** — retail **`0x5c/0x60/0x64`** homes and wall **`r1+0x30`** (~**94.5%**).
+Open: **`local_10`** at **`0x24`** not **`0x10`**, retail **`TVec3::sub`** symbol vs **`#pragma dont_inline`**
+**`enemyAttachmentBindSub`**, **`behaveToHitWall`** **`mResultWalls[0]`** load **`0x4c(r1)`** vs **`0x40`**.
 
 **`TEnemyAttachment::sendMessage`** walks **`mCollisions`** with **`lwz r3, 0x44(r29)`** then
 **`lwzx r4, r3, r31`** (byte offset in **`r31`**, index in **`r30`**). For collisions that are not Mario
