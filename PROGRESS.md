@@ -11488,6 +11488,31 @@ als Member-Name. Check: **`decomp-diff -u … -t object -s nonmatching`**.
 **Verify.** `ninja changes_all` ggü. **`cf903cfc`**; **`namekuri` matched_data
 70.86% → 100%**; **`build.sha1` OK**.
 
+### R208 (Aufgabe B; Player emit size + `2.0f` pool, 2× data)
+
+**Hunt.** B-scope Enemy/Player tiny `.ctors`/`.sdata2` objects; ASM `.float`
+literals; cap ~8; skip **DebuTelesa**, **koopajr** stubs.
+
+**Ship (data, 2).**
+
+- **`@4740`** (`ModelWaterManager`): `TWaterEmitInfo::mSize` default **`17.0f`**
+  (ASM `stfs` to `0xe4`), not `0.0f`.
+- **`@3757`** (`ModelWaterManager`): `calcVMMtxGround` / `calcVMMtxWall` use
+  **`2.0f`** (sdata2 `@3757`), not **`2.0`** double literals.
+
+**Probes (~5, no-ship).** `tinkoopa` `@3000` (empty TU); `bossgesso`
+`idxarray$3450` (incomplete `doAttackSingle` tail); `bossManta` `@2805` (12 B
+rodata zero triplet); `WaterGun` `@4827`; `bgtentacle`/`bossgesso` switch
+`.rel`.
+
+**Tip (R208).** **`PARAM_INIT` float defaults** must match ASM ctor **`stfs`**
+pool symbols (`@4740` = **17** for **`mSize`**). Matrix helpers: **`2.0f`**
+keeps **`@3757`** in **`.sdata2`**; **`2.0`** pulls a different constant class
+and breaks the 4 B object.
+
+**Verify.** `ninja changes_all` ggü. **`0372b993`**; `@3757`, `@4740` 100% on
+`mario/Player/ModelWaterManager`.
+
 ### R207 (Aufgabe B; sdata2/rodata literals + short-angle scale, 4× data)
 
 **Hunt.** `.sdata2` ULP / unfused operands; tiny 4 B objects; skip **DebuTelesa**,
