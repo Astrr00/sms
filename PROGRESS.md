@@ -12877,6 +12877,27 @@ spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%
 
 **Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
 
+### R285i (Enemy/Player B; @4108 pool, 0× ship)
+
+**Hunt.** Optional **`emWaiting`** (`sEnemyMarioStickScale` + **`TEMario* emario`**); else **≤200B**; skip **`consider`**, spill **≥99.7%**, Closet/MoveBG; strict **100%** only.
+
+**Ship.** none.
+
+**Trial (reverted).** **`emWaiting`** + file-top **`static const f32 sEnemyMarioStickScale`** shared with **`setStickToAngle`** — still **`lfs @2630`** not **`@4108`**, **`fmuls` swap** — **~99.6%** — reverted.
+
+**Probes (≤200B).**
+
+- **`PakkunRootCallback2`**: matrix spill **`0x5c`** — **~98.1%** (180B) — deferred.
+- **`TRotation3::setQuat` (fireWanwan)**: **~98.5%** (160B) — deferred.
+- **`TWalkerEnemy::isReachedToGoalXZ`**: **~99.7%** (200B) — spill skip.
+- **`TNerveWalkerEscape::execute`**: **~99.9%** (352B) — spill skip.
+- **`TGessoManager::initSetEnemies`**: **~81.2%** (188B) — deferred.
+- **`TEnemyMario::emWaiting`**: trial note — **~99.6%** — deferred.
+
+**Tip (R285i).** **`@4108` vs `@2630`**: a TU **`static const f32`** at file top is **not enough** — retail **`@4108`** is fixed by **whole-`enemyMario.cpp` `.sdata2` emission order**; likely need **every stick-path `64.0f` → `sEnemyMarioStickScale`** (or MAP-order rodata) before **`fmuls f0,f0,f1`** tuning matters.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
 ### R258 (Aufgabe B; defer GraphGroup/ColumSand pool + diversify, 0× ship)
 
 **Hunt.** Post-R257 dry; **defer `TGraphGroup::perform`** (empty **`TGraphWeb::perform` DCE**) and
