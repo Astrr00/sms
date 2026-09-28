@@ -12206,6 +12206,32 @@ separate from the **`self`/`blrl`** fix.
 
 **Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged).
 
+### R261 (Aufgabe B; defer EffectObj + diversify opcode, 0× ship)
+
+**Hunt.** Post-R260 dry; **defer `TEffectObjBase::perform` frame** and **`moveObject` scale
+`lfs` order**; prefer other opcode/data/PARAM/vtable wins; skip spill-only **≥99.7%** and
+R251–R260 thrash; **`ninja baseline`** + **`changes_all`**; cap ~8; strict 100% only.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8).**
+
+- **`SMS_IsMarioOnWire`**: **93.8%** — retail **`lwz r0, 0x68(mario)`** then **`lwz r3, 0x68(mario)`**
+  before **`0x4c`**; **`&&`/`!!ret`** rewrites unchanged (reverted).
+- **`TYoshi::getEmitPosDir`**: **97.1%** — retail keeps matrix base in **`r6`** (`mActor` → **`+4`**
+  → **`+0x58`** → **`+idx*0x30`**); **`void*`/`MActor*` reuse** still loads into **`r3`** (reverted).
+- **`TTamaNoko::isReachedToGoal`**: **97.3%** → **74.9%** with inlined **`TPathNode`** — needs early
+  **`addi r4, r3, 0x104`** + **`r4`/`r5`** schedule matching **`TTelesa`** (reverted to **`getPoint()`**).
+- **`TEnemyAttachment::sendMessage`**: **97.1%** — **`lwzx`/`r31`** operand scheduling (deferred).
+- **`TGessoPolluteObj::getNowGravity`**: already **100%** in objdiff (no ship delta).
+- Spill-only **≥99.7%** (**`TBubbleCallBack`**, **`TConductor::getManagerByName`**, etc.): skipped.
+
+**Tip (R261).** Walker **`isReachedToGoal()`** on **`unk104`** (tamaNoko/telesa) is not a high-level
+**`getPoint()`** call in retail: prologue does **`addi r4, this, 0x104`**, branches on **`unk0`**, copies
+the goal **`Vec`** with **`lwz`/`stw`**, then **`fcmpu`** zero-X/Z before **`MsVECMag2`**.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged).
+
 ### R258 (Aufgabe B; defer GraphGroup/ColumSand pool + diversify, 0× ship)
 
 **Hunt.** Post-R257 dry; **defer `TGraphGroup::perform`** (empty **`TGraphWeb::perform` DCE**) and

@@ -99,6 +99,12 @@ In **`TEffectObjBase::moveObject`**, retail inlines **`JPABaseEmitter::setGlobal
 **`stfs`** to **`0x154`/`0x174`**. Calling the header **`setGlobalScale(const TVec3&)`** can permute the
 **`lfs`** order (**`f2,f0,f1`**) even when the math is equivalent.
 
+**`TTamaNoko::isReachedToGoal`** / **`TTelesa::isReachedToGoal`** inline **`TPathNode::getPoint`**
+at **`this+0x104`**: **`addi r4, r3, 0x104`** right after **`mflr`**, **`lwz r5, 0x104(r3)`**, then either
+**`addi r5, r5, 0x10`** (actor position) or **`addi r5, r4, 4`** (embedded **`unk4`**), copy three words
+to **`r1+0x14`**, subtract **`mPosition`**, force **`y=0`**, **`fcmpu`** X/Z vs zero, then **`MsVECMag2`**
+against a rodata threshold — not a single **`getPoint()`** call plus **`TVec3`** math.
+
 `TCoasterEnemy::bind` (and similar short **`bind`** overrides) already match retail math when written as
 **`nextPos = mPosition; nextPos += mLinearVelocity; nextPos += mVelocity; mLinearVelocity = nextPos -
 mPosition`**. Remaining diffs are usually **`TVec3` spill slots** (**`r1+0x10`** vs **`+0x1c`**) on a
