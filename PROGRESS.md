@@ -11321,6 +11321,48 @@ unverändert ggü. **`63f8cdc0`**.
 
 **Verify.** `ninja baseline` / `changes_all` ohne Code-Delta.
 
+### R197 (Aufgabe B; weak/emit pivot + `initParticle`, keine Vollmatches)
+
+**Hunt.** R196-Skips + User; Pivot **R188/R189** (weak Header-Inlines, emit-Zwei-Zeiler),
+`MarioParticle`/`WaterGun`/`Nozzle`-Rest, Enemy **`setMActorAndKeeper`/`init`/`perform`**
+nur **`stwu`-Gap**; Cap ~8; strikt 100 %.
+
+**Skip (neu, R196-Probes).** `TPakkun::load`, `TBubbleCallBack`, `THinokuri2::perform`-Trash,
+`TBEelTearsDrop::perform`, `TBEelTears::perform`, `TNozzleBase::emitCommon`,
+`TOneShotGenerator::receiveMessage`, `TMario::toroccoEffect`, `TBoxTelesa::load`,
+`TTamaNokoManager::load`, `TNerveSmallEnemyFreeze` (+ R194/R195-Prior).
+
+**Scanner.** Viele **`setMActorAndKeeper`** (telesa/tamaNoko/pakkun/…): **`decomp-diff` 0× `~`**
+(isoliert) — TU bleibt `NonMatching` wegen Nachbarn; **HamuKuri-Familie** noch
+**`addi 0x360` vs `0x370`** (Layout).
+
+**Probes (~8, revertiert).**
+
+1. **`TMario::initParticle`:** Retail-ASM (`stmw r25`, **`r30` Byte-Offset**, **`r26` Flag-Ptr**,
+dupl. `cmpwi r31,1`-Zweige) vs. `SMS_LoadParticle`-Schleife — Register/Frame **−0x30** vs **−0x28**,
+40× `~` (kein entry-only).
+2. **`TMario::surfingEffect`:** `MtxPtr` Zwei-Zeiler + ohne `scaleVec` / manuelle `stfs` — Frame
+**−0x60** vs **−0xb8** (extra `MtxPtr`-Locals); Baseline **−0x70** + **`r5`/`r7`-Swap** bleibt.
+3. **`TNerveBathtubKillerExplosion`:** entry `trash[4]` — nur **+4 B Spill** (0x1c vs 0x18),
+Frame **−0x30**→**−0x38**.
+4. **`TNozzleBase::emitCommon`:** `trash[0x18]` — **`stwu −0x78`** OK, **`TVec3` +0xc** (R196).
+5. **`TBEelTears::perform`:** `trash[8]` — Frame OK, **vtable/`effectMtx`**-Cluster bleibt.
+6. **`TBEelTearsDrop`:** `trash[4]`/`mtxPad[0xc]` — **0x6c** vs **0x60** `Mtx` unverändert.
+7. **Weak/`emit*` Scan:** `emitGetEffect`/`emitFootPrintWithEffect`/mehrere **`setMActorAndKeeper`**
+bereits **strikt 100 %**; `TWaterGun::emit` Frame OK, kein Ein-Zeiler-Fix.
+8. **`WaterGunDivingCtrlR`:** Frame **−0x70** vs **−0x58** (kein reines Pad).
+
+**Vollmatch, strikt.** keine (letzter Ship: R189 `emitGetWaterEffect`).
+
+**Tip (R197).** **R189-Zwei-Zeiler** hilft bei **Call-Arg-Reihenfolge** (`mr r5` vor `addi r7`),
+nicht bei **`surfingEffect`** wenn zusätzliche **`MtxPtr`-Temps** den Frame aufblasen — Retail
+nutzt **`f31`** + direkte **`stfs`** ohne Stack-`TVec3`. **`initParticle`:** SMS_LoadParticle-Inline
+≠ Retail (**`gpResourceManager`/`gParticleFlagLoaded`**, **`r30`+=4**); Matching braucht
+**out-of-line-Loop-Form**, nicht Weak-Tweak. **`setMActorAndKeeper` 100 %** einzeln ⇒ nächster
+Hebel oft **Klassen-Offset** (HamuKuri **0x370**) oder **Caller-TU**, nicht weiteres entry-Trash.
+
+**Verify.** `ninja baseline` / `changes_all` ohne Code-Delta ggü. **`c68146c0`**.
+
 ### R196 (Aufgabe B; emit/load entry-pad + Eel-Tears, keine Vollmatches)
 
 **Hunt.** B-scope Enemy/Player ≤600 B; Skip R195-Liste + User (`TPakkun::load`, `TBubbleCallBack`,
