@@ -11488,6 +11488,40 @@ als Member-Name. Check: **`decomp-diff -u … -t object -s nonmatching`**.
 **Verify.** `ninja changes_all` ggü. **`cf903cfc`**; **`namekuri` matched_data
 70.86% → 100%**; **`build.sha1` OK**.
 
+### R226 (Aufgabe B; PARAM/data hunt, bossManta deferred, 0× ship)
+
+**Hunt.** Post-**`f1f78944`**; **defer `bossManta` `@2805`/`@2807`**; skip R222–R225 stack +
+stuck lists; string/table/PARAM/float/vtable/**`createModelData`**; ≤200 B / data +
+MAP; cap ~8.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, no-ship).**
+
+- **`bossManta` `@2805`:** not re-tried (deferred).
+- **`TGessoPolluteObj::getNowGravity`** (32 B): retail **`lwz r4,0x1e8` + `beqlr`** vs
+  double **`getSaveParams()`**; hoisting **`params`** / direct **`unk1E8`** → **85%**
+  (`bne`/`blr`, **`r3`** base) — register/scheduling, not PARAM spelling.
+- **EP object scan:** empty/scaffold TUs (**`hanasambo`**, **`popo`**, **`amiNoko`**, …)
+  → many **missing** mtx-calc **`.ctors`** pools (full TU work, not a typo).
+- **`spider`:** **extra** **`.data` `@134`/`@154`** (no **`InfectiousStrings`** in TU —
+  likely PCH/include closure); **`bind`** = structural, not **`1/60`** literal alone.
+- **`feetinv`:** missing **`TMtxCalcFootInv::__vtable`** + **`@1795…`** jump tables —
+  scaffolding gap.
+- **`createModelData`:** **`coasterkiller` / `launcher` / `BathtubKiller`** already **100%**
+  (entry label names only).
+- **`TBoxTelesa::load`** (99.8%, 264 B): stack **`r1+0x14`** vs **`+0x10`** for vec temps.
+- **`TBubbleCallBack::execute`** (99.6%, 164 B): **`stwu -0x48`** vs **`-0x38`** — stack.
+- **EP `≤64B` `≥95%` text / `≥99%` data:** none outside skip/stuck (besides **`gesso`**
+  above).
+
+**Tip (R226).** **`getNowGravity`-size** helpers need **retail load order**
+(**`gesso` → `unk1E8` in `r4`**, **`beqlr`**) — not a second **`getSaveParams()`**
+  call or PARAM rename. For **missing `@2357…` mtx strings**, check whether the **`.cpp`
+  is still empty** before tuning **`InfectiousStrings`**.
+
+**Verify.** `ninja changes_all` ggü. **`f1f78944`** — **no diff**.
+
 ### R225 (Aufgabe B; bossManta rodata + EP diversify, 0× ship)
 
 **Hunt.** Post-**`385107f3`**; optional **`bossManta` `@2805`/`@2807`** lead (Amenbo
