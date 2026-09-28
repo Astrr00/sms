@@ -11321,6 +11321,44 @@ unverändert ggü. **`63f8cdc0`**.
 
 **Verify.** `ninja baseline` / `changes_all` ohne Code-Delta.
 
+### R195 (Aufgabe B; Pakkun + Bubble/Hino2-Spill, keine Vollmatches)
+
+**Hunt.** B-scope Enemy/Player ≤600 B außer User-Skips (`isReachedToGoalXZ`, `getNowGravity`,
+`TNerveNKFollowMario`, `jumpToSearchActor`, `getTakingMtx`, `TAmenbo::calcRootMatrix`,
+`TNerveDoroHaneHitWater` + Prior); Präferenz `receiveMessage`/`perform`/`emit*`/`init`/`load`;
+Entry-`trash` + R171-`TVec3` nur wo Frame exakt; Cap ~8; strikt 100 %.
+
+**Probes (~8, revertiert).**
+
+1. **`TPakkun::load`:** Baseline **99,7 %**, Frame **−0x30** OK; Retail-`TPathNode`-Temp **0x18**,
+uns **0x14** (+4 B). `u32 local_14`, `struct { u32 pad; TPathNode node; }`, Default-Ctor+Manuell,
+R171-`trash[8]` — Frame wächst oder Logik/ASM bricht; bestes Bleiben **+4 B Spill**.
+2. **`TBubbleCallBack::execute`:** Entry `char trash[8]; trash[0]=0;` → Frame **−0x48** OK;
+`getCurrentPosition`-`TVec3` **0x30** vs **0x34**; `mBubbleToRipple`-`lfs`-Paar vertauscht.
+`trash[0x10]` → Frame **−0x50** (overshoot).
+3. **`THinokuri2::perform`:** `trash[0]=0` auf bestehendem `trash[8]` → `request`-Spill **0x30**
+vs **0x34** (von **0x2c**); `trash[0x10]` Frame **−0x60**; lokales `requestPos`+R171 → **90,5 %**.
+4. **`TGessoPolluteObj::set`:** nur Diff — Frame **−0x68** vs **−0x70** (`trash[8]` overshoot **−0x78**,
+R194).
+5. **`TNerveBPTouchDown::execute`:** Frame **−0x50** vs **−0x48** (8 B zu groß, kein sicherer Cut).
+6. **`TFireHamuKuri::setMActorAndKeeper` / `THamuKuri::setMActorAndKeeper`:** Overview **100,0 %**,
+strikt **`addi` 0x360 vs 0x370** (Klassen-Layout, nicht Entry-Trash).
+7. **`TPakkunSeed::moveObject` / `TNameKuri::reset`:** Frame **−0x38/−0x40** vs **−0x40/−0x48**
+(±8 B; nicht weiter geheadbuttet).
+8. **`TBossPakkun::rumblePad`:** R194 — `delta`-Spill **0x24** vs **0x20**; Entry-`trash[4]` Frame
+**−0x48** (schlechter).
+
+**Vollmatch, strikt.** keine (letzter Ship: R189 `emitGetWaterEffect`).
+
+**Tip (R195).** **`TPakkun::load`:** Retail baut **`TPathNode` @ 0x18** in festem **−0x30**-Frame
+(inlined `setGoalPath`, kein Out-of-line-Ctor); **+4 B** sind **In-Frame-Slot @ 0x14–0x17**, nicht
+lösbar mit Entry-`trash[4]` (wächst `stwu`). **`TBubbleCallBack`/`THinokuri2::perform`:** Entry-Trash
+aligniert oft nur **`stwu`**; **`TVec3`-Homing für `getCurrentPosition`/`TQuestionManager::request`**
+braucht **post-entry +8 B** zwischen Trash und Spill-Cluster (vgl. R194 `getTakingMtx` **Slot-Pad**),
+ohne Frame-Overshoot.
+
+**Verify.** `ninja baseline` / `changes_all` ohne Code-Delta ggü. **`ed07be76`**.
+
 ### R194 (Aufgabe B; isReached Option A + frische TU, keine Vollmatches)
 
 **Hunt.** Option **A** (max 2): `isReachedToGoalXZ` Retail-Register (`r4`=node, `r5`=goal,
