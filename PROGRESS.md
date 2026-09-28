@@ -10920,6 +10920,38 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R257 (`MapObjFence`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TFenceWater::controlRotation`.
+
+- `switch (mState)` mit leerem `case 1`, damit die untere Hälfte gegen 1 vergleicht.
+  Zustand 2 zieht `unk13C` von `unk140` ab.
+  `unk140 <= -90` ist `cror`+`bne` und klemmt auf `-90`, setzt `unk13C` auf 0, `mState` auf 3 und `mStateTimer` auf `mTurnedWaitTime` (600).
+  Zustand 3 bricht ab, solange `isStateTimerEngaged()` wahr ist.
+  Danach `gateCheck` und `startSoundActor` mit `MSD_SE_OBJ_WATER_FENCE_REV`, `unk13C = mBackSpeed` (3.0f), `mState = 4`.
+  Zustand 4 addiert `unk13C` auf `unk140`.
+  `unk140 >= 0` ist `cror`+`bne` und ruft virtuell `changeStatusToWait`.
+  `dont_inline` bleibt, damit `control` den `bl` behält.
+  `char trash[0x9]` hält das Frame bei `-0x28` (`r31` bei `r1+0x24`).
+  308 Bytes, 77 Instruktionen.
+  `control`, `changeStatusToGo` und `changeStatusToWait` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjFence`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.17030 % -> 79.17877 %, matched code 49.90295 % -> 49.91153 % (1791560 -> 1791868, +308).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9629 -> 9630.
+`MapObjFence` 3504 -> 3812 (+308).
+Kein R170–R256-Unit hat matched code verloren.
+Nur `MapObjFence` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R256 (`MapObjFence`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

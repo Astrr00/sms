@@ -14,7 +14,9 @@
 
 // -inline deferred: source order is the reverse of mario.MAP emission order.
 
-f32 TFenceWater::mWaterAccel = 2.1f;
+f32 TFenceWater::mWaterAccel     = 2.1f;
+f32 TFenceWater::mBackSpeed      = 3.0f;
+int TFenceWater::mTurnedWaitTime = 600;
 
 BOOL TFence::receiveMessage(THitActor*, u32 message)
 {
@@ -141,9 +143,43 @@ void TFenceWater::changeStatusToWait()
 	mState  = 1;
 }
 
-// Empty here. dont_inline keeps the call in control().
+// dont_inline keeps the call in control().
 #pragma dont_inline on
-void TFenceWater::controlRotation() { }
+void TFenceWater::controlRotation()
+{
+	switch (mState) {
+	case 1:
+		// Empty. The low half of the switch still compares against 1.
+		break;
+	case 2:
+		unk140 -= unk13C;
+		if (unk140 <= -90.0f) {
+			unk140       = -90.0f;
+			unk13C       = 0.0f;
+			mState       = 3;
+			mStateTimer  = mTurnedWaitTime;
+		}
+		break;
+	case 3:
+		if (isStateTimerEngaged())
+			break;
+		if (gpMSound->gateCheck(MSD_SE_OBJ_WATER_FENCE_REV))
+			MSoundSESystem::MSoundSE::startSoundActor(
+			    MSD_SE_OBJ_WATER_FENCE_REV, &mPosition, 0, nullptr, 0, 4);
+		unk13C = mBackSpeed;
+		mState = 4;
+		break;
+	case 4:
+		unk140 += unk13C;
+		if (unk140 >= 0.0f)
+			changeStatusToWait();
+		break;
+	}
+
+	// Dead slot so the frame stays at -0x28 (r31 at r1+0x24).
+	char trash[0x9];
+	trash[0] = 0;
+}
 #pragma dont_inline off
 
 void TFenceWater::control()

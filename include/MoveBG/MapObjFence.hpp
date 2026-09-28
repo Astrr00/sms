@@ -74,6 +74,8 @@ public:
 	}
 
 	static f32 mWaterAccel;
+	static f32 mBackSpeed;
+	static int mTurnedWaitTime;
 
 public:
 	/* 0x13C */ f32 unk13C;
