@@ -316,8 +316,13 @@ void TMammaYacht::initMapObj() { }
 
 void TSandBird::control() { }
 
-TMapObjBase* TSandBird::makeObjFromJointName(const char*, unsigned short)
+TMapObjBase* TSandBird::makeObjFromJointName(const char* name, unsigned short param)
 {
+	TMapObjBase* obj = TJointCoin::makeObjFromJointName(name, param);
+	if (obj != nullptr)
+		return obj;
+	if (strstr(name, "none") == nullptr)
+		return makeObj("SandBirdBlock", param);
 	return nullptr;
 }
 

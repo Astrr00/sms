@@ -62,7 +62,7 @@ class TFenceWater : public TFence {
 public:
 	void draw() const;
 	BOOL receiveMessage(THitActor* sender, u32 message);
-	void changeStatusToGo();
+	virtual void changeStatusToGo();
 	void changeStatusToWait();
 	void controlRotation();
 	void control();
@@ -72,6 +72,8 @@ public:
 	    : TFence(name)
 	{
 	}
+
+	static f32 mWaterAccel;
 
 public:
 	/* 0x13C */ f32 unk13C;

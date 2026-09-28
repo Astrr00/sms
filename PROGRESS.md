@@ -10920,6 +10920,38 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R204 (`MapObjBianco` / `MapObjFence` / `MapObjMamma`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+Drei kurze Fills ohne `SMatrix34C`-Leer-Konstruktor.
+Zurückgenommen, nur Frame:
+`TMapObjRootPakkun::drawObject` (Rumpf passt, Frame `-0x20` statt `-0x28`).
+Zurückgenommen, Ablauf:
+`startCameraShakeSE` (`addi` vor dem `bne`, `gpMSound` in `r3` statt `r0` plus `mr`).
+
+- `TBellWatermill::touchWater` setzt `unk190`, addiert `unk15C` auf `unk158` und, wenn `fabsf(unk158)` über `unk16C` liegt, auch `unk180` auf `unk178`, dann klemmt `unk158` auf `unk164`.
+  104 Bytes, 26 Instruktionen.
+- `TFenceWater::receiveMessage` reagiert auf `HIT_MESSAGE_SPRAYED_BY_WATER` außerhalb von State 3, setzt `unk13C` auf `mWaterAccel` (2.1) und ruft virtuell `changeStatusToGo`, wenn `unk13C` positiv ist.
+  120 Bytes, 30 Instruktionen.
+- `TSandBird::makeObjFromJointName` delegiert an `TJointCoin::makeObjFromJointName` und legt sonst `SandBirdBlock` an, wenn der Name kein `none` enthält.
+  140 Bytes, 35 Instruktionen.
+
+`validate-symbol-order` für Bianco, Fence und Mamma: PASS.
+Dieselben UNUSED-Größenwarnungen wie zuvor.
+Fence zusätzlich die bekannte Weak-Order-Warnung.
+
+`ninja changes_all`: fuzzy 78.846695 % -> 78.85625 %, matched code 49.55043 % -> 49.560566 % (1778904 -> 1779268, +364).
+Matched data bleibt 65.18551 %.
+Funktionen matched 9552 -> 9555.
+MapObjBianco matched code 4300 -> 4404.
+MapObjFence matched code 2244 -> 2364.
+MapObjMamma matched code 5396 -> 5536.
+Monte, `MapObjManager` und `MarNameRefGen_MapObj` unverändert (matched code 2348).
+Kein R170-R203-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R203 (`MapObjPinna` / `MapObjMamma`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

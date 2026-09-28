@@ -11,6 +11,8 @@
 
 // -inline deferred: source order is the reverse of mario.MAP emission order.
 
+f32 TFenceWater::mWaterAccel = 2.1f;
+
 BOOL TFence::receiveMessage(THitActor*, u32 message)
 {
 	if (message == 3) {
@@ -79,7 +81,16 @@ void TRevolvingFenceInner::initMapObj() { }
 
 void TFenceWater::draw() const { }
 
-BOOL TFenceWater::receiveMessage(THitActor*, u32) { return FALSE; }
+BOOL TFenceWater::receiveMessage(THitActor*, u32 message)
+{
+	if (!isState(3) && message == HIT_MESSAGE_SPRAYED_BY_WATER) {
+		unk13C = mWaterAccel;
+		if (unk13C > 0.0f)
+			changeStatusToGo();
+		return TRUE;
+	}
+	return FALSE;
+}
 
 void TFenceWater::changeStatusToGo() { }
 

@@ -19,6 +19,22 @@ public:
 	virtual void control();
 	virtual u32 touchWater(THitActor*);
 	TBellWatermill(const char* name = "ベル水車");
+
+public:
+	/* 0x16C */ f32 unk16C;
+	/* 0x170 */ f32 unk170;
+	/* 0x174 */ f32 unk174;
+	/* 0x178 */ f32 unk178;
+	/* 0x17C */ f32 unk17C;
+	/* 0x180 */ f32 unk180;
+	/* 0x184 */ f32 unk184;
+	/* 0x188 */ f32 unk188;
+	/* 0x18C */ f32 unk18C;
+	/* 0x190 */ u8 unk190;
+	/* 0x191 */ u8 unk191[0xF];
+	/* 0x1A0 */ u8 unk1A0;
+	/* 0x1A1 */ u8 unk1A1[3];
+	/* 0x1A4 */ u32 unk1A4;
 };
 
 class TBiancoBell : public TMapObjBase {
