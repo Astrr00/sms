@@ -11488,6 +11488,36 @@ als Member-Name. Check: **`decomp-diff -u … -t object -s nonmatching`**.
 **Verify.** `ninja changes_all` ggü. **`cf903cfc`**; **`namekuri` matched_data
 70.86% → 100%**; **`build.sha1` OK**.
 
+### R202 (Aufgabe B; `.prm`-Pfad + `createModelData` entry table, 2× data)
+
+**Hunt.** `decomp-diff -t object -s nonmatching` B-scope **≤48 B / ≥80 %**;
+Section-Δ-Scan; `.text` ≤600 B off Skip; Cap ~8; strikt 100 %.
+
+**Scan.** Verbleibend u. a. **`DebuTelesa` `entry$2835`/`bastable`**, **`bgtentacle`
+`@4448`**, **`Tongue`/`bossgesso` `.rel`-Switch** (kein String); **`MarioInit`
+`@6543`**, **`smallEnemy` `entry$3004`**.
+
+**Ship (data, 2).**
+
+- **`@6543`** (23 B): **`"/Mario/DmgHamukuri.prm"`** (ASM `.string`); Member
+`mDmgParamsHamakuri` unverändert (`MarioInit.cpp`).
+- **`entry$3004`** (24 B): **`TSmallEnemyManager::createModelData`** — Retail
+**null-terminiertes** `TModelDataLoadEntry[]` + Literal **`0x10220000`**, nicht
+Einzel-`&entry` mit `J3DMLF_*`-OR (`smallEnemy.cpp`).
+
+**Probes (~6, revertiert / Skip).** `DebuTelesa`: `bastable` als **SDA-Einzelpointer**
++ `getBasNameTable`-Cast → **`entry$2835` missing**; ohne `const` auf `entry[]`
+ebenso — revert. **`DebuTelesa_bastable`** (4 B `.sdata`) = **sdata-Reihenfolge**
+(`@2830`… nach `bastable`). **`WaterGun` `@4827`**; Switch-**`.rel`**-Tables.
+
+**Tip (R202).** **`.prm`/Ressourcen-Pfade** 1:1 aus ASM **`.string`** (unabhängig vom
+C++-Member-Namen). **`createModelDataArray`**: Retail **`entry$nnnn`** fast immer
+**`{ … }, { nullptr, 0, 0 }`** — Muster wie **`TTelesaManager::createModelData`**.
+
+**Verify.** `ninja changes_all` ggü. **`b7f6af48`**; **`MarioInit` matched_data
+9.23% → 93.50%**; **`smallEnemy` matched_data 66.88% → 100%**; Total **63.04% →
+64.24%**.
+
 ### R196 (Aufgabe B; emit/load entry-pad + Eel-Tears, keine Vollmatches)
 
 **Hunt.** B-scope Enemy/Player ≤600 B; Skip R195-Liste + User (`TPakkun::load`, `TBubbleCallBack`,
