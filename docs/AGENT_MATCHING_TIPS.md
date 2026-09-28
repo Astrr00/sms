@@ -85,6 +85,11 @@ counter** ( **`lwz` at `0x4(r3)`**, **`li r7,0`**, **`cmpwi`/`bdnz` clusters**, 
 Matching requires keeping the empty **`perform`** and the simple **`for`** — hand-unrolling the counter
 in C usually diverges opcode selection.
 
+Inside **`TEffectObjBase::perform`**, a direct **`moveObject()`** call on implicit **`this`** is often
+devirtualized to a direct **`bl`** (or inlined) in the same TU. Retail loads **`vtable+0xb0`** and uses
+**`blrl`**. Assign **`TEffectObjBase* self = this`** and call **`self->moveObject()`** to force the
+virtual dispatch pattern; fixing **`stwu -0x20`** / **`stw r31`** is a separate stack-layout issue.
+
 `TCoasterEnemy::bind` (and similar short **`bind`** overrides) already match retail math when written as
 **`nextPos = mPosition; nextPos += mLinearVelocity; nextPos += mVelocity; mLinearVelocity = nextPos -
 mPosition`**. Remaining diffs are usually **`TVec3` spill slots** (**`r1+0x10`** vs **`+0x1c`**) on a

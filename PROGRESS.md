@@ -12147,6 +12147,35 @@ still diverges (extra **`b`** / frame); needs UNUSED-inline-sized stack or flag 
 
 **Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged).
 
+### R259 (Aufgabe B; opcode-first + skip spill thrash, 0× ship)
+
+**Hunt.** Post-R258 dry; avoid **≥99.7% spill-only** (**coaster `bind`**, **`TLiveActor::bind`**, Bathtub
+Explosion, **`getRumblePow`**, **`canGo`**); prefer data/vtable/string/PARAM or real **`|`** opcode diffs;
+skip R251–R258 thrash; **`ninja baseline`** + **`changes_all`**; cap ~8; strict 100% only.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8).**
+
+- **`TEffectObjBase::perform`**: **90.8%** — retail **`blrl`** via vtable **`0xb0`** on **`moveObject`**;
+  direct **`moveObject()`** devirt/inlined; **`TEffectObjBase* self = this; self->moveObject()`** restores
+  **`blrl`** (kept in tree); still **`stwu -0x8`** vs **`-0x20`**, no **`stw r31`** — frame class
+  separate from opcode fix.
+- **`GessoBodyCallback`**: **85.5%** — **`gpCurGesso` / `lfs 0x148`** scheduling vs **`getModel`**;
+  structural, not spill-only.
+- **`TNerveHino2Landing`**: **87.4%** — missing **`getFrameCtrl` + `mLiveFlag` bit 29** cluster vs retail.
+- **`hinokuri2` `MtxCalcTypeName` (.ctors)**: **50%** — local **`MtxCalcTypeName[]`** like **`smallEnemy`**
+  did not flip match (pointer/rodata placement); reverted.
+- **`TEnemyManager::copyAnmMtx`**, **`TEffectColumWater::generate`**: skipped (thrash / pool).
+- **Spill-only ≥99.7%**: skipped per scope.
+
+**Tip (R259).** In **`TEffectObjBase::perform`**, MWCC devirtualizes **`moveObject()`** when called on
+implicit **`this`** in the same TU; use a **`TEffectObjBase* self = this`** and **`self->moveObject()`**
+to recover retail **`lwz 0xb0` / `blrl`**. Epilogue **`stwu -0x20` / `stw r31`** is still a separate
+stack-home problem ( **`volatile` padding did not move `-0x8`** ).
+
+**Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged).
+
 ### R258 (Aufgabe B; defer GraphGroup/ColumSand pool + diversify, 0× ship)
 
 **Hunt.** Post-R257 dry; **defer `TGraphGroup::perform`** (empty **`TGraphWeb::perform` DCE**) and
