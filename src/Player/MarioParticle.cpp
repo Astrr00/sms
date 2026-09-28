@@ -101,6 +101,7 @@ void TMario::emitSweat(s16 rot)
 	    && !checkFlag(MARIO_FLAG_IN_ANY_WATER) && !isUnderWater()) {
 		MtxPtr mtx = mModel->getModel()->getAnmMtx(mJointIdHead);
 		JGeometry::TVec3<f32> pos;
+		char trashAfterPos[8];
 		pos.x = mtx[0][3];
 		pos.y = mtx[1][3];
 		pos.z = mtx[2][3];
