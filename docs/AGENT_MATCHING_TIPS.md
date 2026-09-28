@@ -115,6 +115,12 @@ first **`||`** block; the last node must load via **`slwi` + `lwzx r3, r4, r0`**
 after **`unk8 - 1`**). **`r4[idx].unk0`** or splitting **`||`** into separate **`if`/`return`** changes
 branch targets and **`lwzx`** shape.
 
+When **`TSpineEnemy::calcRootMatrix`** finds **`mHolder->getHeldObject() == this`**, retail calls
+**`getTakingMtx`** on the **holder** (`lwz r12, 0(r3)` with **`r3 == mHolder`**), not on the held
+enemy. Use **`mHolder->getTakingMtx()`**. A **`char trash[8]`** prologue (same pattern as
+**`TSpineEnemy::perform`** in this TU) may be required for the **`-0x30`** frame / **`stw r31`/`r30`**
+homes after the virtual **`blrl`**.
+
 `TCoasterEnemy::bind` (and similar short **`bind`** overrides) already match retail math when written as
 **`nextPos = mPosition; nextPos += mLinearVelocity; nextPos += mVelocity; mLinearVelocity = nextPos -
 mPosition`**. Remaining diffs are usually **`TVec3` spill slots** (**`r1+0x10`** vs **`+0x1c`**) on a

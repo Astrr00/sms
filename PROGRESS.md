@@ -12252,6 +12252,35 @@ the goal **`Vec`** with **`lwz`/`stw`**, then **`fcmpu`** zero-X/Z before **`MsV
 
 **Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged).
 
+### R263 (Aufgabe B; calcRootMatrix holder virtual + probes, 1× ship)
+
+**Hunt.** Post-R262 dry; prefer opcode/data outside R251–R262 thrash; **DebuTelesa `entry$2835`** only
+as coupled **`const` + `createModelData`** if both **100%**; skip spill **≥99.7%**, stuck lists, empty
+TUs, Closet/MoveBG; **`ninja baseline`** + **`changes_all`**; cap ~8; strict **100%** only.
+
+**Ship.** **`TSpineEnemy::calcRootMatrix`** (`src/Enemy/enemy.cpp`) — **`mHolder->getTakingMtx()`**
+(retail **`blrl`** on **holder** vtable **`+0xa4`**, not **`this`**) + **`char trash[8]`** for **`-0x30`**
+frame (**100%**, 156 B).
+
+**Probes (~8).**
+
+- **`TGraphWeb::startIsEnd`**: **98.8%** — **`TGraphNode* r4` / `TRailNode* r5`** fixes first **`lwz`**
+  pair; **`r4[idx].unk0`** still **`add`/`lwz`** vs **`lwzx`**; split **`||`** regressed branches — left
+  at **`getFirstGraphNode`/`getLastGraphNode`**.
+- **`TDebuTelesa` `entry$2835`**: **`createModelData`** text already **100%** but **`entry$2835` @ha/@l**
+  label only; non-const **`entry[]`** clears **`.ctors`** pool in R262 but not re-shipped without coupled
+  proof — skipped this round.
+- **`TBubbleCallBack`**, **`TConductor::getManagerByName`**, **`TDangoHamuKuri::getTakingMtx`**: spill
+  **≥99.6%** — skipped.
+- **`TEnemyAttachment::sendMessage`**: **97.1%** **`lwzx`/`r3`/`r4`** schedule — deferred.
+- **`TBossMantaAdditionalCollisionSet::adapt`**: **98.8%** frame + **`f0`/`f1`** multiply order —
+  deferred.
+
+**Tip (R263).** Held **`TSpineEnemy::calcRootMatrix`** uses **`mHolder->getTakingMtx()`** (virtual on the
+**`TTakeActor` holder**), then **`getModel`/`PSMTXCopy`** from the returned **`MtxPtr`**.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9274**): **+1** (**9275**).
+
 ### R258 (Aufgabe B; defer GraphGroup/ColumSand pool + diversify, 0× ship)
 
 **Hunt.** Post-R257 dry; **defer `TGraphGroup::perform`** (empty **`TGraphWeb::perform` DCE**) and
