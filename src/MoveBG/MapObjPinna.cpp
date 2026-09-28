@@ -1,5 +1,6 @@
 #define PINNA_EMIT_MOVEMTX
 #include <MoveBG/MapObjPinna.hpp>
+#include <MoveBG/MapObjManager.hpp>
 
 #include <M3DUtil/MActor.hpp>
 #include <M3DUtil/MActorUtil.hpp>
@@ -259,7 +260,12 @@ void TBalloonKoopaJr::kill() { }
 
 void TBalloonKoopaJr::load(JSUMemoryInputStream&) { }
 
-void TPinnaEntrance::loadAfter() { }
+void TPinnaEntrance::loadAfter()
+{
+	TMapObjBase::loadAfter();
+	JGeometry::TVec3<f32> rot(90.0f, 0.0f, 0.0f);
+	TMapObjBaseManager::newAndRegisterObj("GateManta", mPosition, rot);
+}
 
 void TWaterRecoverObj::touchPlayer(THitActor* actor)
 {

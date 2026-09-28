@@ -10920,6 +10920,31 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R240 (`MapObjPinna`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TPinnaEntrance::loadAfter`.
+
+- `TMapObjBase::loadAfter` läuft zuerst.
+  `rot` ist `(90, 0, 0)`.
+  `newAndRegisterObj("GateManta", mPosition, rot)` lässt `scale` beim Default `(1, 1, 1)`.
+  Der Default wird zuerst materialisiert, daher `addi r6` vor den übrigen Argumentzeigern.
+  104 Bytes, 26 Instruktionen.
+  Die übrigen 47 Matches in `MapObjPinna` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjPinna`: PASS.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.07903 % -> 79.08181 %, matched code 49.80992 % -> 49.81282 % (1788220 -> 1788324, +104).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9611 -> 9612.
+`MapObjPinna` 4888 -> 4992 (+104).
+Kein R170–R239-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R239 (`MapObjMare`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
