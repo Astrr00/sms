@@ -11488,6 +11488,35 @@ als Member-Name. Check: **`decomp-diff -u … -t object -s nonmatching`**.
 **Verify.** `ninja changes_all` ggü. **`cf903cfc`**; **`namekuri` matched_data
 70.86% → 100%**; **`build.sha1` OK**.
 
+### R219 (Aufgabe B; DebuTelesa nm -S + EP data, 0× ship)
+
+**Hunt.** Post-**`569f9a65`**; data/vtable/string; **`nm -S`** on **`DebuTelesa`**
+only if concrete **`InfectiousStrings`** / emission fix; cap ~8; skip stack thrash.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, no-ship).**
+
+- **`DebuTelesa` `nm -S`:** retail **`.sdata`** = **`DebuTelesa_bastable@0x0`**
+  + **`@2830…@2833`** (5×4 B); ours **`bastable@0xc`** with **`MtxCalcTypeName`**
+  + **`dummyMactorStringValue1`** + **`@1053…`** ahead. Drop **`InfectiousStrings`**
+  → **`MtxCalc` gone** but **`bastable@0x4`** (**`@163`/`MSSetSound` JAL sdata@0**)
+  — **not** a one-include fix; **`bastable`/`entry$2835` still 50%/85.7%**.
+- **`bgtentacle` `@4448`** (44 B, 81.8%): **`.rel`** jump table inside
+  **`moveConstraint`** — control-flow, not string/table.
+- **`bossgesso` `idxarray$3450` / `@6268`**; **`hinokuri2`/`bosseel` `MtxCalcTypeName`**
+  (skipped).
+- **EP `.rodata`/`.data` ≥95% ≤128 B:** **dry**.
+- **MAP bogus-`virtual`:** unchanged (managers use base **`perform`** thunks).
+- **`fireWanwan`/`enemyAttachment` objects:** still **100%**.
+
+**Tip (R219).** Retail **`DebuTelesa`** has **no** **`MtxCalcTypeName`** in the TU —
+rogue **`MSSetSound`/`InfectiousStrings`** both inject **`.sdata`** before
+**`bastable`**; fixing **`bastable`** needs **matching retail include closure**,
+not moving the array alone.
+
+**Verify.** `ninja changes_all` ggü. **`569f9a65`** — **no diff**.
+
 ### R218 (Aufgabe B; EP data / vtable scan, 0× ship)
 
 **Hunt.** Post-**`b998245f`**; prefer **`.sdata`/vtable/string** (R212–R214); avoid
