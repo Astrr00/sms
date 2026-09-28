@@ -73,7 +73,22 @@ void TSandLeafBase::grow() { }
 
 void TSandLeafBase::control() { }
 
-void TSandLeafBase::initMapObj() { }
+void TSandLeafBase::initMapObj()
+{
+	unk138 = 0.003f;
+	unk13C = 0.001f;
+	unk140 = 0;
+	mScaling.y = TSandBase::mScaleMin;
+	TMapObjBase::initMapObj();
+	unk144 = TMapObjBaseManager::newAndRegisterObj("SandLeaf", mPosition,
+	                                               mRotation);
+	((TSandLeaf*)unk144)->unk138 = (TMapObjGeneral*)this;
+	unk144->appear();
+
+	// Dead slot so MWCC keeps frame -0x28 and the scale temp at r1+0x10.
+	char trash[1];
+	trash[0] = 0;
+}
 
 void TSandBomb::makeObjAppeared()
 {

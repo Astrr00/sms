@@ -10920,6 +10920,34 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R243 (`MapObjMamma`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TSandLeafBase::initMapObj`.
+
+- `unk138` wird `0.003f`, `unk13C` wird `0.001f`, `unk140` wird `0`.
+  `mScaling.y` kommt aus `TSandBase::mScaleMin`.
+  Danach `TMapObjBase::initMapObj`.
+  `newAndRegisterObj("SandLeaf", mPosition, mRotation)` lässt `scale` beim Default `(1, 1, 1)`.
+  Das Ergebnis landet in `unk144`.
+  `((TSandLeaf*)unk144)->unk138` zeigt auf `this`, dann `appear`.
+  `char trash[1]` hält den Frame bei `-0x28`.
+  148 Bytes, 37 Instruktionen.
+  Die übrigen 63 Matches in `MapObjMamma` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMamma`: PASS.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.08901 % -> 79.09303 %, matched code 49.82028 % -> 49.82441 % (1788592 -> 1788740, +148).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9614 -> 9615.
+`MapObjMamma` 6292 -> 6440 (+148).
+Kein R170–R242-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R242 (`MapObjPinna`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
