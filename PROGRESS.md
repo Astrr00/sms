@@ -11321,6 +11321,42 @@ unverändert ggü. **`63f8cdc0`**.
 
 **Verify.** `ninja baseline` / `changes_all` ohne Code-Delta.
 
+### R193 (Aufgabe B; non-J3D +0x10 helpers, keine Vollmatches)
+
+**Hunt.** R192-Scanner (59 Treffer); **Enemy/Player**, kein `*Ctrl`; exaktes Frame-Δ ohne
+großes `Mtx`-Rest-Spill; **scalar/`lwz`–`stw`-`TVec3`** für **+0x10**-Helfer; Cap ~8; strikt 100 %.
+
+**Skip (User + R192).** `YoshiHeadCtrl`, `NozzleCtrl`, `RotateCtrl`,
+`TBEelTearsManager::createEnemies`, `TBGTentacleMtxCalc::~dtor`; R191-Skips (`behaveToMario`,
+`getRumblePow`, `tryTake`, …).
+
+**Fokus.** `TWalkerEnemy::isReachedToGoalXZ`, `TTobiPuku::isReachedToGoalXZ` (Scanner **+0x10**);
+`THamuKuri::isResignationAttack`, `TWalkerEnemy::isResignationAttack` (gleiche `unk104`-Kette).
+
+**Probes (~8, revertiert / no-ship).**
+
+1. **`TWalkerEnemy::isReachedToGoalXZ` (Baseline):** `#pragma dont_inline` `getPoint()` → **99,7 %**;
+Frame **−0x30** vs **−0x20**, Spill **+0xc** (`0x20` vs `0x14`).
+2. **Scalar `u32` goal + `Vec diff`:** Frame **−0x20** OK; **`r4`/`r5`** vertauscht,
+`lwz`/`stw`-Paar-Reihenfolge (`0x14` vs `0x10`) → **~98,4 %**.
+3. **`word0`/`word1`-Temps:** Spill **0x10** statt **0x14** (schlechter).
+4. **`char pad[8]`** vor/nach `Vec`:** Frame **−0x28** (overshoot).
+5. **`TTobiPuku::isReachedToGoalXZ`:** gleiches Scalar-Muster wie (2), revertiert.
+6. **`THamuKuri::isResignationAttack`:** nur Diff-Check — `dist()`-Static + `getPoint()`;
+kein sicherer Scalar-Pfad ohne `dist`-UNUSED-Größe.
+7. **`TSpineEnemy::calcTurnSpeedToReach`:** Frame **−8**; f32-Spill bleibt (Prior).
+8. **`TPakkunSeed::moveObject`:** Frame **−8**; `MsGetRotFromZaxis`-Stack (Prior).
+
+**Vollmatch, strikt.** keine (letzter Ship: R189 `emitGetWaterEffect`).
+
+**Tip (R193).** **`+0x10` Frame** bei `isReachedToGoalXZ`: Retail **inlined** `getPoint()`-Logik
+(`addi r4,r3,0x104` → `lwz r5,0x104` → `lwz`/`stw` @ **0x14**), **kein** Out-of-line-`getPoint`
+(−0x30). Scalar-`u32`-Kopie bringt Frame zurück; **100 %** hängt an **`r4`=node / `r5`=actor**
+und **`lwz r4,0(r5); lwz r0,4(r5); stw r4; stw r0`** — extra `u32`-Locals verschieben nur den
+Spill-Slot (**0x10**), nicht die Register-Rollen.
+
+**Verify.** `ninja baseline` / `changes_all` ohne Code-Delta ggü. **`a2a063d0`**.
+
 ### R192 (Aufgabe B; Frame-Δ-Scanner + J3D-Callbacks, keine Vollmatches)
 
 **Hunt.** Enemy/Player ≤500 B; Frame-Δ exakt **8/0x10/0x20/0x28** + wenige `~`; Emit-Zwei-Zeiler;
