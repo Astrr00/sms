@@ -10920,6 +10920,34 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R244 (`MapObjFlag`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjFlagManager::load`.
+
+- `JDrama::TNameRef::load`, dann `readString` von 8 Bytes.
+  `switch` auf `gpMarDirector->getCurrentMap()`:
+  Karte 0 und 2 setzen `TMapObjFlag::mFlutterSpeed` auf `16.0f`,
+  Karte 4 auf `12.0f`,
+  sonst `8.0f`.
+  `char trash[8]` hält den Namenspuffer bei `r1+0x20` (Frame `-0x30`).
+  148 Bytes, 37 Instruktionen.
+  Die übrigen 7 Matches in `MapObjFlag` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjFlag`: PASS.
+4 vorbestehende UNUSED-Größen.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.09303 % -> 79.09703 %, matched code 49.82441 % -> 49.82853 % (1788740 -> 1788888, +148).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9615 -> 9616.
+`MapObjFlag` 1260 -> 1408 (+148).
+Kein R170–R243-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R243 (`MapObjMamma`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

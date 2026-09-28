@@ -1,4 +1,5 @@
 #include <MoveBG/MapObjFlag.hpp>
+#include <System/MarDirector.hpp>
 
 // rogue includes needed for matching sinit & bss
 #include <MSound/MSSetSound.hpp>
@@ -47,7 +48,30 @@ void TMapObjFlagManager::loadFlag(TMapObjFlagInfo*, TMapObjFlag*, const char*)
 
 void TMapObjFlagManager::registerObj(TMapObjFlag*, const char*) { }
 
-void TMapObjFlagManager::load(JSUMemoryInputStream&) { }
+void TMapObjFlagManager::load(JSUMemoryInputStream& stream)
+{
+	JDrama::TNameRef::load(stream);
+	char name[8];
+	stream.readString(name, 8);
+	switch (gpMarDirector->getCurrentMap()) {
+	case 0:
+		TMapObjFlag::mFlutterSpeed = 16.0f;
+		break;
+	case 2:
+		TMapObjFlag::mFlutterSpeed = 16.0f;
+		break;
+	case 4:
+		TMapObjFlag::mFlutterSpeed = 12.0f;
+		break;
+	default:
+		TMapObjFlag::mFlutterSpeed = 8.0f;
+		break;
+	}
+
+	// Dead slot so the name buffer stays at r1+0x20 (frame -0x30).
+	char trash[8];
+	trash[0] = 0;
+}
 
 TMapObjFlagManager::TMapObjFlagManager(const char* name)
     : JDrama::TViewObj(name)
