@@ -11488,6 +11488,30 @@ als Member-Name. Check: **`decomp-diff -u … -t object -s nonmatching`**.
 **Verify.** `ninja changes_all` ggü. **`cf903cfc`**; **`namekuri` matched_data
 70.86% → 100%**; **`build.sha1` OK**.
 
+### R206 (Aufgabe B; JMA 16384/90 sdata2 + probes, 2× data)
+
+**Hunt.** `.sdata2` `@nnnn` 4 B scan (Enemy + Camera/Player/MarioUtil); skip
+**`DebuTelesa`**; cap ~8.
+
+**Ship (data, 2).**
+
+- **`@4816`**, **`@4817`** (4 B each, `tobiPuku`): `TTobiPukuLaunchPad::forceLaunch`
+— Retail **`16384.0f`** / **`90.0f`** for `JMASSin`/`JMASCos` index
+(`tobiPukuDegToJmaIndex`); fly/launch velocity uses table sin/cos of **X/Y**
+rotation, not folded `16384/90` ratio (would drop symbols).
+
+**Probes (~6, no-ship).** `koopajr`/`tinkoopa`/`limitkoopajr` `.sdata` int
+defaults (empty `koopajr.cpp`); `MtxUtil` `@2551` (−4); `DrawUtil` `@3043/3044`;
+`ModelWaterManager` `@3757`/`@4740`; `enemyMario` `@4674` jump table.
+
+**Tip (R206).** JMA degree→index: **`16384.0f * deg / 90.0f`** (≈
+`deg * (65536/360)`). Emit pool literals as **separate** `16384.0f` and
+`90.0f` loads — MWCC folds a single `182.044…f` ratio and **`@4816` stays
+missing**. Same ULP family as R205 `0.017453294f` vs `DEG_TO_RAD`.
+
+**Verify.** `ninja changes_all` ggü. **`0b2bfb81`**; **`tobiPuku` data 100%**;
+`@4816`/`@4817` 100%. (`forceLaunch` text still nonmatching — stack/scheduling.)
+
 ### R205 (Aufgabe B; entry hunt + sdata2 literal, 1× data)
 
 **Hunt.** Enemy `entry$` scan (nur **`DebuTelesa` `entry$2835`** nonmatching;
