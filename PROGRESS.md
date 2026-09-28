@@ -10920,6 +10920,31 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R294 (`MapObjMamma`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TLeanMirror::loadAfter`.
+
+- `TMapObjBase::loadAfter`.
+  `TNameRefGen::search("ShiningStone")` landet in `unk17C`.
+  Die Positionsdifferenz geht über `TVec3::sub` nach `unk180`.
+  `squared() <= epsilon` nullt `unk180`.
+  Sonst `scale(one() * inv_sqrt(lsq))`.
+  `char trash[0xC]` hält das Frame bei `-0x58`.
+  296 Bytes, 74 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMamma`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.36743 % -> 79.37558 %, matched code 50.13916 % -> 50.147408 % (1800040 -> 1800336, +296).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9666 -> 9667.
+`MapObjMamma` 7080 -> 7376 (+296).
+Kein R170–R293-Unit hat matched code verloren.
+
 ### R293 (`MapObjMamma`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
