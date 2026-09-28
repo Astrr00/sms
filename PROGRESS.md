@@ -10920,6 +10920,38 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R252 (`MapObjWave`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjWave::updateHeightAndAlpha`.
+
+- `checkGround` und `checkGroundExactY` an Marios Position, Y der zweiten Abfrage ist 10.
+  Flachwasser oder eine Wasserfläche mischt die Amplitude, sonst die Ruhewerte.
+  Typ `0x700` oder eine negative Höhe kopiert die volle Amplitude.
+  Sonst ist der Faktor `1 - höhe / spanne` und geht in `fmadds`.
+  Auf Karte 4 setzt das Rechteck um Mario die Ruhewerte.
+  Ein Stream-Würfel hebt `unk44` bis `unk3C`, sonst fällt es auf 0.
+  Liegt `unk44` über 0, kommt es auf die Amplitude drauf.
+  `char trash[0x28]` hält den Frame bei `-0x70`.
+  792 Bytes, 198 Instruktionen.
+  Dtor, `perform`, `updateTime`, `noWave`, `getHeight`, `getWaveHeight` und `__sinit_MapObjWave_cpp` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjWave`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+`MarNameRefGen_MapObj` matched code bleibt 2348.
+Klassengröße bleibt `0x98`.
+
+`ninja changes_all`: fuzzy 79.12306 % -> 79.14500 %, matched code 49.85516 % -> 49.87722 % (1789844 -> 1790636, +792).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9624 -> 9625.
+`MapObjWave` 1660 -> 2452 (+792).
+Kein R170–R251-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R251 (`MapObjWave`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

@@ -4,6 +4,8 @@
 #include <Map/Map.hpp>
 #include <Map/MapData.hpp>
 #include <JSystem/JUtility/JUTColor.hpp>
+#include <Player/MarioAccess.hpp>
+#include <Camera/CubeManagerBase.hpp>
 #include <math.h>
 
 TMapObjWave* gpMapObjWave;
@@ -46,6 +48,14 @@ static inline bool isWaveSurface(u16 type)
 	if (type == BG_TYPE_WATER || type == BG_TYPE_DAMAGING_WATER
 	    || (u16)(type - BG_TYPE_SEA_WATER) <= 3u
 	    || type == BG_TYPE_SHADED_POOL)
+		return true;
+	return false;
+}
+
+// `==` in a condition is a direct bne. The if/return keeps li 1 / li 0.
+static inline bool isType700(u16 type)
+{
+	if (type == 0x700)
 		return true;
 	return false;
 }
@@ -100,12 +110,78 @@ void TMapObjWave::noWave()
 
 void TMapObjWave::getAlpha(float, float) const { }
 
-// dont_inline: draw/updateHeightAndAlpha are still stubs, and updateTime
-// must stay out of line so perform keeps its bl.
+// dont_inline: draw is still a stub. updateHeightAndAlpha and updateTime
+// must stay out of line so perform keeps its bls.
 #pragma dont_inline on
 void TMapObjWave::draw() { }
 
-void TMapObjWave::updateHeightAndAlpha() { }
+void TMapObjWave::updateHeightAndAlpha()
+{
+	const TBGCheckData* groundData;
+	const TBGCheckData* exactData;
+	const JGeometry::TVec3<f32>& mario = *gpMarioPos;
+	gpMap->checkGround(mario, &groundData);
+	gpMap->checkGroundExactY(gpMarioPos->x, 10.0f, gpMarioPos->z, &exactData);
+
+	if (SMS_CheckMarioFlag(MARIO_FLAG_IN_SHALLOW_WATER)
+	    || isWaveSurface(exactData->mBGType)
+	    || isWaveSurface(groundData->mBGType)) {
+		f32 groundY = gpMap->checkGroundIgnoreWaterSurface(
+		    gpMarioPos->x, 0.0f, gpMarioPos->z, &exactData);
+		f32 rise = unk4C + groundY;
+		if (rise < 0.0f || isType700(exactData->mBGType)) {
+			unk3C = unk2C;
+			unk40 = unk30;
+		} else {
+			f32 t = 1.0f - rise / unk4C;
+			unk3C = t * (unk2C - unk34) + unk34;
+			unk40 = t * (unk30 - unk38) + unk38;
+		}
+
+		f32 riseA = unk50 + groundY;
+		if (riseA < 0.0f || isType700(exactData->mBGType)) {
+			unk54 = unk58;
+		} else {
+			f32 t = 1.0f - riseA / unk50;
+			unk54 = t * (unk58 - unk5C) + unk5C;
+		}
+	} else {
+		unk3C = unk34;
+		unk40 = unk38;
+		unk54 = unk5C;
+	}
+
+	if (gpMarDirector->getCurrentMap() == 4
+	    && -4950.0f < gpMarioPos->x && -4340.0f > gpMarioPos->x
+	    && 7660.0f < gpMarioPos->z && 8040.0f > gpMarioPos->z) {
+		unk3C = unk34;
+		unk40 = unk38;
+		unk54 = unk5C;
+	}
+
+	const JGeometry::TVec3<f32>& marioCube = *gpMarioPos;
+	int cube = gpCubeStream->getInCubeNo(marioCube);
+	if (cube != -1) {
+		TCubeStreamInfo& info
+		    = (TCubeStreamInfo&)*gpCubeStream->unk14->begin()[cube];
+		if (unk44 < info.unk3C)
+			unk44 += unk48;
+	} else {
+		if (unk44 > 0.0f)
+			unk44 -= unk48;
+		else
+			unk44 = 0.0f;
+	}
+
+	if (unk44 > 0.0f) {
+		unk3C = unk2C + unk44;
+		unk40 = unk30 + unk44;
+	}
+
+	// Dead slot so the frame stays at -0x70 (r31 at r1+0x6c).
+	char trash[0x28];
+	trash[0] = 0;
+}
 
 void TMapObjWave::updateTime()
 {
