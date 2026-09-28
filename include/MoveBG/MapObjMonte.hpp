@@ -59,6 +59,9 @@ public:
 	THangingBridge(const char* name = "つり橋");
 
 public:
+	static int mPointNumBetweenBoards;
+	static f32 mRopeHeight;
+
 	/* 0x10 */ u32 unk10;
 	/* 0x14 */ u32 unk14;
 	/* 0x18 */ u8 unk18[0x20];

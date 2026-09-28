@@ -20,9 +20,25 @@ BOOL TJumpMushroom::receiveMessage(THitActor*, unsigned long)
 
 void TJumpMushroom::load(JSUMemoryInputStream&) { }
 
+// dont_inline: empty stub would otherwise fold into the rope draw.
+#pragma dont_inline on
 void THangingBridgeBoard::drawOneRope(const JGeometry::TVec3<f32>&) const { }
+#pragma dont_inline off
 
-void THangingBridgeBoard::drawRopes() const { }
+// Extra inline level so the inlined copy keeps the dead stack slot (frame -0x40).
+static inline const JGeometry::TVec3<f32>&
+boardRopePoint(const THangingBridgeBoard* board, int index)
+{
+	return board->unk1A4[index];
+}
+
+void THangingBridgeBoard::drawRopes() const
+{
+	JGeometry::TVec3<f32> pos = boardRopePoint(this, 0);
+	drawOneRope(pos);
+	pos = boardRopePoint(this, 1);
+	drawOneRope(pos);
+}
 
 void THangingBridgeBoard::push(f32) { }
 
@@ -103,11 +119,26 @@ void THangingBridge::drawUpper(const JGeometry::TVec3<f32>&,
 
 void THangingBridge::setDrawPos(int, f32, JGeometry::TVec3<f32>*) const { }
 
+// dont_inline: empty stubs would otherwise fold into THangingBridge::perform.
+#pragma dont_inline on
 void THangingBridge::drawRopeBetweenBoards(f32, int) const { }
 
 void THangingBridge::initDraw() const { }
+#pragma dont_inline off
 
-void THangingBridge::perform(unsigned long, JDrama::TGraphics*) { }
+int THangingBridge::mPointNumBetweenBoards = 10;
+f32 THangingBridge::mRopeHeight;
+
+void THangingBridge::perform(unsigned long cue, JDrama::TGraphics*)
+{
+	if (cue & CUE_DRAW) {
+		initDraw();
+		for (int i = 0; i < (int)unk10; ++i)
+			((THangingBridgeBoard**)unk14)[i]->drawRopes();
+		drawRopeBetweenBoards(0.0f, mPointNumBetweenBoards);
+		drawRopeBetweenBoards(mRopeHeight, 1);
+	}
+}
 
 void THangingBridge::initMonte() { }
 

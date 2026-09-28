@@ -10920,6 +10920,33 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R215 (`MapObjMonte`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`THangingBridge::perform` ohne `SMatrix34C`-Leer-Konstruktor.
+`TRevolvingFenceInner::setGroundCollision` bleibt geparkt.
+`TMapObjBall::hold` bleibt geparkt (`TUtil<f32>::sqrt` muss ein `bl` bleiben).
+
+- `THangingBridge::perform` zeichnet bei `CUE_DRAW`: `initDraw`, dann für jedes Brett `drawRopes` (beide `unk1A4`-Enden per `boardRopePoint` nach `drawOneRope`), dann `drawRopeBetweenBoards(0, mPointNumBetweenBoards)` und `drawRopeBetweenBoards(mRopeHeight, 1)`.
+  `mPointNumBetweenBoards` ist 10, `mRopeHeight` liegt uninitialisiert in `.sbss`.
+  Der zusätzliche Inline hält das tote Stack-Slot, Frame `-0x40`.
+  224 Bytes, 56 Instruktionen.
+  `drawRopes` ist UNUSED und trifft die Map-Größe 0x6c.
+  `setGroundCollision`, `calcDefaultMtx`, `initMapObj` und `__sinit_MapObjMonte_cpp` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMonte`: PASS.
+Elf bestehende UNUSED-Größenwarnungen (`drawRopes` fällt weg).
+`MapObjBase.hpp` unverändert.
+
+`ninja changes_all`: fuzzy 78.95772 % -> 78.96385 %, matched code 49.680454 % -> 49.686695 % (1783572 -> 1783796, +224).
+Matched data 65.2486 % -> 65.24985 % (417807 -> 417815, +8).
+Funktionen matched 9582 -> 9583.
+`MapObjMonte` 3232 -> 3456 (+224).
+Kein R170-R214-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R214 (`MapObjFence`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
