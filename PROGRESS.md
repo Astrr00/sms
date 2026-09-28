@@ -11460,6 +11460,34 @@ als **`tstatestr` 0x2C** (11× Zeiger). Function-local **`static`** behalten fü
 **Verify.** `ninja baseline` / `changes_all` ggü. **`d9156f48`**; DOL OK; kein neues
 `.text`-Symbol (`.text`-Hunt weiter Mid-Frame).
 
+### R201 (Aufgabe B; rodata string/PARAM typos, 3× data)
+
+**Hunt.** (1) **`symbols.txt`/`@####`-Objects** + ASM **`.string`**; (2) B-scope
+**Δ≤16 B** `.data`/`.rodata`; (3) `.text` ≤600 B off Skip; Cap ~8; strikt 100 %.
+
+**Scan.** Kleine Section-Deltas (47 TUs); **`decomp-diff -t object`** auf
+**≥95% / ≤64 B** → **`namekuri` `@2909`**, **`WaterGun` `@4030`/`@4367`**.
+`bgtentacle` **`@4448`** (Switch-`.rel`, 81.8%) — kein String-Fix.
+
+**Ship (data, 3).**
+
+- **`@2909`** (41 B): `name_jump_start.**bas**` nicht `.base` (`namekuri2_bastable`).
+- **`@4030`** (14 B): PARAM-Key **`mHHoverHeight`** (retail `.string`), Feld
+`mHoverHeight` → **`mHHoverHeight`** (`WaterGun.hpp` + Mario Jump/Run/Wait).
+- **`@4367`** (13 B): Joint-Name **`chn_muzzle_1`** nicht `chn_muzzle_l`
+(`WaterGun.cpp`).
+
+**Probes (~5, revertiert / Skip).** `TGraphWeb::getRandomNextIndex` entry-trash;
+`bgtentacle` **`@4448`**; `MarioInit` **`@6543`** (schon OK in Quelle);
+`WaterGun` **`@4827`** (36 B, Layout); `.text`-Nerves unverändert Mid-Frame.
+
+**Tip (R201).** Bei **98–99% / kleine `.ctors`-Strings**: ASM **`.string`** vs.
+Quellliteral (`.bas`/`.base`, `_1`/`_l`); PARAM_INIT-Keys aus **`.rodata`** 1:1
+als Member-Name. Check: **`decomp-diff -u … -t object -s nonmatching`**.
+
+**Verify.** `ninja changes_all` ggü. **`cf903cfc`**; **`namekuri` matched_data
+70.86% → 100%**; **`build.sha1` OK**.
+
 ### R196 (Aufgabe B; emit/load entry-pad + Eel-Tears, keine Vollmatches)
 
 **Hunt.** B-scope Enemy/Player ≤600 B; Skip R195-Liste + User (`TPakkun::load`, `TBubbleCallBack`,

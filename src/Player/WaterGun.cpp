@@ -1359,7 +1359,7 @@ void TWaterGun::init()
 	                              ->unk380->getModel()
 	                              ->getModelData()
 	                              ->getJointName()
-	                              ->getIndex("chn_muzzle_l"))
+	                              ->getIndex("chn_muzzle_1"))
 	    ->setCallBack(&NozzleCtrl);
 
 	mNozzleList[Spray]
