@@ -3,12 +3,12 @@
 
 #include <Enemy/SmallEnemy.hpp>
 #include <Enemy/WalkerEnemy.hpp>
-
 class TBombHei : public TWalkerEnemy {
 public:
 	TBombHei(const char* name = "ボム兵");
 
 	virtual const char** getBasNameTable() const;
+	virtual void setAfterDeadEffect();
 
 	/* 0x194 */ u32 unk194;
 	/* 0x198 */ u32 unk198;

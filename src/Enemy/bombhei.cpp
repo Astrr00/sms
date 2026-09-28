@@ -42,3 +42,6 @@ TSpineEnemy* TBombHeiManager::createEnemyInstance()
 {
 	return new TBombHei;
 }
+
+void TBombHei::setAfterDeadEffect() { }
+

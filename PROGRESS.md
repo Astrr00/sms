@@ -13231,6 +13231,17 @@ spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%
 
 **Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0** (NonMatching TU not linked); **`mario/Enemy/bombhei`** **~5.6%** matched code in unit report.
 
+### R286 (B; DOL-link `bgpoldrop` + `MarioBlend`, bombhei weak stub)
+
+**Ship (DOL-linked, `build.sha1` OK).**
+
+- **`configure.py`**: **`Enemy/bgpoldrop.cpp`**, **`Player/MarioBlend.cpp`** → **`Matching`** (byte-identical `.o`; **12** functions now in retail DOL).
+- **`TBombHei::setAfterDeadEffect`** — **4B** @ **100%** (weak; TU still **NonMatching**).
+
+**Gate.** Total **`matched_functions` 9283 → 9284** (+1 weak on non-linked **`bombhei`**). Excluding all **`bombhei`** matches, effective vs **9275** remains **even**. **`complete_units` 415 → 417**; Game Code **`matched_functions`** **5318 → 5319** (includes non-linked **`bombhei`** bump).
+
+**DRY / next.** **`TSplashManager::makeDL`** (**392B**, **~99.9%**, stack **`0x54`/`0x58`**); **`TNerveBombHeiPickUp::execute`** (**44B**); flip **`DebuTelesa`** only after DOL SHA1 passes (failed this round).
+
 ### R258 (Aufgabe B; defer GraphGroup/ColumSand pool + diversify, 0× ship)
 
 **Hunt.** Post-R257 dry; **defer `TGraphGroup::perform`** (empty **`TGraphWeb::perform` DCE**) and
