@@ -13071,6 +13071,26 @@ spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%
 
 **Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
 
+### R285s (Enemy/Player B; fresh TUs, 0× ship)
+
+**Hunt.** **~6** MAP; skip **R285 thrash**, spill **≥99.7%**, Closet/MoveBG; strict **100%** only; no frame fakematch.
+
+**Ship.** none.
+
+**Probes (~6).**
+
+- **`telesa` / `TTelesa::isReachedToGoal`**: manual **`&unk104`** / **`r5`** ternary — **~84.9%** — reverted; retail **~97.3%** uses **`lwz`** goal copy to **`r1+0x14`** then **`fsubs`**, not direct **`lfs` from `r5`**.
+- **`enemyMario` / `TEnemyMario::checkReturn`**: **`gpMarioPos`** **`lfs`/`fsubs`** vs graph **`Vec`** stack — **~94.6%** (312B) — deferred.
+- **`tobiPuku` / `TTobiPuku::hitWall`**: wall-check **`Vec`** home **`−0x90`** vs **`−0x50`** — **~96.1%** (348B) — deferred.
+- **`tobiPuku` / `TNerveTobiPukuGenerate::execute`**: **`r29`/`r30`** spine body + **`MsGetRotFromZaxis`** stack — **~96.2%** (428B) — deferred.
+- **`mameGesso` / `TMameGesso::calcObjCollision`**: **`@1490`** before **`stwu`** + joint **`fmuls`** order — **~99.2%** (368B) — deferred.
+- **`generator` / `TGenerator::load`**: read buffer **`r1+0x5c`/`0x60`/`0x64`** vs shared **`+0x50`** — **~99.6%** spill — skipped.
+- **`enemy` / `TSpineEnemy::calcTurnSpeedToReach`**: **`fnmsubs`/`frsqrte`** spill **`r1+0x1c`** — **~99.4%** (224B) — deferred.
+
+**Tip (R285s).** **`TTelesa::isReachedToGoal`**: after **`addi r4,r3,0x104`**, retail **`lwz`×3** into **`r1+0x14`** then per-component **`fsubs`** — **`getPoint()`** inlines to **`lfs` from `r4`**, wrong frame and schedule.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
 ### R258 (Aufgabe B; defer GraphGroup/ColumSand pool + diversify, 0× ship)
 
 **Hunt.** Post-R257 dry; **defer `TGraphGroup::perform`** (empty **`TGraphWeb::perform` DCE**) and

@@ -227,6 +227,8 @@ temp** both get DCE’d; assigning **`BOOL bckPass`** adds stack (**`−0x30`**)
 
 **`TCoasterKiller::perform`** (R285r): sound distance uses **`lwz gpMarioPos`** then interleaved **`lfs`** from **`mPosition@0x10`** and **`Vec*`** with **`fsubs`** before the next mario component load — **`mPosition.distance(SMS_GetMarioPos())`** schedules **`distance()`** differently (~95% / worse if hand-unrolled without matching load order).
 
+**`TTelesa::isReachedToGoal`** (R285s): prologue **`addi r4,r3,0x104`**, **`unk0`** ternary to **`r5`**, then **`lwz`/`stw`** copy of goal **`Vec`** to **`r1+0x14`** before **`fsubs`** vs **`mPosition`** — not **`unk104.getPoint()`** returning a ref consumed via **`lfs` from `r4`**.
+
 **`TSpineEnemy::setGoalPathFromGraph`**: retail **`−0x60`**, **`getPoint` into `r1+0x48`**, manual **`stw`** cluster **`0x38–0x44`**, then member **`stw`** to **`unkF4`/`unk104`** — **`TPathNode(local_48)` + assign** shrinks frame and regresses (~**29%** if forced to **`Vec`** writes without stack layout).
 
 **`TTamaNoko::isReachedToGoal`** (and **`TTelesa`**): retail inlines **`TPathNode`** at **`this+0x104`** — **`unk0` ? `unk0+0x10` : `&unk4`** — not an out-of-line **`getPoint()`** call; **`TVec3` assign from `mPosition`** breaks the **`addi r5,r4,4`** branch.
