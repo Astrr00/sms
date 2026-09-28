@@ -11488,6 +11488,29 @@ als Member-Name. Check: **`decomp-diff -u … -t object -s nonmatching`**.
 **Verify.** `ninja changes_all` ggü. **`cf903cfc`**; **`namekuri` matched_data
 70.86% → 100%**; **`build.sha1` OK**.
 
+### R211 (Aufgabe B; `.sdata2` literals, 2× data)
+
+**Hunt.** B-scope Enemy/Player data+text first; other TUs for clear tiny pool
+wins; skip R209/R210 thrash; cap ~8.
+
+**Ship (data, 2).**
+
+- **`@3778`** (`MarDirectorSetupObjects`, 4 B): look-at camera aspect uses pool
+  **`0.91346145f`**, not **`0.9134614f`** (ULP vs ASM `.float`).
+- **`@2913`** (`Option`, 4 B): `TPaneScalingControl::update` uses literal
+  **`57.295776f`** for rad→deg (retail pool), not **`RAD_TO_DEG`** macro fudge.
+
+**Probes (~2, no-ship).** **`riccohook` `entry[]`** rename/placement — still
+**~99%** (`entry$2170`); Enemy/Player tiny objects mostly vtable / switch
+**`.rel`**.
+
+**Tip (R211).** Match **`.sdata2` / rodata floats** to ASM **`.float`** (full
+significant digits); shared literals (**`57.295776f`**) beat macro expansions
+when the macro adds a different constant.
+
+**Verify.** `ninja changes_all` ggü. **`de437746`**; **`@3778` 100%**;
+**`Option` matched_data 100%**; **`@2913` 100%**.
+
 ### R210 (Aufgabe B; PARAM vector + name table, 2× data)
 
 **Hunt.** Fresh B-scope data (skip R209 thrash); tiny objects / PARAM pools; cap
