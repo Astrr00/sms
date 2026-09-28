@@ -105,6 +105,16 @@ at **`this+0x104`**: **`addi r4, r3, 0x104`** right after **`mflr`**, **`lwz r5,
 to **`r1+0x14`**, subtract **`mPosition`**, force **`y=0`**, **`fcmpu`** X/Z vs zero, then **`MsVECMag2`**
 against a rodata threshold — not a single **`getPoint()`** call plus **`TVec3`** math.
 
+**`TDebuTelesaManager::createModelData`** uses a function-local **`static TModelDataLoadEntry entry[]`**
+(without **`const`**) for retail **`entry$2835`** in **`.rodata`**. Marking the array **`const`** keeps
+**`createModelData`** text clean but leaves **`entry$2835`** at ~**85%**; dropping **`const`** can match
+the pool while **`createModelData`** drifts to ~**99%** — treat as one emission-order problem.
+
+**`TGraphWeb::startIsEnd`** keeps **`unk0`** in **`r4`** and the first rail in **`r5`** through the
+first **`||`** block; the last node must load via **`slwi` + `lwzx r3, r4, r0`** (index still in **`r3`**
+after **`unk8 - 1`**). **`r4[idx].unk0`** or splitting **`||`** into separate **`if`/`return`** changes
+branch targets and **`lwzx`** shape.
+
 `TCoasterEnemy::bind` (and similar short **`bind`** overrides) already match retail math when written as
 **`nextPos = mPosition; nextPos += mLinearVelocity; nextPos += mVelocity; mLinearVelocity = nextPos -
 mPosition`**. Remaining diffs are usually **`TVec3` spill slots** (**`r1+0x10`** vs **`+0x1c`**) on a
