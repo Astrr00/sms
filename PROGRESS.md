@@ -12015,6 +12015,60 @@ is a separate pattern: **manual stacked `fadds`**, not **`LiveActor::getBindingP
 **Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged). Tip
 **`50b4c218`**.
 
+### R246 (Aufgabe B; bosspakkun pivot + EP bool scan, 0× ship)
+
+**Hunt.** Post-R245; medium nerves with **`fadds`/`fcmpo`** clusters (**`TNerveBPPivot`**);
+**`cmpwi` vs `clrlwi`** on **`||`** early-outs; skip R244–R245 failure list + stuck/empty/Closet/MoveBG;
+**`ninja baseline`** + fresh **`report.json`**; cap ~8.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~6, reverted / no-ship).**
+
+- **`TNerveBPPivot::execute`** (**99.5%**, **344 B**): **`delta.squared()`** vs Mario — retail
+  **`fadds f0,f1,f0`** / **`fcmpo f0,f3`** cluster at **`0x33ac`** plus **4 B** vec spill
+  (**`0x5c`** vs **`0x58`**). Full manual **`fsubs`** rewrite **86.9%**; **`f32`** sum-only
+  retune **86.9%**; reverted.
+- **`TNerveSmallEnemyHitWaterJump::execute`** (**99.3%**, **520 B**): **`bool skip = flag1 || flag2`**
+  for **`cmpwi r0,0`** vs **`clrlwi`** — **95.2%**; reverted.
+- **EP scan (skipped / frame-only):** **`TNameKuriLauncher::stateLaunch`**, **`TOneShotGenerator::receiveMessage`**,
+  **`TNerveBPStompReact`**, **`TBiancoGateKeeper::getRumblePow`**, **`TBossPakkun::rumblePad`** — **`r1` `~`**
+  only.
+
+**Tip (R246).** **`TNerveBPPivot`** needs **coupled** fixes: Mario-delta **spill offset** and
+**`fmuls`/`fadds`/`fcmpo` register schedule** (load **`mSLSwingLength`** into **f3** before final
+**`fadds`**) — partial **`f32`** retunes without matching **`fsubs`** prologue still collapse the nerve.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged). Tip
+**`29c206a7`**.
+
+### R247 (Aufgabe B; bosspakkun water inline + pivot spill, 0× ship)
+
+**Hunt.** Post-R246; R243-style **`f32`** / MAP **`bosspakkun.s`** spill order; skip R244–R245
+failures + stuck/empty/Closet/MoveBG; **`ninja baseline`** + **`report.json`** + **`changes_all`**;
+cap ~8.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~5, reverted / no-ship).**
+
+- **`TNerveBPWaitL::execute`** (**92.8%**, **564 B**): hand-rolled **`BG_TYPE_WATER`** /
+  **`type - 0x101 <= 4`** / **`SHADED_POOL`** vs **`isWaterSurface()`** — retail inlines **`lhz`**
+  + range at **`0x2CC8`** without extra locals; frame **`0x68`→`0x60`**; reverted.
+- **`TNerveBPPivot::execute`** (**54.4%**, **344 B**): scalar **`f32`** + **`prm`** between
+  **`fmuls`** — retail **`stw`** Mario delta at **`r1+0x5c`**, **`blrl` `getBossPakkunParams`**, then
+  **`lfs f3,0xe0(r3)`** between **`dy²`** and **`dz²`**; reverted.
+- **EP scan (frame-only):** **`TNameKuri::reset`**, **`TNerveGessoFreeze`**, **`TNerveFireWanwanTurn`**
+  (spine **`addi r4,r3,8`** cluster).
+
+**Tip (R247).** **`TNerveBPPivot`** is not “same math, different temps”: match the **int spill +
+virtual param fetch between `fsubs` and `fmuls`**, then **`f3 = mSLSwingLength`²** before
+**`fcmpo`**. **`TNerveBPWaitL`** water gate must codegen as **inlined `mBGType` range** at the
+call site, not a freestanding manual duplicate with new stack locals.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged). Tip
+**`TBD`** (see commit).
+
 ### R225 (Aufgabe B; bossManta rodata + EP diversify, 0× ship)
 
 **Hunt.** Post-**`385107f3`**; optional **`bossManta` `@2805`/`@2807`** lead (Amenbo
