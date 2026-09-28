@@ -146,6 +146,12 @@ before **`getPoint`** and regresses (~**75%**).
 **`recoverScale`** (**vtable `+0x13c`**) then **`getNowGravity`** (**`+0x140`**), then **`mVelocity.y`** clamp —
 not **`setBehavior`** at the top.
 Late path still does **`setBehavior`** (**`+0x138`**) and **`forceKill`** (**`+0x134`**) after wall handling.
+**`checkGround`** takes **`&mGroundPlane`** (**`addi r4, r31, 0xc4`**), not a stack **`TBGCheckData*`** temp.
+Wall pass: **`TBGWallCheckRecord(x, y + mHeadHeight, z, mBodyRadius * 2.f, 1, 0)`** matches retail manual
+spills better than **`TVec3 p` + record ctor**; epilogue still wants **`addi r3, r1, 0x10`** +
+**`TVec3::sub`** before **`mLinearVelocity@0x94`** (MWCC may fold when **`mPosition == nextPos`**).
+**`stfd f31`** / **`lfs f31, 0x60(r1)`** ground compare needs **`local_1C.y`** home at **`0x60`** on **`-0x78`**
+frame — not fixed by **`char pad[0x10]`** alone.
 
 **`TEnemyAttachment::sendMessage`** walks **`mCollisions`** with **`lwz r3, 0x44(r29)`** then
 **`lwzx r4, r3, r31`** (byte offset in **`r31`**, index in **`r30`**). For collisions that are not Mario
