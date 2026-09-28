@@ -132,6 +132,13 @@ with unary **`-`** matches retail **`rand`** + **`fneg`** better than **`MsRandF
 **`-0xa8`** frame / **`stfd f31`** / spill homes (~**99.8%**).
 **`char pad[0x30]`** at function entry (not **`0x48`**) hits retail **`stwu -0xa8`**; remaining gaps are
 **`TMsRange`** spill slots (**`0x54`** vs **`0x84`**) and **`Mtx local_40`** home (**`0x24`** vs **`0x40`**).
+Hoisting **`Mtx`** to the prologue shifts both clusters wrong; a hand-written **`rand`** without the retail
+**`stfs`/`lfs`** reload chain regresses hard — reconstruct the **`0x84`/`0x88`** spill sequence, not
+**`MsRandF`** or a standalone helper call.
+
+**`TSpineEnemy::setGoalPathFromGraph`**: **`char pad[0x18]`** at entry can match retail **`stwu -0x60`** while
+**`getPoint(&vec)`** still uses **`addi r4, r1, 0x34`** — the **`0x48`** vec home tracks **`TPathNode`**
+copy / ctor spill order, not prologue padding alone.
 
 **`TEnemyAttachment::sendMessage`** walks **`mCollisions`** with **`lwz r3, 0x44(r29)`** then
 **`lwzx r4, r3, r31`** (byte offset in **`r31`**, index in **`r30`**). For collisions that are not Mario

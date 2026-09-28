@@ -12373,6 +12373,47 @@ sweep before **`trash[0x48]`** guesses.
 
 **Verify.** `ninja changes_all` ggü. baseline: **+0** matched_functions.
 
+### R268 (Aufgabe B; Dango spill layout + setGoal pad, 0× ship)
+
+**Hunt.** Post-R267 dry (**9275**); optional **`TDangoHamuKuri::calcRootMatrix`** inline **`rand`** spills
+**`0x84`/`0x88`** + **`Mtx @0x40`** (keep **`pad[0x30]`** **`-0xa8`**); prefer opcode/data wins; skip spill
+**≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%** only.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8).**
+
+- **`TDangoHamuKuri::calcRootMatrix`**: early **`Mtx local_40`** / hand **`rand`** (float/double) — regressed or wrong spills;
+  **`TMsRange`** + late **`Mtx`** stays **99.8%** (**`0x54`** vs **`0x84`**, **`0x24`** vs **`0x40`**).
+- **`TSpineEnemy::setGoalPathFromGraph`**: **`pad[0x18]`** fixes **`stwu -0x60`** but **`getPoint`** buffer stays **`0x34`**
+  vs **`0x48`**; **`mid[]`/`pad[0x2c]`** sweeps — no ship; manual word-copy reverted.
+
+**Tip (R268).** In-frame layout ≠ frame size: **`pad[0x30]`** can match **`stwu`** while **`TMsRange`** spill slots stay
+**`0x30`** low — need retail-shaped **`stfs`/`lfs`** chain, not more top **`pad`**.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
+### R269 (Aufgabe B; Dango spill/Mtx + setGoal vec, 0× ship)
+
+**Hunt.** Post-R268 dry (**9275**); optional **`TDangoHamuKuri::calcRootMatrix`** retail **`0x84`/`0x88`** +
+**`Mtx @0x40`** (keep **`pad[0x30]`** **`-0xa8`**); prefer opcode/data wins; skip spill **≥99.7%**, stuck lists,
+empty TUs, Closet/MoveBG; cap ~8; strict **100%** only.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8).**
+
+- **`TDangoHamuKuri::calcRootMatrix`**: **`padRand[0x30]`** + manual **`MsRandF`** span — **87.7%** / **`stwu -0xf0`**; hoisted
+  **`Mtx`** after **`pad[0x30]`** — **`Mtx @0x20`**, rand **`0x50`**; **`gapMtx[0x1c]`** not tried (reverted with rand block).
+  **`TMsRange`** + late **`Mtx`** still **99.8%** (**`0x54`/`0x58`**, **`0x24`/`0x40`**, **`f1`/`f2`** position loads).
+- **`TSpineEnemy::setGoalPathFromGraph`**: **`pad[0x18]`** → **`stwu -0x60`** but **`getPoint`** **`addi`** still **`0x34`**;
+  **`mid[0x14]`** → **`stwu -0x78`** — reverted.
+
+**Tip (R269).** **`setGoalPathFromGraph`**: frame **`pad`** and **`TVec3 local_48`** home decouple — **`0x18`** fixes **`stwu`**
+without moving **`getPoint`** buffer (**`0x14`** gap needs inlined **`TPathNode`** layout, not more **`char`** at top).
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
 ### R258 (Aufgabe B; defer GraphGroup/ColumSand pool + diversify, 0× ship)
 
 **Hunt.** Post-R257 dry; **defer `TGraphGroup::perform`** (empty **`TGraphWeb::perform` DCE**) and
