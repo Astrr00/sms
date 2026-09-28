@@ -74,6 +74,17 @@ r3, 0x74(r30)`** for the **`MActor*`**, then **`add r3, r28, r29`** + **`stw r0,
 Calling header-inline **`getThing()`** or casting **`this+0x74`** in C without matching that schedule
 leaves **`stwu -0xf0`** and pool-offset mismatches (~95% stuck).
 
+`TEffectColumSand::reset` (and similar **`effectObj`** TU users) load **`@1490`** with **`lis`/`addi`
+into **`r30` before `stwu`**, with **`this` in `r31`**, then **`bl TSpineEnemy::reset`** and
+**`addi r4, r30, 0x1c8`** for **`08_sunabashira`** — not **`TEffectModel::reset()`** as the first
+call if that prevents the early pool setup.
+
+`TGraphGroup::perform` is a **`for (i < unk4)`** over **`unk8[i]->perform`**, but **`TGraphWeb::perform`
+is empty in `graph.cpp`**, so MWCC deletes the virtual calls and emits only a **Duff-style iteration
+counter** ( **`lwz` at `0x4(r3)`**, **`li r7,0`**, **`cmpwi`/`bdnz` clusters**, no **`bl`** ).
+Matching requires keeping the empty **`perform`** and the simple **`for`** — hand-unrolling the counter
+in C usually diverges opcode selection.
+
 ## Ifs
 
 Ifs are always compiled to very simple code:

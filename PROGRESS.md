@@ -12147,6 +12147,36 @@ still diverges (extra **`b`** / frame); needs UNUSED-inline-sized stack or flag 
 
 **Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged).
 
+### R257 (Aufgabe B; defer MarioEffect pool + diversify MAP, 0× ship)
+
+**Hunt.** Post-R256 dry; **defer `TMarioEffect` water-jump pool (`@1490`/`slwi`)**; prefer other
+string/PARAM/float/vtable/text outside R251–R256 thrash; skip stuck lists, empty TUs, Closet/MoveBG;
+**`ninja baseline`** + **`changes_all`**; cap ~8; strict 100% only.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, reverted / no-ship).**
+
+- **`TGraphGroup::perform`**: **96.8%** (88 B) — retail is a **Duff-style counter** (no **`bl`**):
+  empty **`TGraphWeb::perform`** inlines away; **`for (i < unk4)`** becomes **`r7`/`r6`/`r5`**
+  schedule; explicit **`r7`/`r6`/`r5` C** regressed to **50.7%** — reverted.
+- **`TEffectColumSand::reset`**: **98.5%** — retail **`lis @1490` before `stwu`**, **`r30`=pool /
+  **`r31`=this**, **`TSpineEnemy::reset`**, **`@1490+0x1c8`** anim strings; **`TEffectModel::reset`**
+  call vs inlined spine+flags same **98.5%**; prologue swap remains.
+- **`TEnemyManager::createEnemies`**, **`TConductor::makeOneEnemyAppear`**: **98.8%** / **99.2%** —
+  frame + spill **`~`** only.
+- **`TNerveFireWanwanDie`**, **`TNerveBathtubKillerBreak`**: **99.5%** / **99.9%** — frame / vec
+  spill **`~`**.
+- **`TMario::soundTorocco`**, **`TGraphGroup::initGraphGroup`**: **99.6%** / **99.8%** — stack only.
+- **`TMarioEffect::*`**, **`waitingCommonEvents`**, **`TNerveSmallEnemyJump`**: skipped (defer/thrash).
+
+**Tip (R257).** **`TGraphGroup::perform`** matches only when MWCC emits the retail empty-loop counter
+(depends on **`TGraphWeb::perform` {}** in the same TU); do not hand-unroll without asm proof.
+**`effectObj`** **`@1490`** functions need **`lis` before `stwu`** and pool offset **`+0x1c8`**, not
+swapped **`this`/pool` in **`r30`/`r31`**.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged).
+
 ### R256 (Aufgabe B; hard diversify data/pool + Player FX, 0× ship)
 
 **Hunt.** Post-R255 dry; skip **`TNerveSmallEnemyJump`** + R251–R255 thrash/stuck lists; prefer
