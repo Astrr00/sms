@@ -12514,6 +12514,25 @@ empty TUs, Closet/MoveBG; cap ~8; strict **100%** only.
 
 **Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0** (no source delta vs R273).
 
+### R275 (Aufgabe B; bind trash-top → local_10@0x14, 0× ship)
+
+**Hunt.** Post-R274 dry (**9275**); **1–2** **`bind`** probes (**`local_10@0x10`**, retail **`TVec3::sub`**); skip Dango/setGoal,
+spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%** only.
+
+**Ship.** none (strict 100% only).
+
+**Probes (2).**
+
+- **`char trash[0x10]`** at decl top (remove post-**`+=`** trash): **`local_10@0x14`** (was **`@0x24`**), still **~94.5%**,
+  **`0x5c`** spills hold — **kept** in tree.
+- **`local_10.sub`** at **`@0x14`** without helper: **~85.6%** (folded) — keep **`enemyAttachmentBindSub`**.
+
+**Tip (R275).** **`bind`**: hoist **`trash[0x10]`** to decl block (before **`local_48`**) to nudge **`local_10`**
+**`0x24 → 0x14`** without losing **`local_1C@0x5c`**; retail **`0x10`** still open; direct **`sub`** still needs
+**`@0x10`** + non-fold.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0** (**bind** epilogue **`addi r3`** **0x24 → 0x14**).
+
 ### R258 (Aufgabe B; defer GraphGroup/ColumSand pool + diversify, 0× ship)
 
 **Hunt.** Post-R257 dry; **defer `TGraphGroup::perform`** (empty **`TGraphWeb::perform` DCE**) and

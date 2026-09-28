@@ -161,10 +161,10 @@ than a mid-function ctor.
 **`char trash[0x10]`** immediately after integrating **`local_1C`** (not before) helps **`-0x78`** with **`f31`** live;
 Declare locals **`local_1C`**, then **`TBGWallCheckRecord local_48`**, then **`local_10`**, then integrate
 **`local_1C`** and **`char trash[0x10]`** — retail **`0x5c/0x60/0x64`** homes and wall **`r1+0x30`** (~**94.5%**).
-Open: **`local_10`** at **`0x24`** ( **`trash[0x10]`** after **`operator+=`**) or **`0x14`** ( **`trash`** at decl top) —
-not **`0x10`**; retail **`TVec3::sub`** **`bl`** needs **`local_10@0x10`** ( **`local_10.sub`** alone folds to
-**`~85.6%`**); interim **`enemyAttachmentBindSub`** is wrong symbol. **`behaveToHitWall`**: retail **`lwz r12`**
-before **`mr r3`/`lwz r4, 0x4c(r1)`** — **`wallHit`** temp did not fix scheduling.
+Open: **`local_10@0x10`** — decl-top **`trash[0x10]`** (before **`local_48`**) lands **`@0x14`**; post-**`+=`**
+**`trash`** lands **`@0x24`**; both keep **`local_1C@0x5c`**. Retail **`TVec3::sub`** **`bl`** still blocked
+(**`local_10.sub`** folds **`~85.6%`** even at **`@0x14`**); use **`enemyAttachmentBindSub`** until **`@0x10`**.
+**`behaveToHitWall`**: retail **`lwz r12`** before **`mr r3`/`lwz r4, 0x4c(r1)`** — **`wallHit`** temp did not fix.
 
 **`TEnemyAttachment::sendMessage`** walks **`mCollisions`** with **`lwz r3, 0x44(r29)`** then
 **`lwzx r4, r3, r31`** (byte offset in **`r31`**, index in **`r30`**). For collisions that are not Mario

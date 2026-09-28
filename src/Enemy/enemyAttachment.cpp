@@ -76,11 +76,11 @@ static void enemyAttachmentBindSub(JGeometry::TVec3<f32>& dst,
 void TEnemyAttachment::bind()
 {
 	JGeometry::TVec3<f32> local_1C = mPosition;
+	char trash[0x10]; // matching: decl-top → local_10@0x14 (post-+= → @0x24)
 	TBGWallCheckRecord local_48;
 	JGeometry::TVec3<f32> local_10;
 	local_1C += mLinearVelocity;
 	local_1C += mVelocity;
-	char trash[0x10]; // matching: spill local_1C @0x5c
 	recoverScale();
 	mVelocity.y -= getNowGravity();
 	if (mVelocity.y < mVelocityMinY)
