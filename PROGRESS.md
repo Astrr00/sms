@@ -12094,7 +12094,7 @@ through the hide path (no extra **`addi r29,r3,0`**). **`TStayPakkun::isHitValid
 is **`32.0f × u8`** via **double-stacked i2f**, not a plain **`(f32)u8`** multiply.
 
 **Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged). Tip
-**`3c5aa699`**.
+**`f69a6bd8`**.
 
 ### R225 (Aufgabe B; bossManta rodata + EP diversify, 0× ship)
 
