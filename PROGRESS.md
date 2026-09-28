@@ -12147,6 +12147,36 @@ still diverges (extra **`b`** / frame); needs UNUSED-inline-sized stack or flag 
 
 **Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged).
 
+### R258 (Aufgabe B; defer GraphGroup/ColumSand pool + diversify, 0× ship)
+
+**Hunt.** Post-R257 dry; **defer `TGraphGroup::perform`** (empty **`TGraphWeb::perform` DCE**) and
+**`TEffectColumSand::reset`** (**`@1490` prologue**); prefer MAP-clear wins outside R251–R257 thrash;
+skip stuck lists, empty TUs, Closet/MoveBG; **`ninja baseline`** + **`changes_all`**; cap ~8; strict
+100% only.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, reverted / no-ship).**
+
+- **`TCoasterEnemy::bind`**: **99.9%** — retail manual **`fadds`** chain + **`TVec3::sub`** into
+  **`mLinearVelocity@0x94`**; source already correct; only **`TVec3` spill `r1+0x10` vs `+0x1c`**;
+  explicit **`pos.sub`/`component` rewrite** → **40.1%** — reverted.
+- **`TLiveActor::bind`**, **`TNerveBathtubKillerExplosion`**: **100.0% fuzzy** / **99.9%** — same
+  **`sub` temp** spill class at epilogue only.
+- **`TBiancoGateKeeper::getRumblePow`**, **`TYoshiTongue::canGo`**: **99.8%** / **99.7%** — vec
+  distance math; stack **`~`** only.
+- **`TNerveTamaNokoSink`**, **`TGessoPolluteObj::set`**, **`TLiveActor::initAnmSound`**: **99.x%** —
+  frame/spill **`~`**.
+- **`TEffectColumSand::reset`**, **`TGraphGroup::perform`**: skipped (R257 defer).
+- **`TMarioEffect`**, **`waitingCommonEvents`**, **`TNerveSmallEnemyJump`**: skipped (thrash).
+
+**Tip (R258).** High fuzzy **Enemy `bind()`** overrides (**`TCoasterEnemy`**, base **`TLiveActor`**) are
+often already logic-matched; remaining gaps are **`TVec3` home addresses** on **`stwu -0x40`** frames,
+not missing physics — avoid **`sub()`/`component`** rewrites that shrink the frame (**`stwu -0x18`**
+regression on coaster).
+
+**Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged).
+
 ### R257 (Aufgabe B; defer MarioEffect pool + diversify MAP, 0× ship)
 
 **Hunt.** Post-R256 dry; **defer `TMarioEffect` water-jump pool (`@1490`/`slwi`)**; prefer other

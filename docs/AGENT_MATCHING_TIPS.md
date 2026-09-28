@@ -85,6 +85,12 @@ counter** ( **`lwz` at `0x4(r3)`**, **`li r7,0`**, **`cmpwi`/`bdnz` clusters**, 
 Matching requires keeping the empty **`perform`** and the simple **`for`** — hand-unrolling the counter
 in C usually diverges opcode selection.
 
+`TCoasterEnemy::bind` (and similar short **`bind`** overrides) already match retail math when written as
+**`nextPos = mPosition; nextPos += mLinearVelocity; nextPos += mVelocity; mLinearVelocity = nextPos -
+mPosition`**. Remaining diffs are usually **`TVec3` spill slots** (**`r1+0x10`** vs **`+0x1c`**) on a
+**`-0x40`** frame, not wrong velocity composition — rewriting with **`pos.sub(mPosition)`** or
+component temps can collapse the frame to **`-0x18`** and destroy the match.
+
 ## Ifs
 
 Ifs are always compiled to very simple code:
