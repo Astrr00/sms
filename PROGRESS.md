@@ -11488,6 +11488,40 @@ als Member-Name. Check: **`decomp-diff -u … -t object -s nonmatching`**.
 **Verify.** `ninja changes_all` ggü. **`cf903cfc`**; **`namekuri` matched_data
 70.86% → 100%**; **`build.sha1` OK**.
 
+### R225 (Aufgabe B; bossManta rodata + EP diversify, 0× ship)
+
+**Hunt.** Post-**`385107f3`**; optional **`bossManta` `@2805`/`@2807`** lead (Amenbo
+closure + **`f32[3]`** before **`TNerveMantaHitWater`**; **full 1744 B `.rodata`**);
+cap **1–2** on that then diversify; skip R222–R224 stack + stuck lists; cap ~8.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, reverted / no-ship).**
+
+- **`bossManta` (2 focused):** (1) **`MapCollisionEntry` + `f32[3]`** pools — objdiff
+  **`@2805`/`@2807` 100%** but **`.rodata` len 1787**, first diff **`0xC`** (same as
+  R224). (2) **Pools only** — bytes at **`0xE0…0xF7`** OK, **len 1763**, skew
+  **`0x178`**, **`entry$3295` 85.7%** (was **100%**). **File-scope `hitSounds[]`**
+  → **`@2983` 100%** / **1739 B** but **`@2805` still out** and
+  **`TNerveMantaHitWater` 86.9%** (reverted all).
+- **EP object scan:** unchanged stuck **`.ctors`** (`MarioMove`/`MarioDraw` jumps,
+  **`bgtentacle` `@4448`**, empty koopajr, **`bossManta` `@2805`**).
+- **`bgtentacle` `@4448`:** **`.data`** jump table for **`moveConstraint`** — control-flow,
+  not strings.
+- **`TConductor::getManagerByName`** (99.6%, 188 B): **`stwu -0x58`** vs **`-0x48`** — stack.
+- **`TGessoPolluteObj::getNowGravity`** (98.1%, 32 B): **`r3`/`r4`** base reg — not PARAM.
+- **`TBossManta::getPolluteRadius`:** not re-tried (R224 defer).
+- **EP `≥99%` `.rodata`/`.sdata2`/`.data`:** none outside skip/stuck TUs.
+
+**Tip (R225).** Treat **`@2805`/`@2807`** as **dead tail padding** tied to
+**`InfectiousStrings` + nerve-local rodata** emission — not a standalone **`f32[3]`**
+  literal you can add without shifting **`@2983`** / **`entry$3295`**. Until retail
+  side-effect is identified (cf. **`bosseel`** padding before **`bastable`** strings),
+  verify with **`objcopy -O binary --only-section=.rodata`** (**1744 B**), not objdiff
+  labels alone.
+
+**Verify.** `ninja changes_all` ggü. **`385107f3`** — **no diff** (clean tree).
+
 ### R224 (Aufgabe B; EP rodata / small `.text`, 0× ship)
 
 **Hunt.** Post-**`90d09d0d`**; skip R222–R223 failures + stuck lists
