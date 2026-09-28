@@ -11789,6 +11789,31 @@ Closet/MoveBG, **`getNowGravity`**, **`DebuTelesa` bastable**, **`bossManta` `@2
 **Verify.** `ninja changes_all` ggü. **`97545385`**: **+2** matched functions (**9270 → 9272**), **+156 B**
   matched code.
 
+### R237 (Aufgabe B; scalar temp / cached ptr hunt, 0× ship)
+
+**Hunt.** Post-**`dea1dafc`**; same B-scope as R236 (small accessors, PARAM/string/float/vtable);
+cap ~8; skip R235 deferrals + **`TCoasterKiller::bind`** / large **`TVec3`** frame thrash.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, no-ship).**
+
+- **`TPakkun::load` / `TStayPakkun::load`**: **`TPathNode`** stack @ **`r1+0x18`** vs **`+0x14`** (4 B skew);
+  inline **`setGoalPath(TPathNode(...))`**, **`PathNode`** ctor spelling — still **99.7–99.8%**.
+- **`TBEelTearsManager::createEnemies`**: split **`load`/`new`**, **`owner`** reorder — **reg/frame** worse
+  (**88–90%**); reverted.
+- **`TCoasterEnemy::bind`**: algebraic **`setLinearVelocity(lin+vel)`** — **44%**; reverted (defer
+  **`coasterkiller`** family).
+- **`TGraphWeb::getRandomNextIndex`**: **`TRailNode tmp`** order / **`stackPad[8]`** — still **`~`** on
+  **`addi r7,r1,0x24`** vs **`0x1c`** (fuzzy **100%**, not strict).
+- **`TNameKuriLauncher::stateLaunch`**, **`setGoalPathFromGraph`**, **`getManagerByName`**: **12–24 B**
+  frame gaps only.
+
+**Tip (R237).** Near-miss **99.8%+** with **only `r1` offset `~` lines** are usually **UNUSED inline /
+  frame-size** territory — not R236-style scalar temps; **`char` pads** often enlarge the gap.
+
+**Verify.** `ninja changes_all` ggü. **`dea1dafc`**: **+0** matched functions (**9272** unchanged).
+
 ### R225 (Aufgabe B; bossManta rodata + EP diversify, 0× ship)
 
 **Hunt.** Post-**`385107f3`**; optional **`bossManta` `@2805`/`@2807`** lead (Amenbo
