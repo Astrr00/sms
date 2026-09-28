@@ -10920,6 +10920,59 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R192 (`MapObjMamma`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+Bisher leerer TU.
+Jeder Map-Symbol ist definiert, der Rest bleibt Stub.
+`TMammaBlockRotate::touchWater` bleibt Stub (`fcmpo`+`ble`).
+
+- `TSandEgg::getSDLModelFlag`, `TLeanMirror::getSDLModelFlag` und `TSandBomb::getSDLModelFlag` geben 0 zurück.
+  Je 8 Bytes, 2 Instruktionen.
+- `TSandBombBase::grow` setzt `mState = 5`.
+  12 Bytes, 3 Instruktionen.
+- `TSandBombBase::waitBeforeExplode` setzt `mState = 6` und kopiert `unk148` in den Timer.
+  20 Bytes, 5 Instruktionen.
+- `TSandBomb::initMapObj` ruft `TMapObjBase::initMapObj` direkt.
+  32 Bytes, 8 Instruktionen.
+- `TSandCastle::calcRootMatrix` ruft `TMapObjBase::calcRootMatrix`, wenn `isState(2)` falsch ist.
+  64 Bytes, 16 Instruktionen.
+- `TSandBombBase::withered` schreibt den Timer aus `unk140`, setzt `mState = 3` und ruft `sleep` auf `unk144`.
+  52 Bytes, 13 Instruktionen.
+- `TSandLeaf::control` ruft `TMapObjBase::control` und legt die Höhe über `checkGround` bei `y + 200` ab.
+  88 Bytes, 22 Instruktionen.
+- `TSandLeaf::touchWater` ruft virtuell `getLivingTime` auf `unk138` und gibt 1 zurück.
+  52 Bytes, 13 Instruktionen.
+- `TSandBase::TSandBase` nullt `unk138`, `unk13C` und `unk144`.
+  88 Bytes, 22 Instruktionen.
+- `TSandBombBase::TSandBombBase` inlined den Basis-Konstruktor und setzt `unk148`, `unk14C = 1`, `unk150`, `unk154`.
+  128 Bytes, 32 Instruktionen.
+- `TSandCastle::TSandCastle` inlined die Kette und nullt `unk158` und `unk15C`.
+  156 Bytes, 39 Instruktionen.
+- `TLeanMirror::TLeanMirror` nullt die Skalare im Initializer und fünf `TVec3` über `zero()`.
+  192 Bytes, 48 Instruktionen.
+- `TShiningStone::TShiningStone` nullt die Felder ab `0x70` in Retail-Reihenfolge.
+  104 Bytes, 26 Instruktionen.
+- `TMammaBlockRotate::TMammaBlockRotate` nullt `unk13C` bis `unk148`.
+  88 Bytes, 22 Instruktionen.
+- `TSandBird::TSandBird` ruft `TJointCoin` und nullt `unk150` und `unk151`.
+  80 Bytes, 20 Instruktionen.
+- `TGoalWatermelon::TGoalWatermelon` nullt zwei Zeiger und `unk140` über `zero()`.
+  96 Bytes, 24 Instruktionen.
+- `__sinit_MapObjMamma_cpp` (764 Bytes) kommt aus `MSSetSound.hpp` / `MSoundBGM.hpp`.
+  Die sdata-Statics (`mWitherTime` bis `mWaitTime`) sind 100 %.
+
+Destruktoren, alle `@32`-Thunks und alle VTables der TU sind ebenfalls 100 %.
+`TSandBase::grow` ist rein virtuell, weil der VTable-Slot im Retail null ist.
+`validate-symbol-order`: PASS, nur acht UNUSED-Größenwarnungen.
+
+`ninja changes_all`: fuzzy 78.49 % → 78.60 %, matched code 49.20 % → 49.31 %, matched data 64.58 % → 64.62 %.
+Kein R170–R191-Unit hat matched code verloren.
+`getNameRef_MapObj` tickt fuzzy 86.23 % → 86.49 %, matched code bleibt 2348.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R191 (`MapObjBall`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
