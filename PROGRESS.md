@@ -12120,7 +12120,7 @@ must codegen as **`lwz` at `0x180`** off the **`getSaveParam`** pointer (same ob
 **`.get()`**’s **`0x170+0x10`** split nor extra **`param`** locals without fixing the frame.
 
 **Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged). Tip
-(pending commit).
+**`c5442021`**.
 
 ### R225 (Aufgabe B; bossManta rodata + EP diversify, 0× ship)
 
