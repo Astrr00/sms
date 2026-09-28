@@ -11139,6 +11139,44 @@ torocco/sound, prior deadlocks.
 
 **Verify.** `ninja baseline` / `changes_all` ohne Code-Delta; `dtk shasum -c` → OK.
 
+### R176 (Aufgabe B; entry frame-pad sweep, keine Vollmatches)
+
+**Hunt.** Entry `char trash[8/0x10/0x20]` + `trash[0]=0` bei Frame-short (Retail
+größer) Enemy/Player; kurz emitSweat-`TVec3` wo Locals +4.
+
+**Skip (User + Prior).** `drawWaterVolume`, `TBGTentacle::decideOwnState`,
+`rumblePad`, `jumpMain`, DangoHamuKuri `behaveToWater`/`receiveMessage`,
+`BPPreDie`, `TRiccoHook::init`, `TNerveWalkerEscape` (Frame `0x28` ok, PathNode
+`pop` +0x1c), Prior-Skips.
+
+**Probes (~8, revertiert).** `TModelWaterManager::loadAfter` (`trash[0x18]` →
+fmadd-Cluster); `drawRefracAndSpec` (`trash[8]` overshoot); `TSplashManager::makeDL`
+(`trash[8]`); `TNerveWalkerEscape` (`trash[0x28]` + `trashPath[0x1c]`);
+`TBossMantaManager::setupEfbAlpha` (`trash[0xc]`); `TStayPakkun::load` (`trash[4]`);
+`TWalkerEnemy::isReachedToGoalXZ` (emitSweat); `TNerveBPTouchDown` (emitSweat goal).
+
+**Notiz.** `TModelWaterManager::load` bereits **100 %** ohne Entry-Pad (kein
+`trash[0x18]` — overshoot).
+
+**Vollmatch, strikt.** keine. Quellbaum unverändert ggü. **`09a41198`**.
+
+**Verify.** `ninja baseline` / `changes_all` ohne Code-Delta; `dtk shasum -c` → OK.
+
+### R175 (Aufgabe B; entry frame-pad, 2 Vollmatches)
+
+**Hunt.** Entry `char trash[N]` + `trash[0]=0` (frame −8/−0x20) Enemy/Player;
+emitSweat-`TVec3` wo Locals +4 (z. B. `drawWaterVolume` Mtx, `rumblePad`).
+
+**Skip (User + Prior).** DangoHamuKuri `behaveToWater`/`receiveMessage`,
+`jumpProcess`, `BPPreDie`, `TRiccoHook::init`, `drawWaterVolume` (Mtx-Slot),
+`decideOwnState` (case-5 TVec3), `rumblePad`, Prior-Skips.
+
+**Vollmatch, strikt (2).**
+`TNerveBGKAppear::execute` (`gatekeeper.cpp`, `trash[0x20]`);
+`TBossManta::initNthGeneration` (`bossManta.cpp`, `trash[0x20]`).
+
+**Verify.** `ninja baseline` / `changes_all`; `dtk shasum -c` → OK.
+
 ### R174 (Aufgabe B; entry frame-pad, 3 Vollmatches)
 
 **Hunt.** Entry `char trash[N]` (+ `trash[0]=0` wenn nötig) bei Frame **−8/−16**;
