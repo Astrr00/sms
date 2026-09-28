@@ -179,8 +179,10 @@ raises fuzzy **%** but emits **`addi r31,r3`** / extra **`bl`** — not a ship p
 (**`0x4c(r30)`**). **`mCoin->isActorType`** restores type-test **`li`/`b`/`clrlwi`** but inflates frame
 (**`−0x110`** vs retail **`−0x100`**). Manual **`(mCoin->mActorType - 0x20000000u) == 0xEu`** into a **`BOOL`**
 then **`if ((u8)isEventCoin)`** (not plain **`if (isEventCoin)`**) keeps **`−0x108`**, **`r4`**, and retail
-**`clrlwi. r0, r0, 24`** before spawn vs **`appear`**. Open: frame **`−0x8`** vs retail **`−0x100`**, loop spill
-slots, **`@4358`/`@4359`** (**`8`/`16`** **`TMsRange`** literals) pool order.
+**`clrlwi. r0, r0, 24`** before spawn vs **`appear`**. Open: frame **`−0x8`** vs retail **`−0x100`** (likely
+**`BOOL`/`TCoin*`** stack homes), loop spill slots, **`@4358`/`@4359`** (**`8`/`16`** **`TMsRange`**
+literals) pool order. Replacing **`TMsRange::rand`** with **`MsRandF`** changes the frame (**`−0xf0`**) but
+does not reproduce retail’s pre-loop **`lfs f29/f30`** + **`stfs`** / **`bl rand`** sequence.
 
 **`TEnemyAttachment::sendMessage`** walks **`mCollisions`** with **`lwz r3, 0x44(r29)`** then
 **`lwzx r4, r3, r31`** (byte offset in **`r31`**, index in **`r30`**). For collisions that are not Mario

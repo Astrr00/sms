@@ -12664,6 +12664,25 @@ spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%
 
 **Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
 
+### R283 (Aufgabe B; genEventCoin −0x100 hunt, 0× ship)
+
+**Hunt.** Post-R282 dry (**9275**); **`TSmallEnemy::genEventCoin`** (**~99.6%**, **`−0x108`**, **`@4358`/`@4359`**); defer PolluteModel/**bind**/Dango/setGoal;
+spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%** only.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~6).**
+
+- **`loopCoin`** rename (loop **`TCoin*`**): no frame change — **kept** (clarity).
+- Duplicated **`mCoin`** branches (no shared **`coin`**): **~89.7%** — **`r4`/`r27`** schedule break — reverted.
+- **`MsRandF`** vs **`TMsRange::rand`**: frame **`−0xf0`** / wrong rand chain — reverted.
+- **`TNerveSmallEnemyFreeze`**: drop **`freezeTime`** local — **~64%** — reverted.
+- **`genEventCoin`**: **`−0x108`** + pool labels unchanged; type/**`clrlwi`** path still clean.
+
+**Tip (R283).** **`BOOL` + `TCoin* coin`** in **`genEventCoin`** likely accounts for the steady **`+0x8`** frame vs retail; **`MsRandF`** swaps frame size but won’t ship without matching retail’s **`stfs f29/f30` + `bl rand`** schedule — fix **`.sdata2`** / homes together, not loop spills alone.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
 ### R258 (Aufgabe B; defer GraphGroup/ColumSand pool + diversify, 0× ship)
 
 **Hunt.** Post-R257 dry; **defer `TGraphGroup::perform`** (empty **`TGraphWeb::perform` DCE**) and
