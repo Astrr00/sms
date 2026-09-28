@@ -11321,6 +11321,35 @@ unverändert ggü. **`63f8cdc0`**.
 
 **Verify.** `ninja baseline` / `changes_all` ohne Code-Delta.
 
+### R192 (Aufgabe B; Frame-Δ-Scanner + J3D-Callbacks, keine Vollmatches)
+
+**Hunt.** Enemy/Player ≤500 B; Frame-Δ exakt **8/0x10/0x20/0x28** + wenige `~`; Emit-Zwei-Zeiler;
+weak wie `isEmitting`; Cap ~8.
+
+**Skip (User + R191).** `behaveToMario`, `getRumblePow`, `tryTake` neu; weiter
+`getEmitPosDir`, `surfingEffect`, `getNowGravity`, `createModelData`, `getPolluteRadius`, …
+
+**Scanner (Frame-Δ, 0 `|`/`<`/`>`, ≤500 B).** **59** Treffer (z. B. `YoshiHeadCtrl` −8,
+`NozzleCtrl` −0x10, `TWalkerEnemy::isReachedToGoalXZ` +0x10, `RotateCtrl` −0x20).
+
+**Probes (~8, revertiert / no-ship).**
+
+1. **`YoshiHeadCtrl`:** `trash[8]` → Frame **−0x50** OK, `Mtx` bleibt **0x10** vs **0x14** (`~`).
+2. **`NozzleCtrl`:** `trash[0x10]` → Frame **−0x60** OK, `Mtx` **0x14** vs **0x28**; `mtxPad`/`unused2` verschlechtert.
+3. **`RotateCtrl`:** `trash[0x20]` → Frame OK, `Mtx` **0x10** vs **0x2c**.
+4. **`TBEelTearsManager::createEnemies`:** Zwei-Zeiler `resource` / `s32`-Loop / Owner-Inline → Frame **+8** bleibt (`r30` vs `r31`).
+5. **`TBGTentacleMtxCalc::~dtor`:** nur **Rodata**-`addi` (+4), kein Entry-Pad.
+
+**Vollmatch, strikt.** keine (letzter Ship: R189 `emitGetWaterEffect`).
+
+**Tip (R192).** **−0x8 Frame** bei J3D-Callbacks oft **`trash[8]`** am Entry — danach noch
+**+4 B `Mtx`-Spill** (Frame passt, `addi r3,r1,0x14` fehlt): Entry-Trash allein reicht nicht;
+Retail legt **`Mtx` höher** (z. B. Nozzle **0x28** auf **−0x60**). **+0x10 Frame** bei
+`TVec3`-Helfern: nicht Entry-Trash, sondern **kein `TVec3`-Temp** / Retail-`lwz`/`stw`-Kette
+(`isReachedToGoalXZ`, `getRumblePow`).
+
+**Verify.** `ninja baseline` / `changes_all` ohne Code-Delta ggü. **`e483d1c7`**.
+
 ### R191 (Aufgabe B; B-scope spill/Frame, keine Vollmatches)
 
 **Hunt.** Enemy/Player außer R188–R190-Dry; kleine `receiveMessage`/`perform`/`emit*`
@@ -11328,7 +11357,8 @@ mit Entry-Trash exaktem Frame-Δ oder Emit-Zwei-Zeiler; strikt 100 %, Cap ~8.
 
 **Skip (User + Prior).** `getEmitPosDir`, `surfingEffect`, `getNowGravity`,
 `createModelData`, `getPolluteRadius`, `toroccoEffect`, `TBubbleCallBack`, R187+
-(`thinkSituation`, `TBossEelAwaCollision::behaveToMario`, …).
+(`thinkSituation`, `TBossEelAwaCollision::behaveToMario`, …); ab R192 auch
+`getRumblePow`, `tryTake`.
 
 **Scanner.** 114× **97–99,9 %** / ≤400 B (Enemy/Player); **0** mit nur ≤3 `~`, 0 `|`,
 ≤120 B. Viele **99,8 %** = einheitliches **+4**-Stack-Spill (`TVec3`/`Mtx`) oder
