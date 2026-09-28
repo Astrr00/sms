@@ -10920,6 +10920,31 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R236 (`MapObjMare`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TCogwheelScale::touchWater`.
+
+- `unk140` wird mit `unk144` verglichen.
+  Liegt `unk140` darunter, wird `1.0f` addiert.
+  Der Vergleich ist `fcmpo` und `bge`.
+  `fadds` bleibt `f0, f1, f0`.
+  36 Bytes, 9 Instruktionen.
+  Die übrigen 41 Matches in `MapObjMare` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMare`: PASS.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.06933 % -> 79.07011 %, matched code 49.79967 % -> 49.80067 % (1787852 -> 1787888, +36).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9607 -> 9608.
+`MapObjMare` 4324 -> 4360 (+36).
+Kein R170–R235-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R235 (`Item`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

@@ -33,8 +33,12 @@ f32 TCogwheel::mMinSpeed            = 3.0f;
 static f32 mGrowStartFrame          = 90.0f;
 static f32 mGrowEndFrame            = 175.0f;
 
-// TODO: retail is fcmpo + bge.
-u32 TCogwheelScale::touchWater(THitActor*) { return 1; }
+u32 TCogwheelScale::touchWater(THitActor*)
+{
+	if (unk140 < unk144)
+		unk140 += 1.0f;
+	return 1;
+}
 
 // TODO: retail lfsu of unk158->unk138. `+=` emits lfs + stfs 0x138.
 BOOL TCogwheelScale::receiveMessage(THitActor* sender, u32 message)
