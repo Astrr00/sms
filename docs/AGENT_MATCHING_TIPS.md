@@ -215,6 +215,10 @@ temp** both get DCE’d; assigning **`BOOL bckPass`** adds stack (**`−0x30`**)
 
 **`JGeometry::TRotation3::setQuat` (e.g. fireWanwan TU)**: **`f1`/`f2` register swap** on **`2.0f×quat` muls** and **`.sdata2` literal slots** — header **`// TODO: regswap`**; fix via **MAP-order pool + operand schedule**, not one-line C tweaks.
 
+**`TMario::checkSink`**: sink-death path **`lfs @4214`** then **`stfs`×6** into **`mBaseSpeed`/`mForwardVel` cluster** before **`loserExec`**; **`−0xa0`** needs the **ground-check scratch/inlines** in the mid-body, not a lone **`char[]` pad**.
+
+**`TBossMantaManager::TMantaBattleState::update`**: opens with **`lis`/`addi @1490` string pool** into **`r30`** before state **`switch`** — same **rodata-before-work** pattern as other managers; **`−0xe0` vs `−0xd8`** is spill layout, not missing logic.
+
 **`TTamaNoko::isReachedToGoal`** (and **`TTelesa`**): retail inlines **`TPathNode`** at **`this+0x104`** — **`unk0` ? `unk0+0x10` : `&unk4`** — not an out-of-line **`getPoint()`** call; **`TVec3` assign from `mPosition`** breaks the **`addi r5,r4,4`** branch.
 
 **`TEnemyAttachment::sendMessage`** walks **`mCollisions`** with **`lwz r3, 0x44(r29)`** then
