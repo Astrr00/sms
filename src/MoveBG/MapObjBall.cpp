@@ -1,5 +1,6 @@
 #include <MoveBG/MapObjBall.hpp>
 #include <JSystem/JDrama/JDRNameRefGen.hpp>
+#include <MarioUtil/PacketUtil.hpp>
 #include <string.h>
 
 // rogue includes needed for matching sinit & bss
@@ -18,7 +19,10 @@ GXColorS10 TResetFruit::mRottenColor    = { 0, 0, 0, 0 }; // UNUSED
 
 void TMapObjBall::touchRoof(JGeometry::TVec3<f32>*) { }
 
+// Empty here. dont_inline keeps the qualified calls in TBigWatermelon.
+#pragma dont_inline on
 void TMapObjBall::touchWall(JGeometry::TVec3<f32>*, TBGWallCheckRecord*) { }
+#pragma dont_inline off
 
 void TMapObjBall::touchPollution() { kill(); }
 
@@ -26,7 +30,9 @@ void TMapObjBall::touchWaterSurface() { kill(); }
 
 void TMapObjBall::rebound(JGeometry::TVec3<f32>*) { }
 
+#pragma dont_inline on
 void TMapObjBall::touchGround(JGeometry::TVec3<f32>*) { }
+#pragma dont_inline off
 
 void TMapObjBall::put()
 {
@@ -56,7 +62,9 @@ void TMapObjBall::control() { }
 
 BOOL TMapObjBall::receiveMessage(THitActor*, u32) { return 0; }
 
+#pragma dont_inline on
 void TMapObjBall::initMapObj() { }
+#pragma dont_inline off
 
 TMapObjBall::TMapObjBall(const char* name)
     : TMapObjGeneral(name)
@@ -143,7 +151,12 @@ void TResetFruit::makeObjAppeared() { }
 
 BOOL TResetFruit::receiveMessage(THitActor*, u32) { return 0; }
 
-void TResetFruit::initMapObj() { }
+void TResetFruit::initMapObj()
+{
+	TMapObjBall::initMapObj();
+	SMS_InitPacket_OneTevColor(getModel(), 0, GX_TEVREG0,
+	                           (const GXColorS10*)&unk19C);
+}
 
 TResetFruit::TResetFruit(const char* name)
     : TMapObjBall(name)
@@ -166,7 +179,20 @@ TRandomFruit::TRandomFruit(const char* name)
 
 void TCoverFruit::calcRootMatrix() { }
 
-BOOL TCoverFruit::receiveMessage(THitActor*, u32) { return 0; }
+BOOL TCoverFruit::receiveMessage(THitActor* sender, u32 message)
+{
+	if (sender->isActorType(0x08000083) && message == HIT_MESSAGE_TAKE) {
+		onHitFlag(HIT_FLAG_NO_COLLISION);
+		mHolder = (TTakeActor*)sender;
+		return TRUE;
+	}
+	if (message == HIT_MESSAGE_UNKB) {
+		kill();
+		TFlagManager::smInstance->setBool(true, 0x1038B);
+		return TRUE;
+	}
+	return FALSE;
+}
 
 void TCoverFruit::loadAfter()
 {
@@ -177,11 +203,18 @@ void TCoverFruit::loadAfter()
 
 void TBigWatermelon::touchWaterSurface() { }
 
-void TBigWatermelon::touchWall(JGeometry::TVec3<f32>*, TBGWallCheckRecord*) { }
+void TBigWatermelon::touchWall(JGeometry::TVec3<f32>* param_1,
+                               TBGWallCheckRecord* param_2)
+{
+	TMapObjBall::touchWall(param_1, param_2);
+}
 
 void TBigWatermelon::rebound(JGeometry::TVec3<f32>*) { }
 
-void TBigWatermelon::touchGround(JGeometry::TVec3<f32>*) { }
+void TBigWatermelon::touchGround(JGeometry::TVec3<f32>* param_1)
+{
+	TMapObjBall::touchGround(param_1);
+}
 
 void TBigWatermelon::touchActor(THitActor*) { }
 

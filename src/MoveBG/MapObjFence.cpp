@@ -29,7 +29,15 @@ void TFence::initMapObj()
 	TMapObjBase::initMapObj();
 }
 
-BOOL TRevolvingFenceOuter::receiveMessage(THitActor*, u32) { return FALSE; }
+BOOL TRevolvingFenceOuter::receiveMessage(THitActor*, u32 message)
+{
+	if (message == HIT_MESSAGE_SUPER_HIP_DROP) {
+		startBck("fence_revolve_outer_shake");
+		unk13C->startBck("fence_revolve_inner_shake");
+		return TRUE;
+	}
+	return FALSE;
+}
 
 void TRevolvingFenceOuter::initMapCollisionData() { }
 
@@ -37,6 +45,7 @@ BOOL TRevolvingFenceInner::receiveMessage(THitActor*, u32) { return FALSE; }
 
 void TRevolvingFenceInner::calcCurrentMtx() { }
 
+#pragma dont_inline on
 void TRevolvingFenceInner::controlWall()
 {
 	// Address-of keeps the out-of-line copies.
@@ -46,12 +55,23 @@ void TRevolvingFenceInner::controlWall()
 	(void)rot;
 	(void)wrap;
 }
+#pragma dont_inline off
 
+// Empty here. dont_inline keeps the call in control().
+#pragma dont_inline on
 void TRevolvingFenceInner::controlGroundRoof() { }
+#pragma dont_inline off
 
 void TRevolvingFenceInner::setGroundCollision() { }
 
-void TRevolvingFenceInner::control() { }
+void TRevolvingFenceInner::control()
+{
+	TMapObjBase::control();
+	if (unk140 != 0)
+		controlWall();
+	else
+		controlGroundRoof();
+}
 
 void TRevolvingFenceInner::initMapCollisionData() { }
 

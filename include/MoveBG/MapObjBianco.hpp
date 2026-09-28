@@ -143,10 +143,15 @@ public:
 	/* 0x13C */ u32 unk13C;
 };
 
+class TTrembleModelEffect;
+
 class TMapObjRootPakkun : public TMapObjBase {
 public:
 	virtual void initMapObj();
 	virtual void drawObject(JDrama::TGraphics*);
+
+public:
+	/* 0x138 */ TTrembleModelEffect* unk138;
 };
 
 class TBigWindmill : public TMapObjBase {

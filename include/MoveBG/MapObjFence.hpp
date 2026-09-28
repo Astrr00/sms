@@ -30,6 +30,9 @@ public:
 	    : TFence(name)
 	{
 	}
+
+public:
+	/* 0x13C */ TMapObjBase* unk13C;
 };
 
 class TRevolvingFenceInner : public TFence {

@@ -10920,6 +10920,47 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R200 (`MapObjBianco` / `MapObjBall` / `MapObjFence`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+Acht kurze Fills ohne `ble`/`bge`/`lfsu` und ohne `SMatrix34C`-Leer-Konstruktor.
+Zurückgenommen, nur Argument-Schedule (kein Strukturfehler im Ablauf):
+`TPinnaEntrance::loadAfter` (vier `~` auf den `addi`s von `newAndRegisterObj`, 98.3 %, Frame beide `-0x30`).
+
+- `TMapObjRootPakkun::initMapObj` ruft `TMapObjBase::initMapObj`, legt `TTrembleModelEffect` an, ruft `init` mit `mMActor->getModel` und `tremble(100, 1, 1, 0x2EE0)`.
+  96 Bytes, 24 Instruktionen.
+- `TBiancoWatermill::control` zieht `unk138` von `mRotation.z` ab und startet `MSD_SE_OBJ_BI_BIGMILL` mit `fabsf(unk138)` und Handle `(JAISoundHandle*)&unk13C`.
+  132 Bytes, 33 Instruktionen.
+- `TResetFruit::initMapObj` ruft `TMapObjBall::initMapObj` (leer, `#pragma dont_inline`) und `SMS_InitPacket_OneTevColor` auf `GX_TEVREG0` ab `unk19C`.
+  68 Bytes, 17 Instruktionen.
+- `TCoverFruit::receiveMessage` setzt bei `isActorType(0x08000083)` und `HIT_MESSAGE_TAKE` `HIT_FLAG_NO_COLLISION` und `mHolder`, bei `HIT_MESSAGE_UNKB` virtuell `kill` und `setBool(true, 0x1038B)`.
+  160 Bytes, 40 Instruktionen.
+- `TBigWatermelon::touchWall` reicht an `TMapObjBall::touchWall` weiter (leer, `#pragma dont_inline`).
+  32 Bytes, 8 Instruktionen.
+- `TBigWatermelon::touchGround` reicht an `TMapObjBall::touchGround` weiter (leer, `#pragma dont_inline`).
+  32 Bytes, 8 Instruktionen.
+- `TRevolvingFenceOuter::receiveMessage` startet bei Nachricht 3 `fence_revolve_outer_shake` und auf `unk13C` `fence_revolve_inner_shake`.
+  92 Bytes, 23 Instruktionen.
+- `TRevolvingFenceInner::control` ruft `TMapObjBase::control` und dann `controlWall`, wenn `unk140` ungleich 0 ist, sonst `controlGroundRoof` (beide `#pragma dont_inline`).
+  76 Bytes, 19 Instruktionen.
+
+`validate-symbol-order` für Bianco, Ball und Fence: PASS.
+Dieselben UNUSED-Größenwarnungen wie zuvor.
+Ball behält die weak-only Order-Warnung.
+Fence behält eine weak-only Order-Warnung (`MsWrap`).
+
+`ninja changes_all`: fuzzy 78.7922 % → 78.81031 %, matched code 49.493717 % → 49.512882 % (1776868 → 1777556, +688).
+Matched data bleibt 65.18551 %.
+Funktionen matched 9535 → 9543.
+MapObjBianco matched code 3960 → 4188.
+MapObjBall matched code 2552 → 2844.
+MapObjFence matched code 2076 → 2244.
+Pinna (3468), Mamma (4860), `MapObjManager` (7064) und `MarNameRefGen_MapObj` (2348) unverändert.
+Kein R170–R199-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R199 (`MapObjMamma` / `MapObjPinna` / `MapObjFence`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

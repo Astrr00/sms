@@ -1,5 +1,9 @@
 #include <MoveBG/MapObjBianco.hpp>
+#include <MarioUtil/DrawUtil.hpp>
 #include <MarioUtil/PacketUtil.hpp>
+#include <M3DUtil/MActor.hpp>
+#include <MSound/MSound.hpp>
+#include <MSound/SoundEffects.hpp>
 #include <string.h>
 
 // rogue includes needed for matching sinit & bss
@@ -14,7 +18,13 @@ void TBigWindmill::load(JSUMemoryInputStream&) { }
 
 void TMapObjRootPakkun::drawObject(JDrama::TGraphics*) { }
 
-void TMapObjRootPakkun::initMapObj() { }
+void TMapObjRootPakkun::initMapObj()
+{
+	TMapObjBase::initMapObj();
+	unk138 = new TTrembleModelEffect;
+	unk138->init(mMActor->getModel());
+	unk138->tremble(100.0f, 1.0f, 1.0f, 0x2EE0);
+}
 
 void TBiancoWatermill::turnByEnemy(THitActor*, const TBGCheckData*) { }
 
@@ -26,7 +36,13 @@ void TBiancoWatermill::turn(const JGeometry::TVec3<f32>&, const TBGCheckData*,
 
 u32 TBiancoWatermill::touchWater(THitActor*) { return 0; }
 
-void TBiancoWatermill::control() { }
+void TBiancoWatermill::control()
+{
+	mRotation.z -= unk138;
+	SMSGetMSound()->startSoundActorWithInfo(
+	    MSD_SE_OBJ_BI_BIGMILL, &mPosition, nullptr, fabsf(unk138), 0, 0,
+	    (JAISoundHandle*)&unk13C, 0, 4);
+}
 
 void TBiancoWatermill::initMapObj()
 {
