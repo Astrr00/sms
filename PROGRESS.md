@@ -11904,6 +11904,29 @@ standalone **`asm`** here.
 
 **Verify.** `ninja changes_all` ggü. session baseline (**9273**): **+0** (**9273** unchanged).
 
+### R242 (Aufgabe B; GPR/data hunt, 0× ship)
+
+**Hunt.** Post-R241: skip **`getEmitPosDir` asm** / **`thinkHoldOut`** frame; prefer small text/data
+with MAP; gate on **`changes_all` `matched_functions`**; defer frsqrte / BossGesso; cap ~8.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~4, no-ship).**
+
+- **`TGraphWeb::startIsEnd`** (120 B @ **`8025F068`**): **`r4`/`r5`** walk from **`unk0`**
+  — split **`if`** / early **`unk8`** load → **87–82%**; restored **`getFirstGraphNode()`** form
+  (**98.8%**).
+- **`TBEelTearsManager::createEnemies`**: **`void* r30`** resource temp — still **`r31`** + frame
+  **`0x30`/`0x38`** (**99.7%**); skip list overlap.
+- **EP scan:** no other **48–120 B** symbols with opcode-only diffs at **≥97%**; **99.5%+** remain
+  frame/`~` clusters (**`canGo`**, **`isReachedToGoalXZ`**, **`TNerveSmallEnemyFreeze`**, etc.).
+
+**Tip (R242).** **`startIsEnd`** needs retail **control-flow** ( **`mConnectionNum`** gate before
+**`unk8` reload** ) **and** **`r4`/`r5`** caching — not **`getFirstGraphNode()`** replacement alone;
+combined with **`||`** short-circuit risks branch inversion.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9273**): **+0** (**9273** unchanged).
+
 ### R225 (Aufgabe B; bossManta rodata + EP diversify, 0× ship)
 
 **Hunt.** Post-**`385107f3`**; optional **`bossManta` `@2805`/`@2807`** lead (Amenbo
