@@ -12856,6 +12856,27 @@ spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%
 
 **Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
 
+### R285h (Enemy/Player B; emWaiting + ≤200B, 0× ship)
+
+**Hunt.** Optional **`emWaiting`** finish; else **≤200B**; skip **`consider`**, **`checkController` (1468B)**, spill **≥99.7%**, Closet/MoveBG; strict **100%** only.
+
+**Ship.** none.
+
+**Trial (reverted).** **`TEnemyMario::emWaiting`**: inlined **0.2f** stick, **`TEMario* emario`** graph arm — **~99.6%** (**`fmuls f0,f0,f1`** / **`@4108` pool** vs **`@2630`**); **`jmaSinTable[]` direct** trial **~93.7%** — reverted.
+
+**Probes (≤200B + emWaiting).**
+
+- **`TEnemyMario::emWaiting`**: **280B** — **~99.6%** peak — deferred.
+- **`PakkunRootCallback2`**: **`−0x90`** **`TRotation3f`** — **~98.1%** (180B) — deferred.
+- **`TRotation3::setQuat` (fireWanwan)**: quat **`fmuls`/`fsubs` swap** — **~98.5%** (160B) — deferred.
+- **`TEnemyMario::startMonteReplay`**: graph **`findNearestNodeIndex`** cluster — **~99.8%** (328B) — deferred (spill skip).
+- **`TEnemyMario::perform`**: cue dispatch — **~99.5%** — deferred.
+- **`TMario::doRunningAnimation`**: run BCK — **~98.7%** — deferred.
+
+**Tip (R285h).** **`emWaiting`**: keep **`(JMASSin×64.0f)×0.2f`** single-expression stick (not **`jmaSinTable[]`**); last gap is **`fmuls` operand order** + **`lfs` from `enemyMario` `.sdata2` `@4108`** — share **`64.0f`** pool with **`setStickToAngle`** TU literal, not a new slot.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
 ### R258 (Aufgabe B; defer GraphGroup/ColumSand pool + diversify, 0× ship)
 
 **Hunt.** Post-R257 dry; **defer `TGraphGroup::perform`** (empty **`TGraphWeb::perform` DCE**) and
