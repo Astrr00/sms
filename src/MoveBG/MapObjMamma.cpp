@@ -7,6 +7,8 @@
 #include <Map/MapCollisionEntry.hpp>
 #include <Map/MapData.hpp>
 #include <M3DUtil/MActor.hpp>
+#include <MSound/MSound.hpp>
+#include <MSound/SoundEffects.hpp>
 #include <string.h>
 
 // rogue includes needed for matching sinit & bss
@@ -197,7 +199,21 @@ void TLeanMirror::calcCurrentMtx(MtxPtr) { }
 
 void TLeanMirror::release() { }
 
-static void startCameraShakeSE(u32, u32) { }
+static s32 startCameraShakeSE(u32 pos, u32 param_2)
+{
+	if (param_2 == 0) {
+		// gpMSound stays in r0; the position is saved after that load.
+		MSound* sound = gpMSound;
+		const Vec* position = (const Vec*)pos;
+		if (sound->gateCheck(MSD_SE_OBJ_QUAKE))
+			MSoundSESystem::MSoundSE::startSoundActor(
+			    MSD_SE_OBJ_QUAKE, position, 0, nullptr, 0, 4);
+	}
+	// Dead slot so MWCC keeps frame -0x20.
+	char trash[1];
+	trash[0] = 0;
+	return 0;
+}
 
 void TLeanMirror::controlGoTarget() { }
 

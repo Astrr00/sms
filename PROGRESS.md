@@ -10920,6 +10920,33 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R226 (`MapObjMamma`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`startCameraShakeSE`.
+`TRevolvingFenceInner::setGroundCollision` und `TMapObjBall::hold` bleiben geparkt.
+
+- `startCameraShakeSE` spielt bei `param_2 == 0` `MSD_SE_OBJ_QUAKE` über `gateCheck` und `startSoundActor` an der übergebenen Position.
+  Ein lokales `MSound*` hält `gpMSound` in r0, die Position wird danach nach r31 gelegt.
+  `char trash[1]` hält Frame `-0x20`.
+  Rückgabe 0.
+  104 Bytes, 26 Instruktionen.
+  `TGoalWatermelon::load`, `loadAfter` und `__sinit_MapObjMamma_cpp` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMamma`: PASS.
+Acht bestehende UNUSED-Größenwarnungen.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.03689 % -> 79.039665 %, matched code 49.761345 % -> 49.76424 % (1786476 -> 1786580, +104).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9597 -> 9598.
+`MapObjMamma` 6092 -> 6196 (+104).
+Kein R170–R225-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R225 (`MapObjMonte`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
