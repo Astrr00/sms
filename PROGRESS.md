@@ -12701,6 +12701,24 @@ spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%
 
 **Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
 
+### R285 (Aufgabe B; diversify opcode hunt, 0× ship)
+
+**Hunt.** Post-R284 dry (**9275**); opcode/data wins outside R279–R284 thrash (**genEventCoin**, **OnWire**, **isReachedToGoal**); defer PolluteModel/**bind**/Dango/setGoal;
+spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%** only.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~6).**
+
+- **`TNervePakkunAppear::execute`**: retail dead **`cmpwi`** after **`checkPass(100.f)`** — **`BOOL bckPass`/`if {}`** still DCE’d — **~98.6%** — reverted.
+- **`TEnemyMario::setStickToAngle`**: split **`*=`** for **`fmuls`** order in **`emWaiting`** — **~61.8%** — reverted.
+- **`TRiccoHook::init`**, **`TTailRubber::bindOne`**, **`TEffectColumWater::generate`**, **`requestShadow`**: frame/rodata — deferred.
+- **`SMS_IsMarioOnWire`**, **`isReachedToGoal`**, **`genEventCoin`**: not revisited (thrash list).
+
+**Tip (R285).** **`TNervePakkunAppear`**: retail keeps a discarded **`cmpwi`** after **`checkPass(100.f)`** before **`checkCurAnmEnd`**; empty **`if (checkPass()) {}`** is not enough — need a different MWCC shape (not **`BOOL` spill**) to preserve dead compare without **`−0x30`** frame.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
 ### R258 (Aufgabe B; defer GraphGroup/ColumSand pool + diversify, 0× ship)
 
 **Hunt.** Post-R257 dry; **defer `TGraphGroup::perform`** (empty **`TGraphWeb::perform` DCE**) and
