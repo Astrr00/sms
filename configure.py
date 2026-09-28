@@ -934,7 +934,7 @@ config.libs = [
             Object(NonMatching, "Player/MarioUpper.cpp"),
             PCHObject(NonMatching, "Player/MarioParticle.cpp"),
             Object(NonMatching, "Player/MarioWait.cpp"),
-            PCHObject(NonMatching, "Player/SplashManager.cpp"),
+            PCHObject(Matching, "Player/SplashManager.cpp"),
             PCHObject(NonMatching, "Player/Tongue.cpp"),
             PCHObject(NonMatching, "Player/WaterGun.cpp"),
             PCHObject(NonMatching, "Player/Yoshi.cpp"),

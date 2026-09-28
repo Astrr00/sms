@@ -82,6 +82,12 @@ void TSplashManager::move()
 	}
 }
 
+static inline void setSplashColor(const TSplashManager* self, GXColor& color,
+                                  TWaterSplash* splash)
+{
+	color = (GXColor) { 0xff, 0xff, 0xff, splash->unk10 * 255 / self->unk648 };
+}
+
 void TSplashManager::makeDL(JDrama::TGraphics* param_1) const
 {
 	MtxPtr viewMtx = param_1->mViewMtx;
@@ -103,8 +109,8 @@ void TSplashManager::makeDL(JDrama::TGraphics* param_1) const
 
 		f32 fVar1 = ((f32)unk648 - splash->unk10) / unk648 * unk634 + unk630;
 
-		GXColor color
-		    = (GXColor) { 0xff, 0xff, 0xff, splash->unk10 * 255 / unk648 };
+		GXColor color;
+		setSplashColor(this, color, splash);
 
 		thing[0].set(pos.x - fVar1, pos.y + fVar1, pos.z);
 		thing[1].set(pos.x + fVar1, pos.y + fVar1, pos.z);
