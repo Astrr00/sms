@@ -10920,6 +10920,47 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R218 (`MapObjBianco`, `MapObjMare`, `MapObjRicco`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TWoodLog::control`, `TMareCork::calcRootMatrix` und `TCraneUpDown::initMapObj`.
+`TRevolvingFenceInner::setGroundCollision` und `TMapObjBall::hold` bleiben geparkt.
+
+- `TWoodLog::control` ruft `TMapObjFloatOnSea::control`.
+  Inverse von `getAnmMtx(0)`, Mario lokal, Schwimm-Box (−232 / −141 / 141 / −441 / 441).
+  X wird auf ±141 geschoben und per `SMS_MarioMoveRequest` zurücktransformiert.
+  `char trash[0x14]` hält Frame `-0x90`.
+  248 Bytes, 62 Instruktionen.
+  `__sinit_MapObjBianco_cpp` bleibt 100 %.
+- `TMareCork::calcRootMatrix` ignoriert `checkPass(350)`.
+  Bei `checkPass(250)`: `startChorobeiShout`, Shine-Demo, `unk148` (2773, 8618, 7006), Partikel `0x44` mit Scale 2.5.
+  Danach `TMapObjBase::calcRootMatrix`.
+  `char trash[0x18]` hält Frame `-0x30`.
+  248 Bytes, 62 Instruktionen.
+  `drawObject`, `moveObject`, `getTakingMtx` und `__sinit_MapObjMare_cpp` bleiben 100 %.
+- `TCraneUpDown::initMapObj` ruft `TMapObjBase::initMapObj`, `setAllActor(nullptr)`, `newAndRegisterObj("craneCargoUpDown")` und `appear`.
+  Der Inline-Pad hält Frame `-0x48`.
+  `strcmp(mName, "craneUpDown 0")` wählt −25/45 und `MSD_SE_OBJ_CRANE_UPDOWN1`, sonst −25/30 und `MSD_SE_OBJ_CRANE_UPDOWN2`.
+  `mRotation.x` ist `unk144 + (unk140 - unk144) * MsRandF()`.
+  `mRotSpeed` 0.1 und `mWaitTime` 120 matchen.
+  288 Bytes, 72 Instruktionen.
+  Destruktor, VTable und `__sinit_MapObjRicco_cpp` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBianco`, `MapObjMare`, `MapObjRicco`: PASS.
+Bestehende UNUSED-Größenwarnungen (5 / 5 / 3).
+`MapObjBase.hpp` unverändert.
+
+`ninja changes_all`: fuzzy 78.97599 % -> 78.99749 %, matched code 49.69906 % -> 49.720898 % (1784240 -> 1785024, +784).
+Matched data bleibt 65.24985 % (417815).
+Funktionen matched 9585 -> 9588.
+`MapObjBianco` 5016 -> 5264 (+248).
+`MapObjMare` 3884 -> 4132 (+248).
+`MapObjRicco` 2336 -> 2624 (+288).
+Kein R170–R217-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R217 (`MapObjMamma`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

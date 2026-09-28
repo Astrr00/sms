@@ -1,7 +1,9 @@
 #include <MoveBG/MapObjMare.hpp>
 #include <JSystem/J3D/J3DGraphAnimator/J3DModel.hpp>
+#include <JSystem/JParticle/JPAEmitter.hpp>
 #include <M3DUtil/MActor.hpp>
 #include <Map/MapWireManager.hpp>
+#include <MoveBG/ItemManager.hpp>
 #include <System/Particles.hpp>
 #include <MSound/MSound.hpp>
 
@@ -11,6 +13,7 @@ extern void MsMtxSetTRS(MtxPtr result, f32 x, f32 y, f32 z, f32 r, f32 p, f32 h,
 class TCannon {
 public:
 	bool isObject();
+	void startChorobeiShout();
 };
 
 static JGeometry::TVec3<f32> fall_upper_pos(2827.0f, 8604.0f, 7202.0f);
@@ -249,7 +252,38 @@ void TMareCork::moveObject()
 	}
 }
 
-void TMareCork::calcRootMatrix() { }
+void TMareCork::calcRootMatrix()
+{
+	if (unk154) {
+		mMActor->getFrameCtrl(0)->checkPass(350.0f);
+		if (mMActor->getFrameCtrl(0)->checkPass(250.0f)) {
+			unk138->startChorobeiShout();
+			gpItemManager->makeShineAppearWithDemo(
+			    "シャイン（ボス用）", "ボスシャインカメラ", mPosition.x,
+			    mPosition.y, mPosition.z);
+			unk148.x = 2773.0f;
+			unk148.y = 8618.0f;
+			unk148.z = 7006.0f;
+			JPABaseEmitter* emitter
+			    = gpMarioParticleManager->emitWithRotate(
+			        0x44, &unk148, 0x4000, 0x0D82, 0, 0, nullptr);
+			if (emitter != nullptr) {
+				emitter->mGlobalDynamicsScale.x = 2.5f;
+				emitter->mGlobalDynamicsScale.y = 2.5f;
+				emitter->mGlobalDynamicsScale.z = 2.5f;
+				emitter->mGlobalParticleScale.x = 2.5f;
+				emitter->mGlobalParticleScale.y = 2.5f;
+				emitter->mGlobalParticleScale.z = 2.5f;
+			}
+		}
+	}
+
+	TMapObjBase::calcRootMatrix();
+
+	// Dead slot so MWCC keeps frame -0x30.
+	char trash[0x18];
+	trash[0] = 0;
+}
 
 MtxPtr TMareCork::getTakingMtx()
 {

@@ -1,6 +1,8 @@
 #include <MoveBG/MapObjRicco.hpp>
+#include <MoveBG/MapObjManager.hpp>
 #include <JSystem/J3D/J3DGraphAnimator/J3DModel.hpp>
 #include <Map/MapCollisionManager.hpp>
+#include <MarioUtil/RandomUtil.hpp>
 #include <MSound/SoundEffects.hpp>
 #include <stdlib.h>
 #include <string.h>
@@ -34,9 +36,39 @@ void TCraneRotY::load(JSUMemoryInputStream& stream)
 	mState = 0;
 }
 
+f32 TCraneUpDown::mRotSpeed = 0.1f;
+s32 TCraneUpDown::mWaitTime = 120;
+
 void TCraneUpDown::control() { }
 
-void TCraneUpDown::initMapObj() { }
+// Inlined 4-byte pad. MWCC keeps it in the caller's frame (retail -0x48).
+static inline void craneCargoFramePad()
+{
+	char trash[4];
+	trash[0] = 0;
+}
+
+void TCraneUpDown::initMapObj()
+{
+	TMapObjBase::initMapObj();
+	mMapCollisionManager->unk8->setAllActor(nullptr);
+	unk138 = TMapObjBaseManager::newAndRegisterObj(
+	    "craneCargoUpDown", JGeometry::TVec3<f32>(0.0f, 0.0f, 0.0f),
+	    JGeometry::TVec3<f32>(0.0f, 0.0f, 0.0f),
+	    JGeometry::TVec3<f32>(1.0f, 1.0f, 1.0f));
+	unk138->appear();
+	craneCargoFramePad();
+	if (strcmp(mName, "craneUpDown 0") == 0) {
+		unk144 = -25.0f;
+		unk140 = 45.0f;
+		unk13C = MSD_SE_OBJ_CRANE_UPDOWN1;
+	} else {
+		unk144 = -25.0f;
+		unk140 = 30.0f;
+		unk13C = MSD_SE_OBJ_CRANE_UPDOWN2;
+	}
+	mRotation.x = unk144 + (unk140 - unk144) * MsRandF();
+}
 
 void TCraneCargo::control()
 {

@@ -27,6 +27,15 @@ public:
 	void control();
 	void initMapObj();
 	TCraneUpDown(const char* name = "上下クレーン");
+
+	static f32 mRotSpeed;
+	static s32 mWaitTime;
+
+public:
+	/* 0x138 */ TMapObjBase* unk138;
+	/* 0x13C */ u32 unk13C;
+	/* 0x140 */ f32 unk140;
+	/* 0x144 */ f32 unk144;
 };
 
 class TCraneCargo : public TLeanBlock {

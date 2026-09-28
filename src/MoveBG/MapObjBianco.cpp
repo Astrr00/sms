@@ -6,6 +6,8 @@
 #include <M3DUtil/MActor.hpp>
 #include <MSound/MSound.hpp>
 #include <MSound/SoundEffects.hpp>
+#include <JSystem/J3D/J3DGraphAnimator/J3DModel.hpp>
+#include <Player/MarioAccess.hpp>
 #include <stdlib.h>
 #include <string.h>
 
@@ -302,4 +304,32 @@ TBellWatermill::TBellWatermill(const char* name)
 {
 }
 
-void TWoodLog::control() { }
+void TWoodLog::control()
+{
+	TMapObjFloatOnSea::control();
+
+	Mtx inv;
+	JGeometry::TVec3<f32> marioPos;
+	JGeometry::TVec3<f32> localPos;
+	JGeometry::TVec3<f32> requestPos;
+
+	MTXInverse(getModel()->getAnmMtx(0), inv);
+	marioPos.set(*gpMarioPos);
+	MTXMultVec(inv, (Vec*)&marioPos, (Vec*)&localPos);
+
+	if (SMS_IsMarioStatusTypeSwimming() && -232.0f < localPos.y
+	    && -141.0f < localPos.x && localPos.x < 141.0f && -441.0f < localPos.z
+	    && localPos.z < 441.0f) {
+		if (localPos.x > 0.0f)
+			localPos.x = 141.0f;
+		else
+			localPos.x = -141.0f;
+		MTXMultVec(getModel()->getAnmMtx(0), (Vec*)&localPos,
+		           (Vec*)&requestPos);
+		SMS_MarioMoveRequest(requestPos);
+	}
+
+	// Dead slot so MWCC keeps frame -0x90.
+	char trash[0x14];
+	trash[0] = 0;
+}
