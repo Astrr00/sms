@@ -898,6 +898,8 @@ void TGessoPolluteObj::pollute()
 
 void TGessoPolluteObj::rebirth()
 {
+	char trash[8];
+
 	if (unk158 == 0) {
 		gpMarioParticleManager->emit(PARTICLE_MS_GESO_OSENHIT_A, &mPosition, 0,
 		                             nullptr);
@@ -911,8 +913,12 @@ void TGessoPolluteObj::rebirth()
 
 	if (unk158 == 10) {
 		mVelocity.y = -15.0f;
-		gpPollution->stamp(1, mPosition.x, mPosition.y, mPosition.z,
-		                   TGesso::mPollRange * 32.0f * 0.5f);
+		TPollutionManager* pollution = gpPollution;
+		f32 radius               = TGesso::mPollRange * 32.0f * 0.5f;
+		f32 posZ                 = mPosition.z;
+		f32 posY                 = mPosition.y;
+		f32 posX                 = mPosition.x;
+		pollution->stamp(1, posX, posY, posZ, radius);
 
 		((TGesso*)unk160)
 		    ->getManager()

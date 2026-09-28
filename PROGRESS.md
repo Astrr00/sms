@@ -11049,6 +11049,34 @@ OK (Tip **`f48b5cc7`**, Quellbaum nur PROGRESS).
 
 **Verify.** `ninja baseline` / `changes_all`; `dtk shasum -c` → OK.
 
+### R164 (Aufgabe B; 1 Vollmatch Enemy/gesso, pollution-stamp clone)
+
+**Pattern reuse (R163).** `gpPollution->stamp(1, …)` in B-scope Enemy: lokales
+`TPollutionManager*`, Radius-Temp, `posZ`/`posY`/`posX` vor `stamp`; bei
+`rebirth` zusätzlich `char trash[8];` (Frame **0x30**).
+
+**Vollmatch (strikt 100 %, `decomp-diff`):**
+
+1. **`TGessoPolluteObj::rebirth`** — `+328` Code-Bytes, `matched_functions`
+   **9249 → 9250** (`changes_all`).
+
+**Pollution-Stempel geprüft, nicht shipped:** `TEnemyMario::emJumping` /
+   `emWalkAround` (Stamp-Cluster mit `z→y→x` + `trash[0x20]` → **99,7 %**,
+   Rest `setStickToAngle`/`fmuls`-Operanden; Quelle revertiert),
+   `TFireWanwan::updatePollute` (Frame **−0x10**, Register durchgängig),
+   `TMario::setStatusToJumping` / `oilSlope` skip bzw. extra.
+
+**Scanner (Player/Enemy ≥95 %, `TNerve*` / `TMario::`, ≤600 B).** Kein neues
+Pad-Δ **4/8/0x10** mit uniform `~` only in dieser Runde; Top-Kandidaten u. a.
+`TNerveBathtubKillerBreak` **99,9 %**, `TMario::slopeProcess` (Frame **−0x18**).
+
+**Probes revertiert (8):** `emJumping`/`emWalkAround` (s. o.),
+   `TNerveSmallEnemyFreeze` (`trash[8]`, unverändert **99,8 %**),
+   `TNerveWalkerEscape`, `TNerveTobiPukuHitWater`, `TNerveBossEelMouthOpenWait`,
+   `setStatusToJumping`, `initAndRegister` skip, `updatePollute` (nur Analyse).
+
+**Verify.** `ninja baseline` / `changes_all`; `dtk shasum -c` → OK.
+
 ### R162 (Aufgabe B; `initAndRegister` only; keine Vollmatches)
 
 Dedizierte Pass nur **`TMapObjBase::initAndRegister`**. Retail hat **kein**
