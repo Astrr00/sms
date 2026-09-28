@@ -11488,6 +11488,41 @@ als Member-Name. Check: **`decomp-diff -u … -t object -s nonmatching`**.
 **Verify.** `ninja changes_all` ggü. **`cf903cfc`**; **`namekuri` matched_data
 70.86% → 100%**; **`build.sha1` OK**.
 
+### R220 (Aufgabe B; DebuTelesa closure + EP scan, 0× ship)
+
+**Hunt.** Post-**`da7dab8a`**; prefer data/vtable/string; **`DebuTelesa`** only with
+retail include closure; cap ~8; same skip list (stack, **`MtxCalcTypeName`**
+bosseel/hinokuri2, WaterGun, Tongue, RiccoHook::init).
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, no-ship).**
+
+- **EP objects ≥80% ≤128 B:** **`DebuTelesa` `entry$2835`** (85.7%), **`bgtentacle`
+  `@4448`** (81.8%, **`.rel`** in **`moveConstraint`**), **`bossgesso` `@6268`**
+  (81.2%); **`Tongue` `@2843`** skipped.
+- **EP objects ≥95% ≤128 B:** **dry** (0 candidates).
+- **`DebuTelesa`:** move **`bastable`** above rogue includes → **`bastable@0x4`**
+  (still **50%**; **`MtxCalcTypeName`** remains). Strip all three rogue includes →
+  **no** **`MtxCalc`**, **`bastable@0x4`**, but **`__sinit_DebuTelesa_cpp`** **N/A**
+  (764 B missing vs retail) — cannot ship without alternate sinit that keeps
+  **`smList`/`__init__smList` as `U`** like retail **`nm -S`**.
+- **`bossgesso` `TBossGessoManager::createModelData`:** **99.2%** — pool
+  **`entry$1840`** vs retail **`entry$3707`** (static emission order in huge TU).
+- **`tinkoopa`:** empty TU; **`@3000`** **50%** — needs scaffolding, not a table
+  tweak.
+- **`fireWanwan`/`pakkun`:** retail **`smList` `U`**, ours **`V`** in TU — sinit
+  still matches there; **`DebuTelesa`** gap is **extra `.sdata`** before
+  **`bastable`**, not JAL list binding alone.
+
+**Tip (R220).** **`DebuTelesa_bastable@0x0`** needs **zero** preceding **`.sdata`**
+in this TU (retail has only **`bastable` + `@2830…@2833`**). Dropping rogue
+includes fixes pollution but **breaks sinit** until we match retail’s **undefined**
+JAL symbols without pulling **`MSSetSound`/`InfectiousStrings` object defs** —
+defer **`bastable`** until that closure is solved.
+
+**Verify.** `ninja changes_all` ggü. **`da7dab8a`** — **no diff**.
+
 ### R219 (Aufgabe B; DebuTelesa nm -S + EP data, 0× ship)
 
 **Hunt.** Post-**`569f9a65`**; data/vtable/string; **`nm -S`** on **`DebuTelesa`**
