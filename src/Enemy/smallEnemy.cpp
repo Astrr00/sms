@@ -749,17 +749,18 @@ void TSmallEnemy::changeOut()
 void TSmallEnemy::decHpByWater(THitActor* param_1)
 {
 	// TODO: not actually a TWaterHItActor, IDK what it is
-	s16 uVar2
-	    = gpModelWaterManager->getParticleAttack((TWaterHitActor*)param_1);
-	if (uVar2 < 1)
-		uVar2 = 1;
+	s16 r0 = gpModelWaterManager->getParticleAttack((TWaterHitActor*)param_1);
+	s16 r4 = r0;
+	if (r0 < 1)
+		r4 = 1;
 
-	if (mHitPoints < uVar2) {
+	u8 hp = mHitPoints;
+	if (hp < r4) {
 		mHitPoints = 0;
 		return;
 	}
 
-	mHitPoints -= uVar2;
+	mHitPoints = hp - r4;
 }
 
 void TSmallEnemy::kill()
