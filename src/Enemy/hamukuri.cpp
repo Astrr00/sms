@@ -1063,7 +1063,7 @@ void THamuKuri::setWalkAnm() { setBckAnm(4); }
 
 void THamuKuri::setDeadAnm()
 {
-	char trash[0x18];
+	char trash[0x48];
 	if (unk198 && mHeldObject != nullptr
 	    && mHeldObject->receiveMessage(this, HIT_MESSAGE_PUT)) {
 		TMapObjBase* heldObj = (TMapObjBase*)mHeldObject;
@@ -1703,20 +1703,23 @@ void TDangoHamuKuri::setRunAnm()
 
 void TDangoHamuKuri::calcRootMatrix()
 {
+	char trash[0x48]; // matching: stack frame (TODO: still ~99.8%)
+	(void)trash;
+
 	getModel()->setBaseScale(mScaling);
 
 	if (!mHolder || mHolder->getHeldObject() != this)
 		goto spine;
 
-	MtxPtr takingMtx = mHolder->getTakingMtx();
-	if (!takingMtx)
+	MtxPtr r30 = mHolder->getTakingMtx();
+	if (!r30)
 		goto spine;
 
 	if (unk230) {
 		unk210 += 40.0f;
 		if (unk210 > 360.0f) {
-			// TODO: should be a rand interval
-			unk210 = -MsRandF(10.0f, 20.0f);
+			TMsRange<f32> interval(10.0f, 20.0f);
+			unk210 = -interval.rand();
 			unk230 = 0;
 		}
 	}
@@ -1727,18 +1730,23 @@ void TDangoHamuKuri::calcRootMatrix()
 			unk210 = -holder->unk210;
 	}
 
-	takingMtx[3][0] += unk21C;
-	takingMtx[3][1] += unk220;
-	takingMtx[3][2] += unk224;
+	r30[0][3] += unk21C;
+	r30[1][3] += unk220;
+	r30[2][3] += unk224;
 
 	getModel()->setBaseScale(mScaling);
 
 	Mtx local_40;
 	MsMtxSetRotRPH(local_40, 0.0f, unk210, unk214);
-	MTXConcat(takingMtx, local_40, takingMtx);
-	getModel()->setBaseTRMtx(takingMtx);
+	PSMTXConcat(r30, local_40, r30);
+	PSMTXCopy(r30, (MtxPtr)((u8*)getModel() + 0x20));
 
-	mPosition.set(takingMtx[3][0], takingMtx[3][1], takingMtx[3][2]);
+	f32 posZ = r30[2][3];
+	f32 posY = r30[1][3];
+	f32 posX = r30[0][3];
+	mPosition.x = posX;
+	mPosition.y = posY;
+	mPosition.z = posZ;
 	return;
 
 spine:

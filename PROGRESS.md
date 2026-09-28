@@ -12331,6 +12331,27 @@ on collision (**100%**, 180 B).
 
 **Verify.** `ninja changes_all` ggü. baseline (**9275**): **+1** (**9276**).
 
+### R266 (Aufgabe B; Dango calcRootMatrix partial, 0× ship)
+
+**Hunt.** Post-R265 (**9276**); continue **`sendMessage`-class** / holder **`calcRootMatrix`** wins; skip
+spill **≥99.7%**, R251–R262 thrash, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%** only.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8).**
+
+- **`TDangoHamuKuri::calcRootMatrix`**: **`mScaling`** path kept; held path uses **`r30[0/1/2][3]`**,
+  **`TMsRange<f32>(10,20).rand()`** + **`fneg`**, **`PSMTXConcat`/`PSMTXCopy(model+0x20)`** —
+  **88.6% → 99.8%**; still **`-0xa8`/`stfd f31`/rand spill offsets** — WIP kept in tree.
+- **`TSpineEnemy::setGoalPathFromGraph`**, **`TGraphWeb::startIsEnd`**, **`TGraphGroup::perform` Duff**,
+  **`TEnemyAttachment::bind`**, spill **≥99.7%** (**`getTakingMtx`**, **`TNerveSmallEnemyFreeze`**, etc.):
+  skipped or reverted.
+
+**Tip (R266).** Dango held matrix: translation column **`[row][3]`**; spin reset via **`TMsRange`** +
+**`rand()`**, not **`MsRandF`**.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9276**): **+0** (**9276** unchanged).
+
 ### R258 (Aufgabe B; defer GraphGroup/ColumSand pool + diversify, 0× ship)
 
 **Hunt.** Post-R257 dry; **defer `TGraphGroup::perform`** (empty **`TGraphWeb::perform` DCE**) and

@@ -125,7 +125,11 @@ homes after the virtual **`blrl`**.
 **`setBaseScale(mScaling)`** (three **`lwz`** from **`this+0x24`** into the model, not **`mPosition`**).
 When **`unk230`** is zero, retail still runs the held-matrix offset / **`MTXConcat`** path — only the
 **`unk210`** spin / **`rand`** block is skipped (do not nest that under **`if (unk230)`** for the whole
-held path).
+held path). Held translation tweaks use **`takingMtx[0/1/2][3]`** (offsets **`0xc`/`0x1c`/`0x2c`**), not
+**`[3][0..2]`**. After **`PSMTXConcat`**, retail **`PSMTXCopy`**s into **`getModel()+0x20`**, then reloads
+position from the holder matrix. For the **`unk210 > 360`** reset, **`TMsRange<f32>(10.f, 20.f).rand()`**
+with unary **`-`** matches retail **`rand`** + **`fneg`** better than **`MsRandF`**; residual diffs are
+**`-0xa8`** frame / **`stfd f31`** / spill homes (~**99.8%**).
 
 **`TEnemyAttachment::sendMessage`** walks **`mCollisions`** with **`lwz r3, 0x44(r29)`** then
 **`lwzx r4, r3, r31`** (byte offset in **`r31`**, index in **`r30`**). For collisions that are not Mario
