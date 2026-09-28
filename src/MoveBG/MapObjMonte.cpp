@@ -11,7 +11,17 @@
 // -inline deferred: source order is the reverse of mario.MAP emission order.
 // Bodies below the matched function are stubs so the TU's symbols exist.
 
-void TMapObjMonteRoot::initMapObj() { }
+void TMapObjMonteRoot::initMapObj()
+{
+	TMapObjBase::initMapObj();
+	mDamageHeight = 1400.0f * mScaling.y;
+	calcEntryRadius();
+	mPosition.y = mInitialPosition.y + mYOffset;
+
+	// Dead slot so MWCC keeps frame -0x20.
+	char trash[1];
+	trash[0] = 0;
+}
 
 BOOL TJumpMushroom::receiveMessage(THitActor*, unsigned long)
 {

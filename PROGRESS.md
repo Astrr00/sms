@@ -10920,6 +10920,32 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R237 (`MapObjMonte`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjMonteRoot::initMapObj`.
+
+- `TMapObjBase::initMapObj` läuft zuerst.
+  `mDamageHeight` wird `1400.0f * mScaling.y`.
+  Danach `calcEntryRadius`.
+  `mPosition.y` wird `mInitialPosition.y + mYOffset`.
+  `char trash[1]` hält den Frame auf `-0x20`.
+  84 Bytes, 21 Instruktionen.
+  Die übrigen 33 Matches in `MapObjMonte` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMonte`: PASS.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.07011 % -> 79.07234 %, matched code 49.80067 % -> 49.80301 % (1787888 -> 1787972, +84).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9608 -> 9609.
+`MapObjMonte` 3784 -> 3868 (+84).
+Kein R170–R236-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R236 (`MapObjMare`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
