@@ -191,6 +191,12 @@ does not reproduce retail’s pre-loop **`lfs f29/f30`** + **`stfs`** / **`bl ra
 temp** both get DCE’d; assigning **`BOOL bckPass`** adds stack (**`−0x30`**) without restoring the
 **`cmpwi`**.
 
+**`TEnemyMario::checkReturn`**: loop uses **`int` continue flag** (**`li r31,1`**), **`getPoint` into `r1+0x78`**, **`f31=1000.f`**, and **`sqrtf`** on manual **`fsubs`** from **`gpMarioPos`** with Mario **Y/Z loaded after the first `fsubs`**. **`checkFlag`** / **`TVec3::distance`** changes frame and load order.
+
+**`TEnemyMario::emJumping`**: **`setStickToAngle` is inlined** in the jumping branch (**`JMASSin`/`JMASCos`**, **`@4108`/`@4291`**, **`fctiwz`** into **`unk108->mStick*`**). The **`0x600`** status path calls **`stamp`** then **`mEMDoingTimer=0`/`mEMDoing=0`** — not **`changeEMDoing`**.
+
+**`TMario::startJumpWall`**: wall kick angle is **`matan(mNormal.x, mNormal.z) + 0x8000`** via **`mWallPlane+0x34`** (**`lfs`/`lfsu` on `mNormal`**), not **`matan(mMinY, normal.x)`** or **`getNormal()`**.
+
 **`TTamaNoko::isReachedToGoal`** (and **`TTelesa`**): retail inlines **`TPathNode`** at **`this+0x104`** — **`unk0` ? `unk0+0x10` : `&unk4`** — not an out-of-line **`getPoint()`** call; **`TVec3` assign from `mPosition`** breaks the **`addi r5,r4,4`** branch.
 
 **`TEnemyAttachment::sendMessage`** walks **`mCollisions`** with **`lwz r3, 0x44(r29)`** then
