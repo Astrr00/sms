@@ -12122,6 +12122,30 @@ must codegen as **`lwz` at `0x180`** off the **`getSaveParam`** pointer (same ob
 **Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged). Tip
 **`c5442021`**.
 
+### R253 (Aufgabe B; EP outside R251–252 defer, 0× ship)
+
+**Hunt.** Post-R252; skip **`checkRideMovement`**, **`isReachedToGoal`**, **`checkReturn`**, **`diving`** +
+R244–R252 thrash/stuck; prefer opcode/PARAM/string; empty/Closet/MoveBG off; **`ninja baseline`** +
+**`report.json`** + **`changes_all`**; cap ~8.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, reverted / no-ship).**
+
+- **`TMario::waitingCommonEvents`**: **`char trash[0x10]`** → **`stwu -0x38`** matches retail; **`mFaceAngle.y -
+  mIntendedYaw`** for **`IConverge`** + **`mFlag & MARIO_FLAG_IN_WATER`** / **`(1<<16)`** input → **95.4%**
+  (retail **`rlwinm` bit 17/16** vs wrong homes); reverted.
+- **`TNerveSmallEnemyHitWaterJump`**: split **`||`** early-outs → **97.7%** (extra branches); keep **`||`** +
+  **`cmpwi` vs `clrlwi`** + **`-0x90`** frame defer.
+- **`TGraphGroup::perform`**, **`drawHPMeter`**, **`getNeighborNodeIndexByFlag`**: reg **`~` only**.
+- **`TNerveTobiPukuGenerate`**: **`mr r29` vs `r30`** spine reg — frame/scheduling.
+
+**Tip (R253).** **`waitingCommonEvents`**: **`trash[0x10]`** is the frame key; opcode gaps are **`IConverge`**
+diff sign (**`face − intended`** + **`extsh` before call only**) and **non-`checkFlag`** **`mFlag`/`mInput`**
+bit tests for retail **`rlwinm`** slots — do not swap **`IS_PERFORMING`** for **`IN_WATER`** without map proof.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged).
+
 ### R252 (Aufgabe B; EP diversify, defer ride, 0× ship)
 
 **Hunt.** Post-R251; **defer `checkRideMovement`** (full local order for **`-0xd0`** + vec/Mtx homes);
