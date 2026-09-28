@@ -345,7 +345,15 @@ TShiningStone::TShiningStone(const char* name)
 	unk73 = 0;
 }
 
-u32 TMammaBlockRotate::touchWater(THitActor*) { return 0; }
+u32 TMammaBlockRotate::touchWater(THitActor*)
+{
+	if (isState(1)) {
+		mRotation.y += mRotSpeed;
+		if (mRotation.y > mRotEnd)
+			mState = 2;
+	}
+	return 1;
+}
 
 void TMammaBlockRotate::control() { }
 

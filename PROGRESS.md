@@ -10920,6 +10920,34 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R261 (`MapObjMamma`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMammaBlockRotate::touchWater`.
+
+- `isState(1)` ist das `? true : false` mit `li 1` / `li 0` / `clrlwi.`.
+  Danach `mRotation.y += mRotSpeed`.
+  `mRotation.y > mRotEnd` ist `fcmpo`+`ble` und setzt `mState` auf 2.
+  Rückgabe ist 1.
+  Kein Zusatzframe.
+  80 Bytes, 20 Instruktionen.
+  `withering`, `TGoalWatermelon::control` und `sinit` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMamma`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.18719 % -> 79.18918 %, matched code 49.92279 % -> 49.92501 % (1792272 -> 1792352, +80).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9634 -> 9635.
+`MapObjMamma` 6740 -> 6820 (+80).
+Kein R170–R260-Unit hat matched code verloren.
+Nur `MapObjMamma` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R260 (`MapObjMamma`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
