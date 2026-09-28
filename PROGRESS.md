@@ -12814,6 +12814,27 @@ spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%
 
 **Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
 
+### R285f (Enemy/Player B; post-R285e, 0× ship)
+
+**Hunt.** Skip R285–R285e thrash, spill **≥99.7%**, Closet/MoveBG; strict **100%** only.
+
+**Ship.** none.
+
+**Optional `consider`.** Retail **`bctr`** on **`mEMDoing`** + inlined **`EM_DOING_WAITING`** stick (**`@4108`/`fctiwz`/`neg` stick**); our **`switch`→`em*()`** — **~94.0%**, **`−0x250` vs `−0x220`** — no trial (structural).
+
+**Probes (~6).**
+
+- **`TEnemyMario::emRunAwayToNearestNode`**: **`getPoint` spill `0x110`**; **`−0x128`** — **~98.1%** — deferred.
+- **`TEnemyMario::emWaitingToInviteMario`**: graph **`getPoint`→`mPosition`** stack **`0x8c`** — **~95.7%** — deferred.
+- **`TEnemyMario::initEnemyValues`**: init loop **`−0x590`/`stmw r18`** vs **`−0x4e8`** — **~94.7%** — deferred.
+- **`TEnemyMario::checkController`**: dist-to-Mario **`stfs` spill `0x50`** — **~99.1%** — deferred.
+- **`TMario::doSliding`**: float save cluster **`−0x98`** — **~98.5%** — deferred.
+- **`TSmallEnemy::expandCollision`**: **`lis 0x4330`/`xoris`** pair spill **`0x58`** — **~98.6%** — deferred.
+
+**Tip (R285f).** Match **`consider`** by restoring the **jump-table monolith** (inlined cases), not by inlining only **`setStickToAngle`** into the current dispatcher.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
 ### R258 (Aufgabe B; defer GraphGroup/ColumSand pool + diversify, 0× ship)
 
 **Hunt.** Post-R257 dry; **defer `TGraphGroup::perform`** (empty **`TGraphWeb::perform` DCE**) and
