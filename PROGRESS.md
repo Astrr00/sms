@@ -12352,6 +12352,27 @@ spill **≥99.7%**, R251–R262 thrash, stuck lists, empty TUs, Closet/MoveBG; c
 
 **Verify.** `ninja changes_all` ggü. baseline (**9276**): **+0** (**9276** unchanged).
 
+### R267 (Aufgabe B; Dango frame pad, 0× ship)
+
+**Hunt.** Post-R266 dry (**9276**); optional finish **`TDangoHamuKuri::calcRootMatrix`**; prefer clear
+opcode/data wins; skip spill **≥99.7%**, R251–R262 thrash, empty TUs, Closet/MoveBG; cap ~8; strict **100%**
+only.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8).**
+
+- **`TDangoHamuKuri::calcRootMatrix`**: **`char pad[0x30]`** (not **`trash[0x48]`**) → retail **`stwu -0xa8`**
+  aligns; still **99.8%** — **`TMsRange`** spills **`0x54`/`0x58`**, **`Mtx`** at **`0x24`**, **`f1`/`f2`**
+  load order on position — deferred.
+- **`TSpineEnemy::setGoalPathFromGraph`** (**`pad[0x14..0x18]`** sweep), **`TGraphWeb::startIsEnd`**
+  (**`r4`/`r5`** locals), spill tier: skipped/reverted.
+
+**Tip (R267).** MWCC stack steps: **`pad[0x30]`** → **`-0xa8`**; **`pad[0x8]`** overshoots to **`-0xc0`** —
+sweep before **`trash[0x48]`** guesses.
+
+**Verify.** `ninja changes_all` ggü. baseline: **+0** matched_functions.
+
 ### R258 (Aufgabe B; defer GraphGroup/ColumSand pool + diversify, 0× ship)
 
 **Hunt.** Post-R257 dry; **defer `TGraphGroup::perform`** (empty **`TGraphWeb::perform` DCE**) and

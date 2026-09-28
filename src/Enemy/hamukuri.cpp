@@ -1703,8 +1703,8 @@ void TDangoHamuKuri::setRunAnm()
 
 void TDangoHamuKuri::calcRootMatrix()
 {
-	char trash[0x48]; // matching: stack frame (TODO: still ~99.8%)
-	(void)trash;
+	char pad[0x30]; // matching: stack frame
+	(void)pad;
 
 	getModel()->setBaseScale(mScaling);
 

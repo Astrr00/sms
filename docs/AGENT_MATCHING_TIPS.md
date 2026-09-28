@@ -130,6 +130,8 @@ held path). Held translation tweaks use **`takingMtx[0/1/2][3]`** (offsets **`0x
 position from the holder matrix. For the **`unk210 > 360`** reset, **`TMsRange<f32>(10.f, 20.f).rand()`**
 with unary **`-`** matches retail **`rand`** + **`fneg`** better than **`MsRandF`**; residual diffs are
 **`-0xa8`** frame / **`stfd f31`** / spill homes (~**99.8%**).
+**`char pad[0x30]`** at function entry (not **`0x48`**) hits retail **`stwu -0xa8`**; remaining gaps are
+**`TMsRange`** spill slots (**`0x54`** vs **`0x84`**) and **`Mtx local_40`** home (**`0x24`** vs **`0x40`**).
 
 **`TEnemyAttachment::sendMessage`** walks **`mCollisions`** with **`lwz r3, 0x44(r29)`** then
 **`lwzx r4, r3, r31`** (byte offset in **`r31`**, index in **`r30`**). For collisions that are not Mario
