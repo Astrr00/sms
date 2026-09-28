@@ -211,7 +211,7 @@ temp** both get DCE’d; assigning **`BOOL bckPass`** adds stack (**`−0x30`**)
 
 **`TEnemyMario::checkController`**: horizontal dist uses **`fmadds`+`fcmpo`+`frsqrte` Newton** with a **`stfs`/`lfs` spill** before **`stfs`→`0x429c`**; stick tail matches **`emWaiting`** **`lis 0x4330`/`xoris`** pattern for analog dead-zone math.
 
-**`PakkunRootCallback2`**: retail **`stwu −0x90`** and **`stfs`**-builds a **`3×4` scale mtx** at **`r1+0x5c`** (**`@3450`/`@4061`**, **`fdivs 1.0f/unk1B8`**) before **`PSMTXConcat`** — not **`TRotation3f::setScale`** (**`−0x70`**).
+**`PakkunRootCallback2`**: retail **`stwu −0x90`** and **`stfs`**-builds a **`3×4` scale mtx** at **`r1+0x5c`** (**`@3450`/`@4061`**, **`fdivs 1.0f/unk1B8`**) before **`PSMTXConcat`** — not **`TRotation3f::setScale`** (**`−0x70`**). Entry is **`cmpwi`/`stwu`/`bne`** before **`gpCurPakkun`**; a top-level **`Mtx`** + **`if (type&&pakkun)`** breaks branch/`fdivs` schedule (~77%).
 
 **`JGeometry::TRotation3::setQuat` (e.g. fireWanwan TU)**: **`f1`/`f2` register swap** on **`2.0f×quat` muls** and **`.sdata2` literal slots** — header **`// TODO: regswap`**; fix via **MAP-order pool + operand schedule**, not one-line C tweaks.
 

@@ -12917,6 +12917,27 @@ spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%
 
 **Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
 
+### R285k (Enemy/Player B; PakkunRootCallback2, 0× ship)
+
+**Hunt.** Optional **`PakkunRootCallback2` manual `stfs` mtx**; else **≤200B**; skip **`emWaiting`**, **`setQuat` thrash**, spill **≥99.7%**, Closet/MoveBG; strict **100%** only.
+
+**Ship.** none.
+
+**Trial (reverted).** **`PakkunRootCallback2`**: **`Mtx` + ordered `scaling[][]` stores — **~76.9%** (control-flow/`−0x78` vs **`−0x90`**, early **`cmpwi`/`bne`** shape) — reverted.
+
+**Probes (~6).**
+
+- **`PakkunRootCallback2`**: retail **`stfs`** path — **~98.1%** baseline (180B) — deferred.
+- **`PakkunRootCallback`**: **`−0x90`** mtx — **~95.6%** (356B) — deferred.
+- **`PakkunSeedCallback`**: joint scale — **~88.7%** (272B) — deferred.
+- **`TPakkun::load`**: spill layout — **~99.7%** (192B) — spill skip.
+- **`TTamaNoko::requestShadow`**: shadow setup — **~93.2%** (476B) — deferred.
+- **`TNervePakkunGenerate::execute`**: generate nerve — **~98.8%** (508B) — deferred.
+
+**Tip (R285k).** **`PakkunRootCallback2`**: prologue is **`cmpwi type` → `stwu −0x90` → `bne` exit** even when skipping work; matrix only when **`type==0` && `gpCurPakkun`** — **`Mtx` local alone** reorders branches (**`beq`/`fdivs`** drift).
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
 ### R258 (Aufgabe B; defer GraphGroup/ColumSand pool + diversify, 0× ship)
 
 **Hunt.** Post-R257 dry; **defer `TGraphGroup::perform`** (empty **`TGraphWeb::perform` DCE**) and
