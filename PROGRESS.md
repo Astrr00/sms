@@ -12898,6 +12898,25 @@ spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%
 
 **Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
 
+### R285j (Enemy/Player B; ≤200B MAP, 0× ship)
+
+**Hunt.** Defer **`emWaiting` `@4108`**; focus **≤200B** (**`PakkunRootCallback2`**, fireWanwan **`setQuat`**); skip **`consider`**, spill **≥99.7%**, Closet/MoveBG; strict **100%** only.
+
+**Ship.** none.
+
+**Probes (~6).**
+
+- **`PakkunRootCallback2`**: manual **`stfs` mtx `0x5c`**, **`fdivs`/`@4061`**, **`−0x90`** vs **`TRotation3f`** — **~98.1%** (180B) — deferred.
+- **`TRotation3::setQuat` (fireWanwan)**: quat **`fmuls`/`fsubs` regswap** + pool — **~98.5%** (160B) — deferred.
+- **`PakkunRootCallback`**: sibling callback **`−0x90`** cluster — **~95.6%** (356B) — deferred.
+- **`PakkunSeedCallback`**: seed joint mtx — **~88.7%** (272B) — deferred.
+- **`TPakkun::load`**: **`gpMarioAddress`** spill layout — **~99.7%** (192B) — spill skip.
+- **`TGessoManager::initSetEnemies`**: ctor/`TNameRef` frame **`−0xe8` vs `−0x18`** — **~81.2%** (188B) — deferred.
+
+**Tip (R285j).** **`PakkunRootCallback2`**: match retail **`stfs`** scale matrix (**`1.0f/unk1B8`** on diagonal), not **`scaling.setScale(1.0f/unk1B8)`** helper path.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
 ### R258 (Aufgabe B; defer GraphGroup/ColumSand pool + diversify, 0× ship)
 
 **Hunt.** Post-R257 dry; **defer `TGraphGroup::perform`** (empty **`TGraphWeb::perform` DCE**) and
