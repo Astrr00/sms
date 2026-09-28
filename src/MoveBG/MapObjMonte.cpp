@@ -18,7 +18,18 @@ BOOL TJumpMushroom::receiveMessage(THitActor*, unsigned long)
 	return TRUE;
 }
 
-void TJumpMushroom::load(JSUMemoryInputStream&) { }
+void TJumpMushroom::load(JSUMemoryInputStream& stream)
+{
+	TMapObjBase::load(stream);
+	s32 value;
+	stream.read(&value, 4);
+	if (mMapCollisionManager != nullptr)
+		mMapCollisionManager->unk8->setAllData(value);
+
+	// Dead slot so MWCC keeps frame -0x28.
+	char trash[1];
+	trash[0] = 0;
+}
 
 // dont_inline: empty stub would otherwise fold into the rope draw.
 #pragma dont_inline on
