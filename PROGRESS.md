@@ -10920,6 +10920,34 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R269 (`MapObjBall`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjBall::makeObjAppeared`.
+
+- Zuerst `TMapObjBase::makeObjAppeared`, dann virtuelles `calcCurrentMtx`.
+  Die Anm-Matrix bekommt `mPosition`, Y plus `mBodyRadius`.
+  Banane `0x40000394`: wenn `mtx[1][1] > 0`, Translation Y minus `50 * mtx[1][1]`.
+  Ananas `0x40000392`: Translation Y minus `10 * (1 - mtx[1][1])`.
+  `unkE8` wird 0.
+  `char trash[8]` hält das Frame bei `-0x28`.
+  248 Bytes, 62 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.20519 % -> 79.212 %, matched code 49.961895 % -> 49.968803 % (1793676 -> 1793924, +248).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9642 -> 9643.
+`MapObjBall` 3452 -> 3700 (+248).
+Kein R170–R268-Unit hat matched code verloren.
+Nur `MapObjBall` hat matched code gewonnen.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R268 (`MapObjBall`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

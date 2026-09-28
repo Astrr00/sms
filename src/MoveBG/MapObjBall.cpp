@@ -77,7 +77,23 @@ void TMapObjBall::makeObjDefault()
 	trash[0] = 0;
 }
 
-void TMapObjBall::makeObjAppeared() { }
+void TMapObjBall::makeObjAppeared()
+{
+	TMapObjBase::makeObjAppeared();
+	calcCurrentMtx();
+	MtxPtr mtx  = getModel()->getAnmMtx(0);
+	mtx[0][3]   = mPosition.x;
+	mtx[1][3]   = mPosition.y + mBodyRadius;
+	mtx[2][3]   = mPosition.z;
+	if (isActorType(0x40000394) && mtx[1][1] > 0.0f)
+		mtx[1][3] -= 50.0f * mtx[1][1];
+	if (isActorType(0x40000392))
+		mtx[1][3] -= 10.0f * (1.0f - mtx[1][1]);
+	unkE8 = 0;
+
+	char trash[8];
+	trash[0] = 0;
+}
 
 void TMapObjBall::control() { }
 
