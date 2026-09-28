@@ -12938,6 +12938,25 @@ spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%
 
 **Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
 
+### R285l (Enemy/Player B; diversify off Pakkun/emWaiting, 0× ship)
+
+**Hunt.** Fresh **Player/Enemy** MAP targets; skip **R285–R285k Pakkun/`emWaiting`/`setQuat` thrash**, spill **≥99.7%**, Closet/MoveBG; strict **100%** only.
+
+**Ship.** none.
+
+**Probes (~6).**
+
+- **`TMario::warpRequest`**: **`−0x68`** / arg save — **~99.6%** (240B) — deferred.
+- **`TMario::jumpCatch`**: **`−0x30`** hold/catch — **~99.6%** (696B) — deferred.
+- **`TMario::checkSink`**: **`@4214` zero burst** + **`loserExec`**; **`−0xa0`** — **~99.6%** (796B) — deferred.
+- **`TTelesa::calcRootMatrix`**: matrix float save **`−0x140`** — **~99.6%** (520B) — deferred.
+- **`TBossMantaManager::TMantaBattleState::update`**: **`@1490` pool** + battle switch — **~99.6%** (788B) — deferred.
+- **`TNerveSmallEnemyHitWaterJump::execute`**: water-jump nerve **`−0x90`** — **~99.3%** (520B) — deferred.
+
+**Tip (R285l).** Off Pakkun sticks: **`TMario::checkSink`** death branch is anchored by **`@4214` `.sdata2` zero** stores into speed fields — pool slot must match **`MarioMove` TU order**, same class of issue as **`enemyMario` `@4108`**.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
 ### R258 (Aufgabe B; defer GraphGroup/ColumSand pool + diversify, 0× ship)
 
 **Hunt.** Post-R257 dry; **defer `TGraphGroup::perform`** (empty **`TGraphWeb::perform` DCE**) and
