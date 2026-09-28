@@ -11139,6 +11139,28 @@ torocco/sound, prior deadlocks.
 
 **Verify.** `ninja baseline` / `changes_all` ohne Code-Delta; `dtk shasum -c` → OK.
 
+### R170 (Aufgabe B; stack-shrink / Scanner / Nerves, keine Vollmatches)
+
+**Pivot (User).** Kein weiteres post-`TVec3`-Trash auf Skip-Liste
+(`moveObject`, `hitWater`, `getRumblePow`, `resetToPosition`, `bind`,
+`FireWanwanDie`, `OneShotGenerator`, …).
+
+**Stack-shrink / Scanner (~8, revertiert).** `TNerveBPTouchDown`: `goalY` ohne
+`TVec3` → **93,8 %**; `trashAfterGoal[8]` → Frame **−0x60** (Ziel **−0x48**).
+`TMario::initParticle`: explizite `r31`/`r30`-Schleife statt `SMS_LoadParticle` →
+**93,4 %**. `TAmenbo::calcRootMatrix` / `TNerveBPPivot`: `trash[4]` nach Matrix/
+`delta` (mit `trash[0]=0`) → Spill **−0x4** unverändert. `TConductor::makeEnemyAppear`:
+Entry-`trash[4]` → Frame **−0xa0** (Ziel **−0x98**). `TMario::slippingBasic`:
+Frame **−0x58** vs. **−0x80** (kein emitSweat-Pad). `TPakkunSeed::loadInit` /
+`TStayPakkun::load`: Entry-Pad aus R169-Thread revertiert (99,9 % / 99,8 %).
+
+**Nerves / Player.** `TNerveBPPreDie` / `TNerveBPStompReact`: große Frame-Lücken
+(inline/UNUSED). `TNerveFireWanwanTurn`: strukturell (Graph-Pointer), kein Pad.
+
+**Vollmatch, strikt.** keine. Letzter Code-Win: **`TMario::emitSweat`** (`7c52cd87`).
+
+**Verify.** `ninja baseline` / `changes_all` ohne Code-Delta; `dtk shasum -c` → OK.
+
 ### R168 (Aufgabe B; 1 Vollmatch Player/MarioParticle)
 
 **Vec-Spill (R166-Stil).** `TMario::emitSweat`: nach `pos`-Lokal
