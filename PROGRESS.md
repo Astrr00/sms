@@ -11158,6 +11158,26 @@ torocco/sound, prior deadlocks.
 
 **Verify.** `ninja baseline` / `changes_all` ohne Code-Delta.
 
+### R179 (Aufgabe B; fresh B-scope entry pad, keine Vollmatches)
+
+**Hunt.** Bosseel / fireWanwan / hinokuri2 / gesso / amenbo / namekuri / Player
+`jumpProcess`; entry `trash[8/0x10/0x20/0x28]` + `trash[0]=0` (WallDie-Familie).
+
+**Skip (User + R178).** R178-Probe-Fails (`BoundFreeze`, `PoihanaThrow`, `BGKDive`,
+`BGKSleep`, `MantaHitWater`, `MantaSpawn`, `BGKSleepDamage`, `BathtubKillerBreak`)
++ R177/Prior-Skips (`Hino2Die`, `NKFollowMario`, `GessoTurn`, `FireWanwanDie`, …).
+
+**Probes (~8, revertiert).** `TNameKuri::setMeltAnm`/`setDeadAnm` (`0x20`/`0x28` →
+Frame/Spill); `THinokuri2::receiveMessageLv1` (`0x10`); `TBEelTears::perform` /
+`TBEelTearsDrop::perform` (`0x10`); `TMario::jumpProcess` (`0x10`/`0x20`);
+`TNerveFireWanwanTurn` (`0x18`); `TGesso::pollute` (`0x10`);
+`TNerveBossEelMouthOpenWait` (`0x28` → Frame OK, Spill ~13×); `TNameKuriLauncher::stateLaunch`
+(`0x14`).
+
+**Vollmatch, strikt.** keine. Quellbaum unverändert ggü. **`11513f98`**.
+
+**Verify.** `ninja baseline` / `changes_all` ohne Code-Delta.
+
 ### R177 (Aufgabe B; nerve entry +8, 1 Vollmatch)
 
 **Hunt.** Frische B-scope-Nerves/Player (nicht Water/Manager-R176); entry
