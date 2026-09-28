@@ -63,6 +63,17 @@ Hoisting two `Mtx` locals at entry overshoots the frame (`-0xe0`) and pushes vec
 Retail layout needs the full local home ordering (vec at `0xb0`, `Mtx` at `0x3c`/`0x80`, `stfd` at
 `0xc0`), often tied to inlined `checkRideReCalc` — not frame padding alone.
 
+`TMarioEffect::setJumpIntoWaterEffectSmall` inlines the `getThing()` slot pick at the top ( **`li r29,
+-1`**, then **`unk6C[0/1]`** tests) while loading the TU string pool **`@1490`** into **`r31`** before
+the first **`cmpwi`**.
+Animation names are passed as **`addi r4, r31, 0x14c`** (`"04_tobikomi"` in `MarioEffect` rodata), not
+as freestanding `"04_tobikomi"` literals.
+After **`MTXConcat`**, retail does **`slwi r29, r29, 2`**, **`add r30, r28, r29`**, and uses **`lwzu
+r3, 0x74(r30)`** for the **`MActor*`**, then **`add r3, r28, r29`** + **`stw r0, 0x6c(r3)`** for
+**`unk6C[idx] = 1`** — the shifted index is reused for both **`unk74[]`** and **`unk6C[]`** addressing.
+Calling header-inline **`getThing()`** or casting **`this+0x74`** in C without matching that schedule
+leaves **`stwu -0xf0`** and pool-offset mismatches (~95% stuck).
+
 ## Ifs
 
 Ifs are always compiled to very simple code:

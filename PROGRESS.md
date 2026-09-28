@@ -12147,6 +12147,39 @@ still diverges (extra **`b`** / frame); needs UNUSED-inline-sized stack or flag 
 
 **Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged).
 
+### R256 (Aufgabe B; hard diversify data/pool + Player FX, 0× ship)
+
+**Hunt.** Post-R255 dry; skip **`TNerveSmallEnemyJump`** + R251–R255 thrash/stuck lists; prefer
+**`@1490`/string pool**, Player camera/FX/helpers, Enemy managers; empty TUs / Closet / MoveBG off;
+**`ninja baseline`** + **`changes_all`**; cap ~8; strict 100% only.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, no-ship).**
+
+- **`TMarioEffect::setJumpIntoWaterEffectSmall`**: **95.2%** — retail inlines slot pick + loads
+  **`@1490`** into **`r31`**, **`setBck`…`setBrk`** via **`r31+0x14c`**, **`slwi`/`lwzu`/`add`**
+  **`unk74`/`unk6C`** schedule; header **`getThing()`** + literal **`"04_tobikomi"`** ⇒ **`-0xe8`**
+  frame, wrong pool reg; inlined **`getThing()`** alone still **95.2%**; **`byteOff`/`MActor*`** cast
+  path regressed to **68.9%** — reverted.
+- **`TMarioEffect::setJumpIntoWaterEffect`**, **`init`**: **97.7%** / **98.5%** — same pool/frame
+  class; defer bundled with Small.
+- **`TEnemyManager::createEnemies`**: **98.8%** — **`@3758`** rodata + **`-0xb0`** frame; opcode
+  **`lwz`/`cmpw`** order on **`unk10`/`unk38`** only with frame fix.
+- **`TMario::toroccoEffect`**, **`surfingEffect`**, **`TBubbleCallBack`**: **99.x%** — stack **`~`**
+  only (**`-0x90`** vs **`-0x88`**).
+- **`CLBCalcPointInCubeRatio`**, **`CLBIsPointInCube`**: **98.4%** / **98.5%** — camera float helpers;
+  **`fneg`/`lfsx`** operand scheduling + large frame delta; defer.
+- **`TEffectColumWater::generate`**, **`TEffectObjBase::perform`**: **91.9%** / **90.8%** — structural,
+  not quick pool wins.
+- **`TEnemyManager::copyAnemMtx`**: skipped (R251–R255 exhausted list).
+
+**Tip (R256).** See **`docs/AGENT_MATCHING_TIPS.md`** — **`setJumpIntoWaterEffectSmall`** needs TU
+**`@1490+0x14c`** string refs and post-**`MTXConcat`** **`slwi`** actor/**`unk6C`** addressing, not
+**`getThing()`** + freestanding literals.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged).
+
 ### R254 (Aufgabe B; defer wait MAP ambiguity + EP diversify, 0× ship)
 
 **Hunt.** Post-R253; optional **`waitingCommonEvents`** only if MAP-clear **`IConverge`** + **`rlwinm`**;
