@@ -58,7 +58,33 @@ void THorizontalViking::updateTrans() { }
 
 void THorizontalViking::moveNormal() { }
 
-void THorizontalViking::control() { }
+void THorizontalViking::control()
+{
+	TMapObjBase::control();
+	switch (mState) {
+	case 1:
+		unk144 -= unk13C;
+		unk148 += unk144;
+		if (unk148 < 0.0f)
+			mState = 2;
+		break;
+	case 2:
+		unk144 += unk13C;
+		unk148 += unk144;
+		if (unk148 > 0.0f)
+			mState = 1;
+		break;
+	}
+	mPosition.x
+	    = unk138 * sinf(3.14f * (unk148 / 180.0f)) + mInitialPosition.x;
+	f32 yOff = mYOffset;
+	mPosition.y
+	    = yOff
+	      + (unk138 * (1.0f - cosf(3.14f * (unk148 / 180.0f)))
+	         + mInitialPosition.y);
+	char trash[4];
+	trash[0] = 0;
+}
 
 void THorizontalViking::reset()
 {
