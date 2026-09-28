@@ -11139,6 +11139,25 @@ torocco/sound, prior deadlocks.
 
 **Verify.** `ninja baseline` / `changes_all` ohne Code-Delta; `dtk shasum -c` → OK.
 
+### R178 (Aufgabe B; entry frame-pad sweep, keine Vollmatches)
+
+**Hunt.** Weitere B-scope-Nerves/Player; entry `trash[8/0x10/0x20]` + `trash[0]=0`
+(WallDie-Familie).
+
+**Skip (User + R177).** R177-Probe-Fails (`BPStompReact`, `PakkunGenerate`,
+`BPWaitL`, `BPFly`, `GessoTurn`, `BPTumbleOut`, `FireWanwanDie`, `Hino2Die`,
+`NameKuri::reset`, `NKFollowMario`) + Prior-Skips (Water/Manager, `WalkerEscape`,
+`BPTouchDown`, …).
+
+**Probes (~8, revertiert).** `TNerveHamuKuriBoundFreeze` (`trash[8]` → 99.8%);
+`TNervePoihanaThrow` (entry/inner `trash[0x10]`); `TNerveBGKDive`/`TNerveBGKSleep`
+(`0x10`/`0x20`); `TNerveMantaHitWater`/`TNerveMantaSpawn` (`8`); `TNerveBGKSleepDamage`
+(`0x10`); `TNerveBathtubKillerBreak` (`4`/`8`, Frame schon −0x30).
+
+**Vollmatch, strikt.** keine. Quellbaum unverändert ggü. **`33ec0c9c`**.
+
+**Verify.** `ninja baseline` / `changes_all` ohne Code-Delta.
+
 ### R177 (Aufgabe B; nerve entry +8, 1 Vollmatch)
 
 **Hunt.** Frische B-scope-Nerves/Player (nicht Water/Manager-R176); entry
