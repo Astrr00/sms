@@ -174,6 +174,11 @@ comparisons to steer regs — breaks **`addi r31,r4`**. **`#pragma dont_inline`*
 raises fuzzy **%** but emits **`addi r31,r3`** / extra **`bl`** — not a ship path. **`TEnemyAttachment::perform`**
 (**100%**, **`trash[8]`**, **`-0x30`**) uses **`graphics`** on real paths; PolluteModel ignores **`graphics`** today.
 
+**`TSmallEnemy::genEventCoin`**: when **`mCoin`** is set, retail tests the **coin’s** **`mActorType`**
+(**`lwz r3, 0x4c(r4)`** with **`r4 = mCoin`**) for **`0x2000000E`**, not **`isActorType`** on **`this`**
+(**`0x4c(r30)`**). Use **`mCoin->mActorType == 0x2000000E`** (or equivalent **`subis`/`cmplwi`** shape);
+frame/spill may still block ship.
+
 **`TEnemyAttachment::sendMessage`** walks **`mCollisions`** with **`lwz r3, 0x44(r29)`** then
 **`lwzx r4, r3, r31`** (byte offset in **`r31`**, index in **`r30`**). For collisions that are not Mario
 and not **`unk160`**, retail calls **`TEnemyAttachment::kill()`** via **`this`**'s vtable **`+0xe4`**, not

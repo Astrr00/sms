@@ -12591,6 +12591,24 @@ spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%
 
 **Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
 
+### R279 (Aufgabe B; diversify Enemy/Player, defer PolluteModel perform, 0× ship)
+
+**Hunt.** Post-R278 dry (**9275**); **defer `TEnemyPolluteModel::perform`** (frame vs **`r30`/`r31`**); diversify
+Enemy/Player opcode/data wins; skip **bind**/Dango/setGoal, spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG;
+cap ~8; strict **100%** only.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~6).**
+
+- **`TSmallEnemy::genEventCoin`**: **`mCoin->mActorType == 0x2000000E`** — fixes retail **`lwz … 0x4c(r4)`** vs **`(r30)`**; **~97%** (frame **`−0x108`**) — **kept** (semantic).
+- **`TNerveSmallEnemyJump`**: **`0x8000` / `mVelocity` / `mSLJumpForce`** probe — **~98.8%**, **`cmpwi` vs `clrlwi`** — reverted.
+- Scanned **pakkun/coaster/telesa/tamaNoko/fireWanwan** — mostly frame/spill or reg prologue; no strict ship.
+
+**Tip (R279).** **`genEventCoin`** event-coin branch keys off **`mCoin->mActorType`**, not the enemy’s type — diff **`0x4c(r4)`** vs **`0x4c(r30)`** is a quick opcode tell.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
 ### R258 (Aufgabe B; defer GraphGroup/ColumSand pool + diversify, 0× ship)
 
 **Hunt.** Post-R257 dry; **defer `TGraphGroup::perform`** (empty **`TGraphWeb::perform` DCE**) and
