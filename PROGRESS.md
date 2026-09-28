@@ -11488,6 +11488,48 @@ als Member-Name. Check: **`decomp-diff -u … -t object -s nonmatching`**.
 **Verify.** `ninja changes_all` ggü. **`cf903cfc`**; **`namekuri` matched_data
 70.86% → 100%**; **`build.sha1` OK**.
 
+### R224 (Aufgabe B; EP rodata / small `.text`, 0× ship)
+
+**Hunt.** Post-**`90d09d0d`**; skip R222–R223 failures + stuck lists
+(**`NameKuriLand`**, **`getRumblePow`**, **`createEnemies`**, **`perform`**, DebuTelesa,
+MtxCalc, WaterGun/Tongue/RiccoHook, Closet/MoveBG); prefer ≤200 B / data-only;
+MAP string order / **`nullptr`** / PARAM / float-split / bogus-**`virtual`**; cap ~8.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, reverted / no-ship).**
+
+- **EP object scan:** only **`.ctors`** blobs — **`MarioDraw` `@5888`**, **`MarioMove`
+  `@6662`/`@6663`** (jump/control-flow), **`bossManta` `@2805`** (12 B), empty
+  **`koopajr`/`limitkoopajr`** (skipped).
+- **`bossManta` `@2805`/`@2807`:** retail **`.rodata` `0xE0…0xF7`** = zero **`Vec3`**
+  + **`(1,1,1)`** between mtx-calc strings and **`@2983`** damage-sound pool;
+  **`static f32[3]`** pools **before `TNerveMantaHitWater`** place bytes at **`0xE0`**
+  but objdiff labels **`@2807` missing** (only **`0x178…`** tail skew, +19 B);
+  **`MapCollisionEntry.hpp`** before **`InfectiousStrings`** → **`@2805`/`@2807`
+  **100%** labels but **rodata shuffle from `0xC`** (reverted).
+- **`TBossManta::getPolluteRadius`** (99.5%, 124 B): retail **`stwu -0x28`** +
+  **`lfs` order** (`param`×`scale`) vs our **`-0x20`** — stack/scheduling (defer).
+- **`TGraphWeb::startIsEnd`** (98.8%, 120 B): **`r4`/`r5`** swap on graph node
+  loads — not a string/**`nullptr`** fix.
+- **`TSpineEnemy::calcRootMatrix`** (`enemy.cpp`, 97.1%, 156 B): frame **`0x30`**
+  vs **`0x28`** — skipped (stack thrash).
+- **`TConductor::getManagerByName`** (99.6%, 188 B): strcmp loop scheduling — not
+  pursued.
+- **`fireWanwan` / `graph::perform` / `Yoshi::getEmitPosDir`:** on R222 skip list.
+- **Retail TU pattern:** **`bosseel`/`Amenbo`** share same **12+12 B** padding after
+  mtx strings when **`InfectiousStrings`** + early **`.data`** follow — **`bossManta`**
+  lacks **`bastable`** string block at that slot.
+
+**Tip (R224).** For **`@2805`/`@2807`**, match **Amenbo** include closure
+(**`MapCollisionEntry` before `InfectiousStrings`**) *and* emit the **`f32[3]`**
+  pools **immediately before** the nerve that owns the next rodata pool
+  (**`@2983`** / **`hitSounds[]`**). Label **100%** without full **`.rodata`**
+  equality still fails if later pools shift — verify with **binary `.rodata`**
+  compare, not objdiff object names alone.
+
+**Verify.** `ninja baseline` + `ninja changes_all` ggü. **`90d09d0d`** — **no diff**.
+
 ### R223 (Aufgabe B; nerves / helpers / enemymanager, 0× ship)
 
 **Hunt.** Post-**`f185af2f`**; avoid R222 re-probes + stuck lists; target
