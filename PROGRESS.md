@@ -12435,6 +12435,25 @@ empty TUs, Closet/MoveBG; cap ~8; strict **100%** only.
 
 **Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
 
+### R271 (Aufgabe B; bind checkGround/wall + epilogue, 0× ship)
+
+**Hunt.** Post-R270 dry (**9275**); continue **`TEnemyAttachment::bind`** (prologue **`recoverScale`/`getNowGravity`**
+kept); prefer opcode wins; skip Dango pad, **`setGoalPathFromGraph`** ctor thrash, spill **≥99.7%**, stuck lists,
+empty TUs, Closet/MoveBG; cap ~8; strict **100%** only.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8).**
+
+- **`TEnemyAttachment::bind`**: **`&mGroundPlane`** on **`checkGround`** (**`addi r4, 0xc4`**); wall
+  **`TBGWallCheckRecord(x, y+mHeadHeight, z, …)`** — **~82.9%** (was **~78.5%**); open: **`stfd f31`**, **`-0x78`**
+  frame, **`TVec3::sub`** epilogue vs folded **`lfs`**; **`dont_inline`** velocity helper regressed; **`pad[0x10]`** noop on **%**.
+
+**Tip (R271).** **`bind`**: ground query writes plane through **`mGroundPlane`**, not a local pointer; wall struct prefers
+scalar ctor over **`TVec3`** temp.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0** (**bind** fuzzy **78.5% → 82.9%**).
+
 ### R258 (Aufgabe B; defer GraphGroup/ColumSand pool + diversify, 0× ship)
 
 **Hunt.** Post-R257 dry; **defer `TGraphGroup::perform`** (empty **`TGraphWeb::perform` DCE**) and
