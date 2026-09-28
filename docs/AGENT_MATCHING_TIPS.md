@@ -231,7 +231,7 @@ temp** both get DCE’d; assigning **`BOOL bckPass`** adds stack (**`−0x30`**)
 
 **`SMS_IsMarioOnWire`** (R285t/R285u): leaf function, no **`stwu`**; first **`lwz`→`r0` @ `0x68(r3)`** then **`cmplwi`/`beq`**; second **`lwz r3,0x68(r3)`** before **`0x4c`**; bool **`clrlwi r0`/`neg`/`subfe`/`clrlwi r3`** — **`bool ret` + `!!ret`** (~93.8%) beats **`return r0`** (~84%); **`mario` local `&&`** does not fix **`r0` vs `r3`** on the first holder load. Defer in dry rounds (R285v+).
 
-**`TCommonLauncher::init`** (R285v): after **`@1664`** setup, load **`unk168(r31)` into `r29` before `bl rand`**, then **`xoris r0,r29`** for the **`double`/`f64` jitter** — not **`rand` first** then reload **`0x168`** for **`xoris`**.
+**`TCommonLauncher::init`** (R285v/R285w): after **`@1664`** setup, load **`unk168(r31)` into `r29` before `bl rand`**, then **`xoris r0,r29`** for the **`double`/`f64` jitter** — not **`rand` first** then reload **`0x168`** for **`xoris`**. Source shape **`s32 period = mLaunchPeriod; mLaunchCooldown = rand() * (1.f / (RAND_MAX + 1)) * period;`** matches the **`rand`/`xoris`/`fctiwz`** cluster; remaining gap is retail **`stwu -0xb0`** vs **`-0xa8`** (iterator spill homes), not the multiply.
 
 **`TSpineEnemy::setGoalPathFromGraph`**: retail **`−0x60`**, **`getPoint` into `r1+0x48`**, manual **`stw`** cluster **`0x38–0x44`**, then member **`stw`** to **`unkF4`/`unk104`** — **`TPathNode(local_48)` + assign** shrinks frame and regresses (~**29%** if forced to **`Vec`** writes without stack layout).
 

@@ -13151,6 +13151,28 @@ spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%
 
 **Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
 
+### R285w (Enemy/Player B; optional launcher init, 0× ship)
+
+**Hunt.** Optional **`TCommonLauncher::init`** (**`lwz 0x168` before `rand`**, no frame fakematch); else **~6** fresh MAP; skip **R285 thrash**, **wire**, spill **≥99.7%**, Closet/MoveBG; strict **100%** only.
+
+**Ship.** none.
+
+**Init (`launcher`).** **`s32 period = mLaunchPeriod;`** + **`rand() * (1.f / (RAND_MAX + 1)) * period`** (nonmatching TU) — **`rand`/`xoris`/`fctiwz`** cluster matches retail; still **`stwu -0xb0`** vs **`-0xa8`** and **`r1+0x50`** iterator homes — **~99.9%** (748B) — not promoted.
+
+**Probes (~6).**
+
+- **`conductor` / `TConductor::getManagerByName`**: manager list walk — **~99.6%** (188B) — **`−0x58`** frame only — deferred.
+- **`conductor` / `TConductor::killEnemiesWithin`**: **`@3643`** name table + **`f31`** — **~99.6%** (216B) — **`−0x70`** frame — deferred.
+- **`mameGesso` / `TMameGesso::calcObjCollision`**: **`0x418`/`0x148`** **`lfs`** order + **`fmuls`** temps — **~99.2%** (368B) — deferred.
+- **`poihana` / `TPoiHana::walkBehavior`**: sleep timer **`mulli`/`lwz`** register schedule — **~99.3%** (376B) — deferred.
+- **`enemy` / `TSpineEnemy::goToDirLimitedNextGraphNode`**: graph tracer **`−0xd8`** vs **`−0x90`** — **~99.5%** (432B) — deferred.
+- **`MarioJump` / `TMario::jumpCatch`**: catch window math — **~99.6%** (696B) — deferred.
+- **`conductor` / `TConductor::makeOneEnemyAppear`**: spawn helper — **~99.2%** (404B) — deferred.
+
+**Tip (R285w).** **`TCommonLauncher::init`**: **`period` in `r29` before `bl rand`** is enforced by **`rand() * (1.f/(RAND_MAX+1)) * period`**, not **`MsRandF()`** — fixes the **`lwz 0x168`** / **`xoris r29`** block; **`−0xb0`** frame needs a real spill/inlined neighbor, not **`char trash`**.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
 ### R258 (Aufgabe B; defer GraphGroup/ColumSand pool + diversify, 0× ship)
 
 **Hunt.** Post-R257 dry; **defer `TGraphGroup::perform`** (empty **`TGraphWeb::perform` DCE**) and
