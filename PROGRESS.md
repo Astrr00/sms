@@ -11120,6 +11120,25 @@ Prologue-`trash`) — **100 %**, `+508` B (`changes_all`).
 
 **Verify.** `ninja baseline` / `changes_all`; `dtk shasum -c` → OK.
 
+### R169 (Aufgabe B; post-TVec3 trash sweep, keine Vollmatches)
+
+**Familie (emitSweat / TobiPukuDie / Freeze).** Weitere `char trash[N]` direkt nach
+benanntem `TVec3`/`velocity`/`pos` probiert; nur **reines +8 Frame + +8 Spill**
+(trash **nach** Lokal, vor erster Nutzung) matcht zuverlässig.
+
+**Teilbilder / revertiert (~8):** `TPakkunSeed::moveObject` (`trashAfterVel` → Frame
+**0x40**, Spill noch **−0xc**); `TTobiPuku::hitWater` (Entry **`0x18`** Frame OK,
+`dir`-Cluster weiter off); `TBiancoGateKeeper::getRumblePow` (**+4** Spill, kein
+Win mit `[4]`/`[8]`); `TCoasterEnemy::bind` / `TNerveFireWanwanDie` / `TOneShotGenerator`
+verschlechtert; `TSpineEnemy::resetToPosition` (+4-Spill, named `velocity` hilft nicht).
+
+**Skip (User):** BubbleCallBack, rumblePad, startMonteReplay, walkBehavior, Attack,
+torocco/sound, prior deadlocks.
+
+**Vollmatch, strikt.** keine. Quellbaum unverändert ggü. **`7c52cd87`**.
+
+**Verify.** `ninja baseline` / `changes_all` ohne Code-Delta; `dtk shasum -c` → OK.
+
 ### R168 (Aufgabe B; 1 Vollmatch Player/MarioParticle)
 
 **Vec-Spill (R166-Stil).** `TMario::emitSweat`: nach `pos`-Lokal
