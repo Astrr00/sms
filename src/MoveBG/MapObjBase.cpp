@@ -216,9 +216,14 @@ void TMapObjBase::stopAnim() { }
 void TMapObjBase::startControlAnim(u16 param_1)
 {
 	startAnim(param_1);
-	if (mMapObjData->mAnim && param_1 < mMapObjData->mAnim->unk0)
-		mMActor->getFrameCtrl(mMapObjData->mAnim->unk4[param_1].unk8)
-		    ->setRate(0);
+	TMapObjData* data = mMapObjData;
+	if (data->mAnim && param_1 < data->mAnim->unk0) {
+		// clrlwi overwrites the first mAnim pointer; retail reloads it
+		// from the data pointer kept in r4.
+		const TMapObjAnimDataInfo* anim
+		    = *(const TMapObjAnimDataInfo* volatile*)&data->mAnim;
+		mMActor->getFrameCtrl(anim->unk4[param_1].unk8)->setRate(0);
+	}
 }
 
 void TMapObjBase::startBck(const char* param_1)

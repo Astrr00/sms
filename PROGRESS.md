@@ -10920,6 +10920,23 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R173 (`TMapObjBase::startControlAnim`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+- `TMapObjData* data = mMapObjData` hält `mMapObjData` in `r4`.
+- Zweiter `mAnim`-Load über `*(const TMapObjAnimDataInfo* volatile*)&data->mAnim`
+  nach `clrlwi` (der erste Pointer lag in `r3`).
+- `mMActor` vor `unk4`, Frame `-0x18`, 124 Bytes. Kein Extra-`lwz` von `0x130`.
+
+0 Abweichungen, 124 Bytes, 31 Instruktionen.
+`decomp-diff -u mario/MoveBG/MapObjBase -d startControlAnim`: 100 %.
+
+R172 `TManhole::touchPlayer`, R171 `calcVelocity`, R170 `appearing` unverändert
+strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R172 (`TManhole::touchPlayer`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
