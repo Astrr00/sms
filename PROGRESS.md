@@ -11488,6 +11488,40 @@ als Member-Name. Check: **`decomp-diff -u … -t object -s nonmatching`**.
 **Verify.** `ninja changes_all` ggü. **`cf903cfc`**; **`namekuri` matched_data
 70.86% → 100%**; **`build.sha1` OK**.
 
+### R223 (Aufgabe B; nerves / helpers / enemymanager, 0× ship)
+
+**Hunt.** Post-**`f185af2f`**; avoid R222 re-probes + stuck lists; target
+unmatched **nerves**, **Player helpers** (not **`MarioAccess`/`Yoshi`**),
+**`TEnemyManager`** / manager data; MAP bogus-**`virtual`**; cap ~8.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, no-ship).**
+
+- **Nerves:** **`TNerveNameKuriLand`** (83.9%, 144 B) — retail **`stwu -0x20`** +
+  **`r31=self`** + **`setBckAnm(4)` `blrl`**; **`trash[0x18]`/`r31` name** blew
+  frame to **`-0x38`** (reverted). **`TNerveGessoPollute`** **100%**; **`TNerveBGK*`** /
+  **`fireWanwan`** nerves = stack/control (skipped).
+- **`TBiancoGateKeeper::getRumblePow`** (99.8%, 220 B): **`TVec3 diff`** stack at
+  **`r1+0x18`** vs **`+0x1c`**; **`trash[4]`** before diff → **99.7%** (reverted).
+- **`TEnemyManager::createEnemies`** (98.8%, 340 B): **`@3758`** vs **`@1754`**
+  debug pool + **`0xb0` vs `0xa8`** frame — emission/stack, not nullptr table.
+- **`TEnemyManager` objects / `enemymanager` `.data`:** **100%** (no manager data
+  gap).
+- **MAP bogus-`virtual`:** no new **`Subclass::method`** without MAP symbol
+  (post-R212 **`TRiccoHookManager`**); **`TGessoPolluteObj`/`TEnemyPolluteModel`**
+  vtables **100%**.
+- **`createModelData`:** **`gesso`/`hamukuri`/`effectObj` colum managers** **100%**
+  (entry pool labels differ only).
+- **`TEffectObjBase::perform`:** not re-tried (R222 defer).
+
+**Tip (R223).** Small **nerves** that call **`setBckAnm`/`checkCurAnmEnd` via
+vtable** often need **`r31 = body`** and **`0x20`** stack like retail
+**`TNerveNameKuriLand`** — same class as **`TEffectObjBase::perform`** (frame
+before virtual **`blrl`**), not a BCK string typo.
+
+**Verify.** `ninja changes_all` ggü. **`f185af2f`** — **no diff**.
+
 ### R222 (Aufgabe B; small EP `.text` ASM patterns, 0× ship)
 
 **Hunt.** Post-**`8de329bc`**; diversify off dry **`@NNNN`** data hunts — prefer
