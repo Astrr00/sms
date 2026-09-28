@@ -11321,6 +11321,40 @@ unverändert ggü. **`63f8cdc0`**.
 
 **Verify.** `ninja baseline` / `changes_all` ohne Code-Delta.
 
+### R191 (Aufgabe B; B-scope spill/Frame, keine Vollmatches)
+
+**Hunt.** Enemy/Player außer R188–R190-Dry; kleine `receiveMessage`/`perform`/`emit*`
+mit Entry-Trash exaktem Frame-Δ oder Emit-Zwei-Zeiler; strikt 100 %, Cap ~8.
+
+**Skip (User + Prior).** `getEmitPosDir`, `surfingEffect`, `getNowGravity`,
+`createModelData`, `getPolluteRadius`, `toroccoEffect`, `TBubbleCallBack`, R187+
+(`thinkSituation`, `TBossEelAwaCollision::behaveToMario`, …).
+
+**Scanner.** 114× **97–99,9 %** / ≤400 B (Enemy/Player); **0** mit nur ≤3 `~`, 0 `|`,
+≤120 B. Viele **99,8 %** = einheitliches **+4**-Stack-Spill (`TVec3`/`Mtx`) oder
+**Frame-Δ 0x10** (`tryTake` −0x38 vs −0x28).
+
+**Probes (~8, revertiert / no-ship).**
+
+1. **`TBossEelAwaCollision::behaveToMario`:** manuelle `x/y/z` + `trash[4/8]` →
+   Frame OK mit `trash[8]`+Ctor, Vektor bleibt **0x10** vs Retail **0x14** (nur `~`);
+   `trash[8]` ohne Ctor verschlechtert Frame.
+2. **`TBiancoGateKeeper::getRumblePow`:** Feldweise `diff` statt `= mPosition` →
+   **59 %** (Retail **`lwz`/`stw`**-Kette, kein `operator-=`-Inline).
+3. **`TEnemyMario::tryTake`:** `s32`-Loop-Index → unverändert **99,8 %** (Frame).
+4. **`THamuKuri::setMActorAndKeeper`:** verbleibendes `~` = **Rodata** `addi r4,r31`
+   **0x360** vs **0x370** (`@1490`), nicht Member-Offset.
+
+**Vollmatch, strikt.** keine (letzter Ship: R189 `emitGetWaterEffect`).
+
+**Tip (R191).** Bei **gleichem `stwu`-Frame** aber **+4**-Spill: Retail oft **ohne**
+`TVec3`-Ctor/`add()` — skalare **`stfs`**-Kette und **`gpMarioSpeedY` zwischen
+`y`-Writes** (siehe `bosseel.s` `behaveToMario`); Entry-`trash[4]` schiebt nur
+bei **Ctor**-Layout von 0x10→0x14, nicht allein. **Frame −0x10 zu groß** (`tryTake`):
+nicht Entry-Trash — fehlende Register-Loop wie Retail (`li r30`/`r31`).
+
+**Verify.** `ninja baseline` / `changes_all` ohne Code-Delta ggü. **`af522fc7`**.
+
 ### R190 (Aufgabe B; emit-helper hunt, keine Vollmatches)
 
 **Hunt.** MarioParticle `emitAndBindToPosPtr` / `emitAndBindToMtxPtr` mit
