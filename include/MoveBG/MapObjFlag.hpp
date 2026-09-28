@@ -49,6 +49,9 @@ public:
 	void draw();
 
 	static f32 mFlutterSpeed;
+
+	// Retail `new TMapObjFlag` is 0xC0. Field init belongs to the parked ctor.
+	/* 0x68 */ u8 unk68[0x58];
 };
 
 class TMapObjFlagLower : public TMapObjFlag {

@@ -10920,6 +10920,35 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R212 (`MapObjMamma`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMammaYacht::initMapObj` ohne `SMatrix34C`-Leer-Konstruktor.
+`TRevolvingFenceInner::setGroundCollision` bleibt geparkt (Matrix-Slot `0x34` statt `0x38`).
+
+- `TMammaYacht::unk138` ist `TMapObjFlag*`.
+  `initMapObj` legt `new TMapObjFlag("旗")` an (Größe `0xC0`, POD-Pad in `TMapObjFlag`).
+  Position ist `(2 + x, (1315 + y) - 190, z - 15)`, Rotation `(0, 180, 0)`, Scale `(1, 2.5, 3.8)`, dann `init("MammaYacht00")`.
+  Ein lokales Inline gruppiert die drei Stores, damit MWCC `stfsu` emittiert.
+  `TVec3::set(f32, f32, f32)` ist `dont_inline`.
+  212 Bytes, 53 Instruktionen.
+  `TMammaYacht::control` und `__sinit_MapObjMamma_cpp` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMamma`: PASS.
+Acht bestehende UNUSED-Größenwarnungen.
+`mario/MoveBG/MapObjFlag`: PASS.
+Vier bestehende UNUSED-Größenwarnungen.
+`MapObjBase.hpp` unverändert.
+
+`ninja changes_all`: fuzzy 78.93934 % -> 78.94513 %, matched code 49.661736 % -> 49.66764 % (1782900 -> 1783112, +212).
+Matched data bleibt 65.2486 % (417807).
+Funktionen matched 9579 -> 9580.
+`MapObjMamma` 5544 -> 5756 (+212).
+Kein R170-R211-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R211 (`MapObjFence`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

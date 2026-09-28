@@ -1,5 +1,6 @@
 #include <MoveBG/MapObjMamma.hpp>
 #include <MoveBG/MapObjBall.hpp>
+#include <MoveBG/MapObjFlag.hpp>
 #include <MoveBG/MapObjWave.hpp>
 #include <JSystem/JDrama/JDRNameRefGen.hpp>
 #include <Map/Map.hpp>
@@ -302,6 +303,14 @@ TMammaBlockRotate::TMammaBlockRotate(const char* name)
 {
 }
 
+// Groups the three stores so MWCC emits stfsu. TVec3::set(f32, f32, f32) is dont_inline.
+static inline void setYachtVec(JGeometry::TVec3<f32>& v, f32 x, f32 y, f32 z)
+{
+	v.x = x;
+	v.y = y;
+	v.z = z;
+}
+
 void TMammaYacht::control()
 {
 	TMapObjBase::control();
@@ -312,7 +321,17 @@ void TMammaYacht::control()
 	}
 }
 
-void TMammaYacht::initMapObj() { }
+void TMammaYacht::initMapObj()
+{
+	TMapObjBase::initMapObj();
+	unk138 = new TMapObjFlag("旗");
+
+	setYachtVec(unk138->mPosition, 2.0f + mPosition.x,
+	            (1315.0f + mPosition.y) - 190.0f, mPosition.z - 15.0f);
+	setYachtVec(unk138->mRotation, 0.0f, 180.0f, 0.0f);
+	setYachtVec(unk138->mScaling, 1.0f, 2.5f, 3.8f);
+	unk138->init("MammaYacht00");
+}
 
 void TSandBird::control() { }
 

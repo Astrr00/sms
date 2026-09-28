@@ -5,6 +5,7 @@
 #include <MoveBG/MapObjEx.hpp>
 
 class TMapCollisionMove;
+class TMapObjFlag;
 class TMapObjGeneral;
 
 class TSandLeaf : public TMapObjBase {
@@ -214,7 +215,7 @@ public:
 	}
 
 public:
-	/* 0x138 */ TMapObjBase* unk138;
+	/* 0x138 */ TMapObjFlag* unk138;
 };
 
 class TSandBird : public TJointCoin {
