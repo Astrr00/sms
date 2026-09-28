@@ -11321,6 +11321,41 @@ unverändert ggü. **`63f8cdc0`**.
 
 **Verify.** `ninja baseline` / `changes_all` ohne Code-Delta.
 
+### R190 (Aufgabe B; emit-helper hunt, keine Vollmatches)
+
+**Hunt.** MarioParticle `emitAndBindToPosPtr` / `emitAndBindToMtxPtr` mit
+R189-Zwei-Zeiler (`ptr = &member;` vor Call); weak/B-scope 98–99,6 %, ≤8
+Nicht-Spill-`~`, keine `|`/`<`/`>`.
+
+**Skip (User + R189).** `toroccoEffect`, `TBubbleCallBack`, `surfingEffect`-Frame,
+Prior-Skips unverändert.
+
+**Scanner (tight + manuell).** 4 Treffer ohne `|` (`getPolluteRadius`,
+`createModelData`, `startIsEnd`, `getNowGravity`); alle strukturell/rodata.
+
+**Probes (~8, revertiert / no-ship).**
+
+1. **`surfingEffect`:** `surfMtx = (MtxPtr)&unk1F0` nur Call B → **99,7 %** (Frame
+   −0x70 vs −0x60 bleibt); volle `rootMtx`/`surfMtx`-Locals → Frame **−0xb8**.
+2. **`TGessoPolluteObj::getNowGravity`:** `saveParams`/`unk1E8`-Zwei-Zeiler → **`lwz r3`**
+   statt Retail **`lwz r4`** (8-Instr, kein Stack für `r31`).
+3. **`TBossGessoManager::createModelData`:** file-scope `entry[]` → **99,2 %**
+   (`entry$3707` vs Compiler-Label).
+4. **`TYoshi::getEmitPosDir`:** manuelle `mModel`/`0x58`-Kette, `void* r6`-Reassign —
+   MWCC hält **`lwz r3,4(r6)`** / **`lwz r3,0x58(r3)`** (Retail **`r6`**-Kette).
+5. **`emitGetEffect`:** `unk160Ptr`-Zwei-Zeiler → bereits **100 %** mit `&unk160`
+   (kein Delta).
+6. **`getPolluteRadius`:** Frame + **`lfs`**-Operanden-Reihenfolge (virtueller Call).
+
+**Vollmatch, strikt.** keine (letzter Ship: R189 `emitGetWaterEffect`).
+
+**Tip (R190).** Zwei-Zeiler-Adressen helfen bei **Call-Arg-Setup** (`emitGetWaterEffect`);
+bei **Mtx-Ketten** ohne Call oft **`r6`-Reuse** (`lwz r6,4(r6)`), nicht
+`getModel()`/`getAnmMtx()` — dafür Zeiger-Kette in **`r6`** halten oder Retail
+ohne Out-of-Line-Calls spiegeln (geschützte `J3DModel::mNodeMatrices`).
+
+**Verify.** `ninja baseline` / `changes_all` ohne Code-Delta ggü. **`249db216`**.
+
 ### R189 (Aufgabe B; `emitGetWaterEffect` Arg-Order, 1 Vollmatch)
 
 **Hunt.** Weak/Header-Inlines + Scanner-Dry-Liste (≤3 Nicht-Spill-`~`, Cap ~8);
