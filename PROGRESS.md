@@ -10920,6 +10920,31 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R235 (`Item`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TShine::appearWithDemo`.
+
+- `TShine::appearWithDemo` sucht das Kamera-Tool über `JDrama::TNameRefGen::search`.
+  `unk18C` bekommt `mDemoLengthFrames`.
+  `fireStartDemoCamera` läuft mit `&mPosition`, `appearWithTimeCallback`, `this` und `JDrama::TFlagT<u16>()`.
+  `char trash[1]` hält den Frame auf `-0x50` und das Flag-Halfword auf `r1+0x38`.
+  172 Bytes, 43 Instruktionen.
+  `__sinit_Item_cpp`, `TShine::kill` und `TShine::makeMActors` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/Item`: PASS.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.06931 % -> 79.06933 %, matched code 49.79488 % -> 49.79967 % (1787680 -> 1787852, +172).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9606 -> 9607.
+`Item` 13696 -> 13868 (+172).
+Kein R170–R234-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R234 (`MapObjBall`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

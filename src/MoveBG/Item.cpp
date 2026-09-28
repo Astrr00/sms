@@ -757,6 +757,8 @@ void TShine::appearSimple(int param_1)
 
 void TShine::appearWithDemo(const char* param_1)
 {
+	char trash[1];
+	trash[0] = 0;
 	unk18C = static_cast<TCameraMapTool*>(JDrama::TNameRefGen::search(param_1))
 	             ->mDemoLengthFrames;
 	SMSGetMarDirector()->fireStartDemoCamera(
