@@ -11120,6 +11120,18 @@ Prologue-`trash`) — **100 %**, `+508` B (`changes_all`).
 
 **Verify.** `ninja baseline` / `changes_all`; `dtk shasum -c` → OK.
 
+### R168 (Aufgabe B; 1 Vollmatch Player/MarioParticle)
+
+**Vec-Spill (R166-Stil).** `TMario::emitSweat`: nach `pos`-Lokal
+`char trashAfterPos[8];` vor Komponenten-Zuweisungen — **100 %**, MarioParticle
+`matched_code` **+2,41** %-Pkt. (`changes_all`).
+
+**Probes revertiert (~7):** `TBubbleCallBack` (`trashAfterPos` + Frame **−0x10**),
+`TBossPakkun::rumblePad` (`trashAfterDelta[4]`), `startMonteReplay` (Vec-Pad ohne
+Win), `TNerveBPTouchDown` / `TNerveDoroHaneHitWater` (Frame ±8, skip).
+
+**Verify.** `ninja baseline` / `changes_all`; `dtk shasum -c` → OK.
+
 ### R167 (Aufgabe B; Vec-Spill-Sweep, keine Vollmatches)
 
 **Muster (wie R166).** Post-local `char trashAfterVel[8]` nach benanntem
