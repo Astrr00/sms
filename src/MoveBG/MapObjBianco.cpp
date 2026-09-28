@@ -1,4 +1,6 @@
 #include <MoveBG/MapObjBianco.hpp>
+#include <MarioUtil/PacketUtil.hpp>
+#include <string.h>
 
 // rogue includes needed for matching sinit & bss
 #include <MSound/MSSetSound.hpp>
@@ -26,7 +28,14 @@ u32 TBiancoWatermill::touchWater(THitActor*) { return 0; }
 
 void TBiancoWatermill::control() { }
 
-void TBiancoWatermill::initMapObj() { }
+void TBiancoWatermill::initMapObj()
+{
+	TMapObjBase::initMapObj();
+	if (strcmp(unkF4, "BiaWatermill01") == 0)
+		mBodyRadius = 1200.0f;
+	else if (strcmp(unkF4, "BiaWatermill00") == 0)
+		mBodyRadius = 1200.0f;
+}
 
 TBiancoWatermill::TBiancoWatermill(const char* name)
     : TMapObjBase(name)
@@ -112,7 +121,14 @@ void TLeafBoatRotten::perform(u32 cue, JDrama::TGraphics* graphics)
 	TMapObjBase::perform(cue, graphics);
 }
 
-void TLeafBoatRotten::load(JSUMemoryInputStream&) { }
+void TLeafBoatRotten::load(JSUMemoryInputStream& stream)
+{
+	TMapObjBase::load(stream);
+	stream >> unk170;
+	unk170 *= 10;
+	SMS_InitPacket_OneTevColor(getModel(), 0, GX_TEVREG0,
+	                           (const GXColorS10*)&unk178);
+}
 
 TLeafBoatRotten::TLeafBoatRotten(const char* name)
     : TLeafBoat(name)
@@ -180,7 +196,20 @@ u32 TBiancoBell::touchWater(THitActor*) { return 0; }
 
 void TBiancoBell::touchPlayer(THitActor*) { }
 
-void TBiancoBell::initMapObj() { }
+void TBiancoBell::initMapObj()
+{
+	TMapObjBase::initMapObj();
+	if (strcmp(getName(), "BiaBell 0") == 0) {
+		unk138 = 1;
+		unk13A = 0;
+	} else if (strcmp(getName(), "BiaBell 1") == 0) {
+		unk138 = 2;
+		unk13A = 1;
+	} else {
+		unk138 = 3;
+		unk13A = 0;
+	}
+}
 
 TBiancoBell::TBiancoBell(const char* name)
     : TMapObjBase(name)

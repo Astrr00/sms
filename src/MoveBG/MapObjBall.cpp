@@ -1,4 +1,5 @@
 #include <MoveBG/MapObjBall.hpp>
+#include <JSystem/JDrama/JDRNameRefGen.hpp>
 #include <string.h>
 
 // rogue includes needed for matching sinit & bss
@@ -199,7 +200,15 @@ void TBigWatermelon::checkWallCollision(JGeometry::TVec3<f32>* param_1)
 
 BOOL TBigWatermelon::receiveMessage(THitActor*, u32) { return 0; }
 
-void TBigWatermelon::loadAfter() { }
+void TBigWatermelon::loadAfter()
+{
+	TMapObjGeneral::loadAfter();
+	JDrama::TActor* actor = (JDrama::TActor*)JDrama::TNameRefGen::search(
+	    "シャイン（お化けスイカ用）");
+	actor->mPosition.x = -4659.0f;
+	actor->mPosition.y = 460.0f;
+	actor->mPosition.z = 13620.0f;
+}
 
 void TBigWatermelon::initMapObj() { }
 

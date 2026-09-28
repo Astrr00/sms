@@ -1,5 +1,6 @@
 #include <MoveBG/MapObjMamma.hpp>
 #include <MoveBG/MapObjBall.hpp>
+#include <JSystem/JDrama/JDRNameRefGen.hpp>
 #include <Map/Map.hpp>
 #include <string.h>
 
@@ -147,7 +148,15 @@ void TSandCastle::calcRootMatrix()
 // Retail is a name-ref lookup (96B). Stub so the override signature matches.
 TMapObjBase* TSandCastle::findTriggerActor() { return nullptr; }
 
-void TSandCastle::loadAfter() { }
+void TSandCastle::loadAfter()
+{
+	unk144                       = findTriggerActor();
+	((TSandLeaf*)unk144)->unk138 = (TMapObjGeneral*)this;
+	unk144->appear();
+	unk158 = (TMapObjBase*)JDrama::TNameRefGen::search(
+	    "ステージ切替（砂の城）");
+	unk158->makeObjDead();
+}
 
 void TSandCastle::initMapObj() { }
 

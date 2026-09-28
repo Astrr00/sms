@@ -107,7 +107,7 @@ public:
 	static f32 mCollisionRate;
 
 public:
-	/* 0x158 */ u32 unk158;
+	/* 0x158 */ TMapObjBase* unk158;
 	/* 0x15C */ u8 unk15C;
 };
 

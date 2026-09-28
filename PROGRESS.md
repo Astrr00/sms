@@ -10920,6 +10920,42 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R198 (`MapObjBianco` / `MapObjMamma` / `MapObjBall`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+Fünf kurze Fills ohne `ble`/`bge`/`lfsu` und ohne `SMatrix34C`-Leer-Konstruktor.
+Zurückgenommen, nur Frame (kein Strukturfehler):
+`TSandLeafBase::initMapObj` (`-0x28` statt `-0x20`),
+`TMuddyBoat::initMapObj` (`-0x28` statt `-0x20`).
+
+- `TBiancoWatermill::initMapObj` vergleicht `unkF4` mit `BiaWatermill01` oder `BiaWatermill00` und setzt `mBodyRadius` auf 1200.
+  112 Bytes, 28 Instruktionen.
+- `TBiancoBell::initMapObj` setzt `unk138`/`unk13A` nach `BiaBell 0` bzw. `BiaBell 1`, sonst 3/0.
+  148 Bytes, 37 Instruktionen.
+- `TLeafBoatRotten::load` liest `unk170`, multipliziert mit 10 und initialisiert `GX_TEVREG0` ab `unk178`.
+  108 Bytes, 27 Instruktionen.
+- `TSandCastle::loadAfter` speichert virtuell `findTriggerActor` in `unk144`, setzt `unk138` auf `this`, ruft virtuell `appear`, sucht `ステージ切替（砂の城）` in `unk158` und ruft virtuell `makeObjDead`.
+  180 Bytes, 45 Instruktionen.
+- `TBigWatermelon::loadAfter` ruft `TMapObjGeneral::loadAfter`, sucht `シャイン（お化けスイカ用）` und setzt die Position auf (−4659, 460, 13620).
+  124 Bytes, 31 Instruktionen.
+
+`TSandCastle::findTriggerActor` bleibt `return nullptr`.
+
+`validate-symbol-order` für Bianco, Mamma und Ball: PASS.
+Dieselben UNUSED-Größenwarnungen wie zuvor.
+Ball behält die weak-only Order-Warnung.
+
+`ninja changes_all`: fuzzy 78.75675 % → 78.77492 %, matched code 49.457283 % → 49.476 % (1775560 → 1776232, +672).
+Matched data bleibt 65.18551 %.
+MapObjBianco matched code 3592 → 3960.
+MapObjMamma matched code 4396 → 4576.
+MapObjBall matched code 2428 → 2552.
+Kein R170–R197-Unit hat matched code verloren.
+`MarNameRefGen_MapObj` und `MapObjManager` unverändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R197 (`MapObjMonte` / `MapObjRicco` / `MapObjPinna` / `MapObjBianco`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
