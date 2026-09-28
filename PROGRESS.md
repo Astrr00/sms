@@ -12753,6 +12753,25 @@ spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%
 
 **Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
 
+### R285c (Enemy/Player B; post-R285b skip list, 0× ship)
+
+**Hunt.** Skip R285–R285b trials + thrash (**genEventCoin**, **OnWire**, **isReachedToGoal**, **bind**/PolluteModel/Dango/setGoal, **emWalkAround**, **isFindMario**, **checkReturn**, **emJumping**, **startJumpWall**, Pakkun **Appear/perform/SeedCallback**, **TamaNokoThrown**, spill **≥99.7%**).
+
+**Ship.** none.
+
+**Probes (~6).**
+
+- **`TNerveSmallEnemyJump::execute`**: early exit **`cmpwi r0,0`** on **`mLiveFlag` bit 16/13** (not **`checkLiveFlag2||`** **`clrlwi`**); **`jumpBehavior` @vtable `0x128`**; velocity via **`0x108`** stack **`0x40`** — **~98.9%** — deferred.
+- **`TSmallEnemy::expandCollision`**: retail **`stwu −0x80`** + **`lis 0x4330`/`@3426` `.sdata2`** — **~98.6%** — deferred.
+- **`TBossMantaManager::updateMantaEscape`**: Mario pos spill **`0x1c`**, **`f31`/`f30`/`f28`** temps — **~90.0%** — deferred.
+- **`TTamaNoko::requestShadow`**: shadow struct **`−0x98`**, dual **`rlwinm` `0xf0`** paths before MActor joint loads — **~93.2%** — deferred.
+- **`TEnemyMario::emWaitingToInviteMario`**: twin **`getPoint`** + **`sqrt`** / **`matan`** stacks (**`−0xa8`**) — **~95.7%** — deferred.
+- **`TNerveTelesaImitate::execute`**: matrix/**`fnmsubs`** cluster + TU **`.sdata2`** — **~97.9%** — deferred.
+
+**Tip (R285c).** **`TNerveSmallEnemyJump`**: test **`UNK8000`** with **`rlwinm ,,16,16` then `cmpwi`**; only then **`UNK40000` @ bit 13**; land with **`cmpwi`** on airborne bit **24**, not **`isAirborne()`** bool.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
 ### R258 (Aufgabe B; defer GraphGroup/ColumSand pool + diversify, 0× ship)
 
 **Hunt.** Post-R257 dry; **defer `TGraphGroup::perform`** (empty **`TGraphWeb::perform` DCE**) and
