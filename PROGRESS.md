@@ -11321,6 +11321,49 @@ unverändert ggü. **`63f8cdc0`**.
 
 **Verify.** `ninja baseline` / `changes_all` ohne Code-Delta.
 
+### R188 (Aufgabe B; 95–99,4 % Scanner + `isEmitting`, 1 Vollmatch)
+
+**Hunt.** B-scope Enemy/Player `nonmatching` **95,0–99,4 %**, **≤400 B**, Frame-Δ
+**{4,8,0x10,0x18,0x20,0x28}**; entry `trash[N]` wenn wenige Nicht-Spill-`~`.
+Kleiner Player-Helfer im **emitSweat**/`oilSlip`-Stil.
+
+**Skip (User + R187).** `thinkSituation` / `soundMovement` / `changeScene`,
+`getRandomNextIndex`, `TObjManager::perform`, Hino2/Pollution/`initAndRegister`,
+Prior-Pad-Skips.
+
+**Scanner (25 Treffer, kein Auto-Ship).** Kurzliste (Δ / % / Größe):
+`calcDamagePos` (0x18, 99,5 % — außerhalb 99,4-Cap), `getPolluteRadius` (8,
+99,5 %), `calcTurnSpeedToReach` (8, 99,4 %), `FireWanwanTailHit::moveRequest`
+(8, 99,4 %), `TPoiHana::walkBehavior` (8, 99,3 %), `TMameGesso::calcObjCollision`
+(0x18, 99,2 %), `TWaterGun::isEmitting` (0x10, 98,4 % → **ship**),
+`startJumpWall` (8, 97,9 %, strukturell `<`/`lfs`), `TNerveGessoTurn` (8, 97,9 %),
+`TSpineEnemy::calcRootMatrix` (8, 97,1 %, Control-Flow), …
+
+**Probes (~8, revertiert / no-ship).** `TGraphWeb::getRandomNextIndex` (Skip);
+`isEmitting` mit `self = this` allein → `addi r31,r3,0` vs. `mr`; Non-`const`
+`self` → inlined `getCurrentNozzle` (59 %). `startJumpWall` / `calcRootMatrix`:
+kein reines Frame-Pad. `squating` Open-Code (Register/Frame schlechter).
+
+**Vollmatch, strikt (`decomp-diff` 0× `~`/`|`/`</>`).**
+
+1. **`TWaterGun::isEmitting`** (`WaterGun.hpp`, weak in `MarioRun`) — entry
+`char trash[0x10]; trash[0]=0;`; `getCurrentNozzle` über
+`((const TWaterGun*)this)` statt `const TWaterGun* self = this` (Frame **−0x28**,
+**mr r31,r3**). emitSweat-Analog: Entry-Pad + Spill-/Opcode-Fix ohne
+`gpPollution`-Klon.
+2. **Begleiter (Inline-Größe `isEmitting`).** `TMario::considerRotateStart`:
+`trash[0x10]` entfernt (war Kompensation für altes Inline). `TMario::squating`:
+`getSideWalkValues`-Block `trash[56]` → **`trash[36]`** (Frame **−0xb0**).
+`TYoshi::thinkUpper`: Entry-`trash[0x10]` entfernt.
+
+**Tip (R188).** Bei weak Header-Inlines: **`const TWaterGun* self = this`** erzwingt
+oft **`addi r31,r3,0`** statt **`mr`**; Entry-`trash[0x10]` allein reicht nicht.
+**`((const TWaterGun*)this)->…`** behält **`mr`** und passt zu Retail-ASM
+(`MarioRun.s` ~`0x801394E4`).
+
+**Verify.** `decomp-diff` → **100,0 %** `isEmitting`; `ninja baseline` /
+`changes_all` (ggü. frischem Baseline nach Pull).
+
 ### R181 (Aufgabe B; receiveMessage entry +0x28, 1 Vollmatch)
 
 **Hunt.** `perform` / `receiveMessage` / `init` entry frame-pad (8/0x10/0x20/0x28) +

@@ -623,8 +623,6 @@ void TYoshi::thinkAnimation()
 
 void TYoshi::thinkUpper()
 {
-	char trash[0x10];
-
 	if (mState != STATE_MOUNTED)
 		return;
 

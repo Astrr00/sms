@@ -117,20 +117,21 @@ public:
 	void initInLoadAfter();
 	bool isEmitting()
 	{
-		// TODO: more inlines!
-		const TWaterGun* self = this;
+		char trash[0x10];
+		trash[0] = 0;
 
 		if (mCurrentWater == 0)
 			return false;
 
-		if (self->getCurrentNozzle()->getNozzleKind() == 1) {
-			TNozzleTrigger* trig = (TNozzleTrigger*)self->getCurrentNozzle();
+		if (((const TWaterGun*)this)->getCurrentNozzle()->getNozzleKind() == 1) {
+			TNozzleTrigger* trig
+			    = (TNozzleTrigger*)((const TWaterGun*)this)->getCurrentNozzle();
 			if (trig->unk385 == TNozzleTrigger::ACTIVE)
 				return true;
 			return false;
 		}
 
-		if (self->getCurrentNozzle()->unk378 > 0.0f)
+		if (((const TWaterGun*)this)->getCurrentNozzle()->unk378 > 0.0f)
 			return true;
 
 		return false;
