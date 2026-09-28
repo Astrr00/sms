@@ -11178,6 +11178,24 @@ stattdessen R171/R163-Muster (`TVec3`+`trash[8]`, post-local, `gpPollution` z/y/
 
 **Verify.** `ninja baseline` / `changes_all`; `decomp-diff` → **100,0 %**.
 
+### R181 (Aufgabe B; receiveMessage entry +0x28, 1 Vollmatch)
+
+**Hunt.** `perform` / `receiveMessage` / `init` entry frame-pad (8/0x10/0x20/0x28) +
+emitSweat/empty-`TVec3` wo passend.
+
+**Skip (User + R179/R180).** R180 dry (`setMeltAnm`+`vel`, `pollute`, `updatePollute`,
+`emitEffects`, `TBEelTears::perform`, `receiveMessageLv1`, MouthOpenWait-Kombis) +
+R179/R178/R177/Prior (`jumpProcess`, `MouthOpenWait`, `NKFollowMario`, …).
+
+**Probes (~8, revertiert).** `TBEelTears::perform` (`0x10` → 99,8 %); `TSmallEnemy::init`
+(`0x20`); `TBEelTearsDrop` ctor (`0x30`); `TEnemyPolluteModel::perform` (`0x38`).
+
+**Vollmatch, strikt (`decomp-diff` 100,0 %).**
+
+1. **`TDangoHamuKuri::receiveMessage`** — entry `char trash[0x28]; trash[0]=0;` (Frame −0x48).
+
+**Verify.** `ninja baseline` / `changes_all`; `decomp-diff` → **100,0 %**.
+
 ### R179 (Aufgabe B; fresh B-scope entry pad, keine Vollmatches)
 
 **Hunt.** Bosseel / fireWanwan / hinokuri2 / gesso / amenbo / namekuri / Player
