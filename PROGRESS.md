@@ -11862,6 +11862,25 @@ together, not a one-line temp.
 
 **Verify.** `ninja changes_all` ggü. **`dea1dafc`**: **+0** matched functions (**9272** unchanged).
 
+### R240 (Aufgabe B; frsqrte cluster probe + decHpByWater, 1× ship)
+
+**Hunt.** Optional **`calcTurnSpeedToReach`** / **`TBossGesso` `.ctors`** probe; else MAP-backed medium text;
+skip R237–R239 thrash + stuck; cap ~8.
+
+**Ship.** **`TSmallEnemy::decHpByWater`** — retail always **`mr r4,r0`** before **`uVar2 < 1` clamp**; **`u8 hp`**
+load for **`mHitPoints`** compare/subtract (**`8027E9B0`**, **76 B**).
+
+**Probes (~2, no-ship).**
+
+- **`TSpineEnemy::calcTurnSpeedToReach`**: **`one`/`dClamp`/`f0`** rewrite (drop **`volatile`**) → **95.6%**;
+  reverted to **`volatile f = fVar32 * __frsqrte(fVar32)`** (**99.4%**).
+- **`TBossGesso` `.ctors` `@6268`/`idxarray$3450`**: jump-table / **`.sdata2`** pool — deferred (not PARAM float).
+
+**Tip (R240).** Water HP decrement: mirror retail **`mr` before branch** (`r4 = r0` then **`if (r0 < 1) r4 = 1`**),
+not **`if (uVar2 < 1) uVar2 = 1`** alone — MWCC keeps **`uVar2`** in **`r5`**.
+
+**Verify.** `ninja changes_all` ggü. **`dea1dafc`**: **+1** matched function (**9272 → 9273**).
+
 ### R225 (Aufgabe B; bossManta rodata + EP diversify, 0× ship)
 
 **Hunt.** Post-**`385107f3`**; optional **`bossManta` `@2805`/`@2807`** lead (Amenbo
