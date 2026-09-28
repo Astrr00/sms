@@ -11723,6 +11723,26 @@ Closet/MoveBG, **`getNowGravity`**, **`DebuTelesa` bastable**, **`bossManta` `@2
 **Verify.** `ninja changes_all` ggü. **`1d357e6b`**: **+2** matched functions (**9267 → 9269**), **+288 B**
   matched code.
 
+### R234 (Aufgabe B; NozzleCtrl stack, 1× ship)
+
+**Hunt.** Post-**`a2cc02fe`**; finish **`NozzleCtrl`** (**`Mtx`** at **`r1+0x28`**); cap ~8.
+
+**Ship.**
+
+- **`NozzleCtrl`** (172 B): **`volatile u32 unused2[5]`** *after* **`Mtx mtx`** ( **`[6]`** overshoots **`addi`** by 4 B;
+  **`[4]`** undershoots by 4 B) → **100%**.
+
+**Probes (~8, no-ship).**
+
+- **`NozzleCtrl`:** swept **`unused2[0…8]`** after **`Mtx`** / **`before`** — only **`[5]`** hits retail **`0x28`** with
+  **`stwu -0x60`**.
+- **`TNerveSmallEnemyFreeze::execute`** (99.8%, 160 B): control-flow / spine — not **`Mtx`** pad.
+
+**Tip (R234).** Nested WaterGun callbacks: **`unused2[N]`** after **`Mtx`** is per-function — **`RotateCtrl`** needs
+  **`[7]`** (**`0x2c`**), **`NozzleCtrl`** **`[5]`** (**`0x28`**).
+
+**Verify.** `ninja changes_all` ggü. **`a2cc02fe`**: **+1** matched function (**9269 → 9270**), **+172 B** matched code.
+
 ### R225 (Aufgabe B; bossManta rodata + EP diversify, 0× ship)
 
 **Hunt.** Post-**`385107f3`**; optional **`bossManta` `@2805`/`@2807`** lead (Amenbo

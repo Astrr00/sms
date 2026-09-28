@@ -134,8 +134,7 @@ static BOOL NozzleCtrl(J3DNode* node, BOOL param_2)
 			                   ->getGunAngle();
 			if (gunAngle < 0) {
 				Mtx mtx;
-				// Unused stack space
-				// volatile u32 unused2[6];
+				volatile u32 unused2[5];
 				MsMtxSetRotRPH(mtx, 0.0f, 0.0f, SHORTANGLE2DEG(gunAngle));
 				MTXConcat(J3DSys::mCurrentMtx, mtx, J3DSys::mCurrentMtx);
 			}
