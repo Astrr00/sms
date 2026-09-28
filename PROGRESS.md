@@ -12645,6 +12645,25 @@ spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%
 
 **Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
 
+### R282 (Aufgabe B; genEventCoin frame + diversify, 0× ship)
+
+**Hunt.** Post-R281 dry (**9275**); close **`TSmallEnemy::genEventCoin`** frame / pool or diversify; defer PolluteModel/**bind**/Dango/setGoal;
+spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%** only.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~5).**
+
+- **`register TCoin*` / `register BOOL`**: still **`−0x108`** / **~99.6%** — reverted.
+- **`TNerveSmallEnemyFreeze::execute`**: **~99.8%**, **`−0x40`** vs retail **`−0x38`** — spill tier — deferred.
+- **`TSmallEnemy::isHitWallInBound`**: **~99.8%**, **`−0x80`** vs **`−0xa8`** — deferred.
+- **`TSpineEnemy::turnToCurPathNode`**: **~99.9%**, vec temps **`+4`** spill slots — deferred.
+- **`genEventCoin`**: **`mCoin`** / **`clrlwi`** block matches retail; open **`−0x8`** frame, loop spills, **`@4358`/`@4359`**.
+
+**Tip (R282).** Once **`genEventCoin`**’s **`mCoin`** type path matches through **`clrlwi.`**, remaining diffs are almost all **`stwu −0x108`** and downstream **`r1`** offsets — fix frame / TU **`.sdata2`** before chasing loop vec slots in isolation.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
 ### R258 (Aufgabe B; defer GraphGroup/ColumSand pool + diversify, 0× ship)
 
 **Hunt.** Post-R257 dry; **defer `TGraphGroup::perform`** (empty **`TGraphWeb::perform` DCE**) and
