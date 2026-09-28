@@ -12096,6 +12096,32 @@ is **`32.0f × u8`** via **double-stacked i2f**, not a plain **`(f32)u8`** multi
 **Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged). Tip
 **`f69a6bd8`**.
 
+### R249 (Aufgabe B; hinokuri2 PrePol PARAM + EP scan, 0× ship)
+
+**Hunt.** Post-R248; skip **PakkunGenerate** / **StayPakkun `isHitValid`** thrash + **BPWaitL** /
+**BPPivot**; other medium nerves with opcode clusters or PARAM/string; skip R244–R248 failures +
+stuck/empty/Closet/MoveBG; **`ninja baseline`** + **`report.json`** + **`changes_all`**; cap ~8.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~7, reverted / no-ship).**
+
+- **`TNerveHino2PrePol::execute`** (**94.3%**, **516 B**): **`mSLPrePolWait.value`** +
+  **`THino2Params* param`** + **`rand × 1/32768`** — retail **`lwz 0x180(r3)`** after
+  **`getSaveParam` `blrl`** (not **`addi 0x170`/`lwz 0x10`**); **`r29`** timer path worse;
+  reverted.
+- **EP scan (frame / spill-only):** **`TNerveTamaNokoSink`**, **`TBoxTelesa::load`**,
+  **`TStayPakkun::load`**, **`THinokuri2::changeBck`**, **`TPakkunSeed::loadInit`/`moveObject`**,
+  **`TMario::checkWet`**, **`calcFarthestVertex`**.
+
+**Tip (R249).** **`TNerveHino2PrePol`** is a **PARAM load-shape** problem: **`mSLPrePolWait`**
+must codegen as **`lwz` at `0x180`** off the **`getSaveParam`** pointer (same object as
+**`mSLStampProb` @ `0x2ac`**), with **`mWaitTimer` in `r29`** through **`cmpw`** — not
+**`.get()`**’s **`0x170+0x10`** split nor extra **`param`** locals without fixing the frame.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged). Tip
+(pending commit).
+
 ### R225 (Aufgabe B; bossManta rodata + EP diversify, 0× ship)
 
 **Hunt.** Post-**`385107f3`**; optional **`bossManta` `@2805`/`@2807`** lead (Amenbo
