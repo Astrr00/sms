@@ -6,6 +6,7 @@
 #include <MoveBG/ItemManager.hpp>
 #include <System/Particles.hpp>
 #include <MSound/MSound.hpp>
+#include <System/MarDirector.hpp>
 
 extern void MsMtxSetTRS(MtxPtr result, f32 x, f32 y, f32 z, f32 r, f32 p, f32 h,
                         f32 sx, f32 sy, f32 sz);
@@ -281,7 +282,34 @@ void TMuddyBoat::calc() { }
 
 u32 TMuddyBoat::getSDLModelFlag() const { return 0; }
 
-void TMuddyBoat::initMapObj() { }
+void TMuddyBoat::initMapObj()
+{
+	TMapObjBase::initMapObj();
+	unk138 = 0.04f;
+	unk144 = 0.998f;
+	unk148 = 0.002f;
+	unk150 = 0.997f;
+	unk13C = 0.01f;
+	unk168 = 0x258;
+	if (gpMarDirector->mMap == 0x34) {
+		unk158 = 126.0f;
+		unk154 = 185.0f;
+		unk15C = 150.0f;
+		unk160 = 170.0f;
+		unk164 = 185.0f;
+	} else {
+		unk158 = 100.0f;
+		unk154 = 170.0f;
+		unk15C = 150.0f;
+		unk160 = 180.0f;
+		unk164 = 100.0f;
+	}
+	unk17C.x = 3.0f;
+	unk17C.y = 2.0f;
+	unk17C.z = 5.0f;
+	char trash[0xC];
+	trash[0] = 0;
+}
 
 TMuddyBoat::TMuddyBoat(const char* name)
     : TMapObjBase(name)

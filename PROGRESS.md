@@ -10920,6 +10920,31 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R287 (`MapObjMare`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMuddyBoat::initMapObj`.
+
+- `TMapObjBase::initMapObj`.
+  Danach `unk138`, `unk144`, `unk148`, `unk150`, `unk13C` und `unk168`.
+  Ist `mMap` gleich `0x34`, kommen die Mare-Werte.
+  Sonst die anderen.
+  `unk17C` wird auf `(3, 2, 5)` gesetzt.
+  `char trash[0xC]` hält das Frame bei `-0x28`.
+  208 Bytes, 52 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMare`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.32131 % -> 79.327 %, matched code 50.09236 % -> 50.098156 % (1798360 -> 1798568, +208).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9660 -> 9661.
+`MapObjMare` 5104 -> 5312 (+208).
+Kein R170–R286-Unit hat matched code verloren.
+
 ### R286 (`MapObjMare`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
