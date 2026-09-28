@@ -53,6 +53,13 @@ void THangingBridgeBoard::initMapObj()
 THangingBridgeBoard::THangingBridgeBoard(const char* name)
     : TLeanBlock(name)
 {
+	unk1BC = 0;
+	unk194 = 0;
+	unk198 = 0;
+	unk19C = 0;
+	unk1A0 = 0;
+	unk1A4[0].zero();
+	unk1A4[1].zero();
 }
 
 void THangingBridge::drawLowerMinus(const JGeometry::TVec3<f32>&,
@@ -153,7 +160,19 @@ void TFluff::initMapObj()
 
 TFluff::TFluff(const char* name)
     : TMapObjBase(name)
+    , unk138(0.0f)
+    , unk13C(0.0f)
+    , unk140(0.0f)
+    , unk144(0.0f)
+    , unk148(0.0f)
+    , unk14C(0.0f)
+    , unk150(0.0f)
+    , unk160(1.0f)
+    , unk164(0.95f)
+    , unk168(0)
+    , unk16C(0)
 {
+	unk154.zero();
 }
 
 void TFluffManager::findNextFluff() { }

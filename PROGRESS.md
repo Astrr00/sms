@@ -10920,6 +10920,37 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R208 (`MapObjMonte` / `MapObjBianco`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+Drei Konstruktoren ohne `SMatrix34C`-Leer-Konstruktor.
+Zurückgenommen, nur Frame:
+`TSwingBoard::TSwingBoard` (Rumpf passt, Frame `-0x18` statt `-0x48`).
+
+- `TFluff::TFluff` nullt die Floats von `0x138` bis `0x150`, setzt `unk160` auf 1.0f und `unk164` auf 0.95f und nullt `unk168` sowie `unk16C`.
+  `unk154.zero()` steht im Rumpf.
+  140 Bytes, 35 Instruktionen.
+- `THangingBridgeBoard::THangingBridgeBoard` legt zwei `TVec3` bei `0x1A4` an und nullt im Rumpf `unk1BC`, `unk194`, `unk198`, `unk19C` und `unk1A0`.
+  Danach `zero()` auf beiden Vektoren.
+  156 Bytes, 39 Instruktionen.
+- `TBiancoMiniWindmill::TBiancoMiniWindmill` setzt `unk150` auf `360.0f * ((f32)rand() * 0.000030517578f)`, `unk154` auf 0 und `unk158` auf `1.0f` plus denselben Rand-Faktor.
+  Der zweite Faktor steht in einer eigenen Variable, damit `fmuls` und `fadds` nicht zu `fmadds` verschmelzen.
+  `unk15C` und `unk160` werden genullt.
+  204 Bytes, 51 Instruktionen.
+
+`validate-symbol-order` für Monte und Bianco: PASS.
+Monte hat zwölf bestehende UNUSED-Größenwarnungen, Bianco fünf.
+
+`ninja changes_all`: fuzzy 78.90978 % -> 78.9196 %, matched code 49.627754 % -> 49.64168 % (1781680 -> 1782180, +500).
+Matched data bleibt 65.2486 % (417807).
+Funktionen matched 9573 -> 9576.
+`MapObjBianco` 4528 -> 4732 (+204), `MapObjMonte` 2692 -> 2988 (+296).
+`MapObjManager` und `MarNameRefGen_MapObj` wurden neu gebaut, matched code unverändert.
+Kein R170-R207-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R207 (`MapObjPinna` / `MapObjMonte` / `MapObjFence`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

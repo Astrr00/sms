@@ -30,6 +30,14 @@ public:
 	void setGroundCollision();
 	void initMapObj();
 	THangingBridgeBoard(const char*);
+
+public:
+	/* 0x194 */ u32 unk194;
+	/* 0x198 */ u32 unk198;
+	/* 0x19C */ u32 unk19C;
+	/* 0x1A0 */ u32 unk1A0;
+	/* 0x1A4 */ JGeometry::TVec3<f32> unk1A4[2];
+	/* 0x1BC */ u32 unk1BC;
 };
 
 class THangingBridge : public JDrama::TViewObj {
@@ -92,8 +100,16 @@ public:
 public:
 	/* 0x138 */ f32 unk138;
 	/* 0x13C */ f32 unk13C;
-	/* 0x140 */ u8 unk140[0x20];
+	/* 0x140 */ f32 unk140;
+	/* 0x144 */ f32 unk144;
+	/* 0x148 */ f32 unk148;
+	/* 0x14C */ f32 unk14C;
+	/* 0x150 */ f32 unk150;
+	/* 0x154 */ JGeometry::TVec3<f32> unk154;
 	/* 0x160 */ f32 unk160;
+	/* 0x164 */ f32 unk164;
+	/* 0x168 */ u32 unk168;
+	/* 0x16C */ u8 unk16C;
 };
 
 class TFluffManager : public TMapObjBase {

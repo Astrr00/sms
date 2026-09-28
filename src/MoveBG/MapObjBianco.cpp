@@ -5,6 +5,7 @@
 #include <M3DUtil/MActor.hpp>
 #include <MSound/MSound.hpp>
 #include <MSound/SoundEffects.hpp>
+#include <stdlib.h>
 #include <string.h>
 
 // rogue includes needed for matching sinit & bss
@@ -103,6 +104,12 @@ void TBiancoMiniWindmill::initMapObj() { }
 TBiancoMiniWindmill::TBiancoMiniWindmill(const char* name)
     : THideObjBase(name)
 {
+	unk150 = 360.0f * ((f32)rand() * 0.000030517578f);
+	unk154 = 0.0f;
+	f32 randScale = (f32)rand() * 0.000030517578f;
+	unk158       = 1.0f + randScale;
+	unk15C = 0;
+	unk160 = 0;
 }
 
 void TLeafBoat::touchActor(THitActor*) { }
