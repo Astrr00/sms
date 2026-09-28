@@ -13173,6 +13173,29 @@ spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%
 
 **Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
 
+### R285x (Enemy/Player B; MAP ≤200B band, 0× ship)
+
+**Hunt.** **~6–8** fresh B symbols **`≤~200B`** from MAP; skip **R285** thrash (**`TCommonLauncher::init` frame**, **R285v/w** probes, **DangoHamuKuri** pad, **EnemyAttachment** bind, **EnemyPolluteModel** perform, **genEventCoin**, **emWaiting**, **BathtubKillerManager::load**); strict **100%** only; no frame fakematch.
+
+**Ship.** none.
+
+**Probes (~8).**
+
+- **`graph` / `TGraphWeb::startIsEnd`**: **`r4`/`r5`** first-rail walk — **~98.8%** (120B); **`unk0[i].unk0` locals** → **~93.2%** — reverted.
+- **`bosseel` / `TBEelTearsManager::createEnemies`**: **`JKRGetResource` → `r30`**, **`stwu -0x30`** — **~99.7%** (184B) — deferred.
+- **`walkerEnemy` / `TWalkerEnemy::isReachedToGoalXZ`**: goal **`Vec`** spill **`r1+0x14`** retail **`−0x20`** — **~99.7%** (200B) — deferred.
+- **`walkerEnemy` / `TWalkerEnemy::isResignationAttack`**: same spill family **`−0x48`** vs **`−0x58`** — **~99.7%** (220B) — deferred.
+- **`tobiPuku` / `TTobiPuku::isReachedToGoalXZ`**: walker XZ clone — **~99.7%** (200B) — deferred.
+- **`fireWanwan` / `TRotation3::setQuat`**: **`f1`/`f2` temp schedule on quat→matrix — **~98.5%** (160B) — deferred.
+- **`telesa` / `TTelesa::isReachedToGoal`**, **`tamaNoko` / `TTamaNoko::isReachedToGoal`**: **~97.3%** (200B) — prior defer — skipped.
+- **`bosswanwan` / `TBossWanwanManager::createModelData`**: retail **52B** **`createModelDataArray(entry)`** only — **target-only** (empty **`bosswanwan.cpp`**) — scaffolding, not a byte match path this round.
+
+**Optional.** **`popo`/`poihana`/`bombhei`** nerve **`execute`** text already **100%** in diff scan; **`createModelData`** on **`coasterkiller`/`riccohook`/`launcher`** managers already **100%**.
+
+**Tip (R285x).** Treat **`≤200B` @ ≥99.6%** in Enemy/Player as **frame/spill class** unless MAP shows a missing symbol or a **≤52B** **`createModelData`** stub; **`startIsEnd`** needs **`getFirstGraphNode()`** call shape, not **`unk0[0].unk0`** pointers.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
 ### R258 (Aufgabe B; defer GraphGroup/ColumSand pool + diversify, 0× ship)
 
 **Hunt.** Post-R257 dry; **defer `TGraphGroup::perform`** (empty **`TGraphWeb::perform` DCE**) and
