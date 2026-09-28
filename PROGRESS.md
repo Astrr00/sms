@@ -11522,6 +11522,43 @@ MAP; cap ~8.
 
 **Verify.** `ninja changes_all` ggü. **`f1f78944`** — **no diff**.
 
+### R227 (Aufgabe B; EP object/MAP hunt, 0× ship)
+
+**Hunt.** Post-**`f4a5afd1`**; skip empty TU scaffolding, **`bossManta` `@2805`/`@2807`**,
+**`getNowGravity`**, R222–R226 failures + stuck lists; string/table/PARAM/float/vtable/
+**`createModelData`**; cap ~8.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, no-ship).**
+
+- **EP `.rodata`:** full scan — **no** nonmatching **`.rodata`** objects in Enemy/Player
+  (data pain is **`.ctors`** / vtables, not string typos).
+- **EP object scan (16 hits):** only **`.ctors`** — **`DebuTelesa` `entry$2835`** (85.7%),
+  **`bgtentacle` `@4448`**, **`MarioDraw`/`MarioMove`/`WaterGun`/`Yoshi`/`enemyMario`**
+  jump tables, **`bossgesso` `__vtable` 99.3%** / **`idxarray$3450` 75%** — structural /
+  emission-order, not a one-liner PARAM fix.
+- **`spider` extra `.data` `@134`/`@154`/`@163`:** retail **16 B** (**`__vt__7TSpider`**
+  only); our TU emits **0x38 B** with **six `1.0f` literals + counters** before the vtable
+  (**`objdump -s -j .data`**) — include/PCH closure pollution, not missing
+  **`InfectiousStrings`** in **`spider.cpp`**.
+- **`TPoiHanaManager::load` / `TAreaCylinder::load` / `TGenerator::load`** (99.6–99.8%):
+  **`addi r30,0x2f8`** vs **`0x30c`** — wrong **`T*Params`** member layout / offsetof, not
+  PARAM spelling.
+- **`TCoasterKillerManager::load`** (98.4%): **`stwu -0x70`** vs **`-0x30`** — stack frame.
+- **`TBoxTelesa::load`** (99.8%, 264 B): stack **`r1+0x14`** vs **`+0x10`** (same class as
+  R226).
+- **`createModelData`:** **`coasterkiller` / `launcher` / `BathtubKiller` / `Kumokun`** still
+  **100%** on paths/flags.
+- **`MtxCalcTypeName` (`bosseel` / `hinokuri2`, 50%):** 16 B ctor blobs — same deferred
+  **MtxCalc / InfectiousStrings** chain as empty-TU mtx pools.
+
+**Tip (R227).** When **`decomp-diff`** reports **extra `.data`** in a tiny EP TU, **`objdump`
+  the section** before chasing strings — **`spider`**-style **`1.0f` pools** are almost always
+  **header/PCH-emitted garbage**, not a missing **`nullptr`** on a **`bastable`**.
+
+**Verify.** `ninja baseline` + `ninja changes_all` ggü. **`f4a5afd1`** — **no diff**.
+
 ### R225 (Aufgabe B; bossManta rodata + EP diversify, 0× ship)
 
 **Hunt.** Post-**`385107f3`**; optional **`bossManta` `@2805`/`@2807`** lead (Amenbo
