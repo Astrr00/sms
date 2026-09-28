@@ -229,7 +229,7 @@ temp** both get DCE’d; assigning **`BOOL bckPass`** adds stack (**`−0x30`**)
 
 **`TTelesa::isReachedToGoal`** (R285s): prologue **`addi r4,r3,0x104`**, **`unk0`** ternary to **`r5`**, then **`lwz`/`stw`** copy of goal **`Vec`** to **`r1+0x14`** before **`fsubs`** vs **`mPosition`** — not **`unk104.getPoint()`** returning a ref consumed via **`lfs` from `r4`**.
 
-**`SMS_IsMarioOnWire`** (R285t): leaf function, no **`stwu`**; second **`lwz` from `gpMarioOriginal->mHolder@0x68`** after the null test; bool via **`li`/`clrlwi`/`neg`/`subfe`/`clrlwi r3`** — not **`bool ret` + `!!ret`** (**`cntlzw`**).
+**`SMS_IsMarioOnWire`** (R285t/R285u): leaf function, no **`stwu`**; first **`lwz`→`r0` @ `0x68(r3)`** then **`cmplwi`/`beq`**; second **`lwz r3,0x68(r3)`** before **`0x4c`**; bool **`clrlwi r0`/`neg`/`subfe`/`clrlwi r3`** — **`bool ret` + `!!ret`** (~93.8%) beats **`return r0`** (~84%); **`mario` local `&&`** does not fix **`r0` vs `r3`** on the first holder load.
 
 **`TSpineEnemy::setGoalPathFromGraph`**: retail **`−0x60`**, **`getPoint` into `r1+0x48`**, manual **`stw`** cluster **`0x38–0x44`**, then member **`stw`** to **`unkF4`/`unk104`** — **`TPathNode(local_48)` + assign** shrinks frame and regresses (~**29%** if forced to **`Vec`** writes without stack layout).
 

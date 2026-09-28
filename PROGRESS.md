@@ -13111,6 +13111,26 @@ spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%
 
 **Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
 
+### R285u (Enemy/Player B; optional wire, 0× ship)
+
+**Hunt.** Optional **`SMS_IsMarioOnWire`**; else **~6** MAP; skip **R285 thrash**, spill **≥99.7%**, Closet/MoveBG; strict **100%** only; no frame fakematch.
+
+**Ship.** none.
+
+**Probes.**
+
+- **`MarioAccess` / `SMS_IsMarioOnWire`**: **`int r0`/`!!`**, **`mario->mHolder &&` helper**, **`mario` local `&&`** — best **~93.8%** (72B); still **`lwz r0,0x68`** vs **`lwz r3`**, missing **`clrlwi` before `neg`**, no second **`0x68`** reload — reverted to baseline source.
+- **`spider` / `TSpider::bind`**: **`−0x158`** / **`f27`–`f29`** saves vs **`stmw`** — **~83.9%** (1396B) — deferred.
+- **`WaterGun` / `TNozzleBase::emit`**: **`−0x158`** particle emit frame — **~89.0%** (716B) — deferred.
+- **`wireBinder` / `TWireBinder::init`**: **~99.6%** spill — skipped.
+- **`enemy` / `TSpineEnemy::doShortCut`**: **~94.7%** (800B) — deferred.
+- **`bossManta` / `TBossMantaManager::updateMantaEscape`**: **~90.0%** (344B) — deferred.
+- **`effectObj` / `TEffectColumWater::generate`**: **`Vec`** stack **`r1+0x18`** — **~91.9%** (312B) — deferred.
+
+**Tip (R285u).** **`SMS_IsMarioOnWire`**: first **`mHolder`** test must **`lwz`→`r0`** with **`cmplwi`/`beq`** while **`r3`** stays **`gpMarioOriginal`**; **`return !!ret`** is closer than **`return r0`**, but **`mHolder` reload @ `0x68(r3)`** before **`0x4c`** still unsolved in C without **`lwz r0`** scheduling.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
 ### R258 (Aufgabe B; defer GraphGroup/ColumSand pool + diversify, 0× ship)
 
 **Hunt.** Post-R257 dry; **defer `TGraphGroup::perform`** (empty **`TGraphWeb::perform` DCE**) and
