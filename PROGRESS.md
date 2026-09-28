@@ -13214,6 +13214,23 @@ spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%
 
 **Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
 
+### R285z (Enemy B; `bombhei` TU revive — `createModelData` + manager scaffold)
+
+**Hunt.** Revive **`bombhei`** stub per **`docs/PROGRAM_STRUCTURE_REVVING.md`**: **`BombHei.hpp`**, **`TSmallEnemyManager`** subclass, **`createModelData`** like **`egggen`/`coasterkiller`**.
+
+**Ship (8× `.text` @ 100%, TU still NonMatching).**
+
+- **`TBombHeiManager::createModelData`** — **52B** (was **missing**).
+- **`TBombHeiManager::{TBombHeiManager,createEnemyInstance,~TBombHeiManager}`**.
+- **`TBombHei::{TBombHei,getBasNameTable,~TBombHei}`** + **`@32@__dt__8TBombHeiFv`**.
+- Data: **`entry[]`**, **`bombhei_bastable`**, rodata strings pulled in via PCH compile.
+
+**WIP.** Nerves, **`load`**, actor overrides, **`__sinit_bombhei_cpp`** — still **missing**; no **`mSerialBomb`**.
+
+**Tip (R285z).** **`TBombHei`** needs **`0x1A8`** with **`unk19D[7]`** before **`unk1A4`** or **`createEnemyInstance`**/`ctor` store at **`0x19D`**.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0** (NonMatching TU not linked); **`mario/Enemy/bombhei`** **~5.6%** matched code in unit report.
+
 ### R258 (Aufgabe B; defer GraphGroup/ColumSand pool + diversify, 0× ship)
 
 **Hunt.** Post-R257 dry; **defer `TGraphGroup::perform`** (empty **`TGraphWeb::perform` DCE**) and
