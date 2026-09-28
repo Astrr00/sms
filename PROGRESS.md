@@ -11102,6 +11102,24 @@ Cluster `~`), `TNerveBPPreDie` (`trash[0x18]`, Frame OK, Vec **−0x18**),
 **Verify.** `ninja baseline` / `changes_all` ohne Code-Delta; `dtk shasum -c` →
 OK.
 
+### R166 (Aufgabe B; 1 Vollmatch Enemy/tobiPuku)
+
+**Vec-Spill (FireWanwanFreeze-Stil).** `TNerveTobiPukuDie::execute`: nach
+`velocity`-Lokal `char trashAfterVel[8];` vor `zero.y`-Zuweisung (nicht nur
+Prologue-`trash`) — **100 %**, `+508` B (`changes_all`).
+
+**Vec-Klasse gestoppt (≤2):** `toroccoEffect` (`delta`+`trash`, split-`dist`,
+`rumblePad`-Split) — Frame/`TVec3`-Spills nicht retail; `soundTorocco` unverändert.
+
+**Weitere Probes revertiert:** `TNerveTobiPukuAttack` (`trash[8]`+`unused` Vec),
+`surfingEffect` (Mtx-Temps), `moveRoof` (`trash[0x20]`+`delta`), `isTakeSituation`
+(`trash[0x10]`+`delta`), `TNerveNKFollowMario` / `torocco` entry-trash (skip).
+
+**Scanner.** Shrink: `checkWallPlane`/`surfingEffect` (+16 B Frame); Swim nur
+`doSwimming` 98 %; Special `moveRoof` (+0x20 Frame). Kein weiterer strikter Win.
+
+**Verify.** `ninja baseline` / `changes_all`; `dtk shasum -c` → OK.
+
 ### R162 (Aufgabe B; `initAndRegister` only; keine Vollmatches)
 
 Dedizierte Pass nur **`TMapObjBase::initAndRegister`**. Retail hat **kein**
