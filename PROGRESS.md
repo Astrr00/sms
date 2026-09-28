@@ -11618,6 +11618,34 @@ Closet/MoveBG; cap ~8.
 
 **Verify.** `ninja baseline` + `ninja changes_all` ggü. **`f1650c05`** — **no diff**.
 
+### R230 (Aufgabe B; post-`entry$` MAP hunt, 0× ship)
+
+**Hunt.** Post-**`132ddf9a`**; string/PARAM/float/vtable/small-text ASM; skip empty TUs, stuck lists,
+R222–R229, **`bossManta` `@2805`**, **`DebuTelesa` bastable**, Closet/MoveBG, blind **`const`** on
+**`.data`/`data`** pools; cap ~8.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, no-ship).**
+
+- **`createModelData` / `entry$`:** no remaining src/tgt **`.data` vs `.rodata`** skew in EP; **`tamaNoko`**
+  retail **`entry$3149` in `.data`** — **`static const`** was wrong (R229); without it **`createModelData`**
+  already **100%** (label **`entry$1529`** only).
+- **EP object scan:** no non-**`.ctors`** nonmatching data symbols (bastable/PARAM strings already **100%**).
+- **EP text ≤100 B @ ≥99%:** only **`getNowGravity`** (skip).
+- **`bossgesso` `SMS_GetMarioPos`:** target **weak 8 B** (`lwz r3,gpMarioPos`); out-of-line body in **`.cpp`**
+  → **redefinition** vs **`MarioAccess.hpp` inline** — needs a TU-local weak emission trick, not a naked def.
+- **`TStageEnemyInfoTable::getMatchedInfo`:** **92%** — iterator/register shape, not PARAM spelling.
+- **`fireWanwan` `TLerpControl`:** **UNUSED** **`init`/`update`** — extra **`.text`** in our TU (inlined in retail).
+- **`bosspakkun` `initJParticle`:** **UNUSED 0x280** — extra **640 B** (same class as R229).
+- **99.9% band (`BathtubKillerBreak`, `coasterkiller::bind`, …):** stack **`r1`** locals — skip band.
+
+**Tip (R230).** After **`bossgesso`**, treat **`objdump -t … | entry$`** as **necessary not sufficient** — confirm
+retail section (**`.data` vs `.rodata`**) in **`build/GMSJ01/asm/*.s`** before applying **`static const`**.
+**`tamaNoko`** is the counterexample: both sides want **writable `.data`**.
+
+**Verify.** `ninja baseline` + `ninja changes_all` ggü. **`132ddf9a`** — **no diff**.
+
 ### R225 (Aufgabe B; bossManta rodata + EP diversify, 0× ship)
 
 **Hunt.** Post-**`385107f3`**; optional **`bossManta` `@2805`/`@2807`** lead (Amenbo
