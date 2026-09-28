@@ -10920,6 +10920,27 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R178 (`TMapObjGrassManager::initDrawNear`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+- `Mtx viewItm` lag 0x14 zu tief (`0x30` statt `0x44`), die `fctiwz`-Spills
+  der S16-Konvertierung 0x18 zu tief, Frame `-0x80` statt `-0x98`.
+- `static inline initDrawNearPad()` mit `char trash[0x10]` am Funktionsende
+  trifft beides. `0x14` lässt die Matrix 4 zu hoch. Store ist DCE, kein
+  Extra-Symbol.
+
+0 Abweichungen, 588 Bytes, 147 Instruktionen.
+`decomp-diff -u mario/MoveBG/MapObjGrass -d initDrawNear`: 100 %.
+`validate-symbol-order -u mario/MoveBG/MapObjGrass`: PASS.
+Die TU hat danach keine nonmatching `.text`-Funktionen.
+
+R177 `TWoodBox::kill`, R176 `receiveMessage`, R175 `touchGround`,
+R174 `perform`, R173 `startControlAnim`, R172 `TManhole::touchPlayer`,
+R171 `calcVelocity`, R170 `appearing` unverändert strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R177 (`TWoodBox::kill`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
