@@ -12,6 +12,7 @@
 #include <System/Particles.hpp>
 #include <System/FlagManager.hpp>
 #include <System/MarDirector.hpp>
+#include <Map/MapData.hpp>
 
 // -inline deferred: source order is the reverse of mario.MAP emission order.
 
@@ -206,7 +207,29 @@ u32 TResetFruit::touchWater(THitActor*) { return 0; }
 
 void TResetFruit::touchActor(THitActor*) { }
 
-void TResetFruit::touchGround(JGeometry::TVec3<f32>*) { }
+void TResetFruit::touchGround(JGeometry::TVec3<f32>* param_1)
+{
+	// Dead slot so MWCC keeps the frame at -0x30.
+	char trash[0x10];
+	trash[0] = 0;
+	if (mGroundPlane->isDeathPlane()) {
+		mState = 11;
+		makeObjDefault();
+		makeObjDead();
+		calcRootMatrix();
+		getModel()->calc();
+		mStateTimer = mFruitWaitTimeToAppear;
+		offMapObjFlag(MAP_OBJ_FLAG_DISAPPEARING);
+		mState = TMapObjGeneral::STATE_WAITING_TO_APPEAR;
+		if (gpMarDirector->mMap == 3 && unk1A4 != 0)
+			makeObjDead();
+		param_1->x = mPosition.x;
+		param_1->y = mPosition.y;
+		param_1->z = mPosition.z;
+	} else {
+		TMapObjBall::touchGround(param_1);
+	}
+}
 
 void TResetFruit::makeObjLiving()
 {
