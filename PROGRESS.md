@@ -12122,6 +12122,31 @@ must codegen as **`lwz` at `0x180`** off the **`getSaveParam`** pointer (same ob
 **Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged). Tip
 **`c5442021`**.
 
+### R252 (Aufgabe B; EP diversify, defer ride, 0× ship)
+
+**Hunt.** Post-R251; **defer `checkRideMovement`** (full local order for **`-0xd0`** + vec/Mtx homes);
+prefer other Player/Enemy opcode/string/PARAM paths; skip R244–R251 thrash/stuck, empty/Closet/MoveBG;
+**`ninja baseline`** + **`report.json`** + **`changes_all`**; cap ~8.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, reverted / no-ship).**
+
+- **`TTelesa::isReachedToGoal`**: naive **`unk0`/`unk4`** open-code (no **`getPoint()`** call) → **74.8%**
+  (register homes **`r4`/`r5`** vs retail **`addi r4, r3, 0x104`** prologue); reverted.
+- **`TEnemyMario::checkReturn`**: componentwise **`TUtil::sqrt`** + **`distThresh`** local → **60.7%**
+  (retail **`f31=@4337`** before loop + interleaved **`gpMarioPos`** loads); reverted.
+- **`TMario::diving`**: **`li r4,0` vs `addi r5,r31,0x219c`** around **`unk1CC2`/`unk1CC4`** — PARAM path,
+  not a quick ship.
+- **Frame-only (~):** **`checkWallPlane`**, **`checkWet`**, **`TGessoPolluteObj::set`**, **`turnToCurPathNode`**,
+  **`TNerveGessoFreeze`** (extra **`b`** + frame).
+
+**Tip (R252).** Overrides that mirror inlined **`TPathNode::getPoint()`** (e.g. **`isReachedToGoal`**) need the
+**`this+0x104`** pointer setup **and** retail register allocation — replacing **`getPoint()`** with equivalent
+C alone is not enough.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged).
+
 ### R251 (Aufgabe B; ride frame validation + EP diversify, 0× ship)
 
 **Hunt.** Post-R250; optional **`checkRideMovement`** only if **`-0xd0`** + retail vec/Mtx homes
