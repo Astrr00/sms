@@ -13142,7 +13142,7 @@ spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%
 - **`enemymanager` / `TEnemyManager::createEnemies`**: ary **`0x10`/`0x14`** iterator **`lwz`** order vs clamp — **~98.8%** (340B) — deferred.
 - **`launcher` / `TCommonLauncher::init`**: **`@1664`** pool + **`lwz 0x168(r31)`** before **`rand`/`xoris`** — **~98.1%** (748B) — deferred.
 - **`Amenbo` / `TNerveAmenboTurn::execute`**: velocity **`stw`** block **`r1+0x44`** vs **`+0x30`** — **~98.9%** (704B) — deferred.
-- **`bossgesso` / `TBGBeakHit::moveRequest`**: Mario angle **`lfs`**/`**`Vec`** home **`−0x78`** — **~98.6%** (416B) — deferred.
+- **`bossgesso` / `TBGBeakHit::moveRequest`**: Mario angle **`lfs`** / **`Vec`** home **`−0x78`** — **~98.6%** (416B) — deferred.
 - **`Yoshi` / `TYoshi::appearFromEgg`**: egg appear / scale — **~97.6%** (392B) — deferred.
 - **`hamukuri` / `THamuKuri::getTakingMtx`**: taking mtx **`−0x`** frame vs **`TDangoHamuKuri`** — **~92.2%** (256B) — deferred.
 - **`graph` / `TGraphWeb::getEscapeFromMarioIndex`**: path index walk — **~97.2%** (592B) — deferred.
