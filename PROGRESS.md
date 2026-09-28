@@ -10920,6 +10920,55 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R191 (`MapObjBall`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+Bisher leerer TU.
+Jeder Map-Symbol ist definiert, der Rest bleibt Stub.
+
+- `TBigWatermelon::checkWallCollision` ruft `TMapObjGeneral::checkWallCollision` direkt.
+  32 Bytes, 8 Instruktionen.
+- `TBigWatermelon::TBigWatermelon` nullt `unk198`, `unk19C` und `unk1A0`.
+  88 Bytes, 22 Instruktionen.
+- `TRandomFruit::TRandomFruit` inlined den Reset-Konstruktor und `memset` auf `unk1A8` (32 Bytes).
+  148 Bytes, 37 Instruktionen.
+- `TResetFruit::TResetFruit` nullt `unk198` und `unk1A4` und setzt `unk19C` auf `0xFF`.
+  104 Bytes, 26 Instruktionen.
+- `TResetFruit::getLivingTime` gibt das static `mFruitLivingTime` zurück und steht weak im Header.
+  8 Bytes.
+- `TResetFruit::killByTimer` schreibt den Timer, setzt `MAP_OBJ_FLAG_DISAPPEARING` und `mState = 11`.
+  28 Bytes, 7 Instruktionen.
+- `TResetFruit::thrown` ruft `TMapObjGeneral::thrown` und setzt `mState = 11`.
+  52 Bytes, 13 Instruktionen.
+- `TMapObjBall::TMapObjBall` nullt 19 Floats ab `0x148`, `unk194` und `mInitialScaling` über `zero()`.
+  168 Bytes, 42 Instruktionen.
+- `TMapObjBall::put` ruft `TMapObjGeneral::put` und danach virtuell `calcCurrentMtx`.
+  64 Bytes, 16 Instruktionen.
+- `TMapObjBall::touchWaterSurface` und `touchPollution` rufen virtuell `kill`.
+  Je 44 Bytes, 11 Instruktionen.
+- `__sinit_MapObjBall_cpp` (764 Bytes) kommt aus `MSSetSound.hpp` / `MSoundBGM.hpp`.
+
+Destruktoren, alle `@32`-Thunks und die fünf VTables der TU sind ebenfalls 100 %.
+`validate-symbol-order`: PASS mit Weak-Order-Warnung (`getLivingTime`) und vier UNUSED-Größenwarnungen.
+
+`ninja changes_all`: fuzzy 78.41 % → 78.49 %, matched code 49.13 % → 49.20 %, matched data 64.55 % → 64.58 %.
+Kein R170–R190-Unit hat sich bewegt.
+Zwei NonMatching-Aufrufer (`newUniqueObjByName`, `getNameRef_MapObj`) ticken fuzzy um Bruchteile, matched code bleibt gleich.
+
+R190 `MapObjBianco`, R189 `MapObjPinna`, R188 `MapObjFence`,
+R187 `TModelGate` / `TMapObjWave`, R186 `MapObjMonte` / `MapObjRicco`,
+R185 `getNumGripsDead`, R184 `TWaterHitPictureHideObj::load`,
+R183 `updateCheckData`, R182 `TMapObjTurn::touchWater`,
+R181 `TCloset::touchWater`, R180 `TCasinoPanelGate::touchWater`,
+R179 `waitingToAppear`, R178 `initDrawNear`, R177 `TWoodBox::kill`,
+R176 `receiveMessage`, R175 `touchGround`, R174 `perform`,
+R173 `startControlAnim`, R172 `TManhole::touchPlayer`,
+R171 `calcVelocity`, R170 `appearing`
+unverändert strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R190 (`MapObjBianco`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
