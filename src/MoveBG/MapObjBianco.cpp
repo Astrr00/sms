@@ -8,6 +8,7 @@
 #include <MSound/SoundEffects.hpp>
 #include <JSystem/J3D/J3DGraphAnimator/J3DModel.hpp>
 #include <Player/MarioAccess.hpp>
+#include <System/Application.hpp>
 #include <stdlib.h>
 #include <string.h>
 
@@ -243,9 +244,56 @@ void TBiancoBell::ring() { }
 // UNUSED
 void TBiancoBell::ringSingle() { }
 
-u32 TBiancoBell::touchWater(THitActor*) { return 0; }
+// Fabricated. Deferred inlines make MWCC reload mMActor between the field loads.
+static inline f32 biancoBellRate(MActor* actor)
+{
+	return actor->getFrameCtrl(0)->getRate();
+}
 
-void TBiancoBell::touchPlayer(THitActor*) { }
+static inline f32 biancoBellFrame(MActor* actor)
+{
+	return actor->getFrameCtrl(0)->getFrame();
+}
+
+static inline s16 biancoBellEnd(MActor* actor)
+{
+	return actor->getFrameCtrl(0)->getEnd();
+}
+
+u32 TBiancoBell::touchWater(THitActor*)
+{
+	if (mMActor->getFrameCtrl(0)->getFrame() == 0.0f
+	    || biancoBellFrame(mMActor) + biancoBellRate(mMActor)
+	           >= (f32)biancoBellEnd(mMActor) - 1.0f) {
+		startAnim(4);
+		mMActor->getFrameCtrl(0)->setRate(SMSGetAnmFrameRate());
+		if (gpMSound->gateCheck(MSD_SE_OBJ_BI_BELL))
+			MSoundSESystem::MSoundSE::startSoundActor(
+			    MSD_SE_OBJ_BI_BELL, &mPosition, 0, nullptr, 0, 4);
+	}
+
+	// Dead slot so MWCC keeps frame -0x60.
+	char trash[1];
+	trash[0] = 0;
+	return 1;
+}
+
+void TBiancoBell::touchPlayer(THitActor*)
+{
+	if (mMActor->getFrameCtrl(0)->getFrame() == 0.0f
+	    || biancoBellFrame(mMActor) + biancoBellRate(mMActor)
+	           >= (f32)biancoBellEnd(mMActor) - 1.0f) {
+		startAnim(4);
+		mMActor->getFrameCtrl(0)->setRate(SMSGetAnmFrameRate());
+		if (gpMSound->gateCheck(MSD_SE_OBJ_BI_BELL))
+			MSoundSESystem::MSoundSE::startSoundActor(
+			    MSD_SE_OBJ_BI_BELL, &mPosition, 0, nullptr, 0, 4);
+	}
+
+	// Dead slot so MWCC keeps frame -0x60.
+	char trash[1];
+	trash[0] = 0;
+}
 
 void TBiancoBell::initMapObj()
 {

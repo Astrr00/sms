@@ -10920,6 +10920,34 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R220 (`MapObjBianco`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TBiancoBell::touchPlayer` und `TBiancoBell::touchWater`.
+`TRevolvingFenceInner::setGroundCollision` und `TMapObjBall::hold` bleiben geparkt.
+
+- `TBiancoBell::touchPlayer` läutet, wenn der Frame 0 ist oder `frame + rate >= (f32)end - 1`.
+  Danach `startAnim(4)`, Rate `SMSGetAnmFrameRate()`, `gateCheck` und `startSoundActor` mit `MSD_SE_OBJ_BI_BELL`.
+  Drei TU-lokale Inlines halten die `getFrameCtrl`-Reloads.
+  `char trash[1]` hält Frame `-0x60`.
+  288 Bytes, 72 Instruktionen.
+- `TBiancoBell::touchWater` ist derselbe Körper und gibt 1 zurück.
+  292 Bytes, 73 Instruktionen.
+  `__sinit_MapObjBianco_cpp` und `TWoodLog::control` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBianco`: PASS.
+Fünf bestehende UNUSED-Größenwarnungen.
+`MapObjBase.hpp` unverändert.
+
+`ninja changes_all`: fuzzy 79.000946 % -> 79.01683 %, matched code 49.724464 % -> 49.74062 % (1785152 -> 1785732, +580).
+Matched data bleibt 65.24985 % (417815).
+Funktionen matched 9589 -> 9591.
+`MapObjBianco` 5264 -> 5844 (+580).
+Kein R170–R219-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R219 (`MapObjPinna`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
