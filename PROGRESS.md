@@ -11231,6 +11231,29 @@ stattdessen R171/R163-Muster (`TVec3`+`trash[8]`, post-local, `gpPollution` z/y/
 
 **Verify.** `ninja baseline` / `changes_all` ohne Code-Delta.
 
+### R185 (Aufgabe B; uniform-stack scan + TVec3 helpers, keine Vollmatches)
+
+**Hunt.** (1) B-scope `≥99,5 %` mit **uniformem** `(r1)`-Shift (alle Spills =
+Frame-Δ); nur dann entry `trash[8/0x10/0x20/0x28]`. (2) empty-`TVec3` +
+`trash[8]` + Komponentenwrites auf `behaveToMario`-Helfer. (3) Strategic
+`TObjManager::perform` / `TLiveActor::initAnmSound` (kein MoveBG-Closet).
+
+**Skip (User + R184).** R184 spill-Klasse + Prior.
+
+**Scanner.** Streng uniform `(r1)`-only bei `nonmatching ≥99,5 %`: **0** Treffer;
+viele „uniform“-Kandidaten haben zusätzlich vtable/`(r12)`-Δ (z. B.
+`TMario::waitMain` — `stwu` bereits −0x48, nur `lwz 0xc4` vs `0xd8`).
+
+**Probes (~8, revertiert).** `TLiveActor::initAnmSound` (`trash[4]`/`[8]` →
+100,0 % label, 2× `(r1)`-Spill bleibt); `TObjManager::perform` (`trash[8]` →
+`stwu` OK, `stb`-Slots +0xc); `TBossEelAwaCollision::behaveToMario`
+(Komponenten/`trashAfter`/`SMS_GetMarioPos`); `TMario::waitMain` (`trash[4]`
+→ `stwu` match, vtable bleibt).
+
+**Vollmatch, strikt.** keine. Quellbaum unverändert ggü. **`ec81bde5`**.
+
+**Verify.** `ninja baseline` / `changes_all` ohne Code-Delta.
+
 ### R181 (Aufgabe B; receiveMessage entry +0x28, 1 Vollmatch)
 
 **Hunt.** `perform` / `receiveMessage` / `init` entry frame-pad (8/0x10/0x20/0x28) +
