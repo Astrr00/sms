@@ -5,14 +5,27 @@
 // rogue includes needed for matching sinit & bss
 #include <MSound/MSSetSound.hpp>
 #include <MSound/MSoundBGM.hpp>
+#include <string.h>
 
 // -inline deferred: source order is the reverse of mario.MAP emission order.
 
-BOOL TFence::receiveMessage(THitActor*, u32) { return FALSE; }
+BOOL TFence::receiveMessage(THitActor*, u32 message)
+{
+	if (message == 3) {
+		startBck("fence_normal_shake");
+		return TRUE;
+	}
+	return FALSE;
+}
 
 void TFence::initMapCollisionData() { }
 
-void TFence::initMapObj() { }
+void TFence::initMapObj()
+{
+	if (strstr(unkF4, "bamboo") != nullptr)
+		unk138 = 1;
+	TMapObjBase::initMapObj();
+}
 
 BOOL TRevolvingFenceOuter::receiveMessage(THitActor*, u32) { return FALSE; }
 
@@ -67,7 +80,13 @@ void TFenceWaterH::control() { }
 
 void TFenceWaterH::changeStatusToGo() { }
 
-void TFenceWaterH::changeStatusToWait() { }
+void TFenceWaterH::changeStatusToWait()
+{
+	unk140 = 0.0f;
+	unk13C = 0.0f;
+	mState  = 1;
+	setUpMapCollision(0);
+}
 
 BOOL TRailFence::receiveMessage(THitActor*, u32) { return FALSE; }
 

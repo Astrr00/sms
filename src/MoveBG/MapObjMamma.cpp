@@ -7,6 +7,7 @@
 #include <MSound/MSSetSound.hpp>
 #include <MSound/MSoundBGM.hpp>
 #include <MoveBG/MapObjManager.hpp>
+#include <System/Particles.hpp>
 
 // -inline deferred: source order is the reverse of mario.MAP emission order.
 
@@ -109,7 +110,12 @@ TMapObjBase* TSandBombBase::findTriggerActor()
 	                                             mRotation, scale);
 }
 
-void TSandBombBase::loadAfter() { }
+void TSandBombBase::loadAfter()
+{
+	unk144 = findTriggerActor();
+	((TSandLeaf*)unk144)->unk138 = (TMapObjGeneral*)this;
+	unk144->appear();
+}
 
 void TSandBombBase::initMapObj() { }
 
@@ -261,7 +267,12 @@ bool TSandBird::nameIsObj(const char* name)
 	return strstr(name, "none") == nullptr ? true : false;
 }
 
-void TSandBird::initMapObj() { }
+void TSandBird::initMapObj()
+{
+	TJointCoin::initMapObj();
+	SMS_LoadParticle("/scene/map/map/ms_sunadori_a.jpa", 0x159);
+	SMS_LoadParticle("/scene/map/map/ms_sunadori_b.jpa", 0x15A);
+}
 
 TSandBird::TSandBird(const char* name)
     : TJointCoin(name)

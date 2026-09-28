@@ -10920,6 +10920,48 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R196 (`MapObjMonte` / `MapObjMamma` / `MapObjFence` / `MapObjPinna`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+Acht kurze Fills ohne `ble`/`bge`/`lfsu`.
+`TMareFall::calc` und `TMapObjBall::makeObjDefault` bleiben geparkt (Frame).
+`TGoalWatermelon::load` bleibt Stub: gleicher Code, Frame `-0x38` statt `-0x48`.
+`TChangeStageMerrygoround::calc` bleibt Stub: `gpMarioPos` und `gpMarioParticleManager` tauschen die Lade-Reihenfolge.
+`TSandCastle::findTriggerActor` bleibt `return nullptr`.
+
+- `TGoalFlag::initMapObj` ruft `TMapObjBase::initMapObj`.
+  32 Bytes, 8 Instruktionen.
+- `TFluff::initMapObj` ruft `TMapObjBase::initMapObj`, dann `unk138 = 300` und `unk13C = 0.5`.
+  60 Bytes, 15 Instruktionen.
+- `TSandBombBase::loadAfter` speichert `findTriggerActor` in `unk144`, setzt `unk138` auf `this` und ruft virtuell `appear`.
+  88 Bytes, 22 Instruktionen.
+- `TSandBird::initMapObj` ruft `TJointCoin::initMapObj` und `SMS_LoadParticle` für `0x159` und `0x15A`.
+  144 Bytes, 36 Instruktionen.
+- `TFence::receiveMessage` startet `fence_normal_shake`, wenn die Nachricht 3 ist.
+  60 Bytes, 15 Instruktionen.
+- `TFence::initMapObj` setzt `unk138`, wenn `strstr(unkF4, "bamboo")` trifft, dann `TMapObjBase::initMapObj`.
+  76 Bytes, 19 Instruktionen.
+- `TFenceWaterH::changeStatusToWait` nullt `unk140` und `unk13C`, setzt `mState` auf 1 und ruft `setUpMapCollision(0)`.
+  56 Bytes, 14 Instruktionen.
+- `TAmiKing::loadAfter` ruft `TMapObjBase::loadAfter` und `SMS_LoadParticle` für `0x184`.
+  92 Bytes, 23 Instruktionen.
+
+`validate-symbol-order` für Monte, Mamma, Fence und Pinna: PASS.
+Dieselben UNUSED-Größenwarnungen wie zuvor.
+Fence behält die weak-only Order-Warnung.
+
+`ninja changes_all`: fuzzy 78.723595 % → 78.73961 %, matched code 49.4223 % → 49.43923 % (1774304 → 1774912, +608).
+Matched data bleibt 65.18551 %.
+MapObjMamma matched code 4164 → 4396.
+MapObjPinna matched code 2964 → 3056.
+MapObjFence matched code 1724 → 1916.
+MapObjMonte matched code 1940 → 2032.
+Kein R170–R195-Unit hat matched code verloren.
+`MarNameRefGen_MapObj` und `MapObjManager` unverändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R195 (`MapObjMamma` / `MapObjBall`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

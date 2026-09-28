@@ -8,6 +8,7 @@
 // rogue includes needed for matching sinit & bss
 #include <MSound/MSSetSound.hpp>
 #include <MSound/MSoundBGM.hpp>
+#include <System/Particles.hpp>
 
 // -inline deferred: source order is the reverse of mario.MAP emission order.
 
@@ -143,7 +144,11 @@ void TPinnaEntrance::loadAfter() { }
 
 void TWaterRecoverObj::touchPlayer(THitActor*) { }
 
-void TAmiKing::loadAfter() { }
+void TAmiKing::loadAfter()
+{
+	TMapObjBase::loadAfter();
+	SMS_LoadParticle("/scene/Mapobj/amiking.jpa", 0x184);
+}
 
 void TAmiKing::initMapObj() { }
 

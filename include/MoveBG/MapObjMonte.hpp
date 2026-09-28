@@ -81,6 +81,10 @@ public:
 	void appear();
 	void initMapObj();
 	TFluff(const char*);
+
+public:
+	/* 0x138 */ f32 unk138;
+	/* 0x13C */ f32 unk13C;
 };
 
 class TFluffManager : public TMapObjBase {

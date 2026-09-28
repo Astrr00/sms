@@ -95,7 +95,7 @@ TSwingBoard::TSwingBoard(const char* name)
 
 void TGoalFlag::touchActor(THitActor*) { }
 
-void TGoalFlag::initMapObj() { }
+void TGoalFlag::initMapObj() { TMapObjBase::initMapObj(); }
 
 u32 TFluff::touchWater(THitActor*) { return 0; }
 
@@ -107,7 +107,12 @@ void TFluff::control() { }
 
 void TFluff::appear() { }
 
-void TFluff::initMapObj() { }
+void TFluff::initMapObj()
+{
+	TMapObjBase::initMapObj();
+	unk138 = 300.0f;
+	unk13C = 0.5f;
+}
 
 TFluff::TFluff(const char* name)
     : TMapObjBase(name)
