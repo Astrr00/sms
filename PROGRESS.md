@@ -11700,6 +11700,29 @@ Closet/MoveBG, **`getNowGravity`**, **`DebuTelesa` bastable**, **`bossManta` `@2
 **Verify.** `ninja changes_all` ggü. **`c523ceef`**: **+2** matched functions (**9265 → 9267**), **+272 B**
   matched code.
 
+### R233 (Aufgabe B; WaterGun diving callbacks, 2× ship)
+
+**Hunt.** Post-**`1d357e6b`**; extend R232 **`unused2[7]`** / **`trashAfter[4]`** on J3D **`Mtx`**
+  locals; skip **`isReachedToGoalXZ`**, **`getPolluteRadius`**, **`coasterkiller::bind`**; cap ~8.
+
+**Ship.**
+
+- **`WaterGunDivingCtrlL`** / **`WaterGunDivingCtrlR`** (144 B each): uncomment **`volatile u32 unused2[7]`**
+  before **`MsMtxSetRotRPH`** (retail **`Mtx`** at **`r1+0x2c`**) → **100%**.
+
+**Probes (~8, no-ship).**
+
+- **`NozzleCtrl`** (99.8%): **`unused2[6]`** after **`Mtx`** → **`0x28` vs `0x2c`** (4 B); **`unused2[4]`**
+  before **`Mtx`** → **`0x28` vs `0x14`** — needs different gap layout (deferred).
+- **EP scan:** no remaining **`addi r1, 0x14` vs `0x10`** helpers @ ≥99.78% after R232.
+
+**Tip (R233).** **`NozzleCtrl`** shares the WaterGun callback family but retail **`Mtx`** sits at **`r1+0x28`**
+  inside a deeper **`if`** nest — mirror **`RotateCtrl`**’s **`unused2[7]`** *after* **`Mtx`**, then tune count
+  ( **`[6]`** is 4 B high on **`addi`** only).
+
+**Verify.** `ninja changes_all` ggü. **`1d357e6b`**: **+2** matched functions (**9267 → 9269**), **+288 B**
+  matched code.
+
 ### R225 (Aufgabe B; bossManta rodata + EP diversify, 0× ship)
 
 **Hunt.** Post-**`385107f3`**; optional **`bossManta` `@2805`/`@2807`** lead (Amenbo
