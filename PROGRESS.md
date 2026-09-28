@@ -10920,6 +10920,38 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R274 (`MapObjBall`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TResetFruit::touchPollution`.
+
+- `emitAndBindToPosPtr` mit `PARTICLE_MS_MOE_FIRE_OFF` an `mPosition`.
+  Dann `MSD_SE_OBJ_AWAY_INTO_GRAF`, wenn `gateCheck` wahr ist.
+  Virtuelles `makeObjDefault`, dann `mState` 11, dann noch einmal `makeObjDefault`.
+  Virtuelles `makeObjDead` und `calcRootMatrix`.
+  `getModel()->calc`.
+  `mStateTimer` wird `mFruitWaitTimeToAppear`.
+  `MAP_OBJ_FLAG_DISAPPEARING` geht aus.
+  `mState` wird `STATE_WAITING_TO_APPEAR`.
+  Wenn `gpMarDirector->mMap == 3` und `unk1A4 != 0`, noch einmal virtuelles `makeObjDead`.
+  `char trash[0x20]` hält das Frame bei `-0x38`.
+  300 Bytes, 75 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.2423 % -> 79.25054 %, matched code 49.999554 % -> 50.007908 % (1795028 -> 1795328, +300).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9647 -> 9648.
+`MapObjBall` 4804 -> 5104 (+300).
+Kein R170–R273-Unit hat matched code verloren.
+Nur `MapObjBall` hat matched code gewonnen.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R273 (`MapObjBall`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

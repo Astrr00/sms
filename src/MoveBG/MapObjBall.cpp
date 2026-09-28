@@ -158,7 +158,28 @@ void TResetFruit::thrown()
 
 void TResetFruit::hold(TTakeActor*) { }
 
-void TResetFruit::touchPollution() { }
+void TResetFruit::touchPollution()
+{
+	// Dead slot so MWCC keeps the frame at -0x38.
+	char trash[0x20];
+	trash[0] = 0;
+	gpMarioParticleManager->emitAndBindToPosPtr(PARTICLE_MS_MOE_FIRE_OFF,
+	                                            &mPosition, 0, nullptr);
+	if (gpMSound->gateCheck(MSD_SE_OBJ_AWAY_INTO_GRAF))
+		MSoundSESystem::MSoundSE::startSoundActor(MSD_SE_OBJ_AWAY_INTO_GRAF,
+		                                          &mPosition, 0, nullptr, 0, 4);
+	makeObjDefault();
+	mState = 11;
+	makeObjDefault();
+	makeObjDead();
+	calcRootMatrix();
+	getModel()->calc();
+	mStateTimer = mFruitWaitTimeToAppear;
+	offMapObjFlag(MAP_OBJ_FLAG_DISAPPEARING);
+	mState = TMapObjGeneral::STATE_WAITING_TO_APPEAR;
+	if (gpMarDirector->mMap == 3 && unk1A4 != 0)
+		makeObjDead();
+}
 
 void TResetFruit::touchWaterSurface()
 {
