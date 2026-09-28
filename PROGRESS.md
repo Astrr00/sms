@@ -12122,6 +12122,32 @@ must codegen as **`lwz` at `0x180`** off the **`getSaveParam`** pointer (same ob
 **Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged). Tip
 **`c5442021`**.
 
+### R254 (Aufgabe B; defer wait MAP ambiguity + EP diversify, 0× ship)
+
+**Hunt.** Post-R253; optional **`waitingCommonEvents`** only if MAP-clear **`IConverge`** + **`rlwinm`**;
+else diversify; skip R251–R253 thrash/stuck, empty/Closet/MoveBG; **`ninja baseline`** +
+**`report.json`** + **`changes_all`**; cap ~8.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, reverted / no-ship).**
+
+- **`TMario::waitingCommonEvents` (optional, not MAP-clear):** **`mario.MAP`** lists symbol only
+  (no flag names). Retail **`rlwinm` bit 17** on **`mFlag@0x118`** ⇒ **`0x20000`** (**`MARIO_FLAG_IN_WATER`**
+  in header), not **`MARIO_FLAG_IS_PERFORMING` (`0x200000`)**. **`trash[0x10]`** + **`face − intended`**
+  still leaves **`extsh`**, **`mInput` bit 16 vs 15**, wrong **`mFlag`** bit with **`& IS_PERFORMING`**
+  or **`& 0x20000`** — defer to humans.
+- **`TNerveSmallEnemyJump`**: same **`cmpwi` vs `clrlwi`** on **`||`** live flags + **`-0x58`** frame.
+- **`TNerveSmallEnemyHitWaterJump`**, **`TEMario::init`**, **`doRunning`**, **`isFindMario`**: frame/reg
+  **`~`** or defer.
+- **`TNerveSmallEnemyFreeze`**: **100%** fuzzy in overview — already matched or no `.text` diff listed.
+
+**Tip (R254).** Treat **`waitingCommonEvents`** **`mFlag`** branch as **asm-first**: retail tests
+**bit 17 (`0x20000`)**; **`checkFlag(IS_PERFORMING)`** cannot match until enum/source agree with MAP
+or cross-TU evidence — **`trash[0x10]`** alone is insufficient.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged).
+
 ### R253 (Aufgabe B; EP outside R251–252 defer, 0× ship)
 
 **Hunt.** Post-R252; skip **`checkRideMovement`**, **`isReachedToGoal`**, **`checkReturn`**, **`diving`** +
