@@ -13051,6 +13051,26 @@ spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%
 
 **Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
 
+### R285r (Enemy/Player B; defer Bathtub/setGoal, 0× ship)
+
+**Hunt.** **~6** fresh MAP; skip **`setGoalPathFromGraph`**, **`TBathtubKillerManager::load`**, **R285 thrash**, spill **≥99.7%**, Closet/MoveBG; strict **100%** only; no frame fakematch.
+
+**Ship.** none.
+
+**Probes (~6).**
+
+- **`coasterkiller` / `TCoasterKillerManager::load`**: **`−0x70`** / **`stw r30` @ `0x44`** vs **`−0x30`** — **~98.4%** (292B) — defer (Bathtub-class frame).
+- **`coasterkiller` / `TCoasterKiller::perform`**: **`gpMarioPos`** distance **`lfs`/`fsubs`** interleave vs **`distance()`** — manual **`f32` chain** → **~79.1%** — reverted; retail **~95.5%** at **`−0x58`**.
+- **`namekuri` / `NameKuriScaleCallback`**: scale **`Mtx`** home **`r1+0x48`** vs **`+0x44`** + **`.sdata2`** pool — **~98.9%** (240B) — deferred.
+- **`hinokuri2` / `TNerveHino2JumpIn::execute`**: **`r29`/`r30`** body + **`unk104`** ternary vs **`addi r3,r29,0x104`** — **~95.4%** (364B) — deferred.
+- **`pakkun` / `PakkunRootCallback2`**: **`−0x90`** scale concat matrix vs **`−0x70`** — **~98.1%** (180B) — deferred.
+- **`gesso` / `GessoBodyCallback`**: joint scale / **`MTXConcat`** schedule — **~85.5%** (432B) — deferred.
+- **`hamukuri` / `TDangoHamuKuri::getTakingMtx`**: **~99.6%** spill — skipped.
+
+**Tip (R285r).** **`TCoasterKiller::perform`**: after **`gpMarioPos`**, retail loads **`mPosition.x`**, **`mario.x`**, **`mPosition.y`**, then **`fsubs`** before **`lfs mario.y`** — not a single **`TVec3::distance`** inline.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
 ### R258 (Aufgabe B; defer GraphGroup/ColumSand pool + diversify, 0× ship)
 
 **Hunt.** Post-R257 dry; **defer `TGraphGroup::perform`** (empty **`TGraphWeb::perform` DCE**) and
