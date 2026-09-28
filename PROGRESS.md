@@ -11927,6 +11927,27 @@ combined with **`||`** short-circuit risks branch inversion.
 
 **Verify.** `ninja changes_all` ggü. baseline (**9273**): **+0** (**9273** unchanged).
 
+### R243 (Aufgabe B; medium nerve + fadds schedule, 1× ship)
+
+**Hunt.** Diversify past ≤120 B accessors; medium text with opcode path; data/vtable if MAP-clear;
+gate **`changes_all` `matched_functions`**; skip R241–242 / frame-only / **`getEmitPosDir` asm**; cap ~8.
+
+**Ship.** **`TNerveGessoTurn::execute`** — inlined **`TGesso::turning()`** **`fadds`** wanted **`mTurnAngle`**
+in **f1** then **`7.2f` in f2** (`fadds f1,f1,f2` @ **`8020xxxx`**); split temps fixed opcode
+**and** **`r1 0x28`** frame (**260 B**).
+
+**Probes (~2, no-ship).**
+
+- **`TKumokun::moveObject`**: retail inlines **`updateAnimation`** (**UNUSED `0x19c`**) + **`unk1DC`/`unk1E0`**
+  queue — not a GPR-only patch on current stub (**95.3%**).
+- **EP `.ctors`/`.rodata` scan**: no new **≥90%** PARAM blobs beyond known **`MtxCalcTypeName`** / **`@2843`**.
+
+**Tip (R243).** Medium nerves that call small parent helpers: **`f1 + f2`** compare may need explicit
+**`f32 f1 = mTurnAngle; f32 f2 = 7.2f;`** — not **`mTurnAngle + 7.2f`** in one expression — to match
+MWCC **`lfs`/`fadds`** order inside inlined **`turning()`**.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9273**): **+1** (**9273 → 9274**).
+
 ### R225 (Aufgabe B; bossManta rodata + EP diversify, 0× ship)
 
 **Hunt.** Post-**`385107f3`**; optional **`bossManta` `@2805`/`@2807`** lead (Amenbo
