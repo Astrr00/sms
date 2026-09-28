@@ -10920,6 +10920,32 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R290 (`MapObjMare`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjElasticCode::control`.
+
+- `TMapObjBase::control`.
+  `mVelocity.y` wird mit `unk140` multipliziert.
+  Danach kommt `unk13C * (mInitialPosition.y - mPosition.y) - getGravityY()`.
+  Hält das Objekt etwas, wird `unk138` abgezogen.
+  Die gehaltene Position bekommt `mVelocity.y` und geht an `moveRequest`.
+  `mPosition.y` addiert `mVelocity.y`.
+  `char trash[0x18]` hält das Frame bei `-0x58`.
+  272 Bytes, 68 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMare`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.344826 % -> 79.35228 %, matched code 50.11621 % -> 50.123787 % (1799216 -> 1799488, +272).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9663 -> 9664.
+`MapObjMare` 5312 -> 5584 (+272).
+Kein R170–R289-Unit hat matched code verloren.
+
 ### R289 (`MapObjPinna`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

@@ -130,7 +130,23 @@ TCogwheel::TCogwheel(const char* name)
 
 void TMapObjElasticCode::draw() const { }
 
-void TMapObjElasticCode::control() { }
+void TMapObjElasticCode::control()
+{
+	TMapObjBase::control();
+	mVelocity.y *= unk140;
+	mVelocity.y += unk13C * (mInitialPosition.y - mPosition.y) - getGravityY();
+	if (mHeldObject) {
+		mVelocity.y -= unk138;
+		JGeometry::TVec3<f32> pos = mHeldObject->mPosition;
+		JGeometry::TVec3<f32> vel = mVelocity;
+		pos.y += vel.y;
+		mHeldObject->moveRequest(pos);
+	}
+	JGeometry::TVec3<f32> vel2 = mVelocity;
+	mPosition.y += vel2.y;
+	char trash[0x18];
+	trash[0] = 0;
+}
 
 void TMapObjElasticCode::initMapObj()
 {
