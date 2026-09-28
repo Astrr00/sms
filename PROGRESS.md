@@ -10920,6 +10920,31 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R217 (`MapObjMamma`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TShiningStone::perform` ohne `SMatrix34C`-Leer-Konstruktor.
+`TRevolvingFenceInner::setGroundCollision` und `TMapObjBall::hold` bleiben geparkt.
+
+- `TShiningStone::perform` läuft über vier `MActor` an `unk68` und ruft danach `unk6C` auf.
+  Wenn `(int)unk74` über 0, 1 bzw. 2 liegt, emittiert es die Partikel `0x143`/`0x144`/`0x145` an `mPosition`.
+  `cmpwi`+`ble` ist das natürliche `>`.
+  216 Bytes, 54 Instruktionen.
+  `__sinit_MapObjMamma_cpp`, `TMammaYacht::initMapObj` und der Konstruktor bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMamma`: PASS.
+Acht bestehende UNUSED-Größenwarnungen.
+`MapObjBase.hpp` unverändert.
+
+`ninja changes_all`: fuzzy 78.970085 % -> 78.97599 %, matched code 49.693047 % -> 49.69906 % (1784024 -> 1784240, +216).
+Matched data bleibt 65.24985 % (417815).
+Funktionen matched 9584 -> 9585.
+`MapObjMamma` 5756 -> 5972 (+216).
+Kein R170-R216-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R216 (`MapObjMare`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

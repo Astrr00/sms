@@ -6,6 +6,7 @@
 #include <Map/Map.hpp>
 #include <Map/MapCollisionEntry.hpp>
 #include <Map/MapData.hpp>
+#include <M3DUtil/MActor.hpp>
 #include <string.h>
 
 // rogue includes needed for matching sinit & bss
@@ -263,7 +264,19 @@ void TShiningStone::endDemo() { }
 
 void TShiningStone::putOnLight(TLiveActor*) { }
 
-void TShiningStone::perform(u32, JDrama::TGraphics*) { }
+void TShiningStone::perform(u32 cue, JDrama::TGraphics* graphics)
+{
+	for (int i = 0; i < 4; ++i) {
+		((MActor**)unk68)[i]->perform(cue, graphics);
+		if ((int)unk74 > 0)
+			gpMarioParticleManager->emit(0x143, &mPosition, 1, this);
+		if ((int)unk74 > 1)
+			gpMarioParticleManager->emit(0x144, &mPosition, 1, this);
+		if ((int)unk74 > 2)
+			gpMarioParticleManager->emit(0x145, &mPosition, 1, this);
+	}
+	((MActor*)unk6C)->perform(cue, graphics);
+}
 
 void TShiningStone::load(JSUMemoryInputStream&) { }
 
