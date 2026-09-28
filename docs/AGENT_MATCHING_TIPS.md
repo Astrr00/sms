@@ -203,6 +203,8 @@ temp** both get DCE’d; assigning **`BOOL bckPass`** adds stack (**`−0x30`**)
 
 **`TNerveSmallEnemyJump::execute`**: at **`spine->getTime()==0`**, retail **`lwz` `mLiveFlag`**, **`rlwinm` bit 16 (`UNK8000`)**, **`cmpwi`/`beq`**, then bit **13 (`UNK40000`)** — not **`checkLiveFlag2||checkLiveFlag`**. Velocity uses vtable **`0x108`** into stack **`0x40–0x48`**; exit uses **`rlwinm` airborne (bit 24)** + **`cmpwi`**, not **`isAirborne()`**. Flag/`cmpwi` alone is not enough — keep **`getVelocity`/`setVelocity` out** (manual **`lwz`/`stw` `mVelocity@0xAC`** + **`blrl` `0x108`** for jump force).
 
+**`TSmallEnemy::changeMove`**: block-wait compare builds **`lfd` pairs** from **`lis 0x4330` + `xoris` on `mBlockWaitTime`**; **`fcmpo`** uses **`f0` vs `f6`** in that order. The **`mSLJumpForce`/`mSL*` `.sdata2` path** follows a **`lwz` from `this+0x178`**, not early param **`get()`** calls.
+
 **`TTamaNoko::isReachedToGoal`** (and **`TTelesa`**): retail inlines **`TPathNode`** at **`this+0x104`** — **`unk0` ? `unk0+0x10` : `&unk4`** — not an out-of-line **`getPoint()`** call; **`TVec3` assign from `mPosition`** breaks the **`addi r5,r4,4`** branch.
 
 **`TEnemyAttachment::sendMessage`** walks **`mCollisions`** with **`lwz r3, 0x44(r29)`** then
