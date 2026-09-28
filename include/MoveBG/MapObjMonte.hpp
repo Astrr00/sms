@@ -85,6 +85,8 @@ public:
 public:
 	/* 0x138 */ f32 unk138;
 	/* 0x13C */ f32 unk13C;
+	/* 0x140 */ u8 unk140[0x20];
+	/* 0x160 */ f32 unk160;
 };
 
 class TFluffManager : public TMapObjBase {

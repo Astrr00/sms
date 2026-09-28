@@ -114,7 +114,16 @@ void TGoalFlag::touchActor(THitActor*) { }
 
 void TGoalFlag::initMapObj() { TMapObjBase::initMapObj(); }
 
-u32 TFluff::touchWater(THitActor*) { return 0; }
+u32 TFluff::touchWater(THitActor* actor)
+{
+	const JGeometry::TVec3<f32>& water = TMapObjBase::getWaterPos(actor);
+	JGeometry::TVec3<f32> normal;
+	getNormalVecFromTarget(water.x, water.y, water.z, &normal);
+	mVelocity.x -= normal.x * unk160;
+	mVelocity.y -= normal.y * unk160;
+	mVelocity.z -= normal.z * unk160;
+	return 1;
+}
 
 void TFluff::move() { }
 

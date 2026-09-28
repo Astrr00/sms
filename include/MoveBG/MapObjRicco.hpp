@@ -47,12 +47,17 @@ public:
 	TSurfGesoObj(const char* name = "イカサーフィン");
 };
 
+class TFruitLauncher;
+
 class TFruitSwitch : public TMapObjBase {
 public:
 	void pullUp();
 	void pushDown();
 	BOOL receiveMessage(THitActor* sender, u32 message);
 	TFruitSwitch(const char* name = "フルーツスイッチ");
+
+public:
+	/* 0x138 */ TFruitLauncher* unk138;
 };
 
 class TFruitLauncher : public TMapObjBase {

@@ -1,5 +1,6 @@
 #include <MoveBG/MapObjRicco.hpp>
 #include <JSystem/J3D/J3DGraphAnimator/J3DModel.hpp>
+#include <Map/MapCollisionManager.hpp>
 
 static JGeometry::TVec3<f32> submarineCranePos_forSound(1956.0f, 1000.0f,
                                                         6425.0f);
@@ -56,10 +57,22 @@ void TFruitSwitch::pullUp() { }
 
 void TFruitSwitch::pushDown() { }
 
-BOOL TFruitSwitch::receiveMessage(THitActor*, u32) { return FALSE; }
+BOOL TFruitSwitch::receiveMessage(THitActor*, u32 message)
+{
+	if (message == HIT_MESSAGE_HIP_DROP) {
+		startBck("riccoswitch");
+		onHitFlag(HIT_FLAG_NO_COLLISION);
+		if (mMapCollisionManager->unk8 != nullptr)
+			mMapCollisionManager->unk8->remove();
+		unk138->fireObj();
+		return TRUE;
+	}
+	return FALSE;
+}
 
 void TFruitLauncher::appearFruit() const { }
 
+#pragma dont_inline on
 void TFruitLauncher::fireObj()
 {
 	// Address-of keeps the weak out-of-line copy.
@@ -67,5 +80,6 @@ void TFruitLauncher::fireObj()
 	volatile MActor* (TLiveActor::*p)() const = &TLiveActor::getMActor;
 	(void)p;
 }
+#pragma dont_inline off
 
 void TFruitLauncher::loadAfter() { }

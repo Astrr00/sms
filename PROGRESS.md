@@ -10920,6 +10920,40 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R201 (`MapObjMonte` / `MapObjRicco`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+Zwei kurze Fills ohne `ble`/`bge`/`lfsu` und ohne `SMatrix34C`-Leer-Konstruktor.
+Zurückgenommen, nur Frame:
+`TRailFence::receiveMessage` (`-0x20` statt `-0x28`),
+`TMapObjWave::perform` (`-0x20` statt `-0x40`),
+`TResetFruit::makeObjWaitingToAppear` (`-0x18` statt `-0x28`).
+Zurückgenommen, Frame plus Argument-Schedule:
+`TSandCastle::waitBeforeExplode` (`-0x20` statt `-0x28`).
+Zurückgenommen, Ablauf:
+`TFerrisWheel::becomeCalmlyCallback` (`gpMSound` vor dem Vergleich, `mr` statt `addi`),
+`TMapObjWave::getWaveHeight` (zweites `sinf` anders gerechnet).
+
+- `TFluff::touchWater` holt die Wasserposition, bildet die Normale und zieht sie mal `unk160` von `mVelocity` ab.
+  140 Bytes, 35 Instruktionen.
+- `TFruitSwitch::receiveMessage` startet bei `HIT_MESSAGE_HIP_DROP` `riccoswitch`, setzt `HIT_FLAG_NO_COLLISION`, ruft virtuell `remove` auf der Kollision und `fireObj` auf `unk138`.
+  `fireObj` bleibt per `#pragma dont_inline` ein `bl`.
+  128 Bytes, 32 Instruktionen.
+
+`validate-symbol-order` für Monte und Ricco: PASS.
+Dieselben UNUSED-Größenwarnungen wie zuvor.
+
+`ninja changes_all`: fuzzy 78.81031 % → 78.8174 %, matched code 49.512882 % → 49.520348 % (1777556 → 1777824, +268).
+Matched data bleibt 65.18551 %.
+Funktionen matched 9543 → 9545.
+MapObjMonte matched code 2296 → 2436.
+MapObjRicco matched code 2020 → 2148.
+Pinna, Mamma, Fence, Ball, `MapObjManager` und `MarNameRefGen_MapObj` unverändert.
+Kein R170–R200-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R200 (`MapObjBianco` / `MapObjBall` / `MapObjFence`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
