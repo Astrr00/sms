@@ -11139,6 +11139,24 @@ torocco/sound, prior deadlocks.
 
 **Verify.** `ninja baseline` / `changes_all` ohne Code-Delta; `dtk shasum -c` → OK.
 
+### R174 (Aufgabe B; entry frame-pad, 3 Vollmatches)
+
+**Hunt.** Entry `char trash[N]` (+ `trash[0]=0` wenn nötig) bei Frame **−8/−16**;
+emitSweat-`TVec3` wo passend.
+
+**Skip (User + R173).** `TGessoPolluteObj::set`, `TRiccoHook::init`,
+`TNerveMameGessoJitabata`, TamaNoko-Nerves, `TNerveHino2Burst`,
+`TFireHamuKuri::behaveToWater`, `TDangoHamuKuri::behaveToWater` (TVec3-Slots),
+`TMario::jumpProcess` (+16 overshoot), `TNerveBPPreDie` (TVec3/inlined Body),
+Prior-Skips.
+
+**Vollmatch, strikt (3).**
+`TFireWanwanTailHit::receiveMessage` (`fireWanwan.cpp`, `trash[0x10]`);
+`TNerveBPHover::execute` (`bosspakkun.cpp`, `trash[0x10]`);
+`TBossPakkun::receiveMessage` (`bosspakkun.cpp`, `trash[0x10]` + `trash[0]=0`).
+
+**Verify.** `ninja baseline` / `changes_all`; `dtk shasum -c` → OK.
+
 ### R173 (Aufgabe B; entry +8 frame, 1 Vollmatch)
 
 **Hunt.** `setMActorAndKeeper`-Klonen (meist schon 100 % @108B); emitSweat-`TVec3`;

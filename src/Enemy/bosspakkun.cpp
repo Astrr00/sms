@@ -1129,13 +1129,13 @@ void TBossPakkun::kill()
 
 BOOL TBossPakkun::receiveMessage(THitActor* sender, u32)
 {
+	char trash[8];
+	trash[0] = 0;
 	if (static_cast<TBossPakkunManager*>(mManager)->unk54 != 0)
 		return false;
 
 	// Address first, then the loaded nerve on the left of ==.
 	// `&sleep == getLatestNerve()` swaps the cmplw operands.
-	// TODO: frame is still 0x50 against retail 0x60. No interior
-	// stack access, so a single named int is not the next try.
 	const TNerveBase<TLiveActor>* sleep = &TNerveBPSleep::theNerve();
 	if (mSpine->getLatestNerve() == sleep
 	    && sender->getActorType() == 0x1000000d) {
@@ -1946,6 +1946,7 @@ DEFINE_NERVE(TNerveBPFlyPivot, TLiveActor)
 
 DEFINE_NERVE(TNerveBPHover, TLiveActor)
 {
+	char trash[0x10];
 	TBossPakkun* boss = static_cast<TBossPakkun*>(spine->getBody());
 	if (spine->getTime() == 0) {
 		boss->changeBck(16);
