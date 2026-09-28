@@ -9,6 +9,7 @@
 // rogue includes needed for matching sinit & bss
 #include <MSound/MSSetSound.hpp>
 #include <MSound/MSoundBGM.hpp>
+#include <System/Particles.hpp>
 #include <System/FlagManager.hpp>
 #include <System/MarDirector.hpp>
 
@@ -191,7 +192,35 @@ void TResetFruit::waitEffect() { }
 // UNUSED
 void TResetFruit::rotting() { }
 
-void TResetFruit::breaking() { }
+void TResetFruit::breaking()
+{
+	Mtx scaleMtx;
+	// Dead slot so MWCC keeps the matrix at r1+0x24 and the frame at -0x60.
+	char trash[10];
+	trash[0] = 0;
+	MTXScale(scaleMtx, 1.0f, mBreakingScaleSpeed, 1.0f);
+
+	MtxPtr anmMtx = getModel()->getAnmMtx(0);
+	concatOnlyRotFromLeft(scaleMtx, anmMtx, anmMtx);
+
+	mScaling.y *= mBreakingScaleSpeed;
+	anmMtx[1][3] = mBodyRadius * mScaling.y + mPosition.y;
+
+	if (mScaling.y < 0.2f) {
+		f32 half = 0.5f;
+		mPosition.y += mBodyRadius * half;
+		mScaling.x  = mInitialScaling.x;
+		mScaling.y  = mInitialScaling.y;
+		mScaling.z  = mInitialScaling.z;
+		emitAndScale(PARTICLE_MS_ENM_DISAP_A_W, 0, &mPosition);
+		if (gpMSound->gateCheck(MSD_SE_SMOKE_EFFECT))
+			MSoundSESystem::MSoundSE::startSoundActor(
+			    MSD_SE_SMOKE_EFFECT, &mPosition, 0, nullptr, 0, 4);
+		mStateTimer = 0xF0;
+		sleep();
+		mState = 0xD;
+	}
+}
 
 void TResetFruit::appearing()
 {
