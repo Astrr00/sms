@@ -11488,6 +11488,36 @@ als Member-Name. Check: **`decomp-diff -u … -t object -s nonmatching`**.
 **Verify.** `ninja changes_all` ggü. **`cf903cfc`**; **`namekuri` matched_data
 70.86% → 100%**; **`build.sha1` OK**.
 
+### R217 (Aufgabe B; EP “100% insn” + Pakkun load probe, 0× ship)
+
+**Hunt.** Post-**`0c4dfabe`** baseline; vtable/MAP like R212–R214; small EP text/data;
+**`TPakkun::load`** / **`@3450`**; cap ~8; same skip list as R216.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, no-ship).**
+
+- **EP scan (99.5%+ text ≤300 B):** **`TCoasterEnemy::bind`**, **`TEnemyMario::tryTake`**
+  **`TNerveSmallEnemyFreeze`**, **`TConductor::getManagerByName`**, **`TPakkun::load`**
+  — all stack / frame-size gaps, not literal-table wins.
+- **`TPakkun::load` / `TStayPakkun::load`** (~99.7–99.8%): retail **`@3450`**
+  zero pool + path-node temps at **`r1+0x18`/`0x1c`**; ours **`setGoalPath`**
+  inline → **`@1801`** and **`r1+0x14`**. Direct field writes **regressed** (~48%).
+- **Objdiff “100.0%” text still nonmatching:** **`TGraphWeb::getRandomNextIndex`**
+  (**`TRailNode`** stack **`0x24`** vs **`0x1c`**), **`THinokuri2::perform`**
+  (question **`TVec3`** at **`0x34`** vs **`0x2c`**), **`TBEelTearsDrop::perform`**
+  ( **`Mtx`** at **`0x6c`** vs **`0x60`**, branch reloc).
+- **Vtables:** only **`THinokuri2`/`TBossGesso` `.ctors` ~99.3%** (byte-identical
+  **`.data`** per R215); no new bogus **`virtual`** on MAP pass.
+- **`MtxCalcTypeName`**, **`TBossEelAwaCollision::behaveToMario`**, **`@4827`/`@2843`**:
+  skipped (unchanged).
+
+**Tip (R217).** Treat objdiff **100.0%** on **`.text`** as “one stack slot or
+branch-target away” until **`changes_all`** reports a strict match — insn percent
+hides **`beq`** target skew and **`r1+Δ`** locals.
+
+**Verify.** `ninja changes_all` ggü. **`0c4dfabe`** — **no diff**.
+
 ### R216 (Aufgabe B; Awa behaveToMario + EP text scan, 0× ship)
 
 **Hunt.** Small EP text ≥99.5%; vtable/MAP like R212–R214; optional
