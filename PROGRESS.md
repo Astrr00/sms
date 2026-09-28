@@ -11488,6 +11488,34 @@ als Member-Name. Check: **`decomp-diff -u … -t object -s nonmatching`**.
 **Verify.** `ninja changes_all` ggü. **`cf903cfc`**; **`namekuri` matched_data
 70.86% → 100%**; **`build.sha1` OK**.
 
+### R218 (Aufgabe B; EP data / vtable scan, 0× ship)
+
+**Hunt.** Post-**`b998245f`**; prefer **`.sdata`/vtable/string** (R212–R214); avoid
+stack ≥99.5% thrash; cap ~8; same skip list.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, no-ship).**
+
+- **EP `.ctors`/`.sdata` scan:** **`DebuTelesa`** **`entry$2835`** (85.7%),
+  **`DebuTelesa_bastable`** (50%, our **`.sdata` +0x1c** vs retail **+0x0** —
+  **`InfectiousStrings`/`MtxCalcTypeName`** cluster ahead of **`@2830…`**);
+  **`bossgesso`** **`idxarray$3450`** / **`@6268`**; **`hinokuri2`/`bosseel`**
+  **`MtxCalcTypeName`** (50%).
+- **`DebuTelesa`:** move **`bastable`** below **`createModelData`** — still
+  **50%** (`bastable` at **0x1c**); reverted.
+- **MAP bogus-`virtual`:** no new manager **`perform`** / **`receiveMessage`**
+  slots ( **`TPakkunManager`** → **`perform__13TEnemyManager`** in ASM).
+- **`tinkoopa.cpp`** empty TU → **`@3000`/`@3001`** 50% (PARAM defaults).
+- **Confirmed 100% data:** **`pakkun`** objects; **`bosseel`**/**`riccohook`**
+  vtables incl. **`TBEelTearsDrop`**.
+
+**Tip (R218).** Before thrashing **`bastable`**, diff **`.sdata` symbol addresses**
+in **`src/` vs `obj/` `.o`** — foreign TU-header pools often sit at **+0x0** and
+block the retail-first **`DebuTelesa_bastable`** slot.
+
+**Verify.** `ninja changes_all` ggü. **`b998245f`** — **no diff**.
+
 ### R217 (Aufgabe B; EP “100% insn” + Pakkun load probe, 0× ship)
 
 **Hunt.** Post-**`0c4dfabe`** baseline; vtable/MAP like R212–R214; small EP text/data;
