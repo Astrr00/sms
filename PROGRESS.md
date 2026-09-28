@@ -12772,6 +12772,10 @@ spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%
 
 **Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
 
+**R285c (optional jump).** **`TNerveSmallEnemyJump`**: manual **`mLiveFlag` `cmpwi`** early + airborne **`cmpwi`** — **~96.7%** (was **~98.9%**); still needs vtable **`0x108`** velocity spill **`r1+0x40`** (not **`TVec3`/`setVelocity`**) — reverted.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
 ### R258 (Aufgabe B; defer GraphGroup/ColumSand pool + diversify, 0× ship)
 
 **Hunt.** Post-R257 dry; **defer `TGraphGroup::perform`** (empty **`TGraphWeb::perform` DCE**) and
