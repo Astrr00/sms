@@ -672,6 +672,7 @@ void THamuKuri::init(TLiveManager* param_1)
 
 void THamuKuri::setMActorAndKeeper()
 {
+	char trash[8];
 	mMActorKeeper = new TMActorKeeper(mManager, 1);
 	mMActor       = mMActorKeeper->createMActor("default.bmd", 3);
 	int idx       = getModel()->getModelData()->getMaterialName()->getIndex(
@@ -2079,6 +2080,7 @@ void TFireHamuKuri::reset()
 
 void TFireHamuKuri::setMActorAndKeeper()
 {
+	char trash[8];
 	mMActorKeeper = new TMActorKeeper(mManager, 1);
 	mMActor       = mMActorKeeper->createMActor("default.bmd", 3);
 	ResTIMG* img

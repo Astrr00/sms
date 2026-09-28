@@ -11139,6 +11139,21 @@ torocco/sound, prior deadlocks.
 
 **Verify.** `ninja baseline` / `changes_all` ohne Code-Delta; `dtk shasum -c` → OK.
 
+### R172 (Aufgabe B; Hamukuri setMActor entry-pad, 2 Vollmatches)
+
+**Muster (R171-Familie).** `char trash[8];` am Eintrag von
+`setMActorAndKeeper()` wenn der TU viel Folgecode hat (Tev/Texture) und Frame
+**−8** ggü. Retail — analog `TSmallEnemy::setMActorAndKeeper`, nicht ctor-`TVec3`.
+
+**Skip (User).** `launchPolDrop`, `TBossEelAwaCollision::behaveToMario`, alle
+Prior-Skips; `TTelesa::behaveToWater` / `TYoshiTongue::canGo` / `TNameKuri::reset`
+(Revert, kein emit-Shape).
+
+**Vollmatch, strikt (2).** `THamuKuri::setMActorAndKeeper`,
+`TFireHamuKuri::setMActorAndKeeper` (`hamukuri.cpp`).
+
+**Verify.** `ninja baseline` / `changes_all`; `dtk shasum -c` → OK.
+
 ### R171 (Aufgabe B; emitSweat-class +8, 4 Vollmatches)
 
 **Skip (erweitert).** Zusätzlich zu allen Prior-Skips: `TNerveBPTouchDown`,
