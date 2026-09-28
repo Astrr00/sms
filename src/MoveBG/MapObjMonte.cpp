@@ -1,5 +1,7 @@
 #include <MoveBG/MapObjMonte.hpp>
-#include <dolphin/mtx.h>
+#include <Map/MapCollisionManager.hpp>
+#include <Player/MarioAccess.hpp>
+#include <Player/Yoshi.hpp>
 
 // rogue includes needed for matching sinit & bss
 #include <MSound/MSSetSound.hpp>
@@ -40,7 +42,26 @@ void THangingBridgeBoard::calcDefaultMtx()
 	mPosition.y    = mInitialPosition.y;
 }
 
-void THangingBridgeBoard::setGroundCollision() { }
+// Extra inline level so MWCC keeps the dead 8-byte temp (frame -0x40).
+static inline MtxPtr hangingBoardAnmMtx(THangingBridgeBoard* board)
+{
+	return board->getModel()->getAnmMtx(0);
+}
+
+void THangingBridgeBoard::setGroundCollision()
+{
+	if (SMS_GetYoshi()->isHatched()
+	    && mPosition.x - mBodyRadius < SMS_GetYoshi()->getTranslation().x
+	    && mPosition.x + mBodyRadius > SMS_GetYoshi()->getTranslation().x
+	    && mPosition.z - mBodyRadius < SMS_GetYoshi()->getTranslation().z
+	    && mPosition.z + mBodyRadius > SMS_GetYoshi()->getTranslation().z) {
+		MtxPtr mtx = hangingBoardAnmMtx(this);
+		if (mMapCollisionManager->unk8)
+			mMapCollisionManager->unk8->moveMtx(mtx);
+	} else {
+		TMapObjBase::setGroundCollision();
+	}
+}
 
 void THangingBridgeBoard::initMapObj()
 {

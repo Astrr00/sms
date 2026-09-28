@@ -10920,6 +10920,28 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R210 (`MapObjMonte`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`THangingBridgeBoard::setGroundCollision` ohne `SMatrix34C`-Leer-Konstruktor.
+
+- `THangingBridgeBoard::setGroundCollision` prüft `SMS_GetYoshi()->isHatched()` und den Brett-Bereich gegen `getTranslation()`, wie `TManhole`.
+  `getModel()->getAnmMtx(0)` läuft über ein lokales Inline, damit MWCC den toten 8-Byte-Slot hält und der Frame `-0x40` bleibt.
+  Danach virtuelles `moveMtx` auf `mMapCollisionManager->unk8`, sonst `TMapObjBase::setGroundCollision()`.
+  244 Bytes, 61 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMonte`: PASS.
+Zwölf bestehende UNUSED-Größenwarnungen.
+
+`ninja changes_all`: fuzzy 78.926414 % -> 78.9331 %, matched code 49.64859 % -> 49.655384 % (1782428 -> 1782672, +244).
+Matched data bleibt 65.2486 % (417807).
+Funktionen matched 9577 -> 9578.
+`MapObjMonte` 2988 -> 3232 (+244).
+Kein R170-R209-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R209 (`MapObjPinna`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
