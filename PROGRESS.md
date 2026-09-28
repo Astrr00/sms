@@ -11814,6 +11814,29 @@ cap ~8; skip R235 deferrals + **`TCoasterKiller::bind`** / large **`TVec3`** fra
 
 **Verify.** `ninja changes_all` ggü. **`dea1dafc`**: **+0** matched functions (**9272** unchanged).
 
+### R238 (Aufgabe B; opcode-first accessors, 0× ship)
+
+**Hunt.** Post-**`dea1dafc`** / R237 dry; prefer **≤200 B** with **`|/~` opcode** diffs (not mass **`r1`**
+skew); R236 scalar-temp pattern; skip R237 stack-thrash list + prior deferrals; cap ~8.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, no-ship).**
+
+- **`TGraphWeb::startIsEnd`** (120 B): register **`r4`/`r5`** swaps on rail loads — cached
+  **`TRailNode*`**, direct **`unk0[]`**, or **`getFirstGraphNode()`** temps all **regressed** (8.9–29.9%).
+- **`TBossMantaAdditionalCollisionSet::adapt`** (212 B): **`f32 scale` / `hit54`/`hit26`** temps — **76.3%**
+  (frame **`0x80`→`0x38`**); reverted.
+- **`TSpineEnemy::calcTurnSpeedToReach`** (224 B): split **`__frsqrte`** / drop **`volatile`** — **95.1%**;
+  **`fnmsubs`/`frsqrte`** operand order still open.
+- **`TDangoHamuKuri::getTakingMtx`**, **`TTobiPuku::walkBehavior`**, **`TRiccoHook::init`**: opcode scan →
+  dominated by **8–16 B** frame skew (deferred).
+
+**Tip (R238).** Sub-200 B **99.5%+** Enemy/Player accessors are largely **exhausted**; remaining **`~` only**
+clusters need **UNUSED/frame** work, not another **`getSaveParams()`** temp.
+
+**Verify.** `ninja changes_all` ggü. **`dea1dafc`**: **+0** matched functions (**9272** unchanged).
+
 ### R225 (Aufgabe B; bossManta rodata + EP diversify, 0× ship)
 
 **Hunt.** Post-**`385107f3`**; optional **`bossManta` `@2805`/`@2807`** lead (Amenbo
