@@ -1,5 +1,6 @@
 #include <MoveBG/MapObjBianco.hpp>
 #include <MoveBG/MapObjMessenger.hpp>
+#include <Map/MapCollisionManager.hpp>
 #include <MarioUtil/MathUtil.hpp>
 #include <MarioUtil/DrawUtil.hpp>
 #include <MarioUtil/PacketUtil.hpp>
@@ -68,7 +69,20 @@ TBiancoWatermill::TBiancoWatermill(const char* name)
 
 u32 TBiancoWatermillVertical::touchWater(THitActor*) { return 0; }
 
-void TBiancoWatermillVertical::setGroundCollision() { }
+void TBiancoWatermillVertical::setGroundCollision()
+{
+	if (unk144 != 0 || mColCount != 0) {
+		J3DModel* model = getModel();
+		MtxPtr mtx     = model->getAnmMtx(0);
+		if (mMapCollisionManager->unk8 != nullptr)
+			mMapCollisionManager->unk8->moveMtx(mtx);
+		unk144 = 0;
+	}
+
+	// Dead slot so MWCC keeps frame -0x28.
+	char trash[8];
+	trash[0] = 0;
+}
 
 void TBiancoWatermillVertical::control() { }
 

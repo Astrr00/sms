@@ -153,6 +153,10 @@ public:
 public:
 	/* 0x138 */ f32 unk138;
 	/* 0x13C */ f32 unk13C;
+	/* 0x140 */ u32 unk140;
+	/* 0x144 */ u8 unk144;
+	/* 0x148 */ u32 unk148;
+	/* 0x14C */ u32 unk14C;
 };
 
 class TBiancoWatermill : public TMapObjBase {

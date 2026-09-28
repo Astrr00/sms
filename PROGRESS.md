@@ -10920,6 +10920,34 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R228 (`MapObjBianco`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TBiancoWatermillVertical::setGroundCollision`.
+`TRevolvingFenceInner::setGroundCollision` und `TMapObjBall::hold` bleiben geparkt.
+
+- `TBiancoWatermillVertical::setGroundCollision` läuft, wenn `unk144` oder `mColCount` ungleich 0 ist.
+  Dann `getModel()->getAnmMtx(0)` und `mMapCollisionManager->unk8->moveMtx`.
+  Danach `unk144 = 0`.
+  `unk140`, `unk144`, `unk148` und `unk14C` liegen hinter `unk13C`, damit das Flag bei `0x144` steht.
+  `char trash[8]` hält Frame `-0x28`.
+  116 Bytes, 29 Instruktionen.
+  `load`, `TWoodLog::control`, `TBiancoBell::touchPlayer` und `__sinit_MapObjBianco_cpp` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBianco`: PASS.
+Fünf bestehende UNUSED-Größenwarnungen.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.042 % -> 79.04512 %, matched code 49.76669 % -> 49.769924 % (1786668 -> 1786784, +116).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9599 -> 9600.
+`MapObjBianco` 5844 -> 5960 (+116).
+Kein R170–R227-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R227 (`MapObjBall`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
