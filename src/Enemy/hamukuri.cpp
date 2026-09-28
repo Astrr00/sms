@@ -194,11 +194,11 @@ void THamuKuriManager::loadAfter()
 	}
 }
 
+// rogue string pool: order must match retail @1490 before createMActor literals
 static const char* anmlist[] = {
 	"hamukuri_walk",
 	"hamukuri_run",
-	// TODO: this shouldn't be here but rodata ordering looks like it should?!
-	// "default.bmd",
+	"default.bmd",
 	"hanekuri_wait",
 };
 

@@ -11363,6 +11363,38 @@ Hebel oft **Klassen-Offset** (HamuKuri **0x370**) oder **Caller-TU**, nicht weit
 
 **Verify.** `ninja baseline` / `changes_all` ohne Code-Delta ggü. **`c68146c0`**.
 
+### R198 (Aufgabe B; HamuKuri rodata `anmlist`, 2× `setMActorAndKeeper`)
+
+**Hunt.** R197-Prior: bounded **HamuKuri `0x360` vs `0x370`**, sonst frische ≤600 B;
+Skip `initParticle`, `surfingEffect`, `BathtubKillerExplosion`, `setMActorAndKeeper`-Thrash
+auf bereits-100 %-TUs; Cap ~8; strikt 100 %.
+
+**HamuKuri `0x360`.** Retail **`addi r4, r31, 0x360`** in `setMActorAndKeeper` zeigt auf
+**`"default.bmd"`** im **`@1490`-Stringpool** (`r31` = Pool-Basis, nicht `this`). Unser Build:
+**`0x370`** (+16 B) — **`hanekuri_wait`** stand im rogue **`anmlist[]`** vor dem
+**`createMActor("default.bmd")`-Literal**; Retail-Reihenfolge:
+`hamukuri_walk` → `hamukuri_run` → **`default.bmd`** → `hanekuri_wait`.
+Fix: **`"default.bmd"`** in `anmlist[]` zwischen `hamukuri_run` und `hanekuri_wait`
+(`src/Enemy/hamukuri.cpp`). Kein Klassen-Pad bei **0x360/0x370**.
+
+**Probes (~6, keine weiteren Ships).** `TNerveDoroHaneHitWater` / `jumpToSearchActor` /
+`TNerveHamuKuriWallDie`: **`stwu`/Spill +8/+0x10`** (Mid-Frame, nicht entry-only).
+`TNerveHamuKuriGoForSearchActor`, `THamuKuriLauncher::stateLaunch`: gleiches Muster.
+Player-Scan (`toroccoEffect`, `TBubbleCallBack`): R197-Skips / Frame.
+
+**Vollmatch, strikt (2).**
+
+- `THamuKuri::setMActorAndKeeper()` (228 B)
+- `TFireHamuKuri::setMActorAndKeeper()` (160 B)
+
+**Tip (R198).** Einzelnes **`~` auf `addi r4, r31, 0xNNN`** bei **`setMActorAndKeeper`**
+oft **`.rodata`-Pool-Reihenfolge** (unused `static const char*` arrays, `InfectiousStrings`,
+`TModelDataLoadEntry`-Strings) — vor **`THamuKuri`-Member-Offset** raten, Retail-ASM
+`hamukuri.s` **`.rodata:0xNNN`** mit **`default.bmd`** abgleichen.
+
+**Verify.** `ninja baseline` / `changes_all`; **`build.sha1` OK**; Total matched_code
+**48.63% → 48.64%**; `mario/Enemy/hamukuri` matched_data **31.69% → 97.28%**.
+
 ### R196 (Aufgabe B; emit/load entry-pad + Eel-Tears, keine Vollmatches)
 
 **Hunt.** B-scope Enemy/Player ≤600 B; Skip R195-Liste + User (`TPakkun::load`, `TBubbleCallBack`,
