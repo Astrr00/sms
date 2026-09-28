@@ -2,6 +2,20 @@
 #include "MoveBG/MapObjBase.hpp"
 #include <M3DUtil/MActor.hpp>
 
+// Incomplete: only getRootJointMtx is defined here. Not a TLiveActor
+// subclass, so this TU does not emit the grip vtable.
+class TBathtubGrip {
+public:
+	Mtx* getRootJointMtx() const;
+};
+
+Mtx* TBathtubGrip::getRootJointMtx() const
+{
+	return (Mtx*)reinterpret_cast<const TLiveActor*>(this)
+	    ->getModel()
+	    ->getBaseTRMtx();
+}
+
 void TBathtub::loadAfter() { }
 
 void TBathtub::hipdrop(const JGeometry::TVec3<f32>&) { }
