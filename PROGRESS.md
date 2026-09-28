@@ -10920,6 +10920,29 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R241 (`MapObjMamma`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TSandCastle::findTriggerActor`.
+
+- `JDrama::TNameRefGen::search` sucht `"砂の城爆発の芽"`.
+  Der Zeiger kommt als `TMapObjBase*` zurück.
+  96 Bytes, 24 Instruktionen.
+  Die übrigen 62 Matches in `MapObjMamma` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMamma`: PASS.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.08181 % -> 79.08432 %, matched code 49.81282 % -> 49.81549 % (1788324 -> 1788420, +96).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9612 -> 9613.
+`MapObjMamma` 6196 -> 6292 (+96).
+Kein R170–R240-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R240 (`MapObjPinna`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

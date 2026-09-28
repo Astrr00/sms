@@ -155,8 +155,10 @@ void TSandCastle::calcRootMatrix()
 		TMapObjBase::calcRootMatrix();
 }
 
-// Retail is a name-ref lookup (96B). Stub so the override signature matches.
-TMapObjBase* TSandCastle::findTriggerActor() { return nullptr; }
+TMapObjBase* TSandCastle::findTriggerActor()
+{
+	return (TMapObjBase*)JDrama::TNameRefGen::search("砂の城爆発の芽");
+}
 
 void TSandCastle::loadAfter()
 {
