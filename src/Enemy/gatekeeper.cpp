@@ -798,6 +798,8 @@ DEFINE_NERVE(TNerveBGKSleep, TLiveActor)
 
 DEFINE_NERVE(TNerveBGKAppear, TLiveActor)
 {
+	char trash[0x20];
+	trash[0] = 0;
 	TBiancoGateKeeper* self = (TBiancoGateKeeper*)spine->getBody();
 
 	if (spine->getTime() == 0) {

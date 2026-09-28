@@ -545,6 +545,8 @@ BOOL TBossManta::receiveMessage(THitActor* sender, u32 message)
 
 void TBossManta::initNthGeneration(int gen)
 {
+	char trash[0x20];
+	trash[0] = 0;
 	const f32 heights[6] = { 10.0f, 5.0f, 1.0f, 0.42f, 0.42f, 0.42f };
 
 	mGeneration = gen;

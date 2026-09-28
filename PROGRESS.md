@@ -11153,7 +11153,7 @@ Prior-Skips.
 **Vollmatch, strikt (3).**
 `TFireWanwanTailHit::receiveMessage` (`fireWanwan.cpp`, `trash[0x10]`);
 `TNerveBPHover::execute` (`bosspakkun.cpp`, `trash[0x10]`);
-`TBossPakkun::receiveMessage` (`bosspakkun.cpp`, `trash[0x10]` + `trash[0]=0`).
+`TBossPakkun::receiveMessage` (`bosspakkun.cpp`, `trash[8]` + `trash[0]=0`).
 
 **Verify.** `ninja baseline` / `changes_all`; `dtk shasum -c` → OK.
 
