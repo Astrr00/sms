@@ -10920,6 +10920,52 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R189 (`MapObjPinna`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+Bisher leerer TU.
+Jeder Map-Symbol ist definiert, der Rest bleibt Stub.
+
+- `TAmiKing::touchPlayer` ruft `SMS_SendMessageToMario(this, 9)`.
+  36 Bytes, 9 Instruktionen.
+- `TAmiKing::touchWater` gibt `1` zurück und steht weak im Header.
+  8 Bytes.
+- `TMerrygoround::draw` ist leer.
+  4 Bytes.
+- `TShellCup::TShellCup` baut sechs `TPinnaShell` an `0x138` und nullt `unk498`, `unk49C`, `unk4A0`.
+  124 Bytes, 31 Instruktionen.
+- `TViking::loadAfter` ruft `TMapObjBase::loadAfter` und danach virtuell `reset`.
+  64 Bytes, 16 Instruktionen.
+- `MsMtxSetRotX` ist die bestehende Header-Inline.
+  `perform` nimmt die Adresse, damit die schwache Kopie stehen bleibt.
+  124 Bytes.
+- `TMapCollisionMove::moveMtx` kopiert die Matrix nach `unk20` und ruft `move`.
+  Die schwache Kopie steht nur in diesem TU (`__declspec(weak)`), der virtuelle Inline im Header bleibt für die anderen TUs.
+  60 Bytes, 15 Instruktionen.
+- `__sinit_MapObjPinna_cpp` (764 Bytes) kommt aus `MSSetSound.hpp` / `MSoundBGM.hpp`.
+
+Destruktoren, alle `@32`-Thunks und die VTables der TU sind ebenfalls 100 %.
+`validate-symbol-order`: PASS mit UNUSED-Größenwarnungen.
+
+`TViking::reset` und `THorizontalViking::reset` bleiben bei `fcmpo` + `ble` gegen unser `cror`.
+`TPinnaShell::TPinnaShell` ist bis auf ein Stack-Slot (`0xC` gegen `8`) gleich.
+
+`ninja changes_all`: fuzzy 78.21 % → 78.31 %, matched code 48.96 % → 49.04 %, matched data 63.16 % → 63.85 %.
+Kein anderes Unit hat sich bewegt.
+
+R188 `MapObjFence`, R187 `TModelGate` / `TMapObjWave`,
+R186 `MapObjMonte` / `MapObjRicco`, R185 `getNumGripsDead`,
+R184 `TWaterHitPictureHideObj::load`, R183 `updateCheckData`,
+R182 `TMapObjTurn::touchWater`, R181 `TCloset::touchWater`,
+R180 `TCasinoPanelGate::touchWater`, R179 `waitingToAppear`,
+R178 `initDrawNear`, R177 `TWoodBox::kill`, R176 `receiveMessage`,
+R175 `touchGround`, R174 `perform`, R173 `startControlAnim`,
+R172 `TManhole::touchPlayer`, R171 `calcVelocity`, R170 `appearing`
+unverändert strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R188 (`MapObjFence`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

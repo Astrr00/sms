@@ -22,16 +22,23 @@ public:
 	void updateTrans();
 	void moveNormal();
 	void control();
-	void reset();
+	virtual void reset();
 	void initMapObj();
 	THorizontalViking(const char*);
+
+public:
+	/* 0x138 */ u32 unk138;
+	/* 0x13C */ u32 unk13C;
+	/* 0x140 */ f32 unk140;
+	/* 0x144 */ f32 unk144;
+	/* 0x148 */ f32 unk148;
 };
 
 class TViking : public THorizontalViking {
 public:
 	void roll();
 	void control();
-	void reset();
+	virtual void reset();
 	void loadAfter();
 	void initMapObj();
 	TViking(const char* name = "バイキング");
@@ -43,7 +50,34 @@ public:
 	BOOL receiveMessage(THitActor* sender, u32 message);
 	void control();
 	TPinnaShell(const char*);
-	TPinnaShell();
+	TPinnaShell()
+	    : THitActor("シェル")
+	    , unk68(0)
+	    , unk6C(0.0f)
+	    , unk70(0.0f)
+	    , unk74(0)
+	    , unk78(0)
+	    , unk7C(0)
+	    , unk80(0)
+	    , unk84(0)
+	    , unk88(0)
+	    , unk8C(0)
+	{
+		initHitActor(0x4000013A, 1, 0x80000000, 250.0f, 400.0f, 250.0f,
+		             200.0f);
+	}
+
+public:
+	/* 0x68 */ u32 unk68;
+	/* 0x6C */ f32 unk6C;
+	/* 0x70 */ f32 unk70;
+	/* 0x74 */ u32 unk74;
+	/* 0x78 */ u32 unk78;
+	/* 0x7C */ u32 unk7C;
+	/* 0x80 */ u32 unk80;
+	/* 0x84 */ u32 unk84;
+	/* 0x88 */ u32 unk88;
+	/* 0x8C */ u32 unk8C;
 };
 
 class TShellCup : public TMapObjBase {
@@ -55,6 +89,12 @@ public:
 	void loadAfter();
 	void initMapObj();
 	TShellCup(const char* name = "シェルカップ");
+
+public:
+	/* 0x138 */ TPinnaShell unk138[6];
+	/* 0x498 */ void* unk498;
+	/* 0x49C */ void* unk49C;
+	/* 0x4A0 */ void* unk4A0;
 };
 
 class TMerrygoround : public TMapObjBase {
@@ -102,7 +142,7 @@ public:
 
 class TAmiKing : public TMapObjBase {
 public:
-	u32 touchWater(THitActor*);
+	u32 touchWater(THitActor*) { return 1; }
 	void loadAfter();
 	void initMapObj();
 	void moveObject();

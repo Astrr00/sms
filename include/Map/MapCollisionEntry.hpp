@@ -165,7 +165,12 @@ public:
 		move();
 	}
 	virtual void moveTrans(const JGeometry::TVec3<f32>&);
+#ifdef PINNA_EMIT_MOVEMTX
+	// MapObjPinna.cpp provides the weak out-of-line body (MTXCopy + move).
+	virtual void moveMtx(MtxPtr mtx);
+#else
 	virtual void moveMtx(MtxPtr mtx) { MTXCopy(mtx, unk20); }
+#endif
 
 	void init(u32, u16 bg_type, s16 data, const TLiveActor* actor);
 	void move();
