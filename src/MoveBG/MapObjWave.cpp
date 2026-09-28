@@ -1,6 +1,8 @@
 #include <MoveBG/MapObjWave.hpp>
 
 #include <System/MarDirector.hpp>
+#include <Map/Map.hpp>
+#include <Map/MapData.hpp>
 #include <JSystem/JUtility/JUTColor.hpp>
 #include <math.h>
 
@@ -38,7 +40,53 @@ f32 TMapObjWave::getWaveHeight(float x, float z) const
 	return xWave + zWave;
 }
 
-f32 TMapObjWave::getHeight(float, float, float) const { return 0.0f; }
+// Inlined into getHeight. Not emitted.
+static inline bool isWaveSurface(u16 type)
+{
+	if (type == BG_TYPE_WATER || type == BG_TYPE_DAMAGING_WATER
+	    || (u16)(type - BG_TYPE_SEA_WATER) <= 3u
+	    || type == BG_TYPE_SHADED_POOL)
+		return true;
+	return false;
+}
+
+// `||` of these two types folds into subi/bgt. The goto keeps both
+// cmplwi checks, with li 1 before li 0.
+static inline bool isSeaSurface(u16 type)
+{
+	if (type == BG_TYPE_SEA_WATER)
+		goto yes;
+	if (type != BG_TYPE_DAMAGING_SEA_WATER)
+		goto no;
+yes:
+	return true;
+no:
+	return false;
+}
+
+f32 TMapObjWave::getHeight(float x, float y, float z) const
+{
+	const TBGCheckData* data;
+	f32 ground = gpMap->checkGroundExactY(x, 50.0f + y, z, &data);
+	u16 type   = data->mBGType;
+
+	// unsigned char, not bool: a bool temporary moves the check
+	// pointer from r1+0x1c to r1+0x18.
+	unsigned char water = isWaveSurface(type);
+	if (water) {
+		unsigned char sea = isSeaSurface(type);
+		if (sea) {
+			if (!unk94)
+				return 0.0f;
+
+			f32 xWave = unk3C * sinf(unk24 * (0.15915507f * x) + unk64);
+			f32 zWave = unk40 * sinf(unk28 * (0.15915507f * z) + unk68);
+			return xWave + zWave;
+		}
+		return ground;
+	}
+	return y;
+}
 
 void TMapObjWave::noWave()
 {

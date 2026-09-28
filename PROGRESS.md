@@ -10920,6 +10920,36 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R250 (`MapObjWave`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjWave::getHeight`.
+
+- `checkGroundExactY(x, 50 + y, z)`.
+  Wasserfläche ist Typ `0x100`, `0x101`, `(u16)(Typ - 0x102) <= 3` oder `0x4104`.
+  Sonst kommt `y` zurück.
+  Nur See (`0x102` / `0x103`) nimmt die Wellenhöhe, sonst die Bodenhöhe.
+  Fehlt `unk94`, ist das Ergebnis 0, sonst dieselbe `sinf`-Summe wie `getWaveHeight`.
+  `unsigned char` statt `bool` hält den Check-Pointer bei `r1+0x1c`.
+  Das `<=` ist `cmplwi` + `ble` auf `u16`, wie Retail.
+  300 Bytes, 75 Instruktionen.
+  Dtor, `perform`, `noWave`, `getWaveHeight` und `__sinit_MapObjWave_cpp` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjWave`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+`MarNameRefGen_MapObj` matched code bleibt 2348.
+
+`ninja changes_all`: fuzzy 79.11047 % -> 79.11861 %, matched code 49.84223 % -> 49.85059 % (1789380 -> 1789680, +300).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9622 -> 9623.
+`MapObjWave` 1196 -> 1496 (+300).
+Kein R170–R249-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R249 (`MapObjWave`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
