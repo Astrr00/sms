@@ -11488,6 +11488,33 @@ als Member-Name. Check: **`decomp-diff -u … -t object -s nonmatching`**.
 **Verify.** `ninja changes_all` ggü. **`cf903cfc`**; **`namekuri` matched_data
 70.86% → 100%**; **`build.sha1` OK**.
 
+### R203 (Aufgabe B; bossgesso idxarray + DebuTelesa probes, 1× data)
+
+**Hunt.** Object scan ≤48 B; **`DebuTelesa`** `entry$2835`/`bastable` (const vs.
+non-const, SDA-Einzelpointer, InfectiousStrings weg); **`bossgesso` idxarray**;
+Cap ~8; strikt 100 %.
+
+**Ship (data, 1).**
+
+- **`idxarray$3428`** (8 B): `doAttackSingle` — Retail **`{1, 3}`**, nicht
+`{2, 3, 5, 6}` (nur `i<2` genutzt; ASM **`.4byte`**-Paar).
+
+**Probes (~7, revertiert / Skip).** `DebuTelesa`: non-const `entry[]` →
+**`entry$1058` extra / `entry$2835` missing**; ohne `InfectiousStrings` fehlen
+`@1490`-Pool-Strings; Einzelpointer-`bastable` + Cast → **`bastable` 50 %**
+(unverändert); **`entry$2835` 85.7 %** mit `const`. **`idxarray$3450`**
+(8 B): zweite Schleife in `doAttackSingle` fehlt (TODO-Tail). Switch-`.rel`
+(`bgtentacle` `@4448`, Tongue/bossgesso `@6268`).
+
+**Tip (R203).** **`static const int idxarray[]` in Loops:** ASM-Tabellengröße =
+genutzte Elemente (**2× `.4byte`**), nicht „überlange“ Initializer-Listen; sonst
+falsches `$nnnn`-Symbol/Bytes. **`DebuTelesa`:** `entry$2835` braucht **`const`**
+`TModelDataLoadEntry[]`; `bastable` = **erstes** `.sdata`-Objekt vor `@2830…`
+(load-`.set`-Literale) — `InfectiousStrings` nicht streichen.
+
+**Verify.** `ninja changes_all` ggü. **`de1d59cb`**; **`idxarray$3428` 75% →
+100%**.
+
 ### R202 (Aufgabe B; `.prm`-Pfad + `createModelData` entry table, 2× data)
 
 **Hunt.** `decomp-diff -t object -s nonmatching` B-scope **≤48 B / ≥80 %**;

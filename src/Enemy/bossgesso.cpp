@@ -947,7 +947,7 @@ void TBossGesso::doAttackSingle()
 	}
 
 	for (int i = 0; i < 2; ++i) {
-		static const int idxarray[] = { 2, 3, 5, 6 };
+		static const int idxarray[] = { 1, 3 };
 		TBGTentacle* tentacle       = mTentacles[idxarray[i]];
 
 		if (inSightAngle(getSaveParam()->mSLSightAngle.get() * 0.5f)
