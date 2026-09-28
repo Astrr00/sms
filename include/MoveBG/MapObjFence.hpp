@@ -63,7 +63,7 @@ public:
 	void draw() const;
 	BOOL receiveMessage(THitActor* sender, u32 message);
 	virtual void changeStatusToGo();
-	void changeStatusToWait();
+	virtual void changeStatusToWait();
 	void controlRotation();
 	void control();
 	void initMapCollisionData();

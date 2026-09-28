@@ -10920,6 +10920,38 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R221 (`MapObjFence`, `MapObjPinna`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TFenceWaterH::changeStatusToGo` und `TChangeStageMerrygoround::calc`.
+`TRevolvingFenceInner::setGroundCollision` und `TMapObjBall::hold` bleiben geparkt.
+
+- `TFenceWaterH::changeStatusToGo` prüft `gpMSound->gateCheck(MSD_SE_OBJ_WATER_FENCE_FW)`.
+  Dann `startSoundActor` an `mPosition`, `mState = 2`, `setUpMapCollision(1)`.
+  Ein lokales `MSound*` erzeugt `addi r31` plus `lwz r0`.
+  `char trash[1]` hält Frame `-0x20`.
+  112 Bytes, 28 Instruktionen.
+  `changeStatusToWait` ist jetzt `virtual`, dadurch matchen die VTables von `TFenceWater` und `TFenceWaterH`.
+  `__sinit_MapObjFence_cpp` und `TRevolvingFenceInner::control` bleiben 100 %.
+- `TChangeStageMerrygoround::calc` emittiert bei `unk13C != 0` die Partikel `0x100` und `0x101` an `gpMarioPos`.
+  Ein lokales `TVec3*` lädt `gpMarioPos` nach r5 vor dem Manager.
+  100 Bytes, 25 Instruktionen.
+  `becomeCalmlyCallback` und `__sinit_MapObjPinna_cpp` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjFence` und `MapObjPinna`: PASS.
+Bestehende UNUSED-Größenwarnungen (2 / 6).
+`MapObjBase.hpp` unverändert.
+
+`ninja changes_all`: fuzzy 79.01683 % -> 79.022514 %, matched code 49.74062 % -> 49.746525 % (1785732 -> 1785944, +212).
+Matched data 65.24985 % -> 65.58592 % (417815 -> 419967, +2152).
+Funktionen matched 9591 -> 9593.
+`MapObjFence` 2908 -> 3020 (+112), Data 188 -> 2340.
+`MapObjPinna` 4576 -> 4676 (+100).
+Kein R170–R220-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R220 (`MapObjBianco`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

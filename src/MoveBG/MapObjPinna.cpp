@@ -220,7 +220,16 @@ TMerrygoround::TMerrygoround(const char* name)
 
 void TChangeStageMerrygoround::touchPlayer(THitActor*) { }
 
-void TChangeStageMerrygoround::calc() { }
+void TChangeStageMerrygoround::calc()
+{
+	if (unk13C != 0) {
+		// Local loads gpMarioPos into r5 before the manager.
+		JGeometry::TVec3<f32>* pos = gpMarioPos;
+		gpMarioParticleManager->emitAndBindToPosPtr(0x100, pos, 1, this);
+		pos = gpMarioPos;
+		gpMarioParticleManager->emitAndBindToPosPtr(0x101, pos, 1, this);
+	}
+}
 
 void TBalloonKoopaJr::touchActor(THitActor*) { kill(); }
 

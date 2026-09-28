@@ -4,6 +4,8 @@
 #include <Enemy/Graph.hpp>
 #include <Map/MapCollisionManager.hpp>
 #include <MarioUtil/MathUtil.hpp>
+#include <MSound/MSound.hpp>
+#include <MSound/SoundEffects.hpp>
 
 // rogue includes needed for matching sinit & bss
 #include <MSound/MSSetSound.hpp>
@@ -137,7 +139,20 @@ void TFenceWater::initMapObj() { }
 
 void TFenceWaterH::control() { }
 
-void TFenceWaterH::changeStatusToGo() { }
+void TFenceWaterH::changeStatusToGo()
+{
+	// Local keeps gpMSound in r0 across the this-save (addi r31).
+	MSound* sound = gpMSound;
+	if (sound->gateCheck(MSD_SE_OBJ_WATER_FENCE_FW))
+		MSoundSESystem::MSoundSE::startSoundActor(
+		    MSD_SE_OBJ_WATER_FENCE_FW, &mPosition, 0, nullptr, 0, 4);
+	mState = 2;
+	setUpMapCollision(1);
+
+	// Dead slot so MWCC keeps frame -0x20.
+	char trash[1];
+	trash[0] = 0;
+}
 
 void TFenceWaterH::changeStatusToWait()
 {
