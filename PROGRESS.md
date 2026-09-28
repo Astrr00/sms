@@ -10920,6 +10920,34 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R276 (`MapObjBall`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjBall::receiveMessage`.
+
+- `TMapObjGeneral::receiveMessage` kommt zuerst.
+  Wenn das wahr ist, kommt `TRUE` zurück.
+  Bei `HIT_MESSAGE_TAKE` und `MAP_OBJ_FLAG_UNK100000` ruft die Funktion virtuelles `hold` auf und gibt `TRUE` zurück.
+  Wenn der Sender `0x80000001` ist, dieses Objekt nicht `0x400000D0` ist und die Nachricht nicht `HIT_MESSAGE_TAKE` ist, kommt virtuelles `kicked` und `TRUE`.
+  Sonst `FALSE`.
+  248 Bytes, 62 Instruktionen.
+  Das Frame ist `-0x28`.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.25867 % -> 79.26543 %, matched code 50.01615 % -> 50.02306 % (1795624 -> 1795872, +248).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9649 -> 9650.
+`MapObjBall` 5400 -> 5648 (+248).
+Kein R170–R275-Unit hat matched code verloren.
+Nur `MapObjBall` hat matched code gewonnen.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R275 (`MapObjBall`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

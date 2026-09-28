@@ -99,7 +99,22 @@ void TMapObjBall::makeObjAppeared()
 
 void TMapObjBall::control() { }
 
-BOOL TMapObjBall::receiveMessage(THitActor*, u32) { return 0; }
+BOOL TMapObjBall::receiveMessage(THitActor* sender, u32 message)
+{
+	if (TMapObjGeneral::receiveMessage(sender, message))
+		return TRUE;
+	if (message == HIT_MESSAGE_TAKE
+	    && checkMapObjFlag(MAP_OBJ_FLAG_UNK100000)) {
+		hold((TTakeActor*)sender);
+		return TRUE;
+	}
+	if (sender->isActorType(0x80000001) && !isActorType(0x400000D0)
+	    && message != HIT_MESSAGE_TAKE) {
+		kicked();
+		return TRUE;
+	}
+	return FALSE;
+}
 
 #pragma dont_inline on
 void TMapObjBall::initMapObj() { }
