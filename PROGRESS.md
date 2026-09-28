@@ -11488,6 +11488,32 @@ als Member-Name. Check: **`decomp-diff -u … -t object -s nonmatching`**.
 **Verify.** `ninja changes_all` ggü. **`cf903cfc`**; **`namekuri` matched_data
 70.86% → 100%**; **`build.sha1` OK**.
 
+### R216 (Aufgabe B; Awa behaveToMario + EP text scan, 0× ship)
+
+**Hunt.** Small EP text ≥99.5%; vtable/MAP like R212–R214; optional
+**`MtxCalcTypeName`** (skipped — no **`@1431`/`@1411`/`@1210`** emission fix);
+cap ~8; skip **WaterGun `@4827`**, **Tongue `@2843`**, **`TRiccoHook::init`**.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, no-ship).**
+
+- **`TBossEelAwaCollision::behaveToMario`** (124 B ~99.6%): retail vec at **`r1+0x14`**
+  and **`@4419`/`@4687`/`@6908`** pools; **`TVec3` ctor** + Barrier-style
+  **`trashAfterMarioTarget[8]`** still **`r1+0x10`** / wrong **`.sdata2`** labels.
+- **`TBossEelBarrierCollision::behaveToMario`** already **100%** ( **`trash[8]`**
+  + field-wise init + **`mForcePow`** / **`@4419`** ).
+- **`TCoasterEnemy::bind`**, **`TEnemyMario::tryTake`**, **`TNerveSmallEnemyFreeze`**
+  — stack-frame / pool gaps only (~99.8–99.9%).
+- **`MtxCalcTypeName`** on **`bosseel`/`hinokuri2`**: deferred (needs init pools).
+- **Skipped (user):** **`@4827`**, **`@2843`**, **`TRiccoHook::init`**.
+
+**Tip (R216).** For **`behaveToMario`** clones in one TU, copy the **matching**
+sibling (**`TBossEelBarrierCollision`**) stack shape first; literal pool labels
+(**`@4419`**) follow emission site, not just “same float value”.
+
+**Verify.** `ninja changes_all` ggü. **`8ae76263`** — **no diff**.
+
 ### R215 (Aufgabe B; post-R214 vtable / MtxCalc hunt, 0× ship)
 
 **Hunt.** Same bogus-**`virtual`** / MAP closure as R212–R214; **`MtxCalcTypeName`**
@@ -11511,7 +11537,7 @@ skip **WaterGun `@4827`**, **Tongue `@2843`**, **`TRiccoHook::init`**.
 - **Skipped (user):** **`@4827`**, **`@2843`**, **`TRiccoHook::init`**.
 
 **Tip (R215).** **`MtxCalcTypeName`** is not just the four strings — retail TU
-**`.data`** prefixes **`init()`**-emitted **`@1431`/`@1211`/`@1210`** pools;
+**`.data`** prefixes **`init()`**-emitted **`@1431`/`@1411`/`@1210`** pools;
 match **`graph.cpp`** / **`MarioDraw`** emission, not only **`InfectiousStrings`**.
 
 **Verify.** `ninja changes_all` ggü. **`a96fe42e`** — **no diff**.
