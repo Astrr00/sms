@@ -966,6 +966,7 @@ void THinokuri2::moveObject()
 
 void THinokuri2::perform(u32 cue, JDrama::TGraphics* graphics)
 {
+	char trash[8];
 	gpCurHinokuri = this;
 
 	mHead->perform(cue, graphics);

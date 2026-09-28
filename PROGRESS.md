@@ -11139,6 +11139,20 @@ torocco/sound, prior deadlocks.
 
 **Verify.** `ninja baseline` / `changes_all` ohne Code-Delta; `dtk shasum -c` → OK.
 
+### R173 (Aufgabe B; entry +8 frame, 1 Vollmatch)
+
+**Hunt.** `setMActorAndKeeper`-Klonen (meist schon 100 % @108B); emitSweat-`TVec3`;
+entry `char trash[8]` bei Frame **+8** (unser Build kleiner als Retail).
+
+**Skip.** R172-Reverts + User-Skips; `TGessoPolluteObj::set` (Frame ok, Locals +4);
+`TRiccoHook::init`, `TNerveHino2Burst` (inlined `emitWaterParticle` / TVec3-Slot);
+`TNerveMameGessoJitabata` (Frame zu groß); TamaNoko-Nerves (+8 entry → noch 99,9 %);
+`TFireHamuKuri::behaveToWater` (emitSweat-Probe schlechter).
+
+**Vollmatch, strikt (1).** `THinokuri2::perform` (`hinokuri2.cpp`, entry `trash[8]`).
+
+**Verify.** `ninja baseline` / `changes_all`; `dtk shasum -c` → OK.
+
 ### R172 (Aufgabe B; Hamukuri setMActor entry-pad, 2 Vollmatches)
 
 **Muster (R171-Familie).** `char trash[8];` am Eintrag von
