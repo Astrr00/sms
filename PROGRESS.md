@@ -10920,6 +10920,39 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R256 (`MapObjFence`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TFenceWater::control`.
+
+- `TMapObjBase::control` und `controlRotation` laufen zuerst.
+  `controlRotation` bleibt `dont_inline`, sonst verschwindet der `bl`.
+  `MsWrap(unk140 + mInitialRotation.y, 0, 360)` schreibt `mRotation.y`.
+  Die beiden `while` sind `>= 360` (`cror`+`beq`) und `< 0` (`blt`).
+  `182.04445f * mRotation.y` geht über `jmaSinShift` in die Cos- und Sin-Tabelle.
+  `JMASSin` bleibt ausgeschrieben, weil das Header-`dont_inline` sonst einen Call erzeugt.
+  Der Messenger bei `0x144` wird über `void*` zweimal geladen, damit das zweite `lwz` stehen bleibt.
+  `mPosition.x + 500 * cos` und `mPosition.z - 500 * sin` landen auf dem Messenger.
+  Das Feld bleibt aus der Klasse, sonst ändert sich `sizeof` in `MarNameRefGen`.
+  `char trash[0x9]` hält das Frame bei `-0x48` (`fctiwz` bei `r1+0x38` und `r1+0x30`).
+  244 Bytes, 61 Instruktionen.
+  `changeStatusToGo`, `changeStatusToWait`, `receiveMessage` und `sinit` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjFence`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.16362 % -> 79.17030 %, matched code 49.89616 % -> 49.90295 % (1791316 -> 1791560, +244).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9628 -> 9629.
+`MapObjFence` 3260 -> 3504 (+244).
+Kein R170–R255-Unit hat matched code verloren.
+Nur `MapObjFence` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R255 (`MapObjCorona`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

@@ -141,9 +141,37 @@ void TFenceWater::changeStatusToWait()
 	mState  = 1;
 }
 
+// Empty here. dont_inline keeps the call in control().
+#pragma dont_inline on
 void TFenceWater::controlRotation() { }
+#pragma dont_inline off
 
-void TFenceWater::control() { }
+void TFenceWater::control()
+{
+	TMapObjBase::control();
+	controlRotation();
+
+	// 182.04445 is 65536/360. Written out so JMASSin's dont_inline
+	// does not turn the lookup into a call.
+	f32 scale   = 182.04445f;
+	f32 radius  = 500.0f;
+	mRotation.y = MsWrap(unk140 + mInitialRotation.y, 0.0f, 360.0f);
+
+	// TMapObjMessenger* at 0x144. void* keeps the second lwz.
+	// Not a real member: adding it would change sizeof.
+	void* base = reinterpret_cast<u8*>(this) + 0x144;
+	int index  = static_cast<u16>(scale * mRotation.y) >> jmaSinShift;
+	reinterpret_cast<THitActor**>(base)[0]->mPosition.x
+	    = mPosition.x + radius * jmaCosTable[index];
+
+	index = static_cast<u16>(scale * mRotation.y) >> jmaSinShift;
+	reinterpret_cast<THitActor**>(base)[0]->mPosition.z
+	    = mPosition.z - radius * jmaSinTable[index];
+
+	// Dead slot so the fctiwz spills stay at r1+0x38 and r1+0x30.
+	char trash[0x9];
+	trash[0] = 0;
+}
 
 void TFenceWater::initMapCollisionData() { TMapObjBase::initMapCollisionData(); }
 
