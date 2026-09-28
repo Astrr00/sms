@@ -11427,6 +11427,39 @@ am Ende von `const char*[]` verschiebt **alle** nachfolgenden Pool-Offsets wie b
 **Verify.** `ninja baseline` / `changes_all` ggü. **`28997a6d`**; matched_code
 **48.64% → 48.65%**; `build/GMSJ01/ok` (DOL) unverändert OK.
 
+### R200 (Aufgabe B; Map/ASM table hunt + `jntidx$3428` data)
+
+**Hunt.** (1) **`.data`/`.rodata`-Größen** (readelf tgt vs. src, Δ≤32 B) + Map-`size` vs.
+`decomp-diff -t object`; (2) frische B-scope ≤600 B off Skip; Cap ~8; strikt 100 %.
+
+**Scan.** 50 TUs mit kleinem **Δ `.data`/`.rodata`** (z. B. `bgtentacle` −4 B `.data`,
+`hamukuri` −2 B `.rodata`); kein weiteres **`addi r*,r31`-only** `.text` (R199).
+**`tstatestr`** bereits R199; verbleibende **`bgtentacle` .data**-Lücke ≠ fehlendes
+zweites Null (Dtor bleibt match).
+
+**Ship — `jntidx$3428` (16 B, `.ctors`/data).** Retail **`{8,0xe,0x1c,0x22}`**;
+Quelle **`{8,14,16,34}`** (falsches Gelenk-Offset-Paar). Fix nur **Initializer** in
+`moveConstraint`-`static int jntidx[]` — **kein** File-Scope (sonst **`jntidx` extra /
+`jntidx$3428` missing**). `decomp-diff -t object`: **93.8% → 100%**.
+
+**Probes (~7, revertiert).** `TGraphWeb::getRandomNextIndex`: `trash[8]` vor `TRailNode`
+→ Frame **−0x98**, Tmp weiter **0x1c** (R187). `TBossEelTooth` ctor, `TNerveWalkerEscape`,
+`riccohook::init`, `hinokuri2::perform`: **Frame/Spill**. `bosseel`/`enemyMario` **−4 B
+.data`**: kein isoliertes Null-Zeiger-Fix. File-Scope-`jntidx`: Symbol-Regression.
+
+**Vollmatch, strikt (1, data).**
+
+- `jntidx$3428` (16 B, object)
+
+**Tip (R200).** Tabellen-Hunt: **`symbols.txt` `size`** + ASM **`.4byte`** für
+**`$nnnn`-Statics**; Validierung **`python3 tools/decomp-diff.py -u … -t object -s
+match --search 'jntidx'`**. Map-Größe **0x10** ⇒ Inhalt, nicht nur Terminator — anders
+als **`tstatestr` 0x2C** (11× Zeiger). Function-local **`static`** behalten für
+**`name$3428`**-Mangling.
+
+**Verify.** `ninja baseline` / `changes_all` ggü. **`d9156f48`**; DOL OK; kein neues
+`.text`-Symbol (`.text`-Hunt weiter Mid-Frame).
+
 ### R196 (Aufgabe B; emit/load entry-pad + Eel-Tears, keine Vollmatches)
 
 **Hunt.** B-scope Enemy/Player ≤600 B; Skip R195-Liste + User (`TPakkun::load`, `TBubbleCallBack`,
