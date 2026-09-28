@@ -11837,6 +11837,31 @@ clusters need **UNUSED/frame** work, not another **`getSaveParams()`** temp.
 
 **Verify.** `ninja changes_all` ggü. **`dea1dafc`**: **+0** matched functions (**9272** unchanged).
 
+### R239 (Aufgabe B; pivot UNUSED/data/opcode, 0× ship)
+
+**Hunt.** Post-R238 pivot: **data/vtable/ctors**, **UNUSED→parent**, medium **opcode** fixes; skip R237–238 + stuck;
+cap ~8.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, no-ship).**
+
+- **`TSpineEnemy::calcTurnSpeedToReach`**: retail **`fnmsubs f0; frsqrte f1,f0; fmul f0,f0,f1`**
+  before **`matan`** — **`f1`/`f2`/`f0` spill rewrite** still **`fnmsubs f1`** + **`r1 0x30→0x28`** (95.9%);
+  no clear UNUSED in MAP; reverted.
+- **`TBEelTearsDrop::perform`**: drop **`trash[0x10]`** → fuzzy **100%** but one **`addi r28,r1,0x6c` vs `0x60`**
+  remains; pads/params cache worse — left at HEAD.
+- **`TBossGesso` `.ctors`**: **`__vtable` 99.3%**, **`@6268` 81.2%**, **`idxarray$3450` 8B** — vtable/idx
+  ordering, not a quick PARAM float.
+- **`TBossGesso::stopIfRoll`**: concrete **`|`** on tentacle loop (**`subi r0,r4,3` vs `cmpwi r0,6`**) + frame skew.
+- **Enemy/Player `.rodata`/`.sdata` scan**: no **≥90%** nonmatching PARAM/string blobs left in B-scope.
+
+**Tip (R239).** **`calcTurnSpeedToReach`** sqrt is **not** a single **`x*__frsqrte(x)`** store — retail schedules
+**`1-d²`**, **rsqrt**, **multiply**, then **stack spill into `matan`**; fixing it likely needs **frame + GPR**
+together, not a one-line temp.
+
+**Verify.** `ninja changes_all` ggü. **`dea1dafc`**: **+0** matched functions (**9272** unchanged).
+
 ### R225 (Aufgabe B; bossManta rodata + EP diversify, 0× ship)
 
 **Hunt.** Post-**`385107f3`**; optional **`bossManta` `@2805`/`@2807`** lead (Amenbo
