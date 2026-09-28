@@ -13196,6 +13196,24 @@ spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%
 
 **Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
 
+### R285y (Enemy/Player B; missing 52B createModelData scan, 0× ship)
+
+**Hunt.** Prefer missing **`≤52B` `createModelData`** where scaffolding exists; B symbols with real opcode gaps (not **`stwu` Δ8**); skip **R285** thrash + **R285v–x** band.
+
+**Ship.** none.
+
+**`createModelData` inventory.** **~28** Enemy managers **missing** **52B** **`createModelData`** in objdiff (**`bombhei`**, **`popo`**, **`killer`**, **`Koopa`**, **`bosstelesa`**, **`bosswanwan`**, …). Retail asm = **`entry$` + vtable `0x2c` `blrl`** (same shape as **`TEggGenManager`**, already **100%** in **`egggen`**). **`TTelesaManager::createModelData`** already **100%** in **`telesa`**. Every missing manager checked against **`src/Enemy/*.cpp` size**: stubs are **1 B** — **no** byte-match path without full TU revive.
+
+**Other probes (opcode vs frame).**
+
+- **`namekuri` / `NameKuriScaleCallback`**: **`Mtx local_3c` / `PSMTXConcat`** home **`r1+0x44`** vs **`+0x48`** — **~98.9%** (240B) — matrix spill, deferred.
+- **`gatekeeper` / `TBiancoGateKeeper::getRumblePow`**: **~99.8%** (220B) — spill-only — skipped.
+- **B-wide scan**: no **`≤200B` @ ≥99.5%** with dominant **`|`/`<`/`>`** gaps outside skip lists this round.
+
+**Tip (R285y).** **`createModelData` ships** only after the manager TU exists (**headers, vtable, symbol order**); reference **`egggen.cpp`** **`TEggGenManager::createModelData`**. Gate **9275** moves only on **Matching**-linked TUs — stub **`createModelData` in empty `.cpp`** does not help.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
 ### R258 (Aufgabe B; defer GraphGroup/ColumSand pool + diversify, 0× ship)
 
 **Hunt.** Post-R257 dry; **defer `TGraphGroup::perform`** (empty **`TGraphWeb::perform` DCE**) and

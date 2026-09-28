@@ -235,6 +235,8 @@ temp** both get DCE’d; assigning **`BOOL bckPass`** adds stack (**`−0x30`**)
 
 **B-scope `≤200B` MAP band** (R285x): high-match Enemy/Player text in this size class is almost always **`stwu r1` Δ8** vs retail (**`isReachedToGoalXZ`**, **`getManagerByName`**, **`createEnemies`**, **`TBubbleCallBack`**) — not a one-line C fix. **`TGraphWeb::startIsEnd`**: retail keeps **`lwz r4,0(r3)` / `lwz r5,0(r4)`** on the first rail; hoisting **`const TRailNode*`** locals or **`unk0[i].unk0`** indexing regressed match — stay on **`getFirstGraphNode()`** / **`getNodeNum()`** until a sized UNUSED inline exists.
 
+**Missing `createModelData` (52B)** (R285y): retail body is **`lis r4,entry$…` / `stwu -0x8` / `lwz r12,0(r3)` / `lwz r12,0x2c(r12)` / `blrl`** (vtable slot → **`createModelDataArray`**), same as **`TEggGenManager`** / **`TCoasterKillerManager`** — **`createModelDataArray(entry)`** in C still matches when the TU is built. MAP lists **~28** missing **`…Manager::createModelData`** in Enemy; almost all target **`src/Enemy/<tu>.cpp` stubs are 1 B** (no manager class) — do not paste **`createModelData` alone**; revive the TU (**`docs/PROGRAM_STRUCTURE_REVVING.md`**) first.
+
 **`TSpineEnemy::setGoalPathFromGraph`**: retail **`−0x60`**, **`getPoint` into `r1+0x48`**, manual **`stw`** cluster **`0x38–0x44`**, then member **`stw`** to **`unkF4`/`unk104`** — **`TPathNode(local_48)` + assign** shrinks frame and regresses (~**29%** if forced to **`Vec`** writes without stack layout).
 
 **`TTamaNoko::isReachedToGoal`** (and **`TTelesa`**): retail inlines **`TPathNode`** at **`this+0x104`** — **`unk0` ? `unk0+0x10` : `&unk4`** — not an out-of-line **`getPoint()`** call; **`TVec3` assign from `mPosition`** breaks the **`addi r5,r4,4`** branch.
