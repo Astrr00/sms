@@ -160,7 +160,26 @@ void TResetFruit::hold(TTakeActor*) { }
 
 void TResetFruit::touchPollution() { }
 
-void TResetFruit::touchWaterSurface() { }
+void TResetFruit::touchWaterSurface()
+{
+	// Dead slot so MWCC keeps the frame at -0x30.
+	char trash[0x18];
+	trash[0] = 0;
+	emitColumnWater();
+	if (gpMSound->gateCheck(MSD_SE_OBJ_DRINA_TO_WATER))
+		MSoundSESystem::MSoundSE::startSoundActor(MSD_SE_OBJ_DRINA_TO_WATER,
+		                                          &mPosition, 0, nullptr, 0, 4);
+	mState = 11;
+	makeObjDefault();
+	makeObjDead();
+	calcRootMatrix();
+	getModel()->calc();
+	mStateTimer = mFruitWaitTimeToAppear;
+	offMapObjFlag(MAP_OBJ_FLAG_DISAPPEARING);
+	mState = TMapObjGeneral::STATE_WAITING_TO_APPEAR;
+	if (gpMarDirector->mMap == 3 && unk1A4 != 0)
+		makeObjDead();
+}
 
 u32 TResetFruit::touchWater(THitActor*) { return 0; }
 
