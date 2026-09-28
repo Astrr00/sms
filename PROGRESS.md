@@ -12628,6 +12628,23 @@ spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%
 
 **Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
 
+### R281 (Aufgabe B; genEventCoin clrlwi fix, 0× ship)
+
+**Hunt.** Post-R280 dry (**9275**); **`TSmallEnemy::genEventCoin`** (**~99.3%**); defer PolluteModel/**bind**/Dango/setGoal;
+spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%** only.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~4).**
+
+- **`if ((BOOL)((mCoin->mActorType - …) == 0xEu))`**: **~97%** — drops retail **`li`/`b`/`clrlwi`** — reverted.
+- **`if ((u8)isEventCoin)`** after **`BOOL` assign**: **~99.6%** — **`clrlwi. r0, r0, 24`** + **`beq`** match retail; **`register`** not required — **kept**.
+- Frame still **`−0x108`** (retail **`−0x100`**); loop spills + **`@4358`/`@4359`** float pool order open.
+
+**Tip (R281).** After manual **`mCoin` `subis`/`li`/`b`**, second test must use **`if ((u8)isEventCoin)`** so MWCC reuses **`clrlwi.`** — plain **`if (isEventCoin)`** spills to **`cmpwi`**.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
 ### R258 (Aufgabe B; defer GraphGroup/ColumSand pool + diversify, 0× ship)
 
 **Hunt.** Post-R257 dry; **defer `TGraphGroup::perform`** (empty **`TGraphWeb::perform` DCE**) and

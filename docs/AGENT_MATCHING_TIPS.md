@@ -178,8 +178,9 @@ raises fuzzy **%** but emits **`addi r31,r3`** / extra **`bl`** — not a ship p
 (**`lwz r3, 0x4c(r4)`** with **`r4 = mCoin`**) for **`0x2000000E`**, not **`isActorType`** on **`this`**
 (**`0x4c(r30)`**). **`mCoin->isActorType`** restores type-test **`li`/`b`/`clrlwi`** but inflates frame
 (**`−0x110`** vs retail **`−0x100`**). Manual **`(mCoin->mActorType - 0x20000000u) == 0xEu`** into a **`BOOL`**
-then **`if (isEventCoin)`** keeps **`−0x108`** and **`r4`**, but the second test emits **`cmpwi`** instead of
-**`clrlwi. r0, r0, 24`** — merge type test with spawn/appear control flow to close the ship.
+then **`if ((u8)isEventCoin)`** (not plain **`if (isEventCoin)`**) keeps **`−0x108`**, **`r4`**, and retail
+**`clrlwi. r0, r0, 24`** before spawn vs **`appear`**. Open: frame **`−0x8`** vs retail **`−0x100`**, loop spill
+slots, **`@4358`/`@4359`** (**`8`/`16`** **`TMsRange`** literals) pool order.
 
 **`TEnemyAttachment::sendMessage`** walks **`mCollisions`** with **`lwz r3, 0x44(r29)`** then
 **`lwzx r4, r3, r31`** (byte offset in **`r31`**, index in **`r30`**). For collisions that are not Mario

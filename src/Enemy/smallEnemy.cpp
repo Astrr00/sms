@@ -358,7 +358,7 @@ void TSmallEnemy::genEventCoin()
 			isEventCoin = TRUE;
 		else
 			isEventCoin = FALSE;
-		if (isEventCoin) {
+		if ((u8)isEventCoin) { // matching: clrlwi. on type test (not cmpwi)
 			coin = (TCoin*)gpItemManager->makeObjAppear(0x2000000E);
 		} else {
 			coin = mCoin;
