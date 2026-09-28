@@ -1253,6 +1253,8 @@ BOOL TMario::squatSlipping()
 
 BOOL TMario::oilRun()
 {
+	char trash[8];
+
 	if (mInput & 0x2) {
 		setPlayerVelocity(0.0f);
 		return changePlayerJumping(MARIO_STATUS_JUMP, 0);
@@ -1270,8 +1272,12 @@ BOOL TMario::oilRun()
 		}
 	}
 
-	f32 tmp = mDirtyParams.mPolSizeRun.get();
-	gpPollution->stamp(1, mPosition.x, mPosition.y, mPosition.z, tmp);
+	TPollutionManager* pollution = gpPollution;
+	f32 tmp                = mDirtyParams.mPolSizeRun.get();
+	f32 posZ               = mPosition.z;
+	f32 posY               = mPosition.y;
+	f32 posX               = mPosition.x;
+	pollution->stamp(1, posX, posY, posZ, tmp);
 
 	{
 		f32 rotSp = mDirtyParams.mSlipRotate.get();
@@ -1340,8 +1346,12 @@ BOOL TMario::oilSlip()
 		changePlayerStatus(MARIO_STATUS_CATCH, 0, false);
 	}
 
-	f32 tmp = mDirtyParams.mPolSizeSlip.get();
-	gpPollution->stamp(1, mPosition.x, mPosition.y, mPosition.z, tmp);
+	TPollutionManager* pollution = gpPollution;
+	f32 tmp                = mDirtyParams.mPolSizeSlip.get();
+	f32 posZ               = mPosition.z;
+	f32 posY               = mPosition.y;
+	f32 posX               = mPosition.x;
+	pollution->stamp(1, posX, posY, posZ, tmp);
 	SMSGetMSound()->startSoundActor(MSD_SE_MA_SLIP_POLLUT_CP, &mPosition, 0,
 	                                nullptr, 0, 4);
 

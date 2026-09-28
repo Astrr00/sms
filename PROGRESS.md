@@ -11028,6 +11028,27 @@ vertieft (große Frame-Deltas, kein schneller 100 %-Pfad in diesem Slice).
 **Verify.** `ninja baseline` / `changes_all` ohne Code-Delta; `dtk shasum -c` →
 OK (Tip **`f48b5cc7`**, Quellbaum nur PROGRESS).
 
+### R163 (Aufgabe B; 2 Vollmatches Player/MarioRun)
+
+**Scanner.** Enemy/Player `.text`-Nonmatching ≥95 % mit kleinem Diff-Fokus
+(`TNerve*` / `TMario::`); Skip-Liste + MoveBG/Closet unverändert.
+
+**Vollmatches (strikt 100 %, `decomp-diff`):**
+
+1. **`TMario::oilSlip`** — `TPollutionManager* pollution = gpPollution` vor
+   `stamp`; `posZ`/`posY`/`posX`-Temps (MWCC-Eval-Reihenfolge für `lfs`/`lwz`).
+2. **`TMario::oilRun`** — gleiches `stamp`-Muster + `char trash[8];` Eingang
+   (Frame **0x58**).
+
+**Probes revertiert (8):** `TNerveWalkerEscape` (`trash[0x28]` Eingang /
+   `pathPad[0x20]` vor `pop`), `TNerveTobiPukuHitWater` (`trash[0x10]`),
+   `TNerveBossEelMouthOpenWait` (`trash[0x28]`, Frame OK, Vec-Temps weiter
+   **−0x20**), `TNerveMameGessoJitabata` (nur analysiert), `oilSlope` (extra
+   Symbol, unverändert gelassen), `setStatusToJumping` (Frame **−0x50**, zu
+   groß), `TNerveKumokunFly` (dtor bereits Match), `initAndRegister` skip.
+
+**Verify.** `ninja baseline` / `changes_all`; `dtk shasum -c` → OK.
+
 ### R162 (Aufgabe B; `initAndRegister` only; keine Vollmatches)
 
 Dedizierte Pass nur **`TMapObjBase::initAndRegister`**. Retail hat **kein**
