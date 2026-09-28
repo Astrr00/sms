@@ -8,7 +8,7 @@ class TModelGate : public TTakeActor {
 public:
 	TModelGate(const char* name = "<TModelGate>");
 
-	virtual MtxPtr getTakingMtx();
+	virtual MtxPtr getTakingMtx() { return nullptr; }
 	virtual void perform(u32 cue, JDrama::TGraphics* graphics);
 	virtual BOOL receiveMessage(THitActor* sender, u32 message);
 	virtual void loadAfter();
@@ -39,7 +39,10 @@ public:
 	/* 0xB8 */ u32 unkB8;
 	/* 0xBC */ u32 unkBC;
 	/* 0xC0 */ u32 unkC0;
-	/* 0xC4 */ u32 unkC4;
+	/* 0xC4 */ u8 unkC4;
+	/* 0xC5 */ u8 unkC5;
+	/* 0xC6 */ u8 unkC6;
+	/* 0xC7 */ u8 unkC7;
 	/* 0xC8 */ u32 unkC8;
 	/* 0xCC */ u32 unkCC;
 	/* 0xD0 */ u32 unkD0;

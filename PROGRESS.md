@@ -10920,6 +10920,36 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R187 (`TModelGate` / `TMapObjWave`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+Zwei bisher leere TUs.
+Jeder Map-Symbol ist definiert, der Rest bleibt Stub.
+
+- `TModelGate::startOpen`: `unk70 |= 1`, Byte `unkC4 = 0`, `setBpk(gateMActorNames[unk71])`, `offHitFlag(HIT_FLAG_NO_COLLISION)`, `unk70 |= 2`.
+  116 Bytes, 29 Instruktionen.
+- `TModelGate::getTakingMtx` gibt `nullptr` zurück und steht weak im Header.
+  8 Bytes.
+- `TMapObjWave::noWave` nullt `unk34`, `unk38`, `unk2C`, `unk30`, `unk3C`, `unk40` in dieser Reihenfolge.
+  32 Bytes, 8 Instruktionen.
+- `__sinit_ModelGate_cpp` (764 Bytes) kommt aus `MSSetSound.hpp` / `MSoundBGM.hpp`.
+- `__sinit_MapObjWave_cpp` (772 Bytes) ist dieselbe Liste plus `static JUtility::TColor sColor`, dessen Default-Ctor `-1` schreibt.
+
+`TModelGate::~TModelGate`, `@32@__dt__10TModelGate` und `TMapObjWave::~TMapObjWave` sind ebenfalls 100 %.
+`validate-symbol-order`: ModelGate PASS, Wave PASS mit UNUSED-Größenwarnungen.
+
+R186 `MapObjMonte` / `MapObjRicco`, R185 `getNumGripsDead`,
+R184 `TWaterHitPictureHideObj::load`, R183 `updateCheckData`,
+R182 `TMapObjTurn::touchWater`, R181 `TCloset::touchWater`,
+R180 `TCasinoPanelGate::touchWater`, R179 `waitingToAppear`,
+R178 `initDrawNear`, R177 `TWoodBox::kill`, R176 `receiveMessage`,
+R175 `touchGround`, R174 `perform`, R173 `startControlAnim`,
+R172 `TManhole::touchPlayer`, R171 `calcVelocity`, R170 `appearing`
+unverändert strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R186 (`MapObjMonte` / `MapObjRicco`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
