@@ -10920,6 +10920,32 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R264 (`MapObjBianco`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TBiancoWatermillVertical::TBiancoWatermillVertical`.
+
+- Nach `TMapObjBase` werden `unk138` und `unk13C` auf 0.0f gesetzt.
+  `unk140`, `unk148` und `unk14C` sind 0.
+  `unk144` ist 0 (`stb`).
+  `char trash[8]` hält das Frame bei `-0x28` (`r31` bei `r1+0x24`).
+  100 Bytes, 25 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBianco`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.18938 % -> 79.19034 %, matched code 49.93872 % -> 49.94151 % (1792844 -> 1792944, +100).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9637 -> 9638.
+`MapObjBianco` 6228 -> 6328 (+100).
+Kein R170–R263-Unit hat matched code verloren.
+Nur `MapObjBianco` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R263 (`Item`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

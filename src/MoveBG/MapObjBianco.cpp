@@ -111,7 +111,16 @@ void TBiancoWatermillVertical::load(JSUMemoryInputStream& stream)
 
 TBiancoWatermillVertical::TBiancoWatermillVertical(const char* name)
     : TMapObjBase(name)
+    , unk138(0.0f)
+    , unk13C(0.0f)
+    , unk140(0)
+    , unk144(0)
+    , unk148(0)
+    , unk14C(0)
 {
+	// Dead slot so MWCC keeps frame -0x28 (r31 at r1+0x24).
+	char trash[8];
+	trash[0] = 0;
 }
 
 u32 TBiancoMiniWindmill::touchWater(THitActor*) { return 0; }
