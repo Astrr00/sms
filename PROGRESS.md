@@ -11120,6 +11120,29 @@ Prologue-`trash`) — **100 %**, `+508` B (`changes_all`).
 
 **Verify.** `ninja baseline` / `changes_all`; `dtk shasum -c` → OK.
 
+### R167 (Aufgabe B; Vec-Spill-Sweep, keine Vollmatches)
+
+**Muster (wie R166).** Post-local `char trashAfterVel[8]` nach benanntem
+`TVec3`/`velocity`; Prologue-`trash[8]` nur wenn Frame und Spills getrennt
+steuerbar.
+
+**tobiPuku (~8 Probes, revertiert).** `walkBehavior`: Entry-`trash[8]` → Frame
+**0x68** retail, `velocity`-Spill weiter **−0x8** (`0x38` vs. `0x40`); Dual-
+`trashAfterPrevY`/`trashAfterVel` → Frame **0x70**. `TNerveTobiPukuAttack`:
+`unused` `TVec3` allein → Frame **0x50** OK, Vec-Cluster **−0xc**; `+trashAfterVel`
+→ Frame **0x58**. `Generate`/`Fly`/`HitWater`/`hitWater`: kein strikter Win.
+`torocco`/`soundTorocco`: skip (R166).
+
+**Scanner (kurz).** `moveRoof`/`isTakeSituation`/`slippingBasic`/`slopeProcess`:
+Frame-Gaps **>8**; `TFireWanwan::isMissMario` Frame **+8** zu groß;
+`TNerveSmallEnemyFreeze`/`HamuKuriBoundFreeze`: skip/deadlock; `isHitWallInBound`:
+**−0x28** Frame.
+
+**Vollmatch, strikt.** keine. Quellbaum unverändert ggü. **`a4665ba4`**.
+
+**Verify.** `ninja baseline` / `changes_all` ohne Code-Delta; `dtk shasum -c` →
+OK.
+
 ### R162 (Aufgabe B; `initAndRegister` only; keine Vollmatches)
 
 Dedizierte Pass nur **`TMapObjBase::initAndRegister`**. Retail hat **kein**
