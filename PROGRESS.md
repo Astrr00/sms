@@ -11559,6 +11559,36 @@ MAP; cap ~8.
 
 **Verify.** `ninja baseline` + `ninja changes_all` ggü. **`f4a5afd1`** — **no diff**.
 
+### R228 (Aufgabe B; `createModelData` const pool, 1× ship)
+
+**Hunt.** Post-**`cbe35e73`**; skip spider PCH pollution, empty TUs, **`bossManta` `@2805`**, **`getNowGravity`**,
+R222–R227 failures, stuck **`.ctors`** jump tables, stack **≥99.5%** `load`s, prior stuck lists; cap ~8.
+
+**Ship.**
+
+- **`TBossGessoManager::createModelData`** — **`static const TModelDataLoadEntry entry[]`** (was writable **`.data`
+  `entry$1840`**); retail **`entry$3707`** in **`.rodata`** → **100%** (52 B).
+- Side effect: **`TBossGessoManager::initJParticle`** **99.92% → 100%** (1252 B; particle path literals share pool).
+
+**Probes (~8, no-ship).**
+
+- **`bossgesso` `createModelData`:** root cause above (not path/flag typo).
+- **`TGraphWeb::startIsEnd` / `TGraphGroup::perform`:** register allocation / retail empty unroll loop — not MAP.
+- **`TSmallEnemy::decHpByWater`:** register swap — not PARAM.
+- **`PakkunRootCallback2`:** stack **`-0x90`** vs **`-0x70`** — skip band.
+- **`TPoiHanaManager::load` et al.:** offsetof / stack — skip band.
+- **`DebuTelesa_bastable` (50% `.ctors`):** **`static`** vs file-scope; extra **`.sdata`** prefix bytes — defer with
+  **`entry$2835`**.
+- **EP `.rodata` scan:** no other nonmatching rodata objects (same as R227).
+- **Other `static TModelDataLoadEntry` (non-`const`):** many TUs still **100%** on **`createModelData`** — only
+  **`bossgesso`** needed **`const`** for pool placement.
+
+**Tip (R228).** If **`createModelData`** mismatches only on **`entry$…` `@ha/@l`** but strings/flags look right,
+check **`objdump -t`** — writable **`entry[]` in `.data`** vs retail **`.rodata`**.
+
+**Verify.** `ninja changes_all` ggü. **`cbe35e73`**: **+1** matched function (**9263 → 9264**), **+1252 B** matched code;
+**`mario/Enemy/bossgesso`** **`.rodata` ~95.3% → ~99.7%**.
+
 ### R225 (Aufgabe B; bossManta rodata + EP diversify, 0× ship)
 
 **Hunt.** Post-**`385107f3`**; optional **`bossManta` `@2805`/`@2807`** lead (Amenbo
