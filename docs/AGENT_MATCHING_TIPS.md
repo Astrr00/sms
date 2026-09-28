@@ -184,6 +184,10 @@ then **`if ((u8)isEventCoin)`** (not plain **`if (isEventCoin)`**) keeps **`−0
 literals) pool order. Replacing **`TMsRange::rand`** with **`MsRandF`** changes the frame (**`−0xf0`**) but
 does not reproduce retail’s pre-loop **`lfs f29/f30`** + **`stfs`** / **`bl rand`** sequence.
 
+**`SMS_IsMarioOnWire`**: **`gpMarioOriginal->mHolder && …->mActorType`** is ~**93.8%** but CSEs the **`0x68`** load (**`lwz r3,0x68`** vs retail **`lwz r0,0x68` / `lwz r3,0x68`**). Nested **`if (mHolder != nullptr)`** uses **`r4`** for **`!!`** and regresses.
+
+**`TTamaNoko::isReachedToGoal`** (and **`TTelesa`**): retail inlines **`TPathNode`** at **`this+0x104`** — **`unk0` ? `unk0+0x10` : `&unk4`** — not an out-of-line **`getPoint()`** call; **`TVec3` assign from `mPosition`** breaks the **`addi r5,r4,4`** branch.
+
 **`TEnemyAttachment::sendMessage`** walks **`mCollisions`** with **`lwz r3, 0x44(r29)`** then
 **`lwzx r4, r3, r31`** (byte offset in **`r31`**, index in **`r30`**). For collisions that are not Mario
 and not **`unk160`**, retail calls **`TEnemyAttachment::kill()`** via **`this`**'s vtable **`+0xe4`**, not

@@ -12683,6 +12683,24 @@ spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%
 
 **Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
 
+### R284 (Aufgabe B; diversify off genEventCoin, 0× ship)
+
+**Hunt.** Post-R283 dry (**9275**); **defer `TSmallEnemy::genEventCoin`** frame/**`.sdata2`**; opcode/data/PARAM wins elsewhere; defer PolluteModel/**bind**/Dango/setGoal;
+spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%** only.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~7).**
+
+- **`SMS_IsMarioOnWire`**: nested **`mHolder`** / dual-local — **~76–85%** vs **`&&`** **~93.8%** — reverted.
+- **`TTamaNoko`/`TTelesa::isReachedToGoal`**: manual **`unk104.unk0`/`mPosition`** vs **`getPoint()`** — **~84%** — reverted (**retail inlines `addi r4,0x104` / `addi r5,r4,4`**).
+- **`TEnemyMario::checkReturn`**, **`PakkunRootCallback`**, **`initSetEnemies`**: frame/rodata — deferred.
+- **`genEventCoin`**: untouched (deferred).
+
+**Tip (R284).** **`SMS_IsMarioOnWire`**: keep **`&&`** short-circuit for best fuzzy; retail **`lwz r0,0x68` then `lwz r3,0x68`** needs a second **`gpMarioOriginal->mHolder`** fetch MWCC won’t emit from **`&&`**. **`isReachedToGoal`**: don’t call **`TPathNode::getPoint()`** — match retail’s **`unk0 ? actor+0x10 : &unk4`** load path in-place.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
 ### R258 (Aufgabe B; defer GraphGroup/ColumSand pool + diversify, 0× ship)
 
 **Hunt.** Post-R257 dry; **defer `TGraphGroup::perform`** (empty **`TGraphWeb::perform` DCE**) and
