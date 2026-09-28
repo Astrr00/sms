@@ -9,6 +9,7 @@
 #include <M3DUtil/MActor.hpp>
 #include <MSound/MSound.hpp>
 #include <MSound/SoundEffects.hpp>
+#include <MoveBG/ItemManager.hpp>
 #include <string.h>
 
 // rogue includes needed for matching sinit & bss
@@ -414,7 +415,27 @@ void TWatermelon::control() { }
 
 void TGoalWatermelon::touchActor(THitActor*) { }
 
-void TGoalWatermelon::control() { }
+void TGoalWatermelon::control()
+{
+	TMapObjBase::control();
+
+	// Empty 0/1/3 keep the dispatch: cmp 2, beq, bge, b, b.
+	switch (mState) {
+	case 0:
+	case 1:
+		break;
+	case 2:
+		if (unk13C->animIsFinished()) {
+			gpItemManager->makeShineAppearWithDemoOffset(
+			    "シャイン（お化けスイカ用）", "スイカシャインカメラ", 0.0f,
+			    0.0f, 0.0f);
+			mState = 3;
+		}
+		break;
+	case 3:
+		break;
+	}
+}
 
 void TGoalWatermelon::loadAfter()
 {

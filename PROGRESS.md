@@ -10920,6 +10920,35 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R259 (`MapObjMamma`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TGoalWatermelon::control`.
+
+- `TMapObjBase::control`, dann `switch (mState)`.
+  Leere Fälle 0, 1 und 3 halten die Verteilung: `cmpwi 2`, `beq`, `bge`, `b`, `b`.
+  Zustand 2 ruft `unk13C->animIsFinished()`.
+  Danach `makeShineAppearWithDemoOffset` mit `シャイン（お化けスイカ用）`, `スイカシャインカメラ` und Offset 0.
+  `mState` wird 3.
+  Frame `-0x18` ohne Zusatzslot.
+  128 Bytes, 32 Instruktionen.
+  `loadAfter`, `load` und `sinit` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMamma`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.17900 % -> 79.18246 %, matched code 49.91443 % -> 49.91799 % (1791972 -> 1792100, +128).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9632 -> 9633.
+`MapObjMamma` 6440 -> 6568 (+128).
+Kein R170–R258-Unit hat matched code verloren.
+Nur `MapObjMamma` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R258 (`MapObjPinna`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
