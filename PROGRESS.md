@@ -11158,6 +11158,26 @@ torocco/sound, prior deadlocks.
 
 **Verify.** `ninja baseline` / `changes_all` ohne Code-Delta.
 
+### R180 (Aufgabe B; perform entry +0x10, 1 Vollmatch)
+
+**Pivot.** Kein entry-only bei MouthOpenWait-Klasse (Frame OK, Spill bleibt);
+stattdessen R171/R163-Muster (`TVec3`+`trash[8]`, post-local, `gpPollution` z/y/x).
+
+**Skip (User + R179).** R179 entry-only Fails (`setMeltAnm`/`setDeadAnm`, `receiveMessageLv1`,
+`TBEelTears::perform`, `jumpProcess`, `FireWanwanTurn`, `Gesso::pollute`,
+`BossEelMouthOpenWait`, `NameKuriLauncher::stateLaunch`) + R178/R177/Prior.
+
+**Probes (~8, revertiert).** `setMeltAnm` (`trash[0x20]`+emitSweat-`vel` → 99,9 %, Spill);
+`setDeadAnm` (emitSweat-`vel`); `TGesso::pollute` (`0x10`+post-`tmp`); `updatePollute`
+(stamp z/y/x + empty `v1`); `emitEffects` (`0x18`+post-`thing`); `TBEelTears::perform`
+(`0x10`); `receiveMessageLv1` (`0x10`); MouthOpenWait-Kombis (pre-Mtx `0xc`).
+
+**Vollmatch, strikt (`decomp-diff` 100,0 %).**
+
+1. **`TBEelTearsDrop::perform`** — entry `char trash[0x10]; trash[0]=0;` (Frame −0xc8).
+
+**Verify.** `ninja baseline` / `changes_all`; `decomp-diff` → **100,0 %**.
+
 ### R179 (Aufgabe B; fresh B-scope entry pad, keine Vollmatches)
 
 **Hunt.** Bosseel / fireWanwan / hinokuri2 / gesso / amenbo / namekuri / Player
