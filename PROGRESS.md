@@ -10920,6 +10920,32 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R224 (`MapObjMamma`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TGoalWatermelon::load`.
+`TRevolvingFenceInner::setGroundCollision` und `TMapObjBall::hold` bleiben geparkt.
+
+- `TGoalWatermelon::load` ruft `TMapObjBase::load`.
+  Dann `readString` in ein lokales `char[0x20]` und drei `read`s von je 4 Bytes nach `unk140.x`, `unk140.y` und `unk140.z`.
+  `char trash[0xC]` hält Frame `-0x48` und legt den Namen bei `r1+0x20` ab.
+  120 Bytes, 30 Instruktionen.
+  `loadAfter` und `__sinit_MapObjMamma_cpp` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMamma`: PASS.
+Acht bestehende UNUSED-Größenwarnungen.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.03098 % -> 79.03421 %, matched code 49.755215 % -> 49.758556 % (1786256 -> 1786376, +120).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9595 -> 9596.
+`MapObjMamma` 5972 -> 6092 (+120).
+Kein R170–R223-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R223 (`MapObjFence`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

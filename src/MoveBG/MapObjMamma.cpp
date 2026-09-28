@@ -393,7 +393,19 @@ void TGoalWatermelon::loadAfter()
 	unk138->appear();
 }
 
-void TGoalWatermelon::load(JSUMemoryInputStream&) { }
+void TGoalWatermelon::load(JSUMemoryInputStream& stream)
+{
+	TMapObjBase::load(stream);
+	char name[0x20];
+	stream.readString(name, 0x20);
+	stream.read(&unk140.x, 4);
+	stream.read(&unk140.y, 4);
+	stream.read(&unk140.z, 4);
+
+	// Dead slot so MWCC keeps frame -0x48.
+	char trash[0xC];
+	trash[0] = 0;
+}
 
 TGoalWatermelon::TGoalWatermelon(const char* name)
     : TMapObjBase(name)
