@@ -11488,6 +11488,29 @@ als Member-Name. Check: **`decomp-diff -u … -t object -s nonmatching`**.
 **Verify.** `ninja changes_all` ggü. **`cf903cfc`**; **`namekuri` matched_data
 70.86% → 100%**; **`build.sha1` OK**.
 
+### R205 (Aufgabe B; entry hunt + sdata2 literal, 1× data)
+
+**Hunt.** Enemy `entry$` scan (nur **`DebuTelesa` `entry$2835`** nonmatching;
+viele **`missing entry$`** = kein `createModelData`); tiny objects ≤48 B;
+**`DebuTelesa` `bastable`** skipped; Cap ~8.
+
+**Ship (data, 1).**
+
+- **`@4326`** (4 B `.sdata2`): `TFireWanwan::decideTarget` — Retail-Literal
+**`0.017453294f`** (π/180) statt **`DEG_TO_RAD`** (`3c8efa36` vs `3c8efa35`).
+
+**Probes (~7, no-ship).** `hamukuri`/`pakkun`/`egggen` entry bereits 100 %;
+`bossgesso` **`idxarray$3450`** in unvollständigem `doAttackSingle`-Tail;
+`hinokuri2`/`bosseel` **`MtxCalcTypeName`** (`.data`-Reihenfolge); `koopajr`/
+`tobiPuku` sdata-Literale in Init-Pfaden.
+
+**Tip (R205).** Neben **`createModelDataArray`-Flags**: **`DEG_TO_RAD` /
+`M_PI/180`** oft **1 ULP** daneben — ASM **`.float`** in **`.sdata2`**
+(`@nnnn`) 1:1 als Multiplikator-Literal (vgl. `MapObjLib.cpp`).
+
+**Verify.** `decomp-diff -u mario/Enemy/fireWanwan -t object` — **`@4326` 100%**;
+`ninja changes_all` ggü. **`40cd1f29`** (lokales `baseline` nach Edit).
+
 ### R204 (Aufgabe B; bossManta entry + DebuTelesa probes, 1× data)
 
 **Hunt.** `decomp-diff -t object` ≤48 B; **`DebuTelesa`** `bastable` SDA-Reihenfolge /
