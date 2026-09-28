@@ -12493,6 +12493,27 @@ stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%** only.
 
 **Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0** (**bind** fuzzy **85.5% → 94.5%**).
 
+### R274 (Aufgabe B; bind epilogue/sub probes, 0× ship)
+
+**Hunt.** Post-R273 dry (**9275**); **`TEnemyAttachment::bind`** (**~94.5%**); target **`local_10@0x10`**, retail
+**`TVec3::sub`**, **`behaveToHitWall`** **`0x4c(r1)`** scheduling; skip Dango/setGoal, spill **≥99.7%**, stuck lists,
+empty TUs, Closet/MoveBG; cap ~8; strict **100%** only.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8).**
+
+- **`trash[0x10]`** at decl top (no post-**`+=`** trash): **`local_10@0x14`**, still **~94.5%**; **`trashMid`+`trashTop`**
+  / **`trash[0xf]`** / **`subPad[0x4]`** regressed **`0x5c`** or **%**.
+- **`local_10.sub`** without **`enemyAttachmentBindSub`**: **~85.6%** — **`sub`** folded despite **`addi r3,0x10`** on target side.
+- **`wallHit`** temp before **`behaveToHitWall`**: **~85.6%** — reverted; canonical **~94.5%** unchanged in tree.
+
+**Tip (R274).** **`bind`**: **`trash`** placement trades **`local_10`** slot (**`0x24`** post-integrate vs **`0x14`** decl-top) vs
+**`0x5c`** spills — no dual-pad combo found; keep **`enemyAttachmentBindSub`** until **`local_10@0x10`** unlocks retail **`sub`**
+**`bl`**.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0** (no source delta vs R273).
+
 ### R258 (Aufgabe B; defer GraphGroup/ColumSand pool + diversify, 0× ship)
 
 **Hunt.** Post-R257 dry; **defer `TGraphGroup::perform`** (empty **`TGraphWeb::perform` DCE**) and
