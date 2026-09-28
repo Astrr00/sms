@@ -20,7 +20,13 @@ f32 TResetFruit::mBreakingScaleSpeed    = 0.96f;
 u32 TResetFruit::mFruitWaitTimeToAppear = 360;
 GXColorS10 TResetFruit::mRottenColor    = { 0, 0, 0, 0 }; // UNUSED
 
-void TMapObjBall::touchRoof(JGeometry::TVec3<f32>*) { }
+void TMapObjBall::touchRoof(JGeometry::TVec3<f32>* param_1)
+{
+	if (param_1->y > unk140)
+		param_1->y = unk140;
+	calcReflectingVelocity(unk13C, mMapObjData->mPhysical->unk4->unk4,
+	                       &mVelocity);
+}
 
 // Empty here. dont_inline keeps the qualified calls in TBigWatermelon.
 #pragma dont_inline on

@@ -10920,6 +10920,31 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R234 (`MapObjBall`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjBall::touchRoof`.
+
+- `TMapObjBall::touchRoof` klemmt `param_1->y` auf `unk140`, wenn es größer ist.
+  Danach `calcReflectingVelocity` mit `unk13C`, `mMapObjData->mPhysical->unk4->unk4` und `&mVelocity`.
+  Frame `-0x8`, ohne Trash.
+  76 Bytes, 19 Instruktionen.
+  `TBigWatermelon::touchWaterSurface`, `makeObjDefault`, `put`, `touchPollution` und `__sinit_MapObjBall_cpp` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS.
+Schwache-Reihenfolge-Warnung und vier bestehende UNUSED-Größenwarnungen.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.067314 % -> 79.06931 %, matched code 49.792763 % -> 49.79488 % (1787604 -> 1787680, +76).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9605 -> 9606.
+`MapObjBall` 3172 -> 3248 (+76).
+Kein R170–R233-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R233 (`MapObjBianco`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
