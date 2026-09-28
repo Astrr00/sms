@@ -733,26 +733,31 @@ s32 TShine::appearWithTimeCallback(u32 param_1, u32 param_2)
 
 void TShine::appearSimple(int param_1)
 {
-	TItem::appear();
+	TShine* shine = this;
+	shine->TItem::appear();
 	TFlagManager::smInstance->setBool(true, 0x50000);
 
-	unk174   = 60;
-	unk170   = param_1;
-	unk178   = 60;
-	unk154   = 3;
-	unk158   = 0.0f;
-	unk15C   = 0.0f;
-	unk160   = 0.0f;
-	mUpSpeed = 2.0f;
+	shine->unk174   = 60;
+	shine->unk170   = param_1;
+	shine->unk178   = 60;
+	shine->unk154   = 3;
+	shine->unk158   = 0.0f;
+	shine->unk15C   = 0.0f;
+	shine->unk160   = 0.0f;
+	shine->mUpSpeed = 2.0f;
 
-	mInitialPosition = mPosition;
+	shine->mInitialPosition = shine->mPosition;
 
-	SMSGetMSound()->startSoundActor(MSD_SE_SHINE_APPEAR, &mPosition, 0, nullptr,
-	                                0, 4);
+	SMSGetMSound()->startSoundActor(MSD_SE_SHINE_APPEAR, &shine->mPosition, 0,
+	                                nullptr, 0, 4);
 
-	mStateTimer = unk174;
-	mState      = STATE_UNKB;
-	onHitFlag(HIT_FLAG_NO_COLLISION);
+	shine->mStateTimer = shine->unk174;
+	shine->mState      = STATE_UNKB;
+	shine->onHitFlag(HIT_FLAG_NO_COLLISION);
+
+	// Dead slot so MWCC keeps frame -0x30 (r31 at r1+0x2c).
+	char trash[0x9];
+	trash[0] = 0;
 }
 
 void TShine::appearWithDemo(const char* param_1)

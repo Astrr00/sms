@@ -10920,6 +10920,34 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R262 (`Item`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TShine::appearSimple`.
+
+- `TShine* shine = this` hält `this` in `r31` und das Argument in `r30`.
+  Danach `TItem::appear`, `setBool(true, 0x50000)`, die Feldstores,
+  die Kopie von `mPosition` nach `mInitialPosition` und
+  `startSoundActor(MSD_SE_SHINE_APPEAR)`.
+  `mStateTimer = unk174`, `mState = STATE_UNKB`, `onHitFlag(HIT_FLAG_NO_COLLISION)`.
+  `char trash[0x9]` hält das Frame bei `-0x30` (`r31` bei `r1+0x2c`).
+  252 Bytes, 63 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/Item`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.18918 % -> 79.18936 %, matched code 49.92501 % -> 49.93204 % (1792352 -> 1792604, +252).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9635 -> 9636.
+`Item` 13868 -> 14120 (+252).
+Kein R170–R261-Unit hat matched code verloren.
+Nur `Item` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R261 (`MapObjMamma`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
