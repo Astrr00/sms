@@ -10920,6 +10920,32 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R231 (`MapObjMonte`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TGoalFlag::touchActor`.
+
+- `TGoalFlag::touchActor` bei `isActorType(0x80000001)` setzt Flag `0x50005`, falls es noch nicht gesetzt ist.
+  Danach `receiveMessage(this, HIT_MESSAGE_ATTACK)`.
+  Bei `isActorType(0x08000002)` nur die gleiche Message.
+  `char trash[1]` hält Frame `-0x28`.
+  228 Bytes, 57 Instruktionen.
+  `TJumpMushroom::load`, `TJumpMushroom::receiveMessage` und `__sinit_MapObjMonte_cpp` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMonte`: PASS.
+Elf bestehende UNUSED-Größenwarnungen.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.05183 % -> 79.05807 %, matched code 49.776943 % -> 49.78329 % (1787036 -> 1787264, +228).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9602 -> 9603.
+`MapObjMonte` 3556 -> 3784 (+228).
+Kein R170–R230-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R230 (`MapObjFence`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

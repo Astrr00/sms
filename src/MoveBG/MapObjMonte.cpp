@@ -2,6 +2,7 @@
 #include <Map/MapCollisionManager.hpp>
 #include <Player/MarioAccess.hpp>
 #include <Player/Yoshi.hpp>
+#include <System/FlagManager.hpp>
 
 // rogue includes needed for matching sinit & bss
 #include <MSound/MSSetSound.hpp>
@@ -184,7 +185,18 @@ TSwingBoard::TSwingBoard(const char* name)
 {
 }
 
-void TGoalFlag::touchActor(THitActor*) { }
+void TGoalFlag::touchActor(THitActor* actor)
+{
+	if (actor->isActorType(0x80000001)) {
+		if (!TFlagManager::smInstance->getBool(0x50005))
+			TFlagManager::smInstance->setBool(true, 0x50005);
+		actor->receiveMessage(this, HIT_MESSAGE_ATTACK);
+	} else if (actor->isActorType(0x08000002)) {
+		actor->receiveMessage(this, HIT_MESSAGE_ATTACK);
+	}
+	char trash[1];
+	trash[0] = 0;
+}
 
 void TGoalFlag::initMapObj() { TMapObjBase::initMapObj(); }
 
