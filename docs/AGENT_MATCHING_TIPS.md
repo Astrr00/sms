@@ -197,6 +197,10 @@ temp** both get DCE’d; assigning **`BOOL bckPass`** adds stack (**`−0x30`**)
 
 **`TMario::startJumpWall`**: wall kick angle is **`matan(mNormal.x, mNormal.z) + 0x8000`** via **`mWallPlane+0x34`** (**`lfs`/`lfsu` on `mNormal`**), not **`matan(mMinY, normal.x)`** or **`getNormal()`**.
 
+**`TEnemyMario::emWalkAround`**: branches set **`mEMDoingTimer`/`mEMDoing`** directly (**`sth` doing**, **`stw` timer**); jump paths **`ori 0x100`** on **`unk108->mInput`**, not **`changeEMJumping`**. Graph branch **`stw -1` at `getTracer()+0x8`** then **`goToShortestNextGraphNode`** (not **`changeEMWalkGraph`/`reset`**). After hide **`stamp`**, control falls through to wall-plane jump or inlined **0.5f** stick — no early **`return`**.
+
+**`TSmallEnemy::isFindMario`**: **`isMarioInWater()` is fully inlined** in retail (**`gpMarioFlag` bit tests**, **`gpMarioGroundPlane->isWaterSurface`**, **`r29`/`r30` result**); a call to **`isMarioInWater()`** breaks **`mr r0,r29` vs `li r0,0`** at the visible-flag branch.
+
 **`TTamaNoko::isReachedToGoal`** (and **`TTelesa`**): retail inlines **`TPathNode`** at **`this+0x104`** — **`unk0` ? `unk0+0x10` : `&unk4`** — not an out-of-line **`getPoint()`** call; **`TVec3` assign from `mPosition`** breaks the **`addi r5,r4,4`** branch.
 
 **`TEnemyAttachment::sendMessage`** walks **`mCollisions`** with **`lwz r3, 0x44(r29)`** then

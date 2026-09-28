@@ -12734,6 +12734,25 @@ spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%
 
 **Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
 
+### R285b (Enemy/Player B; skip R285 thrash, 0× ship)
+
+**Hunt.** Skip **checkReturn**, **emJumping**, **startJumpWall**, Pakkun **Appear/perform/SeedCallback**, **TamaNokoThrown**, **genEventCoin**, **OnWire**, **isReachedToGoal**, **bind**/PolluteModel/Dango/setGoal, spill **≥99.7%**; strict **100%** only.
+
+**Ship.** none.
+
+**Probes (~6).**
+
+- **`TEnemyMario::emWalkAround`**: retail **`stw`/`sth` `mEMDoingTimer`/`mEMDoing`** + **`unk108->mInput|0x100`** (no **`changeEMDoing`/`changeEMJumping`**); **`reset2`+`goToShortestNextGraphNode`**; pollution **falls through** wall/stick — trial → **~94.0%** (was **~95.9%**) — reverted.
+- **`TSmallEnemy::isFindMario`**: **`isMarioInWater` inlined** (**`r29`/`r28`/`r30`**, **`*gpMarioFlag`**) — trial → **~58.8%** — reverted.
+- **`TEnemyMario::emWaitingToInviteMario`**: same **`gpMarioPos` `fsubs`** / **`−0xa8`** stack class as **checkReturn** — **~95.7%** — deferred.
+- **`TNerveTelesaAttackMario::execute`**: **`−0xf8`** frame + TU **`.sdata2`** sin/matrix temps — **~97.0%** — deferred.
+- **`TTamaNoko::landEffect`**: **`−0x90`** vs **`−0x20`**; post-**`emit`** particle setup cluster — **~62.5%** — deferred.
+- **`GessoBodyCallback`**: J3D callback matrix **`−0x88`** stack / **`@sdata2`** — **~85.5%** — deferred.
+
+**Tip (R285b).** **`emWalkAround`**: never **`return`** after hide — retail **`stamp`→`mEMDoing=7`→optional wall jump→else inline **0.5f** stick. **`isFindMario`**: keep **`isMarioInWater()`** out-of-line unless you match **`mr r0,r29` vs `mr r0,r30`** at flag bit **30** exactly.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
 ### R258 (Aufgabe B; defer GraphGroup/ColumSand pool + diversify, 0× ship)
 
 **Hunt.** Post-R257 dry; **defer `TGraphGroup::perform`** (empty **`TGraphWeb::perform` DCE**) and
