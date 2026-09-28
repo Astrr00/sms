@@ -10920,6 +10920,34 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R265 (`MapObjRicco`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TRiccoWatermill::TRiccoWatermill`.
+
+- Nach `TMapObjBase` wird `unk138` auf 0.0f gesetzt.
+  `unk13C`, `unk140`, `unk148`, `unk14C`, `unk150` und `unk154` sind 0.
+  `unk144` ist 0 (`stb`).
+  `char trash[8]` hält das Frame bei `-0x28` (`r31` bei `r1+0x24`).
+  108 Bytes, 27 Instruktionen.
+  `loadAfter` bleibt der leere Stub.
+
+`validate-symbol-order` `mario/MoveBG/MapObjRicco`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.19034 % -> 79.19155 %, matched code 49.94151 % -> 49.94452 % (1792944 -> 1793052, +108).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9638 -> 9639.
+`MapObjRicco` 2624 -> 2732 (+108).
+Kein R170–R264-Unit hat matched code verloren.
+Nur `MapObjRicco` hat sich geändert.
+`MarNameRefGen_MapObj` und `MapObjManager` wurden wegen der neuen Felder neu gebaut, ohne Match-Änderung.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R264 (`MapObjBianco`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

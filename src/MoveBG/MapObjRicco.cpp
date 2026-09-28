@@ -94,7 +94,18 @@ void TRiccoWatermill::loadAfter() { }
 
 TRiccoWatermill::TRiccoWatermill(const char* name)
     : TMapObjBase(name)
+    , unk138(0.0f)
+    , unk13C(0)
+    , unk140(0)
+    , unk144(0)
+    , unk148(0)
+    , unk14C(0)
+    , unk150(0)
+    , unk154(0)
 {
+	// Dead slot so MWCC keeps frame -0x28 (r31 at r1+0x24).
+	char trash[8];
+	trash[0] = 0;
 }
 
 void TSurfGesoObj::initMapObj() { }
