@@ -10920,6 +10920,27 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R181 (`TCloset::touchWater`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+- Die Z-Schwellen sind `mPosition.z - 1.1f * unk140`
+  und `mPosition.z + 1.1f * unk140`.
+- Das Produkt landet in f3, das Wasser-Z in f1.
+- Ein benanntes `halfDepth` hatte das Produkt in f1 gelassen.
+
+0 Abweichungen, 352 Bytes, 88 Instruktionen.
+`decomp-diff -u mario/MoveBG/MapObjSirena -d "TCloset::touchWater"`: 100 %.
+`validate-symbol-order -u mario/MoveBG/MapObjSirena`: PASS.
+
+R180 `TCasinoPanelGate::touchWater`, R179 `waitingToAppear`,
+R178 `initDrawNear`, R177 `TWoodBox::kill`, R176 `receiveMessage`,
+R175 `touchGround`, R174 `perform`, R173 `startControlAnim`,
+R172 `TManhole::touchPlayer`, R171 `calcVelocity`, R170 `appearing`
+unverändert strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R180 (`TCasinoPanelGate::touchWater`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
