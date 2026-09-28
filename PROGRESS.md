@@ -10920,6 +10920,34 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R222 (`MapObjPinna`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TChangeStageMerrygoround::touchPlayer`.
+`TRevolvingFenceInner::setGroundCollision` und `TMapObjBall::hold` bleiben geparkt.
+
+- `TChangeStageMerrygoround::touchPlayer` kehrt sofort zurück, wenn `isStateTimerEngaged()` wahr ist.
+  Bei Yoshi-`mType == 1` folgen `gateCheck(MSD_SE_SY_COLLECT_YOSHI)`, `startSoundSystemSE`, `TMapObjChangeStage::touchPlayer` und `unk13C = 1`.
+  Sonst `gateCheck(MSD_SE_SY_NOT_COLLECT_YOSHI)` und optional `startSoundSystemSE`.
+  Danach `mStateTimer = 0x258`.
+  `char trash[0xF]` hält Frame `-0x30`.
+  212 Bytes, 53 Instruktionen.
+  `becomeCalmlyCallback`, `calc` und `__sinit_MapObjPinna_cpp` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjPinna`: PASS.
+Sechs bestehende UNUSED-Größenwarnungen.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.022514 % -> 79.02831 %, matched code 49.746525 % -> 49.75243 % (1785944 -> 1786156, +212).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9593 -> 9594.
+`MapObjPinna` 4676 -> 4888 (+212).
+Kein R170–R221-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R221 (`MapObjFence`, `MapObjPinna`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

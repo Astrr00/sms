@@ -10,6 +10,7 @@
 #include <Map/MapCollisionEntry.hpp>
 #include <MarioUtil/MathUtil.hpp>
 #include <Player/MarioAccess.hpp>
+#include <Player/Yoshi.hpp>
 #include <string.h>
 
 // rogue includes needed for matching sinit & bss
@@ -218,7 +219,28 @@ TMerrygoround::TMerrygoround(const char* name)
 {
 }
 
-void TChangeStageMerrygoround::touchPlayer(THitActor*) { }
+void TChangeStageMerrygoround::touchPlayer(THitActor* actor)
+{
+	if (isStateTimerEngaged())
+		return;
+
+	if (SMS_GetYoshi()->mType == 1) {
+		if (gpMSound->gateCheck(MSD_SE_SY_COLLECT_YOSHI))
+			MSoundSESystem::MSoundSE::startSoundSystemSE(
+			    MSD_SE_SY_COLLECT_YOSHI, 0, nullptr, 0);
+		TMapObjChangeStage::touchPlayer(actor);
+		unk13C = 1;
+	} else if (gpMSound->gateCheck(MSD_SE_SY_NOT_COLLECT_YOSHI)) {
+		MSoundSESystem::MSoundSE::startSoundSystemSE(
+		    MSD_SE_SY_NOT_COLLECT_YOSHI, 0, nullptr, 0);
+	}
+
+	mStateTimer = 0x258;
+
+	// Dead slot so MWCC keeps frame -0x30.
+	char trash[0xF];
+	trash[0] = 0;
+}
 
 void TChangeStageMerrygoround::calc()
 {
