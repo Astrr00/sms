@@ -10920,6 +10920,37 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R281 (`MapObjRicco`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TRiccoWatermill::touchWater`.
+
+- `isState(5)` gibt `1` zurück.
+  Sonst wird `unk140` auf `5` gesetzt.
+  Bei `isState(1)` ruft `unk13C->setUpMapCollision(1)` auf.
+  `MAP_OBJ_FLAG_UNK100` geht an diesem Objekt und an `unk13C` aus.
+  Liegt `unk13C->mPosition.y` unter `mSubmarineMaxTransY`, kommt `mRotAccel` auf `unk138`, gedeckelt bei `mRotSpeedMaxUp`, und `mState` wird `2`.
+  Sonst wird `unk138` zu `0`.
+  Rückgabe ist `1`.
+  `unk13C` ist `TMapObjBase*`.
+  240 Bytes, 60 Instruktionen.
+  Das Frame ist schon `-0x20`.
+
+`validate-symbol-order` `mario/MoveBG/MapObjRicco`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.297516 % -> 79.303986 %, matched code 50.0556 % -> 50.062283 % (1797040 -> 1797280, +240).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9654 -> 9655.
+`MapObjRicco` 2732 -> 2972 (+240).
+Kein R170–R280-Unit hat matched code verloren.
+Nur `MapObjRicco` hat matched code gewonnen.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R280 (`MapObjBall`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

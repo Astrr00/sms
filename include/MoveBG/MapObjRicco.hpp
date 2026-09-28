@@ -56,9 +56,13 @@ public:
 	void loadAfter();
 	TRiccoWatermill(const char* name = "リコ水車");
 
+	static f32 mRotAccel;
+	static f32 mRotSpeedMaxUp;
+	static f32 mSubmarineMaxTransY;
+
 public:
 	/* 0x138 */ f32 unk138;
-	/* 0x13C */ u32 unk13C;
+	/* 0x13C */ TMapObjBase* unk13C;
 	/* 0x140 */ u32 unk140;
 	/* 0x144 */ u8 unk144;
 	/* 0x148 */ u32 unk148;

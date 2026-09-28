@@ -39,6 +39,10 @@ void TCraneRotY::load(JSUMemoryInputStream& stream)
 f32 TCraneUpDown::mRotSpeed = 0.1f;
 s32 TCraneUpDown::mWaitTime = 120;
 
+f32 TRiccoWatermill::mRotAccel           = 1.0f;
+f32 TRiccoWatermill::mRotSpeedMaxUp     = 3.0f;
+f32 TRiccoWatermill::mSubmarineMaxTransY = 750.0f;
+
 void TCraneUpDown::control() { }
 
 // Inlined 4-byte pad. MWCC keeps it in the caller's frame (retail -0x48).
@@ -84,7 +88,25 @@ void TCraneCargo::calc()
 	calcLeanMtx(getModel()->getAnmMtx(1));
 }
 
-u32 TRiccoWatermill::touchWater(THitActor*) { return 0; }
+u32 TRiccoWatermill::touchWater(THitActor*)
+{
+	if (isState(5))
+		return 1;
+	unk140 = 5;
+	if (isState(1))
+		unk13C->setUpMapCollision(1);
+	offMapObjFlag(MAP_OBJ_FLAG_UNK100);
+	unk13C->offMapObjFlag(MAP_OBJ_FLAG_UNK100);
+	if (unk13C->mPosition.y < mSubmarineMaxTransY) {
+		unk138 += mRotAccel;
+		if (unk138 > mRotSpeedMaxUp)
+			unk138 = mRotSpeedMaxUp;
+		mState = 2;
+	} else {
+		unk138 = 0.0f;
+	}
+	return 1;
+}
 
 void TRiccoWatermill::control() { }
 
