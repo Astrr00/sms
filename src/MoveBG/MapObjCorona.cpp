@@ -83,6 +83,9 @@ f32 JGeometry::TUtil<f32>::inv_sqrt(f32 mag)
 #include <M3DUtil/MActor.hpp>
 #include <JSystem/JMath.hpp>
 #include <JSystem/JDrama/JDRNameRefGen.hpp>
+#include <Camera/CameraShake.hpp>
+#include <MarioUtil/RumbleMgr.hpp>
+#include <Player/MarioAccess.hpp>
 
 // Incomplete: only getRootJointMtx is defined here. Not a TLiveActor
 // subclass, so this TU does not emit the grip vtable.
@@ -158,18 +161,25 @@ Mtx* TBathtubGrip::getRootJointMtx() const
 
 void TBathtub::loadAfter() { }
 
-// Incomplete. Timer fields copied into the bathtub on a hipdrop.
+// Incomplete. Timer fields copied into the bathtub on a hipdrop / quake.
 class TBathtubParams {
 public:
-	/* 0x0 */ u8 pad[0x7C];
+	/* 0x0 */ u8 pad[0x54];
+	/* 0x54 */ s32 unk54;
+	/* 0x58 */ u8 pad58[0x10];
+	/* 0x68 */ u32 unk68;
+	/* 0x6C */ u8 pad6C[0x10];
 	/* 0x7C */ s32 unk7C;
 	/* 0x80 */ u8 pad80[0x10];
 	/* 0x90 */ u32 unk90;
+	/* 0x94 */ u8 pad94[0x60];
+	/* 0xF4 */ int unkF4;
 };
 
 class TKoopa {
 public:
 	void stagger(bool);
+	void getDown();
 };
 
 void TBathtub::hipdrop(const JGeometry::TVec3<f32>& pos)
@@ -204,7 +214,48 @@ void TBathtub::hipdrop(const JGeometry::TVec3<f32>& pos)
 }
 
 
-void TBathtub::quake(const JGeometry::TVec3<f32>&) { }
+void TBathtub::quake(const JGeometry::TVec3<f32>& pos)
+{
+	if (unk29A != 0)
+		return;
+
+	// Refs keep init.z loaded after the x subtract.
+	const JGeometry::TVec3<f32>& point = pos;
+	const JGeometry::TVec3<f32>& home  = mInitialPosition;
+	f32 dx = point.x - home.x;
+	f32 dz = point.z - home.z;
+	f32 zero = 0.0f;
+	f32 lsq = zero + dx * dx;
+	lsq += dz * dz;
+	if (!(lsq <= JGeometry::TUtil<f32>::epsilon()))
+		JGeometry::TUtil<f32>::inv_sqrt(lsq);
+
+	unk24C = 300;
+	unk250 = unk16C->unk54;
+	unk258 = unk16C->unk68;
+	unk25C = unk16C->unk68;
+	unk254 = unk16C->unk7C;
+	unk248 = unk16C->unkF4;
+
+	TKoopa* koopa = (TKoopa*)JDrama::TNameRefGen::search("クッパ");
+	gpCameraShake->startShake((EnumCamShakeMode)0x25, 1.0f);
+	gpCameraShake->startShake((EnumCamShakeMode)0x26, 1.0f);
+	SMSRumbleMgr->start(4, (f32*)nullptr);
+
+	// Dead slots so the frame stays at -0xa0 and the throw vector
+	// stays at r1+0x74. The 0x9 array sits above the vector; the
+	// 0x48 array sits below it.
+	char above[0x9];
+	JGeometry::TVec3<f32> up;
+	up.x = 0.0f;
+	up.y = 1.0f;
+	up.z = 0.0f;
+	SMS_ThrowMario(up, 10.0f);
+	koopa->getDown();
+	char below[0x48];
+	below[0] = 0;
+	above[0] = 0;
+}
 
 // TBathtubGrip is not reconstructed. Byte 0x249 is 0 while the grip is dead.
 struct TBathtubGripDead {

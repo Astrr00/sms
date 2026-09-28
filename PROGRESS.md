@@ -10920,6 +10920,41 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R255 (`MapObjCorona`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TBathtub::quake`.
+
+- `unk29A` bricht ab.
+  Zwei Referenzen auf den Trefferpunkt und `mInitialPosition` halten die XZ-Lasten in der Retail-Reihenfolge.
+  `!(lsq <= epsilon)` erzeugt `cror`+`beq` und ruft das lokale out-of-line `inv_sqrt`.
+  Das Ergebnis bleibt unbenutzt.
+  `unk24C` wird 300.
+  `unk16C` kopiert `+0x54` nach `unk250`, `+0x68` nach `unk258` und `unk25C`, `+0x7C` nach `unk254` und `+0xF4` nach `unk248`.
+  `TNameRefGen::search("クッパ")` bleibt in `r31`.
+  `gpCameraShake->startShake` läuft mit Modus `0x25` und `0x26` bei `1.0f`.
+  `SMSRumbleMgr->start(4, nullptr)` folgt.
+  `SMS_ThrowMario` wirft den Vektor `(0, 1, 0)` mit `10.0f`.
+  `TKoopa::getDown` schließt ab.
+  `char above[0x9]` und `char below[0x48]` halten das Frame bei `-0xa0` und den Vektor bei `r1+0x74`.
+  316 Bytes, 79 Instruktionen.
+  Dtor, `hipdrop`, `tumble`, `getNumGripsDead`, die Demo-Mtx-Getter, beide Grip-`receiveMessage` und beide `getRootJointMtx` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjCorona`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.15492 % -> 79.16362 %, matched code 49.88736 % -> 49.89616 % (1791000 -> 1791316, +316).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9627 -> 9628.
+`MapObjCorona` 1052 -> 1368 (+316).
+Kein R170–R254-Unit hat matched code verloren.
+Nur `MapObjCorona` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R254 (`MapObjCorona`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
