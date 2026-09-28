@@ -10920,6 +10920,38 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R279 (`MapObjBall`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TResetFruit::waitingToAppear`.
+
+- Wenn `gpMarDirector->mMap == 3` und `unk1A4 != 0`, virtuelles `makeObjDead`.
+  `MAP_OBJ_FLAG_UNK4000000`, ein laufender State-Timer oder `mColCount != 0` beenden die Funktion.
+  Sonst geht `MAP_OBJ_FLAG_DISAPPEARING` an und virtuelles `makeObjAppeared` läuft.
+  `MTXScale` mit `0.2` auf allen Achsen.
+  `concatOnlyRotFromLeft` schreibt die Skalierung in die Animationsmatrix.
+  `mScaling.y` wird `0.2`.
+  `HIT_FLAG_NO_COLLISION` geht an.
+  `mState` wird `STATE_APPEARING`.
+  `MSD_SE_IT_COMMON_APPEAR`, wenn `gateCheck` wahr ist.
+  `char trash[0x20]` hält die Matrix bei `r1+0x3C` und das Frame bei `-0x78`.
+  316 Bytes, 79 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.280365 % -> 79.28905 %, matched code 50.03822 % -> 50.047016 % (1796416 -> 1796732, +316).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9652 -> 9653.
+`MapObjBall` 6192 -> 6508 (+316).
+Kein R170–R278-Unit hat matched code verloren.
+Nur `MapObjBall` hat matched code gewonnen.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R278 (`MapObjBall`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

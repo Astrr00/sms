@@ -167,7 +167,35 @@ TMapObjBall::TMapObjBall(const char* name)
 
 void TResetFruit::checkGroundCollision(JGeometry::TVec3<f32>*) { }
 
-void TResetFruit::waitingToAppear() { }
+void TResetFruit::waitingToAppear()
+{
+	if (gpMarDirector->mMap == 3 && unk1A4 != 0)
+		makeObjDead();
+	if (checkMapObjFlag(MAP_OBJ_FLAG_UNK4000000))
+		return;
+	if (isStateTimerEngaged())
+		return;
+	if (mColCount != 0)
+		return;
+
+	onMapObjFlag(MAP_OBJ_FLAG_DISAPPEARING);
+	makeObjAppeared();
+
+	Mtx scaleMtx;
+	MTXScale(scaleMtx, 0.2f, 0.2f, 0.2f);
+	MtxPtr anmMtx = getModel()->getAnmMtx(0);
+	concatOnlyRotFromLeft(scaleMtx, getModel()->getAnmMtx(0), anmMtx);
+	mScaling.y = 0.2f;
+	onHitFlag(HIT_FLAG_NO_COLLISION);
+	mState = TMapObjGeneral::STATE_APPEARING;
+	if (gpMSound->gateCheck(MSD_SE_IT_COMMON_APPEAR))
+		MSoundSESystem::MSoundSE::startSoundActor(MSD_SE_IT_COMMON_APPEAR,
+		                                          &mPosition, 0, nullptr, 0,
+		                                          4);
+	// Dead slot so MWCC keeps the matrix at r1+0x3C and the frame at -0x78.
+	char trash[0x20];
+	trash[0] = 0;
+}
 
 void TResetFruit::makeObjWaitingToAppear()
 {
