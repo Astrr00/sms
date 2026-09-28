@@ -11488,6 +11488,36 @@ als Member-Name. Check: **`decomp-diff -u … -t object -s nonmatching`**.
 **Verify.** `ninja changes_all` ggü. **`cf903cfc`**; **`namekuri` matched_data
 70.86% → 100%**; **`build.sha1` OK**.
 
+### R209 (Aufgabe B; B-scope probes, 0× ship)
+
+**Hunt.** PARAM / `.sdata2` literals; tiny `.ctors` objects; small Enemy/Player
+text ≥98%; cap ~8; skip **DebuTelesa**, **koopajr** stubs.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, reverted / no-ship).**
+
+- **`gesso` `getNowGravity`** (32 B text ~98%): retail loads **`unk1E8` → r4**,
+  **`lfs` gravity before `beqlr`**; C branch-before-load / **r3** holds params.
+- **`bossManta` `getPolluteRadius`** (~99.8%): **`getSaveParam()`** vcall +
+  **`mSLPolluteRadius * mScaling.x`** order OK; stack **`0x28`** vs **`0x20`**;
+  **`100.0f`/`0.0f`** pool **`@3456`/`@3585`** vs other SDA labels.
+- **`bossgesso` `createModelData`** (~99.2%): needs rodata **`entry$3707`**, not
+  function-local / renamed static **`entry[]`** (table placement in TU).
+- **`bosseel`/`hinokuri2` `MtxCalcTypeName`** (16 B `.data` ~50%): **`.data`**
+  order **`@1431`/`@1411`/`@1210`** then **`MtxCalcTypeName`** before
+  **`bastable`** (see **`MarioDraw`** pattern).
+- **`tinkoopa` `@3000`**, **`idxarray$3450`**, **`bossManta` `@2805`**: unchanged
+  blockers (empty TU / incomplete `doAttackSingle` / rodata triplet).
+
+**Tip (R209).** **`beqlr` gravity paths**: preload default float, then early-return
+(`getNowGravity`). **`createModelData`**: linker symbol **`entry$nnnn`** = rodata
+**emission site**, not merely file-scope name. Pollute radius: match **virtual
+`getSaveParam`** + **frame size** before chasing float pools.
+
+**Verify.** `ninja changes_all` ggü. **`ddf5c579`** — no regression; no new
+strict data/text matches.
+
 ### R208 (Aufgabe B; Player emit size + `2.0f` pool, 2× data)
 
 **Hunt.** B-scope Enemy/Player tiny `.ctors`/`.sdata2` objects; ASM `.float`
