@@ -113,6 +113,9 @@ TBEelTearsDrop::TBEelTearsDrop(TBEelTears* owner, int jointIndex,
 
 void TBEelTearsDrop::perform(u32 cue, JDrama::TGraphics* graphics)
 {
+	char trash[0x10];
+	trash[0] = 0;
+
 	THitActor::perform(cue, graphics);
 	if (cue & CUE_MOVE) {
 		mPosition.y += mRiseSpeed;
