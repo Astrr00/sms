@@ -10920,6 +10920,30 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R184 (`TWaterHitPictureHideObj::load`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+- `THideObjBase::load` ist hier ausgeschrieben, damit `eventId` ein Local
+  dieser Funktion ist. Inlined lag es bei `0x30`; Retail will `0x48`.
+- `char gap[4]` ist das Loch zwischen `eventId` und den drei Color-Reads
+  (`0x50` / `0x54` / `0x58`).
+- `char trash[0x18]` darunter hält den Frame bei `-0x70`.
+- Beide Stores werden weggoptimiert. `THideObjBase::load` bleibt 100 %.
+
+0 Abweichungen, 444 Bytes, 111 Instruktionen.
+`decomp-diff -u mario/MoveBG/MapObjHide -d "TWaterHitPictureHideObj::load"`: 100 %.
+`validate-symbol-order -u mario/MoveBG/MapObjHide`: PASS.
+
+R183 `TMapObjPlane::updateCheckData`, R182 `TMapObjTurn::touchWater`,
+R181 `TCloset::touchWater`, R180 `TCasinoPanelGate::touchWater`,
+R179 `waitingToAppear`, R178 `initDrawNear`, R177 `TWoodBox::kill`,
+R176 `receiveMessage`, R175 `touchGround`, R174 `perform`,
+R173 `startControlAnim`, R172 `TManhole::touchPlayer`,
+R171 `calcVelocity`, R170 `appearing` unverändert strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R183 (`TMapObjPlane::updateCheckData`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

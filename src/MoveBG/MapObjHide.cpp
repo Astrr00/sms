@@ -503,9 +503,23 @@ void TWaterHitPictureHideObj::loadAfter()
 
 void TWaterHitPictureHideObj::load(JSUMemoryInputStream& stream)
 {
-	THideObjBase::load(stream);
-
+	// Spelled out from THideObjBase::load so eventId is a local here.
+	// Inlined, it sat at 0x30. Retail wants eventId at 0x48, the color
+	// reads at 0x50/0x54/0x58, and frame -0x70. gap[4] is the hole
+	// between eventId and those reads; trash[0x18] is the stack below.
 	u32 r, g, b;
+	char gap[4];
+	s32 eventId;
+	char trash[0x18];
+	gap[0]   = 0;
+	trash[0] = 0;
+
+	TMapObjBase::load(stream);
+	TMapObjBase::loadHideObjInfo(stream, &eventId, &mAppearSpeed,
+	                             &mAppearYSpeed, &unk148);
+	setEventId(eventId);
+	SMS_LoadParticle("/scene/mapObj/ms_watcoin_hit.jpa", 0x57);
+
 	stream >> r >> g >> b;
 	mColor.r = r & 0xff;
 	mColor.g = g & 0xff;
