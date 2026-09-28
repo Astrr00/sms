@@ -11139,6 +11139,28 @@ torocco/sound, prior deadlocks.
 
 **Verify.** `ninja baseline` / `changes_all` ohne Code-Delta; `dtk shasum -c` → OK.
 
+### R171 (Aufgabe B; emitSweat-class +8, 4 Vollmatches)
+
+**Skip (erweitert).** Zusätzlich zu allen Prior-Skips: `TNerveBPTouchDown`,
+`TMario::initParticle`, `TNerveBPPivot`, `TAmenbo::calcRootMatrix`,
+`TConductor::makeEnemyAppear`, `TMario::slippingBasic`, `TPakkunSeed::loadInit`,
+`TStayPakkun::load`.
+
+**Muster.** Frame **−8** ggü. Retail + Spill **+8** mit `char trash[8]` **nach**
+leerem `TVec3` und **vor** Komponenten-Zuweisung (nicht ctor-Init);
+`TFireWanwan::init`: Pad nach `TPosition3f mtx`; `TDoroHaneKuri::isCollidMove`:
+Pad nach `vel = mLinearVelocity` (Copy-ctor).
+
+**Vollmatch, strikt (4).**
+`TBossEelCollision::behaveToMario`, `TBossEelBarrierCollision::behaveToMario`
+(`bosseel.cpp`); `TFireWanwan::init` (`fireWanwan.cpp`);
+`TDoroHaneKuri::isCollidMove` (`hamukuri.cpp`).
+
+**Probes revertiert (~4).** `TBossPakkun::launchPolDrop` (Multi-`TVec3`);
+`TBossEelAwaCollision::behaveToMario` (y-Override nach Init).
+
+**Verify.** `ninja baseline` / `changes_all`; `dtk shasum -c` → OK.
+
 ### R170 (Aufgabe B; stack-shrink / Scanner / Nerves, keine Vollmatches)
 
 **Pivot (User).** Kein weiteres post-`TVec3`-Trash auf Skip-Liste
