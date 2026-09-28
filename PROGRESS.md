@@ -11195,6 +11195,25 @@ stattdessen R171/R163-Muster (`TVec3`+`trash[8]`, post-local, `gpPollution` z/y/
 
 **Verify.** `ninja baseline` / `changes_all` ohne Code-Delta.
 
+### R183 (Aufgabe B; execute/init entry pad, keine Vollmatches)
+
+**Hunt.** B-scope `receiveMessage` / `perform` / `init` / `execute`; entry
+`trash[8/0x10/0x20/0x28]` + `trash[0]=0` (WallDie/Dango-Familie). Scanner:
+`stwu`-Gap LEFT−RIGHT in Spalten 1/2 (nicht Diff-Marker).
+
+**Skip (User + R182).** R182 dry + R181/R180/R179/Prior (`MouthOpenWait`-Spill-Klasse,
+`jumpProcess`, `HitWater`, …).
+
+**Probes (~8, revertiert).** `TRiccoHook::init` (`8` → 99,9 %, Spill);
+`TNerveTobiPukuFly::execute` (`0x10`); `TNerveHino2Burst::execute` (`0x28`);
+`TNerveTobiPukuAttack::execute` (`8`); `TNerveBossEelFirstSpin::execute` (`0x20`
+→ Frame OK, Spill ~9×); `TNerveBossEelSecondSpin::execute` (`0x28`);
+`TNerveKumokunFly::execute` (`8`).
+
+**Vollmatch, strikt.** keine. Quellbaum unverändert ggü. **`c9f9b506`**.
+
+**Verify.** `ninja baseline` / `changes_all` ohne Code-Delta.
+
 ### R181 (Aufgabe B; receiveMessage entry +0x28, 1 Vollmatch)
 
 **Hunt.** `perform` / `receiveMessage` / `init` entry frame-pad (8/0x10/0x20/0x28) +
