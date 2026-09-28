@@ -18,8 +18,8 @@ public:
 	TFerrisWheel(const char* name = "観覧車");
 
 public:
-	/* 0x138 */ u32 unk138;
-	/* 0x13C */ u32 unk13C;
+	/* 0x138 */ s32 unk138;
+	/* 0x13C */ TMapObjBase** unk13C;
 	/* 0x140 */ f32 unk140;
 };
 

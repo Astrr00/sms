@@ -10920,6 +10920,32 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R292 (`MapObjPinna`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TFerrisWheel::initMapObj`.
+
+- `TMapObjBase::initMapObj`.
+  `unk138` ist `getJointNum() - 1`.
+  `unk13C` ist `new TMapObjBase*[unk138]`.
+  Die Schleife registriert `"FerrisGondola"` mit Scale `(1, 1, 1)` und ruft `appear`.
+  Ist `gpMarDirector->unk7D == 2`, wird `unk140` auf `10` gesetzt.
+  Sonst `SMSGetAnmFrameRate() * 0.25`.
+  `char trash[0xC]` hält das Frame bei `-0x78`.
+  292 Bytes, 73 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjPinna`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.35228 % -> 79.3603 %, matched code 50.123787 % -> 50.131916 % (1799488 -> 1799780, +292).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9664 -> 9665.
+`MapObjPinna` 6168 -> 6460 (+292).
+Kein R170–R290-Unit hat matched code verloren.
+
 ### R290 (`MapObjMare`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

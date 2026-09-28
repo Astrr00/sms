@@ -6,6 +6,7 @@
 #include <M3DUtil/MActorUtil.hpp>
 #include <JSystem/J3D/J3DGraphLoader/J3DModelLoaderFlags.hpp>
 #include <System/Application.hpp>
+#include <System/MarDirector.hpp>
 #include <System/FlagManager.hpp>
 #include <MSound/MSound.hpp>
 #include <MSound/SoundEffects.hpp>
@@ -44,7 +45,41 @@ s32 TFerrisWheel::becomeCalmlyCallback(u32 param_1, u32)
 
 void TFerrisWheel::control() { }
 
-void TFerrisWheel::initMapObj() { }
+void TFerrisWheel::initMapObj()
+{
+	TMapObjBase::initMapObj();
+	unk138 = getModel()->getModelData()->getJointNum() - 1;
+	unk13C = new TMapObjBase*[unk138];
+	JGeometry::TVec3<f32> pos;
+	JGeometry::TVec3<f32> rot;
+	JGeometry::TVec3<f32> scale;
+	const JGeometry::TVec3<f32>& rs = scale;
+	const JGeometry::TVec3<f32>& rr = rot;
+	const JGeometry::TVec3<f32>& rp = pos;
+	for (u16 i = 0; i < unk138; ++i) {
+		scale.x = 1.0f;
+		scale.y = 1.0f;
+		scale.z = 1.0f;
+		rot.x = 0.0f;
+		rot.y = 0.0f;
+		rot.z = 0.0f;
+		pos.x = 0.0f;
+		pos.y = 0.0f;
+		pos.z = 0.0f;
+		unk13C[i] = TMapObjBaseManager::newAndRegisterObj("FerrisGondola", rp,
+		                                                  rr, rs);
+		unk13C[i]->appear();
+	}
+	if (gpMarDirector->unk7D == 2)
+		unk140 = 10.0f;
+	else {
+		f32 rate = SMSGetAnmFrameRate();
+		rate *= 0.25f;
+		unk140 = rate;
+	}
+	char trash[0xC];
+	trash[0] = 0;
+}
 
 TFerrisWheel::TFerrisWheel(const char* name)
     : TMapObjBase(name)
