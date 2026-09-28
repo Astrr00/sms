@@ -12122,6 +12122,29 @@ must codegen as **`lwz` at `0x180`** off the **`getSaveParam`** pointer (same ob
 **Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged). Tip
 **`c5442021`**.
 
+### R251 (Aufgabe B; ride frame validation + EP diversify, 0× ship)
+
+**Hunt.** Post-R250; optional **`checkRideMovement`** only if **`-0xd0`** + retail vec/Mtx homes
+match without fakematch; else diversify Player/Enemy B-scope (~8); skip R244–R250 thrash/stuck;
+**`ninja baseline`** + **`report.json`** + **`changes_all`**.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, reverted / no-ship).**
+
+- **`TMario::checkRideMovement`**: **`groundActor != nullptr`** first branch → **99.9%** (**180 ins**),
+  opcode cluster clean; **`char trash[0x20]`** at entry → **`stwu -0xd0`** OK but **`pos` vec still
+  **`0x94` vs `0xb0`**; hoisted **`Mtx`×2** → **`-0xe0`**, vec **`0x60`** — decoupled padding; defer.
+- **`TMario::checkWallPlane`**, **`checkWet`**, **`TGessoPolluteObj::set`**, **`TConductor::getManagerByName`**:
+  frame / spill **`~` only**.
+- **`TNerveGessoFreeze`**: missing retail **`b`** + **`-0xa8`** frame; **`TNerveGessoFall`**, **`TYoshi::thinkHoldOut`**:
+  **`~` only**.
+
+**Tip (R251).** Frame **`trash[N]`** can fix **`stwu`** without moving high vec spills — see
+**`docs/AGENT_MATCHING_TIPS.md`** (`checkRideMovement`).
+
+**Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged).
+
 ### R250 (Aufgabe B; Mario ride + diversified EP scan, 0× ship)
 
 **Hunt.** Post-R249; **diversify** — Player helpers + non-Pakkun/BossPakkun/Hino2 TUs; skip **Hino2PrePol** +
@@ -12132,10 +12155,10 @@ R244–R248 failures/stuck; string/PARAM/float where clear opcode path; empty/Cl
 
 **Probes (~7, reverted / no-ship).**
 
-- **`TMario::checkRideMovement`** (**99.9%**, **720→180 B**): drop **`wall != nullptr`** on first
-  ground-ride branch; **`groundActor != nullptr`** + jump + **`isTouchGround4cm`** per
+- **`TMario::checkRideMovement`** (**99.9%**, **720 B**, **180 ins**): drop **`wall != nullptr`** on
+  first ground-ride branch; **`groundActor != nullptr`** + jump + **`isTouchGround4cm`** per
   **`MarioMove.s`** (**`lwz 0x44(r4)`/`cmplwi r5`** before wall **`r3`** use); opcode cluster fixed,
-  **`stwu -0xd0` vs `-0xb8`** remains; reverted.
+  **`stwu -0xd0` vs `-0xb0`** remains; reverted.
 - **EP scan (frame / reg-only):** **`TYoshi::thinkHoldOut`** (**`r3`/`r4`** pos ptr),
   **`TMario::warpRequest`**, **`TMario::thinkSituation`** (100.0% fuzzy, stack),
   **`TBoxTelesa::load`**, **`TNerveTamaNokoDown`**, **`calcFarthestVertex`**.
@@ -12145,7 +12168,7 @@ R244–R248 failures/stuck; string/PARAM/float where clear opcode path; empty/Cl
 (**`0xb0`/`0x3c`/`0x80`** spill layout).
 
 **Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged). Tip
-(pending commit).
+**`a54d0b57`**.
 
 ### R225 (Aufgabe B; bossManta rodata + EP diversify, 0× ship)
 

@@ -55,6 +55,14 @@ Next, local variables can expand the stack even if they are always stored in a r
 
 When no obviously correct way to make stack frame size match exists, a trick should be used to correctly match the function's context: a temporary char array of required size to inflate the stack. Such hacks however should be removed or commented out after the function is matching to allow for a possible proper solution in the future.
 
+Padding at the top of a function is **not** guaranteed to shift every high-address spill by the same
+delta.
+Concrete case (`TMario::checkRideMovement`): `char trash[0x20]` at entry can fix `stwu -0xd0` while
+the `pos` `TVec3` spill stays at `r1+0x94` instead of retail `r1+0xb0`.
+Hoisting two `Mtx` locals at entry overshoots the frame (`-0xe0`) and pushes vec even lower.
+Retail layout needs the full local home ordering (vec at `0xb0`, `Mtx` at `0x3c`/`0x80`, `stfd` at
+`0xc0`), often tied to inlined `checkRideReCalc` — not frame padding alone.
+
 ## Ifs
 
 Ifs are always compiled to very simple code:
