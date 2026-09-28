@@ -11933,7 +11933,7 @@ combined with **`||`** short-circuit risks branch inversion.
 gate **`changes_all` `matched_functions`**; skip R241–242 / frame-only / **`getEmitPosDir` asm**; cap ~8.
 
 **Ship.** **`TNerveGessoTurn::execute`** — inlined **`TGesso::turning()`** **`fadds`** wanted **`mTurnAngle`**
-in **f1** then **`7.2f` in f2** (`fadds f1,f1,f2` @ **`8020xxxx`**); split temps fixed opcode
+in **f1** then **`7.2f` in f2** (`fadds f1,f1,f2` @ **`80259620`**, **260 B**); split temps fixed opcode
 **and** **`r1 0x28`** frame (**260 B**).
 
 **Probes (~2, no-ship).**
