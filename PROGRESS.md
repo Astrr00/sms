@@ -11178,6 +11178,23 @@ stattdessen R171/R163-Muster (`TVec3`+`trash[8]`, post-local, `gpPollution` z/y/
 
 **Verify.** `ninja baseline` / `changes_all`; `decomp-diff` → **100,0 %**.
 
+### R182 (Aufgabe B; perform/init/loadInit entry pad, keine Vollmatches)
+
+**Hunt.** `receiveMessage` / `perform` / `init` / `loadInit` entry `trash[8/0x10/0x20/0x28/0x30/0x50]`
++ generator `TVec3` emitSweat-Klon (revertiert).
+
+**Skip (User + R181).** R181 dry (`TBEelTears::perform`, `TSmallEnemy::init`,
+`TBEelTearsDrop` ctor, `TEnemyPolluteModel::perform`) + R180/R179/Prior.
+
+**Probes (~8, revertiert).** `TPakkunSeed::loadInit` (`8`/`0x10` → Frame OK, Spill);
+`TBPTornado::perform` (`0x10` → 99,9 %); `TOneShotGenerator::receiveMessage` /
+`TGenerator::perform` (`4`/`8`, emitSweat-`rot`/`vel`); `TKumokun::initAttachPlane`
+(`0x10`); `THinokuri2::init` (`0x50`); `TBEelTears::perform` (`0x10`, R181-Repeat).
+
+**Vollmatch, strikt.** keine. Quellbaum unverändert ggü. **`b37c17d8`**.
+
+**Verify.** `ninja baseline` / `changes_all` ohne Code-Delta.
+
 ### R181 (Aufgabe B; receiveMessage entry +0x28, 1 Vollmatch)
 
 **Hunt.** `perform` / `receiveMessage` / `init` entry frame-pad (8/0x10/0x20/0x28) +
