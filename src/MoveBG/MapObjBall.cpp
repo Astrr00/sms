@@ -259,7 +259,29 @@ void TResetFruit::killByTimer(int param_1)
 	mState = 11;
 }
 
-void TResetFruit::makeObjAppeared() { }
+void TResetFruit::makeObjAppeared()
+{
+	if (checkMapObjFlag(MAP_OBJ_FLAG_UNK4000000))
+		makeObjDefault();
+
+	TMapObjBase::makeObjAppeared();
+	calcCurrentMtx();
+	MtxPtr mtx = getModel()->getAnmMtx(0);
+	mtx[0][3]  = mPosition.x;
+	mtx[1][3]  = mPosition.y + mBodyRadius;
+	mtx[2][3]  = mPosition.z;
+	if (isActorType(0x40000394) && mtx[1][1] > 0.0f)
+		mtx[1][3] -= 50.0f * mtx[1][1];
+	if (isActorType(0x40000392))
+		mtx[1][3] -= 10.0f * (1.0f - mtx[1][1]);
+	unkE8 = 0;
+	if (checkMapObjFlag(MAP_OBJ_FLAG_UNK4000000))
+		mState = 11;
+
+	// Dead slot so MWCC keeps the frame at -0x28.
+	char trash[8];
+	trash[0] = 0;
+}
 
 BOOL TResetFruit::receiveMessage(THitActor*, u32) { return 0; }
 
