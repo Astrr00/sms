@@ -11673,6 +11673,33 @@ Closet/MoveBG, **`getNowGravity`**, **`DebuTelesa` bastable**, **`bossManta` `@2
 **Verify.** `ninja changes_all` ggü. **`c005c09c`**: **+1** matched function (**9264 → 9265**), **+124 B**
   matched code.
 
+### R232 (Aufgabe B; Yoshi + WaterGun stack, 2× ship)
+
+**Hunt.** Post-**`c523ceef`**; **`trashAfter[N]`** / retail **`r1+Δ`** on small locals; skip stuck lists,
+  empty TUs, Closet/MoveBG, **`createModelData` `entry$`**; cap ~8.
+
+**Ship.**
+
+- **`YoshiHeadCtrl`** (140 B): retail **`Mtx`** at **`r1+0x14`** vs **`+0x10`** — **`char trashAfterMtx[4]`**
+  after **`Mtx mtx`** → **100%**.
+- **`RotateCtrl`** (132 B): retail **`Mtx`** at **`r1+0x2c`** — restore commented **`volatile u32 unused2[7]`**
+  before **`MsMtxSetRotRPH`** → **100%**.
+
+**Probes (~8, no-ship).**
+
+- **`TCoasterEnemy::bind`** (99.9%): **`trashAfterNextPos[12]`** — frame **`0x48`** vs retail **`0x40`**
+  (reverted).
+- **`TTobiPuku` / `TWalkerEnemy::isReachedToGoalXZ`** (99.7%): vec **`r1+0x14`** vs **`+0x20`** (12 B skew,
+  not 4 B **`trashAfter`**).
+- **`TBEelTearsManager::createEnemies`** (99.7%): **`stwu -0x30`** vs **`-0x38`** (frame/regs).
+- **`TBossManta::getPolluteRadius`** (99.5%): **`stwu -0x28`** vs **`-0x20`** (deferred).
+
+**Tip (R232).** **`r1+0x10` vs `+0x14`** on **`Mtx`** callbacks matches **`trashAfter[4]`** after the matrix;
+  larger **`r1+0x2c`** skew on WaterGun **`RotateCtrl`** needed the original **`unused2[7]`** spill slots.
+
+**Verify.** `ninja changes_all` ggü. **`c523ceef`**: **+2** matched functions (**9265 → 9267**), **+272 B**
+  matched code.
+
 ### R225 (Aufgabe B; bossManta rodata + EP diversify, 0× ship)
 
 **Hunt.** Post-**`385107f3`**; optional **`bossManta` `@2805`/`@2807`** lead (Amenbo
