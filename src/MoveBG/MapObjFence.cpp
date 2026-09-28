@@ -120,7 +120,19 @@ BOOL TFenceWater::receiveMessage(THitActor*, u32 message)
 	return FALSE;
 }
 
-void TFenceWater::changeStatusToGo() { }
+void TFenceWater::changeStatusToGo()
+{
+	// Local keeps gpMSound in r0 across the this-save (addi r31).
+	MSound* sound = gpMSound;
+	if (sound->gateCheck(MSD_SE_OBJ_WATER_FENCE_FW))
+		MSoundSESystem::MSoundSE::startSoundActor(
+		    MSD_SE_OBJ_WATER_FENCE_FW, &mPosition, 0, nullptr, 0, 4);
+	mState = 2;
+
+	// Dead slot so MWCC keeps frame -0x20.
+	char trash[1];
+	trash[0] = 0;
+}
 
 void TFenceWater::changeStatusToWait()
 {
