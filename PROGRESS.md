@@ -11395,6 +11395,38 @@ oft **`.rodata`-Pool-Reihenfolge** (unused `static const char*` arrays, `Infecti
 **Verify.** `ninja baseline` / `changes_all`; **`build.sha1` OK**; Total matched_code
 **48.63% → 48.64%**; `mario/Enemy/hamukuri` matched_data **31.69% → 97.28%**.
 
+### R199 (Aufgabe B; pool-order scan + `tstatestr` nullptr, 1× dtor)
+
+**Hunt.** (1) Weitere **`.rodata`/InfectiousStrings/`anmlist`-Pools** (`addi rN,r31,0xNNN`
+nur); (2) frische B-scope ≤600 B off Skip; Cap ~8; strikt 100 %.
+
+**Rodata/`r31`-Scan (B-scope).** Automatischer Pass über Enemy/Player: **keine**
+verbleibenden **99.8%+ / ≤600 B** mit ausschließlich **`addi *,r31`**-`~` (HamuKuri-R198
+hat Familie geleert).
+
+**Ship — `TBGTentacleMtxCalc::~TBGTentacleMtxCalc()` (204 B).** Retail-Dtor nutzt
+**`@1431`-`.data`-Pool** (`addi r0,r3,0x3f0` / `0x414` / `0x424` für vtable-Zeiger).
+Unser Build: **−4 B** je Offset (`0x3ec`/`0x410`/`0x420`) — **`tstatestr`** in Map
+**`size:0x2C`** (11 Zeiger inkl. **NULL**), Quelle hatte nur 10 Einträge. Fix:
+trailing **`nullptr`** in `tstatestr[]` (`src/Enemy/bgtentacle.cpp`).
+
+**Probes (~7, revertiert / Skip).** `TGraphWeb::getRandomNextIndex`: **`TRailNode` @
+0x24 vs 0x1c** (Mid-Frame). `TNerveDoroHaneHitWater`, `THamuKuri::jumpToSearchActor`,
+`RotateCtrl`, `TStayPakkun::genRandomItem`, `TGessoPolluteObj::loadInit`: **`stwu`/Spill**.
+`TMario::toroccoEffect` (R197-Skip). `MarioReceiveMsg`/`MarioSwim`: kein ≤600 B ≥99.5%.
+
+**Vollmatch, strikt (1).**
+
+- `TBGTentacleMtxCalc::~TBGTentacleMtxCalc()` (204 B)
+
+**Tip (R199).** **`~` nur auf `addi r*,r3,0xNNN` mit `lis … @####`** im **Dtor/Init**:
+oft **`.data`-Tabellengröße** (Map-`size` / ASM `.obj`) — fehlendes **`nullptr`**
+am Ende von `const char*[]` verschiebt **alle** nachfolgenden Pool-Offsets wie bei
+**`anmlist`** in **`.rodata`**.
+
+**Verify.** `ninja baseline` / `changes_all` ggü. **`28997a6d`**; matched_code
+**48.64% → 48.65%**; `build/GMSJ01/ok` (DOL) unverändert OK.
+
 ### R196 (Aufgabe B; emit/load entry-pad + Eel-Tears, keine Vollmatches)
 
 **Hunt.** B-scope Enemy/Player ≤600 B; Skip R195-Liste + User (`TPakkun::load`, `TBubbleCallBack`,
