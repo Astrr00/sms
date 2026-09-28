@@ -10920,6 +10920,40 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R205 (`MapObjBianco` / `MapObjBall` / `MapObjPinna` / `MapObjMare` / `MapObjMamma`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+Fünf kurze Fills ohne `SMatrix34C`-Leer-Konstruktor.
+
+- `TBellWatermill::TBellWatermill` nullt die Floats `0x16C` bis `0x18C`, die Bytes `0x190` und `0x1A0` und das Wort `0x1A4`.
+  124 Bytes, 31 Instruktionen.
+- `TResetFruit::makeObjLiving` setzt `MAP_OBJ_FLAG_DISAPPEARING` und `mStateTimer` aus `getLivingTime`, solange der Timer nicht läuft, löscht `LIVE_FLAG_UNK10` und setzt `mState` auf 11.
+  128 Bytes, 32 Instruktionen.
+- `TPinnaShell::receiveMessage` reagiert auf `HIT_MESSAGE_SPRAYED_BY_WATER` mit `PARTICLE_MS_ENM_WATHIT` und `MSD_SE_EN_COMMON_W_HIT_OK`, zieht `mWaterOpenAccel` von `unk6C` ab und setzt `unk68`, wenn `unk6C` unter `-mOpenRotMax` fällt.
+  176 Bytes, 44 Instruktionen.
+- `TMapObjBall::getDepthAtFloating` gibt `unk18C` zurück.
+  8 Bytes, 2 Instruktionen.
+- `TMapObjBase::getObjCollisionHeightOffset` gibt `mYOffset` zurück.
+  8 Bytes, 2 Instruktionen.
+
+`validate-symbol-order` für Bianco, Ball, Pinna, Mare und Mamma: PASS.
+Dieselben UNUSED-Größenwarnungen wie zuvor.
+Ball zusätzlich die bekannte Weak-Order-Warnung.
+
+`ninja changes_all`: fuzzy 78.85625 % -> 78.86625 %, matched code 49.560566 % -> 49.572937 % (1779268 -> 1779712, +444).
+Matched data bleibt 65.18551 %.
+Funktionen matched 9555 -> 9560.
+MapObjBianco matched code 4404 -> 4528.
+MapObjBall matched code 2844 -> 2972.
+MapObjPinna matched code 3712 -> 3888.
+MapObjMare matched code 3648 -> 3656.
+MapObjMamma matched code 5536 -> 5544.
+Monte, `MapObjManager` und `MarNameRefGen_MapObj` unverändert.
+Kein R170-R204-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R204 (`MapObjBianco` / `MapObjFence` / `MapObjMamma`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

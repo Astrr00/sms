@@ -194,7 +194,7 @@ void TMuddyBoat::bind()
 {
 	// Retail bind calls the weak out-of-line copy. Address-of keeps that
 	// symbol in this TU; the header body is empty, so the copy stays off.
-	void (TMapObjBase::*fn)() const = &TMapObjBase::getObjCollisionHeightOffset;
+	f32 (TMapObjBase::*fn)() const = &TMapObjBase::getObjCollisionHeightOffset;
 	(this->*fn)();
 }
 

@@ -2,6 +2,8 @@
 #include <MoveBG/MapObjPinna.hpp>
 
 #include <M3DUtil/MActor.hpp>
+#include <MSound/MSound.hpp>
+#include <MSound/SoundEffects.hpp>
 #include <Map/MapCollisionEntry.hpp>
 #include <MarioUtil/MathUtil.hpp>
 #include <Player/MarioAccess.hpp>
@@ -14,6 +16,11 @@
 #include <Map/Map.hpp>
 
 // -inline deferred: source order is the reverse of mario.MAP emission order.
+
+f32 TShellCup::mOpenRotMax      = 90.0f;
+f32 TShellCup::mShellDamageRot = 45.0f;
+f32 TShellCup::mWaterOpenAccel = 5.0f;
+f32 TShellCup::mCloseAccel     = 3.5f;
 
 void TFerrisWheel::becomeCalmlyCallback(u32, u32) { }
 
@@ -107,7 +114,22 @@ TViking::TViking(const char* name)
 
 void TPinnaShell::opened() { }
 
-BOOL TPinnaShell::receiveMessage(THitActor*, u32) { return FALSE; }
+BOOL TPinnaShell::receiveMessage(THitActor* sender, u32 message)
+{
+	if (message == HIT_MESSAGE_SPRAYED_BY_WATER) {
+		gpMarioParticleManager->emit(PARTICLE_MS_ENM_WATHIT, &sender->mPosition,
+		                             0, nullptr);
+		SMSGetMSound()->startSoundSet(MSD_SE_EN_COMMON_W_HIT_OK, &mPosition, 0,
+		                              0.0f, 0, 0, 4);
+		if (unk68 == 0) {
+			unk6C -= TShellCup::mWaterOpenAccel;
+			if (unk6C < -TShellCup::mOpenRotMax)
+				unk68 = 1;
+		}
+		return TRUE;
+	}
+	return FALSE;
+}
 
 // Retail keeps a weak copy in this TU. The shared header stays the virtual
 // inline so other matches that call through the vtable do not change.

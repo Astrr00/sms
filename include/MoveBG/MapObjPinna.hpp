@@ -74,7 +74,7 @@ public:
 	}
 
 public:
-	/* 0x68 */ u32 unk68;
+	/* 0x68 */ s32 unk68;
 	/* 0x6C */ f32 unk6C;
 	/* 0x70 */ f32 unk70;
 	/* 0x74 */ u32 unk74;
@@ -95,6 +95,11 @@ public:
 	void loadAfter();
 	void initMapObj();
 	TShellCup(const char* name = "シェルカップ");
+
+	static f32 mOpenRotMax;
+	static f32 mShellDamageRot;
+	static f32 mWaterOpenAccel;
+	static f32 mCloseAccel;
 
 public:
 	/* 0x138 */ TPinnaShell unk138[6];

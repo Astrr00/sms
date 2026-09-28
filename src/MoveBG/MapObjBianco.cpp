@@ -265,6 +265,18 @@ void TBellWatermill::loadAfter() { }
 
 TBellWatermill::TBellWatermill(const char* name)
     : TMapObjTurn(name)
+    , unk16C(0.0f)
+    , unk170(0.0f)
+    , unk174(0.0f)
+    , unk178(0.0f)
+    , unk17C(0.0f)
+    , unk180(0.0f)
+    , unk184(0.0f)
+    , unk188(0.0f)
+    , unk18C(0.0f)
+    , unk190(0)
+    , unk1A0(0)
+    , unk1A4(0)
 {
 }
 

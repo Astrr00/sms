@@ -183,7 +183,7 @@ public:
 	virtual void touchBoss(THitActor*);
 	virtual void makeObjDefault();
 	virtual u16 getHitObjNumMax();
-	virtual void getDepthAtFloating();
+	virtual f32 getDepthAtFloating();
 
 	void initAndRegister(const char*);
 	void moveByBck();
@@ -318,7 +318,7 @@ public:
 	static bool isDemo();
 	static bool isHideObj(THitActor*);
 #pragma dont_inline on
-	void getObjCollisionHeightOffset() const { }
+	f32 getObjCollisionHeightOffset() const { return mYOffset; }
 #pragma dont_inline off
 
 	// fabricated

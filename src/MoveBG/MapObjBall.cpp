@@ -116,7 +116,15 @@ void TResetFruit::touchActor(THitActor*) { }
 
 void TResetFruit::touchGround(JGeometry::TVec3<f32>*) { }
 
-void TResetFruit::makeObjLiving() { }
+void TResetFruit::makeObjLiving()
+{
+	if (!isStateTimerEngaged()) {
+		onMapObjFlag(MAP_OBJ_FLAG_DISAPPEARING);
+		mStateTimer = getLivingTime();
+	}
+	offLiveFlag(LIVE_FLAG_UNK10);
+	mState = 11;
+}
 
 // UNUSED
 void TResetFruit::pick(THitActor*) { }
