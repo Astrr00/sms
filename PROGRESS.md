@@ -10920,6 +10920,26 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R182 (`TMapObjTurn::touchWater`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+- `liftY(mPosition.y, 200.0f)` hält die Höhe in f2 und die Konstante in f1
+  (`fadds f1, f2, f1`).
+- Das `Mtx` im else-Zweig liegt bei `0x34`, der Frame ist `-0x80`.
+- Der Helfer ist vollständig inlined, kein Extra-Symbol.
+
+0 Abweichungen, 404 Bytes, 101 Instruktionen.
+`decomp-diff -u mario/MoveBG/MapObjLib -d "TMapObjTurn::touchWater"`: 100 %.
+
+R181 `TCloset::touchWater`, R180 `TCasinoPanelGate::touchWater`,
+R179 `waitingToAppear`, R178 `initDrawNear`, R177 `TWoodBox::kill`,
+R176 `receiveMessage`, R175 `touchGround`, R174 `perform`,
+R173 `startControlAnim`, R172 `TManhole::touchPlayer`,
+R171 `calcVelocity`, R170 `appearing` unverändert strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R181 (`TCloset::touchWater`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

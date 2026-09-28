@@ -915,6 +915,9 @@ TMapObjMessenger::TMapObjMessenger(const char* name)
 {
 }
 
+// First argument stays in f2, the constant in f1: fadds f1, f2, f1.
+static inline f32 liftY(f32 base, f32 extra) { return base + extra; }
+
 u32 TMapObjTurn::touchWater(THitActor*)
 {
 	if (fabsf(unk158) < unk164) {
@@ -933,7 +936,8 @@ u32 TMapObjTurn::touchWater(THitActor*)
 			ySpeed = mAppearYSpeed;
 			speed  = mAppearSpeed;
 			obj->appear();
-			obj->mPosition.set(mPosition.x, mPosition.y + 200.0f, mPosition.z);
+			obj->mPosition.set(mPosition.x, liftY(mPosition.y, 200.0f),
+			                   mPosition.z);
 			if (mMActor) {
 				MtxPtr mtx = getModel()->getAnmMtx(0);
 				obj->mVelocity.set(mtx[0][2] * speed,
