@@ -10920,6 +10920,27 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R183 (`TMapObjPlane::updateCheckData`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+- `gridToWorld` läuft erst für x und x+1, dann für z und z+1.
+- Die int-nach-float-Spills von z und x+1 liegen bei `0x88` und `0x90`.
+- `fmsubs` landet in f9 bzw. f8.
+
+0 Abweichungen, 464 Bytes, 116 Instruktionen.
+`decomp-diff -u mario/MoveBG/MapObjPlane -d updateCheckData`: 100 %.
+`validate-symbol-order -u mario/MoveBG/MapObjPlane`: PASS.
+
+R182 `TMapObjTurn::touchWater`, R181 `TCloset::touchWater`,
+R180 `TCasinoPanelGate::touchWater`, R179 `waitingToAppear`,
+R178 `initDrawNear`, R177 `TWoodBox::kill`, R176 `receiveMessage`,
+R175 `touchGround`, R174 `perform`, R173 `startControlAnim`,
+R172 `TManhole::touchPlayer`, R171 `calcVelocity`, R170 `appearing`
+unverändert strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R182 (`TMapObjTurn::touchWater`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

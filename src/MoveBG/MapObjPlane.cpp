@@ -101,9 +101,11 @@ void TMapObjPlane::updateCheckData(int x, int z)
 	if (x < 0 || mExtents <= x || z < 0 || mExtents <= z)
 		return;
 
+	// Both X samples, then both Z samples. That puts the z and x+1
+	// int-to-float spills at 0x88 and 0x90.
 	f32 x1 = mCollision->gridToWorld(x);
-	f32 z1 = mCollision->gridToWorld(z);
 	f32 x2 = mCollision->gridToWorld(x + 1);
+	f32 z1 = mCollision->gridToWorld(z);
 	f32 z2 = mCollision->gridToWorld(z + 1);
 
 	JGeometry::TVec3<f32> local_64(x1, heightAt(x, z) + 2.0f, z1);
