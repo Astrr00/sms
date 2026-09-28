@@ -10920,6 +10920,40 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R266 (`MapObjMonte`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TSwingBoard::TSwingBoard`.
+
+- Nach `TMapObjBase` folgen die Stores in Retail-Reihenfolge.
+  `unk138` ist 5000.0f.
+  `unk13C`, `unk140`, `unk144` und `unk148` sind 0.0f.
+  `unk188` ist 0.
+  `unk178`, `unk168`, `unk158`, `unk164`, `unk154`, `unk170`, `unk150`, `unk16C` und `unk15C` sind 0.0f.
+  `unk174`, `unk160` und `unk14C` sind 1.0f.
+  `unk184`, `unk180` und `unk17C` sind 0.0f.
+  `char trash[0x26]` hält das Frame bei `-0x48` (`r31` bei `r1+0x44`).
+  168 Bytes, 42 Instruktionen.
+  `load`, `draw`, `swing` und `control` bleiben leere Stubs.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMonte`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.19155 % -> 79.19442 %, matched code 49.94452 % -> 49.94919 % (1793052 -> 1793220, +168).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9639 -> 9640.
+`MapObjMonte` 3868 -> 4036 (+168).
+Kein R170–R265-Unit hat matched code verloren.
+Nur `MapObjMonte` hat matched code gewonnen.
+`MarNameRefGen_MapObj` und `MapObjManager` wurden wegen der neuen Felder neu gebaut.
+Matched code dort bleibt 2348 bzw. unverändert.
+Fuzzy von `getNameRef_MapObj` tickt 86.49061 % -> 86.49089 % durch die neue Objektgröße.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R265 (`MapObjRicco`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

@@ -193,6 +193,32 @@ void TSwingBoard::load(JSUMemoryInputStream&) { }
 TSwingBoard::TSwingBoard(const char* name)
     : TMapObjBase(name)
 {
+	// Store order is the retail order. MWCC does not reorder these.
+	unk138 = 5000.0f;
+	unk13C = 0.0f;
+	unk140 = 0.0f;
+	unk144 = 0.0f;
+	unk148 = 0.0f;
+	unk188 = 0;
+	unk178 = 0.0f;
+	unk168 = 0.0f;
+	unk158 = 0.0f;
+	unk164 = 0.0f;
+	unk154 = 0.0f;
+	unk170 = 0.0f;
+	unk150 = 0.0f;
+	unk16C = 0.0f;
+	unk15C = 0.0f;
+	unk174 = 1.0f;
+	unk160 = 1.0f;
+	unk14C = 1.0f;
+	unk184 = 0.0f;
+	unk180 = 0.0f;
+	unk17C = 0.0f;
+
+	// Dead slot so MWCC keeps frame -0x48 (r31 at r1+0x44).
+	char trash[0x26];
+	trash[0] = 0;
 }
 
 void TGoalFlag::touchActor(THitActor* actor)
