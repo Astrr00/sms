@@ -10920,6 +10920,30 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R284 (`MapObjLib`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjBase::emitAndRotateScale`.
+
+- `gpMarioParticleManager->emit` bekommt `this` als Binder.
+  `mRotation` wird durch `180` geteilt und mit `32768` multipliziert.
+  Die drei `s16` gehen an `setRotation`.
+  Danach `setGlobalScale(mScaling)`.
+  `char trash[0xC]` hält das Frame bei `-0x50`.
+  240 Bytes, 60 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjLib`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.31092 % -> 79.31117 %, matched code 50.075317 % -> 50.082005 % (1797748 -> 1797988, +240).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9657 -> 9658.
+`MapObjLib` 9988 -> 10228 (+240).
+Kein R170–R283-Unit hat matched code verloren.
+
 ### R283 (`MapObjLib`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

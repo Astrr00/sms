@@ -806,9 +806,12 @@ void TMapObjBase::emitAndRotateScale(s32 param_1, u8 param_2,
 	    = gpMarioParticleManager->emit(param_1, param_3, param_2, this);
 
 	if (emitter) {
-		emitter->setRotation(mRotation.x / 180.0f * 32768.0f,
-		                     mRotation.y / 180.0f * 32768.0f,
-		                     mRotation.z / 180.0f * 32768.0f);
+		s16 rx = mRotation.x / 180.0f * 32768.0f;
+		s16 ry = mRotation.y / 180.0f * 32768.0f;
+		s16 rz = mRotation.z / 180.0f * 32768.0f;
+		char trash[0xC];
+		trash[0] = 0;
+		emitter->setRotation(rx, ry, rz);
 		emitter->setGlobalScale(mScaling);
 	}
 }
