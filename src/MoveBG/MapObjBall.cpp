@@ -1,4 +1,5 @@
 #include <MoveBG/MapObjBall.hpp>
+#include <JSystem/J3D/J3DGraphAnimator/J3DModel.hpp>
 #include <JSystem/JDrama/JDRNameRefGen.hpp>
 #include <MarioUtil/PacketUtil.hpp>
 #include <string.h>
@@ -54,7 +55,18 @@ void TMapObjBall::calcCurrentMtx() { }
 
 void TMapObjBall::checkWallCollision(JGeometry::TVec3<f32>*) { }
 
-void TMapObjBall::makeObjDefault() { }
+void TMapObjBall::makeObjDefault()
+{
+	TMapObjBase::makeObjDefault();
+	MtxPtr mtx = getModel()->getAnmMtx(0);
+	mtx[0][3] = mPosition.x;
+	mtx[1][3] = mPosition.y + mBodyRadius;
+	mtx[2][3] = mPosition.z;
+
+	// Dead slot so MWCC keeps frame -0x28.
+	char trash[1];
+	trash[0] = 0;
+}
 
 void TMapObjBall::makeObjAppeared() { }
 

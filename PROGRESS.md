@@ -10920,6 +10920,32 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R227 (`MapObjBall`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjBall::makeObjDefault`.
+`TRevolvingFenceInner::setGroundCollision` und `TMapObjBall::hold` bleiben geparkt.
+
+- `TMapObjBall::makeObjDefault` ruft `TMapObjBase::makeObjDefault`.
+  Dann schreibt es in `getAnmMtx(0)` die Translation `mPosition.x`, `mPosition.y + mBodyRadius` und `mPosition.z`.
+  `char trash[1]` hält Frame `-0x28`.
+  88 Bytes, 22 Instruktionen.
+  `put`, `touchPollution` und `__sinit_MapObjBall_cpp` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS.
+Bestehende Weak-Order-Warnung und vier UNUSED-Größenwarnungen.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.039665 % -> 79.042 %, matched code 49.76424 % -> 49.76669 % (1786580 -> 1786668, +88).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9598 -> 9599.
+`MapObjBall` 2972 -> 3060 (+88).
+Kein R170–R226-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R226 (`MapObjMamma`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
