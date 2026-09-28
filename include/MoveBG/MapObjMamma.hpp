@@ -26,7 +26,7 @@ class TSandBase : public TMapObjBase {
 public:
 	// Retail slot is a null pointer. This compiler emits that for a pure virtual.
 	virtual void grow() = 0;
-	virtual void withering();
+	virtual bool withering();
 	void isDown() const;
 	TSandBase(const char*);
 
@@ -99,7 +99,7 @@ public:
 	virtual void loadAfter();
 	virtual void initMapObj();
 	virtual void calcRootMatrix();
-	virtual void withering();
+	virtual bool withering();
 	virtual void waitBeforeExplode();
 	virtual void explode();
 	virtual void expanded();

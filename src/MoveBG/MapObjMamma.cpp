@@ -60,7 +60,26 @@ void TSandLeaf::control()
 
 void TSandBase::isDown() const { }
 
-void TSandBase::withering() { }
+bool TSandBase::withering()
+{
+	mScaling.y -= unk13C;
+	if (mScaling.y < mScaleMin)
+		mScaling.y = mScaleMin;
+
+	// Address is taken before gateCheck so it stays live in r31.
+	const JGeometry::TVec3<f32>* pos = &unk144->mPosition;
+	if (gpMSound->gateCheck(MSD_SE_OBJ_SANDBUD_NORMAL))
+		MSoundSESystem::MSoundSE::startSoundActor(
+		    MSD_SE_OBJ_SANDBUD_NORMAL, pos, 0, nullptr, 0, 4);
+
+	// Dead slot so the frame stays at -0x20 (r31 at r1+0x1c).
+	char trash[1];
+	trash[0] = 0;
+
+	if (mScaling.y <= mScaleMin)
+		return true;
+	return false;
+}
 
 TSandBase::TSandBase(const char* name)
     : TMapObjBase(name)
@@ -155,7 +174,7 @@ TSandBombBase::TSandBombBase(const char* name)
 {
 }
 
-void TSandCastle::withering() { }
+bool TSandCastle::withering() { return false; }
 
 void TSandCastle::expanded() { }
 

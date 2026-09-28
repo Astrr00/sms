@@ -10920,6 +10920,36 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R260 (`MapObjMamma`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TSandBase::withering`.
+
+- `mScaling.y -= unk13C`.
+  `mScaling.y < mScaleMin` ist `fcmpo`+`bge` und klemmt auf `mScaleMin`.
+  `unk144->mPosition` wird vor `gateCheck` gebildet.
+  `MSD_SE_OBJ_SANDBUD_NORMAL` (0x2099) geht durch `startSoundActor`.
+  Rückgabe ist `bool`: `mScaling.y <= mScaleMin` als `cror`+`bne`, `li 1` / `li 0`.
+  `char trash[1]` hält das Frame bei `-0x20` (`r31` bei `r1+0x1c`).
+  172 Bytes, 43 Instruktionen.
+  `TSandCastle::withering` bleibt virtuell und gibt `false` zurück, damit die Signatur passt.
+  `control` von `TGoalWatermelon` und `sinit` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMamma`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.18246 % -> 79.18719 %, matched code 49.91799 % -> 49.92279 % (1792100 -> 1792272, +172).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9633 -> 9634.
+`MapObjMamma` 6568 -> 6740 (+172).
+Kein R170–R259-Unit hat matched code verloren.
+Nur `MapObjMamma` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R259 (`MapObjMamma`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
