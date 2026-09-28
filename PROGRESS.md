@@ -10920,6 +10920,34 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R242 (`MapObjPinna`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TBalloonKoopaJr::kill`.
+
+- `TMapObjGeneral::kill` läuft zuerst.
+  Drei `emitAndScale`-Aufrufe treffen `unk148`, mit `0x5A`, `0x5B` und `0x5C`.
+  `TFlagManager::smInstance->incFlag(0x60001, 1)`.
+  `gateCheck(MSD_SE_BS_BSPAKU_SLAP)` startet danach `startSoundActor` an `&mPosition`.
+  `char trash[1]` hält den Frame bei `-0x20`.
+  `unk148` ist `TVec3<f32>` bei `0x148`.
+  172 Bytes, 43 Instruktionen.
+  Die übrigen 48 Matches in `MapObjPinna` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjPinna`: PASS.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+`MarNameRefGen_MapObj` verliert kein matched code (2348).
+
+`ninja changes_all`: fuzzy 79.08432 % -> 79.08901 %, matched code 49.81549 % -> 49.82028 % (1788420 -> 1788592, +172).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9613 -> 9614.
+`MapObjPinna` 4992 -> 5164 (+172).
+Kein R170–R241-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R241 (`MapObjMamma`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

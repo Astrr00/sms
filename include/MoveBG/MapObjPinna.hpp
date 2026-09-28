@@ -143,6 +143,9 @@ public:
 	void kill();
 	void load(JSUMemoryInputStream&);
 	TBalloonKoopaJr(const char* name = "風船（クッパＪｒ）");
+
+public:
+	/* 0x148 */ JGeometry::TVec3<f32> unk148;
 };
 
 class TPinnaEntrance : public TMapObjBase {

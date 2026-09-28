@@ -6,6 +6,7 @@
 #include <M3DUtil/MActorUtil.hpp>
 #include <JSystem/J3D/J3DGraphLoader/J3DModelLoaderFlags.hpp>
 #include <System/Application.hpp>
+#include <System/FlagManager.hpp>
 #include <MSound/MSound.hpp>
 #include <MSound/SoundEffects.hpp>
 #include <Map/MapCollisionEntry.hpp>
@@ -256,7 +257,21 @@ void TChangeStageMerrygoround::calc()
 
 void TBalloonKoopaJr::touchActor(THitActor*) { kill(); }
 
-void TBalloonKoopaJr::kill() { }
+void TBalloonKoopaJr::kill()
+{
+	TMapObjGeneral::kill();
+	emitAndScale(0x5A, 0, &unk148);
+	emitAndScale(0x5B, 0, &unk148);
+	emitAndScale(0x5C, 0, &unk148);
+	TFlagManager::smInstance->incFlag(0x60001, 1);
+	if (gpMSound->gateCheck(MSD_SE_BS_BSPAKU_SLAP))
+		MSoundSESystem::MSoundSE::startSoundActor(
+		    MSD_SE_BS_BSPAKU_SLAP, &mPosition, 0, nullptr, 0, 4);
+
+	// Dead slot so MWCC keeps frame -0x20.
+	char trash[1];
+	trash[0] = 0;
+}
 
 void TBalloonKoopaJr::load(JSUMemoryInputStream&) { }
 
