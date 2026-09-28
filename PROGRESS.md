@@ -10920,6 +10920,32 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R232 (`MapObjMare`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMareFall::calc`.
+
+- `TMareFall::calc` prüft `gateCheck(MSD_SE_GE_FALL)` über ein lokales `MSound*` und spielt den Sound an `&mPosition`.
+  Danach `gpMSound->gateCheck(MSD_SE_GE_FALL_UPPER)` und `startSoundActor` an `fall_upper_pos`.
+  Zwei `emit`-Aufrufe, `0x149` und `0x14A`, an `&mPosition` mit `this`.
+  `char trash[0xC]` hält Frame `-0x28`.
+  192 Bytes, 48 Instruktionen.
+  `TMareFall::load`, `TMareCork::calcRootMatrix`, `drawObject` und `__sinit_MapObjMare_cpp` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMare`: PASS.
+Fünf bestehende UNUSED-Größenwarnungen.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.05807 % -> 79.06331 %, matched code 49.78329 % -> 49.78864 % (1787264 -> 1787456, +192).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9603 -> 9604.
+`MapObjMare` 4132 -> 4324 (+192).
+Kein R170–R231-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R231 (`MapObjMonte`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

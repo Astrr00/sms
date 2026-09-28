@@ -231,7 +231,20 @@ TMuddyBoat::TMuddyBoat(const char* name)
 	unk17C.zero();
 }
 
-void TMareFall::calc() { }
+void TMareFall::calc()
+{
+	MSound* sound = gpMSound;
+	if (sound->gateCheck(MSD_SE_GE_FALL))
+		MSoundSESystem::MSoundSE::startSoundActor(
+		    MSD_SE_GE_FALL, &mPosition, 0, nullptr, 0, 4);
+	if (gpMSound->gateCheck(MSD_SE_GE_FALL_UPPER))
+		MSoundSESystem::MSoundSE::startSoundActor(
+		    MSD_SE_GE_FALL_UPPER, &fall_upper_pos, 0, nullptr, 0, 4);
+	gpMarioParticleManager->emit(0x149, &mPosition, 1, this);
+	gpMarioParticleManager->emit(0x14A, &mPosition, 1, this);
+	char trash[0xC];
+	trash[0] = 0;
+}
 
 void TMareFall::load(JSUMemoryInputStream& stream)
 {
