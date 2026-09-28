@@ -10920,6 +10920,34 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R249 (`MapObjWave`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjWave::getWaveHeight`.
+
+- Wenn `unk94` fehlt, Ergebnis 0.
+  Sonst `unk3C * sinf(unk24 * (0.15915507 * x) + unk64)` plus
+  `unk40 * sinf(unk28 * (0.15915507 * z) + unk68)`.
+  `0.15915507` ist das Retail-Bitmuster; `1/(2*pi)` liegt ein paar Bits daneben.
+  Zwei benannte Produkte, damit die zweite Multiplikation nicht in `fmadds` faltet.
+  140 Bytes, 35 Instruktionen.
+  Dtor, `perform`, `noWave` und `__sinit_MapObjWave_cpp` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjWave`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+`MarNameRefGen_MapObj` matched code bleibt 2348.
+
+`ninja changes_all`: fuzzy 79.10671 % -> 79.11047 %, matched code 49.83833 % -> 49.84223 % (1789240 -> 1789380, +140).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9621 -> 9622.
+`MapObjWave` 1056 -> 1196 (+140).
+Kein R170–R248-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R248 (`MapObjWave`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

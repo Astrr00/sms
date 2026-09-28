@@ -2,6 +2,7 @@
 
 #include <System/MarDirector.hpp>
 #include <JSystem/JUtility/JUTColor.hpp>
+#include <math.h>
 
 TMapObjWave* gpMapObjWave;
 
@@ -26,7 +27,16 @@ void TMapObjWave::getStaticTexPos1(float) const { }
 
 void TMapObjWave::getStaticTexPos0(float) const { }
 
-f32 TMapObjWave::getWaveHeight(float, float) const { return 0.0f; }
+f32 TMapObjWave::getWaveHeight(float x, float z) const
+{
+	if (!unk94)
+		return 0.0f;
+
+	// Retail float bits. 1/(2*pi) from M_PI is a few bits low.
+	f32 xWave = unk3C * sinf(unk24 * (0.15915507f * x) + unk64);
+	f32 zWave = unk40 * sinf(unk28 * (0.15915507f * z) + unk68);
+	return xWave + zWave;
+}
 
 f32 TMapObjWave::getHeight(float, float, float) const { return 0.0f; }
 
