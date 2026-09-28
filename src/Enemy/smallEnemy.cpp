@@ -389,16 +389,16 @@ void TSmallEnemy::genEventCoin()
 
 			MTXMultVec(local_c0, &local_d0, &local_d0);
 
-			TCoin* coin = (TCoin*)gpItemManager->makeObjAppear(
+			TCoin* loopCoin = (TCoin*)gpItemManager->makeObjAppear(
 			    mPosition.x + local_d0.x, mPosition.y, mPosition.z + local_d0.z,
 			    0x2000000E, false);
-			if (coin) {
-				coin->mPosition.y = mPosition.y;
+			if (loopCoin) {
+				loopCoin->mPosition.y = mPosition.y;
 				MsVECNormalize(&local_d0, &local_d0);
-				coin->mVelocity.set(local_d0.x * 4,
-				                    TMsRange<f32>(16.0f, 8.0f).rand(),
-				                    local_d0.z * 4);
-				coin->offLiveFlag(LIVE_FLAG_UNK10);
+				loopCoin->mVelocity.set(local_d0.x * 4,
+				                        TMsRange<f32>(16.0f, 8.0f).rand(),
+				                        local_d0.z * 4);
+				loopCoin->offLiveFlag(LIVE_FLAG_UNK10);
 			}
 		}
 	}
