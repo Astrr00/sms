@@ -353,7 +353,12 @@ void TSmallEnemy::genEventCoin()
 
 	if (mCoin) {
 		TCoin* coin;
-		if (mCoin->mActorType == 0x2000000E) {
+		BOOL isEventCoin;
+		if ((mCoin->mActorType - 0x20000000u) == 0xEu)
+			isEventCoin = TRUE;
+		else
+			isEventCoin = FALSE;
+		if (isEventCoin) {
 			coin = (TCoin*)gpItemManager->makeObjAppear(0x2000000E);
 		} else {
 			coin = mCoin;

@@ -12609,6 +12609,25 @@ cap ~8; strict **100%** only.
 
 **Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
 
+### R280 (Aufgabe B; genEventCoin frame hunt + diversify, 0× ship)
+
+**Hunt.** Post-R279 dry (**9275**); finish **`TSmallEnemy::genEventCoin`** (**mCoin** type); defer PolluteModel/**bind**/Dango/setGoal;
+spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%** only.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~7).**
+
+- **`mCoin->isActorType`**: **~99.6%**, **`lwz 0x4c(r4)`** OK — frame **`−0x110`** (retail **`−0x100`**).
+- **`mCoin->mActorType ==`**: **~97%**, frame **`−0x108`** — wrong post-**`subis`** branch shape — reverted.
+- **`BOOL` + `(mCoin->mActorType - 0x20000000u) == 0xEu`**: **~99.3%**, **`r4`** + retail **`li`/`b`/`clrlwi`** on type — frame **`−0x108`**; second **`if (isEventCoin)`** → **`cmpwi`** not **`clrlwi`** — **kept**.
+- Inverted **`!= 0xEu`**: **~91%** — reverted; **`trash[8]`** / **`coinRef`**: frame worse — reverted.
+- **`TTamaNoko::walkBehavior`**: **`addi r3,r31,0xf4`** vs inlined **`getPoint`** — needs **`unkF4`** pointer shape — deferred.
+
+**Tip (R280).** **`genEventCoin`**: **`mCoin->isActorType`** matches type-test codegen but costs **+0x10** frame vs **`this->isActorType`**; manual **`subis`/`li`/`b`/`clrlwi`** on **`mCoin->mActorType`** recovers **`r4`** with only **`−0x8`** frame gap — fix **`clrlwi` vs `cmpwi`** on the follow-up **`if`** next.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
 ### R258 (Aufgabe B; defer GraphGroup/ColumSand pool + diversify, 0× ship)
 
 **Hunt.** Post-R257 dry; **defer `TGraphGroup::perform`** (empty **`TGraphWeb::perform` DCE**) and
