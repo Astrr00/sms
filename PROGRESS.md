@@ -10920,6 +10920,32 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R233 (`MapObjBianco`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjRootPakkun::drawObject`.
+
+- `TMapObjRootPakkun::drawObject` ruft `TLiveActor::drawObject` auf.
+  Wenn `fabsf(gpMarioPos->z - mPosition.z) < 10000.0f`, folgt `unk138->movement`.
+  Solange `isStateTimerEngaged` falsch ist, `tremble` mit `mTremblePower`, `mTrembleAccel`, `mTrembleBrake` und `mTrembleTime`, danach `mStateTimer = mTrembleTime`.
+  `char trash[1]` hält Frame `-0x28`.
+  148 Bytes, 37 Instruktionen.
+  `TBiancoWatermillVertical::setGroundCollision`, `TWoodLog::control`, `TBiancoBell::touchPlayer` und `__sinit_MapObjBianco_cpp` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBianco`: PASS.
+Fünf bestehende UNUSED-Größenwarnungen.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.06331 % -> 79.067314 %, matched code 49.78864 % -> 49.792763 % (1787456 -> 1787604, +148).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9604 -> 9605.
+`MapObjBianco` 5960 -> 6108 (+148).
+Kein R170–R232-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R232 (`MapObjMare`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

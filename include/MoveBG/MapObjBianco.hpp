@@ -180,6 +180,11 @@ public:
 	virtual void initMapObj();
 	virtual void drawObject(JDrama::TGraphics*);
 
+	static f32 mTremblePower;
+	static f32 mTrembleAccel;
+	static f32 mTrembleBrake;
+	static int mTrembleTime;
+
 public:
 	/* 0x138 */ TTrembleModelEffect* unk138;
 };

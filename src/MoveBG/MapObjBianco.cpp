@@ -23,7 +23,20 @@ void TBigWindmill::control() { }
 
 void TBigWindmill::load(JSUMemoryInputStream&) { }
 
-void TMapObjRootPakkun::drawObject(JDrama::TGraphics*) { }
+void TMapObjRootPakkun::drawObject(JDrama::TGraphics* graphics)
+{
+	TLiveActor::drawObject(graphics);
+	if (fabsf(gpMarioPos->z - mPosition.z) < 10000.0f) {
+		unk138->movement();
+		if (!isStateTimerEngaged()) {
+			unk138->tremble(mTremblePower, mTrembleAccel, mTrembleBrake,
+			                mTrembleTime);
+			mStateTimer = mTrembleTime;
+		}
+	}
+	char trash[1];
+	trash[0] = 0;
+}
 
 void TMapObjRootPakkun::initMapObj()
 {
@@ -104,6 +117,11 @@ TBiancoWatermillVertical::TBiancoWatermillVertical(const char* name)
 u32 TBiancoMiniWindmill::touchWater(THitActor*) { return 0; }
 
 void TBiancoMiniWindmill::calc() { }
+
+f32 TMapObjRootPakkun::mTremblePower = 15.0f;
+f32 TMapObjRootPakkun::mTrembleAccel = 0.95f;
+f32 TMapObjRootPakkun::mTrembleBrake = 0.98f;
+int TMapObjRootPakkun::mTrembleTime  = 0x168;
 
 f32 TBiancoMiniWindmill::mFriction = 0.01f;
 
