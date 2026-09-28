@@ -11948,6 +11948,42 @@ MWCC **`lfs`/`fadds`** order inside inlined **`turning()`**.
 
 **Verify.** `ninja changes_all` ggü. baseline (**9273**): **+1** (**9273 → 9274**).
 
+### R244 (Aufgabe B; EP nerve/stack hunt, 0× ship)
+
+**Hunt.** Continue medium nerves + inlined parent math (**`f32`** temps in **`lfs`/`fadds`**
+order); **`MtxCalcTypeName` / 100%-fuzzy** stack-only symbols if MAP-clear; gate
+**`changes_all` `matched_functions`**; skip R241–242 / Kumokun **`moveObject`** / Closet·MoveBG;
+cap ~8.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, reverted / no-ship).**
+
+- **`TEnemyMario::emWaiting`** (**99.5%**, **280 B**): inlined **`setStickToAngle`** — **`fmuls`**
+  operand order + **`r1 0x38`** vs **`0x40`**; explicit temps in helper or at call site did not close
+  frame (**97.7%** at inline site).
+- **`TTailRubber::bindOne`** (**99.3%**, **308 B**): ground **`fadds`** chain — named **`f32`**
+  temps in retail load order unchanged in objdiff.
+- **`TNerveBathtubKillerExplosion::execute`** (**100.0%** fuzzy): **`setDeadBathtubKillerAnm`**
+  **`mVelocity`** vec temp **`0x1c`** vs **`0x18`** — **`mVelocity.set(0,0,0)`** reorder regressed
+  explosion/break nerves.
+- **`TBEelTearsDrop::perform`** (**100.0%** fuzzy, **`addi r28,r1,0x6c`**): **`Mtx`** before
+  **`trash[0x10]`** fixed one cluster but **`matched_functions` 9274→9267** (neighbor nerves in
+  **`bosseel`**); reverted.
+- **`THinokuri2::perform`** (**100.0%** fuzzy): **`trash[8]`** / **`trash[0x10]`** — stack locals
+  still **`0x2c`** vs **`0x34`**; **+0** mf.
+- **EP scan:** **`TNerveSmallEnemyFreeze`** (**99.8%**, **160 B**), **`TNerveFireWanwanTurn`**
+  spine **`stw`** cluster, **`hinokuri2` `MtxCalcTypeName` 50%** — frame / TU-wide / data order,
+  not opcode-only ships.
+
+**Tip (R244).** Per-symbol **`decomp-diff` 100%** can still move **`matched_functions`** when the TU
+regalloc shifts (**`bosseel` perform**); always **`ninja baseline`** then fresh **`report.json`**
+before **`changes_all`**. **`100.0%` fuzzy** EP symbols are often **8–12 B** stack skew in inlined
+**`TVec3`/`Mtx`** temps — need UNUSED/size proof, not **`trash[]`** tweaks alone.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged). Tip
+**`b821cab2`**.
+
 ### R225 (Aufgabe B; bossManta rodata + EP diversify, 0× ship)
 
 **Hunt.** Post-**`385107f3`**; optional **`bossManta` `@2805`/`@2807`** lead (Amenbo
