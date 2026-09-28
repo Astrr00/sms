@@ -12067,7 +12067,34 @@ virtual param fetch between `fsubs` and `fmuls`**, then **`f3 = mSLSwingLength`�
 call site, not a freestanding manual duplicate with new stack locals.
 
 **Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged). Tip
-**`TBD`** (see commit).
+**`e33f02c0`**.
+
+### R248 (Aufgabe B; pakkun PARAM float + EP scan, 0× ship)
+
+**Hunt.** Post-R247; skip **BPWaitL** / **BPPivot** thrash; R243-style **`f32`** on other medium
+nerves; skip R244–R247 failures + stuck/empty/Closet/MoveBG; **`ninja baseline`** +
+**`report.json`** + **`changes_all`**; cap ~8.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~6, reverted / no-ship).**
+
+- **`TNervePakkunGenerate::execute`** (**99.1%** best, **508 B**): **`f1 = dist²`**, **`f0 =
+  mDistToMarioSquared`**, **`fcmpo f0,f1`** cluster fixed; still **`r29`** for **`unk194`** +
+  **`stwu -0x80` vs `-0x68`**. Hoisting **`seed`** before **`time==0`** → **91.1%**; reverted.
+- **`TStayPakkun::isHitValid`** (**99.6%**, **528 B**): **`u8` + `f32` `cleanRadius`** vs retail
+  **`lbz`/`stw`/`lfd` `0x43300000`** i2f before **`fsubs`/`fmuls`** — frame **`0x68`→`0x70`**;
+  reverted.
+- **Skipped (user):** **BPWaitL**, **BPPivot**.
+- **EP scan (frame-only):** **`TMario::checkWet`**, **`TGessoPolluteObj::set`**, **`calcFarthestVertex`**,
+  **`TNervePakkunAppear`**.
+
+**Tip (R248).** **`TNervePakkunGenerate`** needs **`fcmpo`** **plus** keeping **`unk194` in `r29`**
+through the hide path (no extra **`addi r29,r3,0`**). **`TStayPakkun::isHitValid`** pollution radius
+is **`32.0f × u8`** via **double-stacked i2f**, not a plain **`(f32)u8`** multiply.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged). Tip
+(pending commit).
 
 ### R225 (Aufgabe B; bossManta rodata + EP diversify, 0× ship)
 
