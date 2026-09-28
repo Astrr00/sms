@@ -1,6 +1,7 @@
 #include "MoveBG/MapObjCorona.hpp"
 #include "MoveBG/MapObjBase.hpp"
 #include <M3DUtil/MActor.hpp>
+#include <JSystem/JMath.hpp>
 
 // Incomplete: only getRootJointMtx is defined here. Not a TLiveActor
 // subclass, so this TU does not emit the grip vtable.
@@ -95,7 +96,32 @@ int TBathtub::getNumGripsDead() const
 	return count;
 }
 
-void TBathtub::tumble(f32, f32) { }
+void TBathtub::tumble(f32 param_1, f32 param_2)
+{
+	if (unk29A != 0)
+		return;
+
+	// 182.04445 is 65536/360. Same lookup as JMASSin, written out so
+	// the header dont_inline does not turn it into a call. The amplitude
+	// is a named local so param_2 stays the left fmuls operand.
+	f32 amp    = 0.0001f;
+	u16 angle  = 182.04445f * param_1;
+	f32 scale  = param_2 * amp;
+	int index  = static_cast<u16>(angle) >> jmaSinShift;
+	f32 cosine = jmaCosTable[index];
+	f32 sine   = jmaSinTable[index];
+	f32 cosAdd = scale * cosine;
+	sine       = -sine;
+	unk1E8     = unk1E8 + cosAdd;
+	sine       = scale * sine;
+	f32 zero   = 0.0f;
+	unk1EC     = unk1EC + zero;
+	unk1F0     = unk1F0 + sine;
+
+	// Dead slot so the fctiwz spill stays at r1+0x38 (frame -0x40).
+	char trash[8];
+	trash[0] = 0;
+}
 
 MtxPtr TBathtub::getTakingMtx()
 {

@@ -10920,6 +10920,35 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R253 (`MapObjCorona`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TBathtub::tumble`.
+
+- `unk29A` bricht ab.
+  Der Winkel ist `182.04445f * param_1` (65536/360), der Index kommt aus `jmaSinShift`.
+  `JMASSin` bleibt im Header `dont_inline`, deshalb steht die Tabellenrechnung hier.
+  `param_2 * 0.0001f` läuft über ein benanntes `amp`, damit `param_2` links im `fmuls` bleibt.
+  `unk1E8` bekommt `scale * cos`, `unk1EC` bekommt `+ 0`, `unk1F0` bekommt `scale * -sin`.
+  Das Sinusprodukt geht zurück in `sine`, damit das zweite `fmuls` in dem Register bleibt.
+  `char trash[8]` hält den `fctiwz`-Slot bei `r1+0x38` (Frame `-0x40`).
+  136 Bytes, 34 Instruktionen.
+  Dtor, `getNumGripsDead`, die Demo-Mtx-Getter, beide Grip-`receiveMessage` und beide `getRootJointMtx` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjCorona`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.14500 % -> 79.14868 %, matched code 49.87722 % -> 49.88100 % (1790636 -> 1790772, +136).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9625 -> 9626.
+`MapObjCorona` 688 -> 824 (+136).
+Kein R170–R252-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R252 (`MapObjWave`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
