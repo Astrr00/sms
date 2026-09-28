@@ -10920,6 +10920,27 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R180 (`TCasinoPanelGate::touchWater`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+- Die Bandvergleiche stehen als `mPosition.y + scale * unk144`.
+- Dadurch liegt `unk144` in f4 und `mPosition.y` in f5.
+- `fmadds` ist `f0 * f4 + f5`.
+- Die unskalierte Schwelle bleibt `mPosition.y + unk144`
+  (`fadds f0, f5, f4`).
+
+0 Abweichungen, 644 Bytes, 161 Instruktionen.
+`decomp-diff -u mario/MoveBG/MapObjSirena -d touchWater`: 100 %.
+`validate-symbol-order -u mario/MoveBG/MapObjSirena`: PASS.
+
+R179 `waitingToAppear`, R178 `initDrawNear`, R177 `TWoodBox::kill`,
+R176 `receiveMessage`, R175 `touchGround`, R174 `perform`,
+R173 `startControlAnim`, R172 `TManhole::touchPlayer`,
+R171 `calcVelocity`, R170 `appearing` unverändert strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R179 (`TMapObjGeneral::waitingToAppear`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
