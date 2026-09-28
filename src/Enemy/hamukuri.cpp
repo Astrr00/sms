@@ -1704,36 +1704,44 @@ void TDangoHamuKuri::setRunAnm()
 void TDangoHamuKuri::calcRootMatrix()
 {
 	getModel()->setBaseScale(mScaling);
-	if (mHolder && mHolder->getHeldObject() == this) {
-		MtxPtr takingMtx = mHolder->getTakingMtx();
-		if (takingMtx) {
-			if (unk230) {
-				unk210 += 40.0f;
-				if (unk210 > 360.0f) {
-					// TODO: should be a rand interval
-					unk210 = -MsRandF(10.0f, 20.0f);
-					unk230 = 0;
-				}
-				TDangoHamuKuri* holder = (TDangoHamuKuri*)mHolder;
-				if (holder->unk230)
-					unk210 = -holder->unk210;
-				takingMtx[3][0] += unk21C;
-				takingMtx[3][1] += unk220;
-				takingMtx[3][2] += unk224;
 
-				getModel()->setBaseScale(mScaling);
-				Mtx afStack_68;
-				MsMtxSetRotRPH(afStack_68, 0.0f, unk210, unk214);
-				MTXConcat(takingMtx, afStack_68, takingMtx);
-				getModel()->setBaseTRMtx(takingMtx);
+	if (!mHolder || mHolder->getHeldObject() != this)
+		goto spine;
 
-				mPosition.set(takingMtx[3][0], takingMtx[3][1],
-				              takingMtx[3][2]);
-				return;
-			}
+	MtxPtr takingMtx = mHolder->getTakingMtx();
+	if (!takingMtx)
+		goto spine;
+
+	if (unk230) {
+		unk210 += 40.0f;
+		if (unk210 > 360.0f) {
+			// TODO: should be a rand interval
+			unk210 = -MsRandF(10.0f, 20.0f);
+			unk230 = 0;
 		}
 	}
 
+	{
+		TDangoHamuKuri* holder = (TDangoHamuKuri*)mHolder;
+		if (holder->unk230)
+			unk210 = -holder->unk210;
+	}
+
+	takingMtx[3][0] += unk21C;
+	takingMtx[3][1] += unk220;
+	takingMtx[3][2] += unk224;
+
+	getModel()->setBaseScale(mScaling);
+
+	Mtx local_40;
+	MsMtxSetRotRPH(local_40, 0.0f, unk210, unk214);
+	MTXConcat(takingMtx, local_40, takingMtx);
+	getModel()->setBaseTRMtx(takingMtx);
+
+	mPosition.set(takingMtx[3][0], takingMtx[3][1], takingMtx[3][2]);
+	return;
+
+spine:
 	TSpineEnemy::calcRootMatrix();
 }
 

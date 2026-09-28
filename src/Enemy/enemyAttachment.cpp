@@ -138,15 +138,21 @@ void TEnemyAttachment::moveObject()
 
 void TEnemyAttachment::sendMessage()
 {
-	for (int i = 0; i < mColCount; ++i) {
-		if (mCollisions[i]->isActorType(0x80000001)) {
+	int r31 = 0;
+	int r30 = 0;
+
+	while (r30 < mColCount) {
+		THitActor* r4
+		    = *(THitActor**)((char*)mCollisions + r31);
+
+		if (r4->isActorType(0x80000001)) {
 			SMS_SendMessageToMario(this, HIT_MESSAGE_ATTACK);
-			continue;
+		} else if (r4 != unk160) {
+			kill();
 		}
 
-		if (mCollisions[i] != unk160) {
-			((TLiveActor*)mCollisions[i])->kill();
-		}
+		++r30;
+		r31 += 4;
 	}
 }
 

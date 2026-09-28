@@ -123,6 +123,14 @@ homes after the virtual **`blrl`**.
 
 **`TDangoHamuKuri::calcRootMatrix`** follows the same holder **`getTakingMtx`** rule after
 **`setBaseScale(mScaling)`** (three **`lwz`** from **`this+0x24`** into the model, not **`mPosition`**).
+When **`unk230`** is zero, retail still runs the held-matrix offset / **`MTXConcat`** path — only the
+**`unk210`** spin / **`rand`** block is skipped (do not nest that under **`if (unk230)`** for the whole
+held path).
+
+**`TEnemyAttachment::sendMessage`** walks **`mCollisions`** with **`lwz r3, 0x44(r29)`** then
+**`lwzx r4, r3, r31`** (byte offset in **`r31`**, index in **`r30`**). For collisions that are not Mario
+and not **`unk160`**, retail calls **`TEnemyAttachment::kill()`** via **`this`**'s vtable **`+0xe4`**, not
+**`TLiveActor::kill`** on the collision actor.
 
 `TCoasterEnemy::bind` (and similar short **`bind`** overrides) already match retail math when written as
 **`nextPos = mPosition; nextPos += mLinearVelocity; nextPos += mVelocity; mLinearVelocity = nextPos -

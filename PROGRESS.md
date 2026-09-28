@@ -12309,6 +12309,28 @@ the model base scale, not **`mPosition`**; held path uses **`mHolder->getTakingM
 
 **Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0** (**9275** unchanged).
 
+### R265 (Aufgabe B; sendMessage lwzx + Dango CF, 1× ship)
+
+**Hunt.** Post-R264 (**9275**); optional finish **`TDangoHamuKuri::calcRootMatrix`** frame; prefer clear
+opcode/data wins; skip spill **≥99.7%**, R251–R262 thrash, stuck lists, empty TUs, Closet/MoveBG; cap ~8;
+strict **100%** only.
+
+**Ship.** **`TEnemyAttachment::sendMessage`** (`src/Enemy/enemyAttachment.cpp`) — **`r30`** index /
+**`r31`** byte offset **`lwzx`**, **`kill()`** on attachment (**vtable `+0xe4`**) vs **`TLiveActor::kill`**
+on collision (**100%**, 180 B).
+
+**Probes (~8).**
+
+- **`TDangoHamuKuri::calcRootMatrix`**: un-nest held path from **`if (unk230)`** (spin/rand only when set);
+  still **~88.6%** — **`-0xa8`/`stfd f31`/`MsRandF`** vs retail **`rand`** interval — deferred.
+- **`TGraphGroup::perform`**: explicit Duff counter rewrite **96.8% → 36%** — reverted **`for`** loop.
+- **`TGraphWeb::startIsEnd`**, **`TDebuTelesa` entry$2835`**, spill **≥99.7%**: skipped.
+
+**Tip (R265).** **`sendMessage`**: **`while (r30 < mColCount)`** with **`r31 += 4`** and
+**`*(THitActor**)((char*)mCollisions + r31)`**; **`else if (r4 != unk160) kill();`**.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+1** (**9276**).
+
 ### R258 (Aufgabe B; defer GraphGroup/ColumSand pool + diversify, 0× ship)
 
 **Hunt.** Post-R257 dry; **defer `TGraphGroup::perform`** (empty **`TGraphWeb::perform` DCE**) and
