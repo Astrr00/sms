@@ -10920,6 +10920,34 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R239 (`MapObjMare`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjPuncher::load`.
+
+- `TMapObjBase::load` liest den Stream zuerst.
+  `read` holt ein `s32` von 4 Bytes.
+  Die Zuweisung an `unk138` ist die übliche `s32`-nach-`f32`-Wandlung.
+  Danach `sleep` und `offHitFlag(HIT_FLAG_NO_COLLISION)`.
+  Das Flag-Bit 0 wird mit `clrrwi` gelöscht.
+  128 Bytes, 32 Instruktionen.
+  Die übrigen 42 Matches in `MapObjMare` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMare`: PASS.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+`TMapObjPuncher::unk138` ist das `f32` bei `0x138`.
+`MarNameRefGen_MapObj` verliert kein matched code.
+
+`ninja changes_all`: fuzzy 79.07557 % -> 79.07903 %, matched code 49.80636 % -> 49.80992 % (1788092 -> 1788220, +128).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9610 -> 9611.
+`MapObjMare` 4360 -> 4488 (+128).
+Kein R170–R238-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R238 (`MapObjBianco`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

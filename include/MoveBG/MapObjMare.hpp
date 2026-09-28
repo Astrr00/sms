@@ -109,6 +109,8 @@ public:
 	virtual void control();
 	virtual void load(JSUMemoryInputStream&);
 	TMapObjPuncher(const char* name = "パンチャー");
+
+	/* 0x138 */ f32 unk138;
 };
 
 class TMuddyBoat : public TMapObjBase {

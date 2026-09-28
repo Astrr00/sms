@@ -180,7 +180,15 @@ void TMapObjPuncher::touchPlayer(THitActor*) { }
 
 void TMapObjPuncher::control() { }
 
-void TMapObjPuncher::load(JSUMemoryInputStream&) { }
+void TMapObjPuncher::load(JSUMemoryInputStream& stream)
+{
+	TMapObjBase::load(stream);
+	s32 value;
+	stream.read(&value, 4);
+	unk138 = value;
+	sleep();
+	offHitFlag(HIT_FLAG_NO_COLLISION);
+}
 
 void TMuddyBoat::moveByWater() { }
 
