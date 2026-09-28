@@ -12172,7 +12172,7 @@ still diverges (extra **`b`** / frame); needs UNUSED-inline-sized stack or flag 
   **`fneg`/`lfsx`** operand scheduling + large frame delta; defer.
 - **`TEffectColumWater::generate`**, **`TEffectObjBase::perform`**: **91.9%** / **90.8%** — structural,
   not quick pool wins.
-- **`TEnemyManager::copyAnemMtx`**: skipped (R251–R255 exhausted list).
+- **`TEnemyManager::copyAnmMtx`**: skipped (R251–R255 exhausted list).
 
 **Tip (R256).** See **`docs/AGENT_MATCHING_TIPS.md`** — **`setJumpIntoWaterEffectSmall`** needs TU
 **`@1490+0x14c`** string refs and post-**`MTXConcat`** **`slwi`** actor/**`unk6C`** addressing, not
