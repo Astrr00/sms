@@ -11254,6 +11254,34 @@ viele „uniform“-Kandidaten haben zusätzlich vtable/`(r12)`-Δ (z. B.
 
 **Verify.** `ninja baseline` / `changes_all` ohne Code-Delta.
 
+### R186 (Aufgabe B; non-entry — perform timer, stamp grep; keine Vollmatches)
+
+**Hunt (nach R185 entry-pool exhausted).** PROGRESS/GOAL-Deferred:
+`TNerveHino2Pollute` (`changeBck` 3 vs 16/17, Frame −0xe8), Stack-Shrink
+`thinkSituation`/`soundMovement`/`changeScene`, `initAndRegister`,
+`BathtubKiller` Explosion-Inlining — nur wo begrenzter Pfad.
+
+**Skip.** `waitMain` (vtable), `initAnmSound`, `AwaCollision`, Closet/MoveBG/
+Mirror, alle Pad-Skips.
+
+**`TObjManager::perform` (Strategic).** Retail: `stb`×4 @ **0x34** vor
+`TTimeArray::append`. Versuche (revertiert): (a) `u8 timerColor[4]` +
+`startTimer(byte…)` → **99,9 %**, `stwu` −0x50 match, **`stb` noch +8**
+(0x2c vs 0x34); (b) volles Inline-`append` → **99,0 %** (Frame −0x30);
+(c) `timerStackPad[8]`/`struct { pad[8]; color[4] }` → Frame/Spill schlechter.
+
+**`gpPollution->stamp(1,…)` grep (Enemy).** Bereits gematcht: `TGessoPolluteObj
+::rebirth` (R164). Probes revertiert: `TEnemyMario::emJumping` (`trash[0x20]` +
+posZ/Y/X → Frame/Operanden), `emWalkAround` (z/y/x), `TFireWanwan::updatePollute`
+(z/y/x → 96,8 %, großes Frame-Δ).
+
+**Deferred nicht vertieft.** `Hino2Pollute` ASM/`changeBck`; `initAndRegister`
+99,8 %-Deadlock; Stack-Shrink; `BathtubKillerExplosion`.
+
+**Vollmatch, strikt.** keine. Quellbaum unverändert ggü. **`8e03585d`**.
+
+**Verify.** `ninja baseline` / `changes_all` ohne Code-Delta.
+
 ### R181 (Aufgabe B; receiveMessage entry +0x28, 1 Vollmatch)
 
 **Hunt.** `perform` / `receiveMessage` / `init` entry frame-pad (8/0x10/0x20/0x28) +
