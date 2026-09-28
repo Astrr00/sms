@@ -11488,6 +11488,29 @@ als Member-Name. Check: **`decomp-diff -u … -t object -s nonmatching`**.
 **Verify.** `ninja changes_all` ggü. **`cf903cfc`**; **`namekuri` matched_data
 70.86% → 100%**; **`build.sha1` OK**.
 
+### R204 (Aufgabe B; bossManta entry + DebuTelesa probes, 1× data)
+
+**Hunt.** `decomp-diff -t object` ≤48 B; **`DebuTelesa`** `bastable` SDA-Reihenfolge /
+`entry$2835`; **`bossManta` `entry$3295`**; Cap ~8; strikt 100 %.
+
+**Ship (data, 1).**
+
+- **`entry$3295`** (24 B): `TBossMantaManager::createModelData` — null-terminiertes
+Array + Literal **`0x10210000`** statt `J3DMLF_*`-OR (`bossManta.cpp`).
+
+**Probes (~6, revertiert / no-ship).** `DebuTelesa`: `InfectiousStrings` streichen
+→ fehlende `@1490`-Pool; Einzelpointer + `&bastable` + Definition vor
+`getBasNameTable` → **`bastable` 50 %** (noch Offset **0xc**, kein `@2830…` in
+`.o`); **`entry$2835` 85.7 %** unverändert. `bossgesso` **`idxarray$3450`**;
+`@2805` (12 B Padding).
+
+**Tip (R204).** Wie R202: **`createModelDataArray`-Tables** mit **`{ nullptr,0,0 }`**
+und **Literal-Flags** aus ASM. **`DebuTelesa_bastable`:** Retail **4 B `.sdata`**
+Zeiger + **`li r3,…@sda21`** — Map schließt **`bastable` unter `getBasNameTable`**;
+ohne **`@2830…`** aus `load()`-`.set()`-Literale bleibt Reihenfolge/Bytes off.
+
+**Verify.** `ninja changes_all` ggü. **`948c3a3b`**; **`entry$3295` 100%**.
+
 ### R203 (Aufgabe B; bossgesso idxarray + DebuTelesa probes, 1× data)
 
 **Hunt.** Object scan ≤48 B; **`DebuTelesa`** `entry$2835`/`bastable` (const vs.

@@ -1072,10 +1072,7 @@ void TBossMantaManager::loadAfter()
 void TBossMantaManager::createModelData()
 {
 	static const TModelDataLoadEntry entry[] = {
-		{ "manta.bmd",
-		  J3DMLF_MaterialPEFull | J3DMLF_UseUniqueMaterials
-		      | (1 << J3DMLF_TevStageNumShift),
-		  0 },
+		{ "manta.bmd", 0x10210000, 0 },
 		{ nullptr, 0, 0 },
 	};
 	createModelDataArray(entry);
