@@ -13091,6 +13091,26 @@ spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%
 
 **Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
 
+### R285t (Enemy/Player B; skip isReachedToGoal, 0× ship)
+
+**Hunt.** **~6** MAP; skip **R285 thrash**, **`isReachedToGoal`**, spill **≥99.7%**, Closet/MoveBG; strict **100%** only; no frame fakematch.
+
+**Ship.** none.
+
+**Probes (~6).**
+
+- **`riccohook` / `TNerveRHGraphWander::execute`**: graph wander / spine temps — **~91.7%** (736B) — deferred.
+- **`emario` / `TEMario::init`**: fog packet loop **`lwz`/`SMS_InitPacket_Fog`** order — **~94.1%** (436B) — deferred.
+- **`bossgesso` / `TBossGesso::lenFromToeToMario`**: toe **`Vec`** **`fmuls`/`fmadds`** chain order — **~92.3%** (412B) — deferred.
+- **`tamaNoko` / `TNerveTamaNokoThrown::execute`**: **`gpMarioAngleY`** / **`jmaSinTable`** load schedule — **~75.9%** (268B) — deferred.
+- **`enemytable` / `TStageEnemyInfoTable::getMatchedInfo`**: **`r28`** weight sum, **`−0xa0`** ary walk — **~92.4%** (276B) — deferred.
+- **`enemyAttachment` / `TEnemyPolluteModel::perform`**: retail **`r31`=`graphics`**, **`−0x80`**; drop **`trash[0x38]`** → **~91.6%** — reverted.
+- **`MarioAccess` / `SMS_IsMarioOnWire`**: **`mHolder`** double **`lwz 0x68`** + **`subfe`** bool — holder reload trial → **~47.2%** — reverted (**~93.8%** baseline).
+
+**Tip (R285t).** **`SMS_IsMarioOnWire`**: no stack frame; **`lwz r0,0x68(r3)`** then **`cmplwi`**, then **`lwz r3,0x68(r3)`** again before **`0x4c`** — **`&&`/`!!ret`** folds to **`cntlzw`**, not retail **`neg`/`subfe`**.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
 ### R258 (Aufgabe B; defer GraphGroup/ColumSand pool + diversify, 0× ship)
 
 **Hunt.** Post-R257 dry; **defer `TGraphGroup::perform`** (empty **`TGraphWeb::perform` DCE**) and
