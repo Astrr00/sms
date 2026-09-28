@@ -11488,6 +11488,29 @@ als Member-Name. Check: **`decomp-diff -u … -t object -s nonmatching`**.
 **Verify.** `ninja changes_all` ggü. **`cf903cfc`**; **`namekuri` matched_data
 70.86% → 100%**; **`build.sha1` OK**.
 
+### R210 (Aufgabe B; PARAM vector + name table, 2× data)
+
+**Hunt.** Fresh B-scope data (skip R209 thrash); tiny objects / PARAM pools; cap
+~8.
+
+**Ship (data, 2).**
+
+- **`sPositionNameTable`** (`CameraNormal`, 20 B): tower camera name table is
+  **`[5]`** pointers (retail rodata), not **`[6]`** with five initializers.
+- **`@2551`** (`MtxUtil`, 4 B): `TMtxSwingRZ::TDeParams::mAcc` default
+  **`(1.0f, -4.0f, 1.0f)`** (ASM `set` + **`@2551` = -4**), not zero vector.
+
+**Probes (~6, no-ship).** Enemy/Player tiny objects dry (switch **`.rel`** /
+vtable); **`riccohook` vtable**; **`Map` `@3705`** string blob; text
+**`getNowGravity`/`getPolluteRadius`** skipped per scope.
+
+**Tip (R210).** **`static const char*[]` size** = count of **stored pointers**
+(retail **20 B** ⇒ **`[5]`**). **`TParamVec` defaults**: read ASM **`set(x,y,z)`**
+pool loads, not assumed **`(0,0,0)`**.
+
+**Verify.** `ninja changes_all` ggü. **`e5444c12`**; **`CameraNormal` matched_data
+100%**; **`@2551` 100%**.
+
 ### R209 (Aufgabe B; B-scope probes, 0× ship)
 
 **Hunt.** PARAM / `.sdata2` literals; tiny `.ctors` objects; small Enemy/Player
