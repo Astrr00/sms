@@ -223,6 +223,8 @@ temp** both get DCE’d; assigning **`BOOL bckPass`** adds stack (**`−0x30`**)
 
 **`TEffectObjBase::perform`**: **`clrlwi. r4`** runs **before** **`stwu`** (draw-cue early path); **`stw r31`** only on the **non-trivial** path — not a uniform **`−0x20`** frame.
 
+**`TBathtubKillerManager::load`**: **`lwz`/`cmplwi` on `this+0x38` (`unk38`) before **`TSmallEnemyManager::load`**, **`−0x58`** with **`r30`/`r31`**, then **`stw` new params** and a second **`lwz`/`cmplwi` on `unk38(r31)`** in the epilogue — parent call alone collapses to **`−0x18`**.
+
 **`TTamaNoko::isReachedToGoal`** (and **`TTelesa`**): retail inlines **`TPathNode`** at **`this+0x104`** — **`unk0` ? `unk0+0x10` : `&unk4`** — not an out-of-line **`getPoint()`** call; **`TVec3` assign from `mPosition`** breaks the **`addi r5,r4,4`** branch.
 
 **`TEnemyAttachment::sendMessage`** walks **`mCollisions`** with **`lwz r3, 0x44(r29)`** then

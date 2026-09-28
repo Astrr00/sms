@@ -12993,6 +12993,25 @@ spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%
 
 **Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
 
+### R285o (Enemy/Player B; fresh TUs, 0× ship)
+
+**Hunt.** **~6** MAP targets in **new TUs**; skip **R285 thrash** (**`getEmitPosDir`**, **`startIsEnd`**, **`GraphGroup`**, **`EffectObjBase`**, Pakkun, **`emWaiting`**, **`genEventCoin`**, spill **≥99.7%**, Closet/MoveBG); strict **100%** only.
+
+**Ship.** none.
+
+**Probes (~6, reverted / no-ship).**
+
+- **`Kumokun` / `TQuat4::rotate`**: paired-single **`fmuls`/`fmadds`** schedule — **~90.4%** (152B) — deferred.
+- **`hinokuri2` / `TNerveHino2Landing::execute`**: **`−0x60`** vs **`−0x30`** around **`getFrameCtrl`/`curAnmEndsNext`** — **~87.4%** (192B) — deferred.
+- **`gesso` / `TGessoManager::initSetEnemies`**: retail **`−0xe8`** pollute-manager setup vs **`−0x18`** — **~81.2%** (188B) — deferred.
+- **`namekuri` / `TNerveNameKuriLand::execute`**: **`−0x8`** vs **`−0x20`/`r31`** on land nerve — **~83.9%** (144B) — deferred.
+- **`BathtubKiller` / `TBathtubKillerManager::load`**: pre-**`TSmallEnemyManager::load`** **`unk38` `cmplwi`** + **`r30` new** — trial **~92.1%** (**`−0x20`** frame, missing tail **`cmplwi`**) — reverted.
+- **`conductor` / `TConductor::getManagerByName`**, **`MarioParticle` / `TBubbleCallBack`**: **~99.6%** spill-only — skipped (**≥99.7%** rule).
+
+**Tip (R285o).** **`TBathtubKillerManager::load`**: retail **`lwz`/`cmplwi` on `unk38@0x38` before `bl` parent `load`**, **`stw r30` saves**, **`−0x58` frame**, then **`lwz`/`cmplwi` on `unk38(r31)` again in epilogue** — not just a **`r30` temp** for **`new`**.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
 ### R258 (Aufgabe B; defer GraphGroup/ColumSand pool + diversify, 0× ship)
 
 **Hunt.** Post-R257 dry; **defer `TGraphGroup::perform`** (empty **`TGraphWeb::perform` DCE**) and
