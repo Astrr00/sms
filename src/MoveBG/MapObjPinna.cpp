@@ -2,6 +2,9 @@
 #include <MoveBG/MapObjPinna.hpp>
 
 #include <M3DUtil/MActor.hpp>
+#include <M3DUtil/MActorUtil.hpp>
+#include <JSystem/J3D/J3DGraphLoader/J3DModelLoaderFlags.hpp>
+#include <System/Application.hpp>
 #include <MSound/MSound.hpp>
 #include <MSound/SoundEffects.hpp>
 #include <Map/MapCollisionEntry.hpp>
@@ -248,7 +251,23 @@ void TAmiKing::touchPlayer(THitActor*) { SMS_SendMessageToMario(this, 9); }
 
 void TPinnaCoaster::control() { }
 
-void TPinnaCoaster::initMapObj() { }
+void TPinnaCoaster::initMapObj()
+{
+	TMapObjBase::initMapObj();
+	unk138 = SMS_MakeMActorWithAnmData(
+	    "/scene/mapObj/CoasterRail.bmd", mManager->getMActorAnmData(), 3,
+	    J3DMLF_MaterialPEFull | J3DMLF_UseUniqueMaterials
+	        | (1 << J3DMLF_TevStageNumShift));
+	unk138->setBck("coasterrail");
+	MsMtxSetXYZRPH(unk138->getModel()->getBaseTRMtx(), mPosition.x, mPosition.y,
+	               mPosition.z, mRotation.x, mRotation.y, mRotation.z);
+	f32 rate = SMSGetAnmFrameRate();
+	rate *= 0.25f;
+	unk138->getFrameCtrl(ANM_TYPE_BCK)->setRate(rate);
+	unk140.x = mPosition.x;
+	unk140.y = mPosition.y;
+	unk140.z = mPosition.z;
+}
 
 TPinnaCoaster::TPinnaCoaster(const char* name)
     : TMapObjBase(name)

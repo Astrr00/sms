@@ -10920,6 +10920,35 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R209 (`MapObjPinna`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TPinnaCoaster::initMapObj` ohne `SMatrix34C`-Leer-Konstruktor.
+Zurückgenommen, nicht strikt:
+`TAmiKing::initMapObj` (leere Joint-Schleife, `mModel`-Load eine Stufe zu weit aus der Schleife).
+`TMapObjFlag::TMapObjFlag` (Stores passen, Frame `-0x20` statt `-0x48`, Rand-`0x4330` in `r3` statt `r0`).
+`TMerrygoround::TMerrygoround` (Rumpf und 9er-Unroll passen, Frame `-0x20` statt `-0x28`).
+
+- `TPinnaCoaster::initMapObj` legt das Rail-Modell mit `SMS_MakeMActorWithAnmData("/scene/mapObj/CoasterRail.bmd", mManager->getMActorAnmData(), 3, 0x10210000)` an.
+  Danach `setBck("coasterrail")` und `MsMtxSetXYZRPH` auf `getModel()->getBaseTRMtx()` aus Position und Rotation.
+  `rate = SMSGetAnmFrameRate(); rate *= 0.25f;` hält `fmuls f31, f1, f0`.
+  `getFrameCtrl(ANM_TYPE_BCK)->setRate(rate)` und komponentenweises Kopieren von `mPosition` nach `unk140`.
+  `unk138` ist `MActor*`.
+  248 Bytes, 62 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjPinna`: PASS.
+Sechs bestehende UNUSED-Größenwarnungen.
+
+`ninja changes_all`: fuzzy 78.9196 % -> 78.926414 %, matched code 49.64168 % -> 49.64859 % (1782180 -> 1782428, +248).
+Matched data bleibt 65.2486 % (417807).
+Funktionen matched 9576 -> 9577.
+`MapObjPinna` 4200 -> 4448 (+248).
+`MapObjManager` und `MarNameRefGen_MapObj` wurden neu gebaut, matched code unverändert.
+Kein R170-R208-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R208 (`MapObjMonte` / `MapObjBianco`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

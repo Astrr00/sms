@@ -8,6 +8,7 @@
 // TODO: mark virtual methods as such
 
 class TCoin;
+class MActor;
 
 class TFerrisWheel : public TMapObjBase {
 public:
@@ -175,7 +176,7 @@ public:
 	TPinnaCoaster(const char* name = "コースター");
 
 public:
-	/* 0x138 */ u32 unk138;
+	/* 0x138 */ MActor* unk138;
 	/* 0x13C */ u32 unk13C;
 	/* 0x140 */ JGeometry::TVec3<f32> unk140;
 };
