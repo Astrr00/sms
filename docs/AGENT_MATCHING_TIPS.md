@@ -139,6 +139,13 @@ Hoisting **`Mtx`** to the prologue shifts both clusters wrong; a hand-written **
 **`TSpineEnemy::setGoalPathFromGraph`**: **`char pad[0x18]`** at entry can match retail **`stwu -0x60`** while
 **`getPoint(&vec)`** still uses **`addi r4, r1, 0x34`** — the **`0x48`** vec home tracks **`TPathNode`**
 copy / ctor spill order, not prologue padding alone.
+Declaring **`TPathNode`** before **`TVec3`** and assigning fields still runs the default ctor (**`li`/zero vec**)
+before **`getPoint`** and regresses (~**75%**).
+
+**`TEnemyAttachment::bind`**: after integrating **`mPosition`/`mLinearVelocity`/`mVelocity`**, retail calls
+**`recoverScale`** (**vtable `+0x13c`**) then **`getNowGravity`** (**`+0x140`**), then **`mVelocity.y`** clamp —
+not **`setBehavior`** at the top.
+Late path still does **`setBehavior`** (**`+0x138`**) and **`forceKill`** (**`+0x134`**) after wall handling.
 
 **`TEnemyAttachment::sendMessage`** walks **`mCollisions`** with **`lwz r3, 0x44(r29)`** then
 **`lwzx r4, r3, r31`** (byte offset in **`r31`**, index in **`r30`**). For collisions that are not Mario

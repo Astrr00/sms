@@ -12414,6 +12414,27 @@ without moving **`getPoint`** buffer (**`0x14`** gap needs inlined **`TPathNode`
 
 **Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
 
+### R270 (Aufgabe B; bind vtable call order, 0× ship)
+
+**Hunt.** Post-R269 dry (**9275**); defer Dango **`calcRootMatrix`** pad thrash; **`setGoalPathFromGraph`**
+needs **`TPathNode`** spill order (not pad); prefer opcode/vtable wins; skip spill **≥99.7%**, stuck lists,
+empty TUs, Closet/MoveBG; cap ~8; strict **100%** only.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8).**
+
+- **`TEnemyAttachment::bind`**: prologue **`setBehavior()`** → **`recoverScale()`** aligns first virtual
+  **`lwz 0x13c`** with retail (**`setBehavior`/`recoverScale`/`getNowGravity`** at **`0x138`/`0x13c`/`0x140`**);
+  still **~78.5%** — **`stfd f31`**, **`TBGWallCheckRecord`** / **`TVec3::sub`** schedule, spill homes.
+- **`TSpineEnemy::setGoalPathFromGraph`**: **`TPathNode`** before **`TVec3`** + field assign — **~74.7%** (default ctor), reverted.
+- Dango **`calcRootMatrix`**, spill-tier fireWanwan / **`thinkSituation`** fuzzy: skipped.
+
+**Tip (R270).** **`bind`** top = **`recoverScale` + `getNowGravity`**, not **`setBehavior`**; count vtable slots from
+**`__vt__16TEnemyAttachment`**, not guess names from C++ call order alone.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
 ### R258 (Aufgabe B; defer GraphGroup/ColumSand pool + diversify, 0× ship)
 
 **Hunt.** Post-R257 dry; **defer `TGraphGroup::perform`** (empty **`TGraphWeb::perform` DCE**) and
