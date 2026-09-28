@@ -11881,26 +11881,28 @@ not **`if (uVar2 < 1) uVar2 = 1`** alone — MWCC keeps **`uVar2`** in **`r5`**.
 
 **Verify.** `ninja changes_all` ggü. **`dea1dafc`**: **+1** matched function (**9272 → 9273**).
 
-### R241 (Aufgabe B; GPR/anm-mtx probe, 1× ship)
+### R241 (Aufgabe B; GPR/anm-mtx probe, 0× ship)
 
 **Hunt.** Same class as **`decHpByWater`**: small EP text with clear GPR schedule; optional
 data/vtable; defer **`calcTurnSpeedToReach`** / BossGesso unless concrete; cap ~8.
 
-**Ship.** **`TYoshi::getEmitPosDir`** — retail keeps joint **`Mtx*`** in **`r6`** through
-**`lwz 4(r6)` / `lwz 0x58(r6)` / `add`**; C **`MtxPtr mtx = getAnmMtx(...)`** used **`r3`**
-(**76 B**, **`8014FBF0`**). **`asm`** body matches retail load order (**`8014FBF0`**).
+**Ship.** none (strict 100% only).
 
-**Probes (~2, no-ship).**
+**Probes (~3, reverted / no-ship).**
 
+- **`TYoshi::getEmitPosDir`**: **`asm`** clone of retail **`r6`** walk → **100%** on symbol, but
+  **TU-wide MWCC regalloc regression** (**9273 → 9261** matched functions project-wide) —
+  **reverted**; keep C **`MtxPtr mtx = getAnmMtx(...)`** at **97.1%**.
 - **`getEmitPosDir`**: **`MActor* r6` / offsetof `mNodeMatrices`** C rewrites — still **`lwz r3,4(r6)`**.
 - **`TYoshi::thinkHoldOut`**: **`TMario* r4 = mMario`** would fix **`lwz 0x10`** cluster but
   frame **`0x80` vs `0x38`** remains — deferred.
 
-**Tip (R241).** Tongue emit matrix helper: when **`getAnmMtx`** is fully inlined in retail,
-prefer **`asm`** (or accept **`r3`**) — intermediate **`MtxPtr`** locals steal **`r3`** from the
-matrix walk.
+**Tip (R241).** Per-function **`asm`** in a large **`-inline deferred`** TU can reshuffle regalloc
+for **neighbors** — verify **`ninja changes_all` matched_functions**, not only **`decomp-diff -d`**
+on the edited symbol. **`getEmitPosDir`** needs a C-level **`r6`** walk or TU-end isolation, not
+standalone **`asm`** here.
 
-**Verify.** `ninja changes_all` ggü. session baseline (**9273**): **+1** (**9273 → 9274**).
+**Verify.** `ninja changes_all` ggü. session baseline (**9273**): **+0** (**9273** unchanged).
 
 ### R225 (Aufgabe B; bossManta rodata + EP diversify, 0× ship)
 
