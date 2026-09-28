@@ -11139,6 +11139,24 @@ torocco/sound, prior deadlocks.
 
 **Verify.** `ninja baseline` / `changes_all` ohne Code-Delta; `dtk shasum -c` → OK.
 
+### R177 (Aufgabe B; nerve entry +8, 1 Vollmatch)
+
+**Hunt.** Frische B-scope-Nerves/Player (nicht Water/Manager-R176); entry
+`char trash[8/0x10/0x20]` + `trash[0]=0` wie `receiveMessage` / `initNthGeneration`.
+
+**Skip (User + R176).** `loadAfter`, `drawRefracAndSpec`, `makeDL`, `WalkerEscape`,
+`setupEfbAlpha`, `StayPakkun::load`, `isReachedToGoalXZ`, `BPTouchDown`, Prior-Skips.
+
+**Probes (~8, revertiert).** `TNerveBPStompReact` (`0x18` Frame, TVec3-Spill);
+`TNervePakkunGenerate`/`TNerveBPWaitL` (`0x10`); `TNerveBPFly`/`TNerveGessoTurn`
+(`8`); `TNerveBPTumbleOut` (`0x48`); `TNerveFireWanwanDie` (`0x28`);
+`TNerveHino2Die` (`0x18`); `TNameKuri::reset` / `TNerveNKFollowMario`.
+
+**Vollmatch, strikt (1).**
+`TNerveHamuKuriWallDie::execute` (`hamukuri.cpp`, entry `trash[8]` + `trash[0]=0`).
+
+**Verify.** `ninja baseline` / `changes_all`; `dtk shasum -c` → OK.
+
 ### R176 (Aufgabe B; entry frame-pad sweep, keine Vollmatches)
 
 **Hunt.** Entry `char trash[8/0x10/0x20]` + `trash[0]=0` bei Frame-short (Retail
