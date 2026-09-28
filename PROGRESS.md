@@ -10920,6 +10920,58 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R190 (`MapObjBianco`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+Bisher leerer TU.
+Jeder Map-Symbol ist definiert, der Rest bleibt Stub.
+
+- `TLampSeesawMain::pushDown` setzt `mState = 2` und zieht das Argument von `unk144` ab.
+  24 Bytes, 6 Instruktionen.
+- `TLampSeesaw::pushDown` ist leer und steht weak im Header.
+  4 Bytes.
+- `TLampSeesaw::TLampSeesaw` nullt `unk138` und setzt `unk140` auf `0.01`.
+  84 Bytes, 21 Instruktionen.
+- `TLampSeesawMain::TLampSeesawMain` inlined den Seesaw-Konstruktor und setzt `unk144`/`unk148`/`unk14C`/`unk150` auf `0`, `0.998`, `0.8`, `0.5`.
+  136 Bytes, 34 Instruktionen.
+- `TLeafBoat::initMapObj` ruft `TMapObjBase::initMapObj` und schreibt `1`, `0.5`, `0.5`, `0.998` nach `unk138`/`unk13C`/`unk140`/`unk148`.
+  72 Bytes, 18 Instruktionen.
+- `TLeafBoat::TLeafBoat` initialisiert die Felder ab `0x138`.
+  `unk164` wird über `zero()` genullt (`z`, `y`, `x`).
+  152 Bytes, 38 Instruktionen.
+- `TLeafBoatRotten::perform` ruft `TMapObjBase::perform` direkt.
+  32 Bytes, 8 Instruktionen.
+- `TLeafBoatRotten::TLeafBoatRotten` nullt `unk170` und setzt vier `u16` auf `0xFF`.
+  96 Bytes, 24 Instruktionen.
+- `TBiancoBell::TBiancoBell` nullt `unk138` und `unk13A`.
+  80 Bytes, 20 Instruktionen.
+- `TBiancoWatermill::TBiancoWatermill` setzt `unk138` auf `0.3` und `unk13C` auf `0`.
+  84 Bytes, 21 Instruktionen.
+- `TBiancoWatermill::touchWater` gibt `0` zurück.
+  8 Bytes.
+- `TBiancoWatermill::turnByEnemy` ist leer.
+  4 Bytes.
+- `__sinit_MapObjBianco_cpp` (764 Bytes) kommt aus `MSSetSound.hpp` / `MSoundBGM.hpp`.
+
+Destruktoren, alle `@32`-Thunks und die VTables der TU sind ebenfalls 100 %.
+`validate-symbol-order`: PASS mit Weak-Order-Warnung und UNUSED-Größenwarnungen.
+
+`ninja changes_all`: fuzzy 78.31 % → 78.41 %, matched code 49.04 % → 49.13 %, matched data 63.85 % → 64.55 %.
+Kein anderes Unit hat sich bewegt.
+
+R189 `MapObjPinna`, R188 `MapObjFence`, R187 `TModelGate` / `TMapObjWave`,
+R186 `MapObjMonte` / `MapObjRicco`, R185 `getNumGripsDead`,
+R184 `TWaterHitPictureHideObj::load`, R183 `updateCheckData`,
+R182 `TMapObjTurn::touchWater`, R181 `TCloset::touchWater`,
+R180 `TCasinoPanelGate::touchWater`, R179 `waitingToAppear`,
+R178 `initDrawNear`, R177 `TWoodBox::kill`, R176 `receiveMessage`,
+R175 `touchGround`, R174 `perform`, R173 `startControlAnim`,
+R172 `TManhole::touchPlayer`, R171 `calcVelocity`, R170 `appearing`
+unverändert strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R189 (`MapObjPinna`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
