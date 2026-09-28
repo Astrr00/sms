@@ -11214,6 +11214,23 @@ stattdessen R171/R163-Muster (`TVec3`+`trash[8]`, post-local, `gpPollution` z/y/
 
 **Verify.** `ninja baseline` / `changes_all` ohne Code-Delta.
 
+### R184 (Aufgabe B; Player torocco + small helpers, keine Vollmatches)
+
+**Hunt.** Player `Mario*.cpp` `perform`/`init` + kleine Enemy-Helfer; nur
+`stwu`-Gap (8/0x10/0x20/0x28), keine Spill-Klasse. `isReachedToGoalXZ` explizit.
+
+**Skip (User + R183).** R183-Liste + Prior; `isReachedToGoalXZ` Spill (+0xc vs +0x10).
+
+**Probes (~8, revertiert).** `TMario::toroccoEffect` (`8` → Frame OK, Spill +4);
+`TMario::soundTorocco` (`8`); `TTobiPuku::walkBehavior` (`8` → 99,9 %);
+`TSmallEnemy::isHitWallInBound` (`0x28`); `TTobiPuku::isReachedToGoalXZ` /
+`TWalkerEnemy::isReachedToGoalXZ` (`0x10`); `TTobiPuku::isReached` tmp-Init
+(Walker-Stil, 99,7 %).
+
+**Vollmatch, strikt.** keine. Quellbaum unverändert ggü. **`3938db08`**.
+
+**Verify.** `ninja baseline` / `changes_all` ohne Code-Delta.
+
 ### R181 (Aufgabe B; receiveMessage entry +0x28, 1 Vollmatch)
 
 **Hunt.** `perform` / `receiveMessage` / `init` entry frame-pad (8/0x10/0x20/0x28) +
