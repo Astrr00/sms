@@ -10920,6 +10920,31 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R285 (`MapObjMare`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TCogwheel::calc`.
+
+- `mRotation.z` ist `360 * (-unk13C / (3.14 * 2 * sRadius))`.
+  `makeRootMtxRotZ` und `makeRootMtxRotY` bauen zwei Matrizen.
+  Ihre Translation wird auf `0` gesetzt.
+  `MTXConcat` schreibt `RotY * RotZ` in die Anm-Matrix.
+  Danach kommt `mPosition` in die Translation.
+  `char trash[4]` hält das Frame bei `-0x80`.
+  196 Bytes, 49 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMare`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.31117 % -> 79.31652 %, matched code 50.082005 % -> 50.087463 % (1797988 -> 1798184, +196).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9658 -> 9659.
+`MapObjMare` 4732 -> 4928 (+196).
+Kein R170–R284-Unit hat matched code verloren.
+
 ### R284 (`MapObjLib`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

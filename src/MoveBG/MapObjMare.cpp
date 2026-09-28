@@ -71,7 +71,27 @@ void TCogwheel::draw() const { }
 
 void TCogwheel::rebound() { }
 
-void TCogwheel::calc() { }
+void TCogwheel::calc()
+{
+	Mtx mtxZ;
+	Mtx mtxY;
+	mRotation.z = 360.0f * (-unk13C / (3.14f * (2.0f * sRadius)));
+	makeRootMtxRotZ(mtxZ);
+	mtxZ[0][3] = 0.0f;
+	mtxZ[1][3] = 0.0f;
+	mtxZ[2][3] = 0.0f;
+	makeRootMtxRotY(mtxY);
+	mtxY[0][3] = 0.0f;
+	mtxY[1][3] = 0.0f;
+	mtxY[2][3] = 0.0f;
+	MtxPtr anm = getModel()->getAnmMtx(0);
+	MTXConcat(mtxY, mtxZ, anm);
+	anm[0][3] = mPosition.x;
+	anm[1][3] = mPosition.y;
+	anm[2][3] = mPosition.z;
+	char trash[4];
+	trash[0] = 0;
+}
 
 void TCogwheel::control() { }
 
