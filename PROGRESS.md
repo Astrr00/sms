@@ -10920,6 +10920,42 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R188 (`MapObjFence`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+Bisher leerer TU.
+Jeder Map-Symbol ist definiert, der Rest bleibt Stub.
+
+- `TFenceWater::changeStatusToWait`: `unk140 = 0.0f`, dann `unk13C = 0.0f`, dann `mState = 1`.
+  24 Bytes, 6 Instruktionen.
+- `TRailFence::initMapCollisionData` und `TFenceWater::initMapCollisionData` rufen `TMapObjBase::initMapCollisionData` direkt.
+  Je 32 Bytes, 8 Instruktionen.
+- `TFenceWater::draw` ist leer.
+  4 Bytes.
+- `MsMtxSetRotY` (124 Bytes) und `MsWrap<f32>` (72 Bytes) sind die bestehenden Header-Inlines.
+  `controlWall` nimmt ihre Adresse, damit die Kopien unter `-inline deferred` stehen bleiben.
+- `__sinit_MapObjFence_cpp` (764 Bytes) kommt aus `MSSetSound.hpp` / `MSoundBGM.hpp`.
+
+`TRailFence::~TRailFence`, `TFenceWaterH::~TFenceWaterH`, `TRevolvingFenceInner::~TRevolvingFenceInner`, `TRevolvingFenceOuter::~TRevolvingFenceOuter` und die sechs `@32`-Thunks sind ebenfalls 100 %.
+Die VTables von `TFence`, `TRailFence`, `TRevolvingFenceInner` und `TRevolvingFenceOuter` auch.
+`validate-symbol-order`: PASS mit weak-Order-Warnung (`MsWrap` steht neben dem schwachen `MsMtxSetRotY`) und UNUSED-Größenwarnungen.
+
+`ninja changes_all`: fuzzy 78.15 % → 78.21 %, matched code 48.91 % → 48.96 %, matched data 63.13 % → 63.16 %.
+`getNameRef_MapObj` steigt mit, weil `TRailFence::TRailFence` jetzt out-of-line und global ist.
+Kein anderes Matching-Symbol hat sich bewegt.
+
+R187 `TModelGate` / `TMapObjWave`, R186 `MapObjMonte` / `MapObjRicco`,
+R185 `getNumGripsDead`, R184 `TWaterHitPictureHideObj::load`,
+R183 `updateCheckData`, R182 `TMapObjTurn::touchWater`,
+R181 `TCloset::touchWater`, R180 `TCasinoPanelGate::touchWater`,
+R179 `waitingToAppear`, R178 `initDrawNear`, R177 `TWoodBox::kill`,
+R176 `receiveMessage`, R175 `touchGround`, R174 `perform`,
+R173 `startControlAnim`, R172 `TManhole::touchPlayer`,
+R171 `calcVelocity`, R170 `appearing` unverändert strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R187 (`TModelGate` / `TMapObjWave`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

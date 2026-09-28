@@ -67,6 +67,10 @@ public:
 	    : TFence(name)
 	{
 	}
+
+public:
+	/* 0x13C */ f32 unk13C;
+	/* 0x140 */ f32 unk140;
 };
 
 class TFenceWaterH : public TFenceWater {
@@ -88,10 +92,7 @@ public:
 	void control();
 	void initMapCollisionData();
 	void load(JSUMemoryInputStream&);
-	TRailFence(const char* name = "レールフェンス")
-	    : TFence(name)
-	{
-	}
+	TRailFence(const char* name = "レールフェンス");
 };
 
 #endif
