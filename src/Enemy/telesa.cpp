@@ -688,7 +688,8 @@ void TTelesa::initAttacker(THitActor* param_1)
 	unk184 = 1;
 	mSpine->initWith(&TNerveTelesaAttackMario::theNerve());
 
-	MtxPtr mtx = ((TLiveActor*)param_1)->getModel()->getAnmMtx(5);
+	TLiveActor* actor = static_cast<TLiveActor*>(param_1);
+	MtxPtr mtx = actor->getModel()->getAnmMtx(5);
 	mPosition.set(mtx[0][3], mtx[1][3] - 150.0f, mtx[2][3]);
 	mDampenedGroundHeight = mPosition.y;
 
@@ -1161,10 +1162,15 @@ DEFINE_NERVE(TNerveTelesaFreeze, TLiveActor)
 {
 
 	TTelesa* self = (TTelesa*)spine->getBody();
+	char trash[4];
+	trash[0] = 0;
 
 	if (spine->getTime() == 0) {
 		self->setBckAnm(5);
-		self->setGoalPath(TPathNode((THitActor*)gpMarioAddress));
+		TPathNode pathNode((THitActor*)gpMarioAddress);
+		char trashPath[4];
+		trashPath[0] = 0;
+		self->setGoalPath(pathNode);
 	} else if (self->checkCurAnmEnd(0)) {
 		if (self->isBckAnm(4)) {
 			if (!self->isFlying()) {
@@ -1263,10 +1269,17 @@ void TKageMarioModoki::init(TLiveManager* manager)
 DEFINE_NERVE(TNerveKageMarioModokiWait, TLiveActor)
 {
 	TKageMarioModoki* self = (TKageMarioModoki*)spine->getBody();
+	char trash[8];
+	trash[0] = 0;
+	char trashAfterSelf[4];
+	trashAfterSelf[0] = 0;
 
 	if (spine->getTime() == 0) {
 		self->getMActor()->setBck("ma_wait");
-		self->setGoalPath(TPathNode(SMS_GetMarioPos()));
+		TPathNode pathNode(SMS_GetMarioPos());
+		char trashPath[8];
+		trashPath[0] = 0;
+		self->setGoalPath(pathNode);
 	}
 
 	if (!self->checkLiveFlag(LIVE_FLAG_DEAD) && self->isFindMario(1.0f)) {

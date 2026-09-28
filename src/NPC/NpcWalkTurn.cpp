@@ -8,8 +8,10 @@
 bool TBaseNPC::isCanWalk() const
 {
 	bool result = true;
-	// TODO: TVec3::sub should use set internally I guess?
-	if ((unkF4.getPoint() - mPosition).squared() < CLBSquared(2.5625f))
+	// Retail passes 10 to CLBSquared. A literal 2.5625 selects another float.
+	// TODO: the inlined body zeroes Y and calls set(); spelling that here
+	// dropped execWalk from 89.4% to 83.5%, so the subtract stays.
+	if ((unkF4.getPoint() - mPosition).squared() < CLBSquared(10.0f))
 		result = false;
 	return result;
 }

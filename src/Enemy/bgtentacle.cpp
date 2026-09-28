@@ -45,6 +45,7 @@ const char* tstatestr[] = {
 	"TSTATE_WAIT",     "TSTATE_ATTACK", "TSTATE_REST", "TSTATE_HELD",
 	"TSTATE_AMPUTEE",  "TSTATE_STUN",   "TSTATE_HIDE", "TSTATE_FOLLOWBODY",
 	"TSTATE_SYNCBODY", "TSTATE_GUARD",
+	nullptr,
 };
 
 TBGTentacle::TTentacleParams::TTentacleParams(const char* path)
@@ -1023,7 +1024,7 @@ void TBGTentacle::moveConstraint()
 				local_38.y += getNodeLen();
 			}
 		} else {
-			static int jntidx[] = { 8, 14, 16, 34 };
+			static int jntidx[] = { 8, 14, 0x1c, 0x22 };
 			int iVar15          = jntidx[mIndex];
 			for (int i = 0; i < mNodeNum; ++i) {
 				MtxPtr mtx = mOwner->getModel()->getAnmMtx(i + iVar15);

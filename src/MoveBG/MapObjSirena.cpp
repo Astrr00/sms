@@ -112,9 +112,12 @@ void TRoulette::perform(u32 cue, JDrama::TGraphics* graphics)
 
 void TRoulette::moveObject()
 {
+	char trash[0x20];
+	trash[0] = 0;
+
 	TLiveActor::moveObject();
 	if (unk142 != 0)
-		mRotation.x += unk13C;
+		mRotation.y += unk13C;
 
 	if (unk141 != 0 && unk140 != 0) {
 		gpMarioOriginal->mGamePad->onNeutralMarioKey();
@@ -256,6 +259,8 @@ void TSlotDrum::initMapObj()
 
 void TSlotDrum::initNeonMatColor()
 {
+	char trash[4];
+	trash[0] = 0;
 	const char* matNames[3] = { "_NEON_A", "_NEON_B", "_NEON_C" };
 	for (int i = 0; i < 3; i++) {
 		unk170[i].r = 120;
@@ -529,7 +534,7 @@ void TItemSlotDrum::generateItem()
 		    mPosition, "テレサマネージャー", 1);
 		if (item != nullptr) {
 			Mtx m;
-			MsMtxSetRotY(m, mRotation.x);
+			MsMtxSetRotY(m, mRotation.y);
 			JGeometry::TVec3<f32> off(0.0f, -350.0f, 300.0f);
 			MTXMultVec(m, &off, &off);
 			item->mPosition += off;
@@ -546,7 +551,7 @@ void TItemSlotDrum::generateItem()
 		}
 		for (int i = 0; i < count; ++i) {
 			Mtx m;
-			MsMtxSetRotY(m, spread * ((f32)i - 1.0f) + (mRotation.x - spread));
+			MsMtxSetRotY(m, spread * ((f32)i - 1.0f) + (mRotation.y - spread));
 			JGeometry::TVec3<f32> off(0.0f, -350.0f, 200.0f);
 			MTXMultVec(m, &off, &off);
 			TMapObjBase* item = gpItemManager->makeObjAppear(
@@ -830,10 +835,12 @@ void TDonchou::loadAfter()
 	TMapObjBase::loadAfter();
 	if (gpApplication.mCurrArea.getStage() == 14
 	    && gpMarDirector->getCurrentStage() == 0) {
-		unk144
+		TSlotDrum* drum
 		    = static_cast<TSlotDrum*>(JDrama::TNameRefGen::search("srotdram"));
-		unk148 = static_cast<TItemSlotDrum*>(
+		unk144 = drum;
+		TItemSlotDrum* itemDrum = static_cast<TItemSlotDrum*>(
 		    JDrama::TNameRefGen::search("itemsrotdram"));
+		unk148 = itemDrum;
 	}
 }
 
@@ -987,7 +994,11 @@ void TCloset::moveObject()
 
 void TCloset::calcRootMatrix()
 {
-	gpCurObject     = this;
+	char trash[4];
+	trash[0] = 0;
+	char pad2[4];
+
+	gpCurObject = this;
 	J3DModel* model = getModel();
 	TRotation3f mtx;
 	MsMtxSetXYZRPH(mtx, mPosition.x, mPosition.y + unk14C, mPosition.z,

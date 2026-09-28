@@ -109,12 +109,11 @@ TSmallEnemyManager::TSmallEnemyManager(const char* name)
 
 void TSmallEnemyManager::createModelData()
 {
-	static TModelDataLoadEntry entry
-	    = { "default.bmd",
-		    J3DMLF_MaterialPEFull | J3DMLF_UseUniqueMaterials
-		        | (2 << J3DMLF_TevStageNumShift),
-		    0 };
-	createModelDataArray(&entry);
+	static TModelDataLoadEntry entry[] = {
+		{ "default.bmd", 0x10220000, 0 },
+		{ nullptr, 0, 0 },
+	};
+	createModelDataArray(entry);
 }
 
 void TSmallEnemyManager::load(JSUMemoryInputStream& stream)
@@ -354,7 +353,12 @@ void TSmallEnemy::genEventCoin()
 
 	if (mCoin) {
 		TCoin* coin;
-		if (isActorType(0x2000000E)) {
+		BOOL isEventCoin;
+		if ((mCoin->mActorType - 0x20000000u) == 0xEu)
+			isEventCoin = TRUE;
+		else
+			isEventCoin = FALSE;
+		if ((u8)isEventCoin) { // matching: clrlwi. on type test (not cmpwi)
 			coin = (TCoin*)gpItemManager->makeObjAppear(0x2000000E);
 		} else {
 			coin = mCoin;
@@ -385,16 +389,16 @@ void TSmallEnemy::genEventCoin()
 
 			MTXMultVec(local_c0, &local_d0, &local_d0);
 
-			TCoin* coin = (TCoin*)gpItemManager->makeObjAppear(
+			TCoin* loopCoin = (TCoin*)gpItemManager->makeObjAppear(
 			    mPosition.x + local_d0.x, mPosition.y, mPosition.z + local_d0.z,
 			    0x2000000E, false);
-			if (coin) {
-				coin->mPosition.y = mPosition.y;
+			if (loopCoin) {
+				loopCoin->mPosition.y = mPosition.y;
 				MsVECNormalize(&local_d0, &local_d0);
-				coin->mVelocity.set(local_d0.x * 4,
-				                    TMsRange<f32>(16.0f, 8.0f).rand(),
-				                    local_d0.z * 4);
-				coin->offLiveFlag(LIVE_FLAG_UNK10);
+				loopCoin->mVelocity.set(local_d0.x * 4,
+				                        TMsRange<f32>(16.0f, 8.0f).rand(),
+				                        local_d0.z * 4);
+				loopCoin->offLiveFlag(LIVE_FLAG_UNK10);
 			}
 		}
 	}
@@ -750,17 +754,18 @@ void TSmallEnemy::changeOut()
 void TSmallEnemy::decHpByWater(THitActor* param_1)
 {
 	// TODO: not actually a TWaterHItActor, IDK what it is
-	s16 uVar2
-	    = gpModelWaterManager->getParticleAttack((TWaterHitActor*)param_1);
-	if (uVar2 < 1)
-		uVar2 = 1;
+	s16 r0 = gpModelWaterManager->getParticleAttack((TWaterHitActor*)param_1);
+	s16 r4 = r0;
+	if (r0 < 1)
+		r4 = 1;
 
-	if (mHitPoints < uVar2) {
+	u8 hp = mHitPoints;
+	if (hp < r4) {
 		mHitPoints = 0;
 		return;
 	}
 
-	mHitPoints -= uVar2;
+	mHitPoints = hp - r4;
 }
 
 void TSmallEnemy::kill()
@@ -819,9 +824,11 @@ bool TSmallEnemy::isFindMarioFromParam(float param_1) const
 		f32 searchLength = prms->mSLSearchLength.get();
 		f32 searchAngle  = prms->mSLSearchAngle.get();
 		f32 searchAware  = prms->mSLSearchAware.get();
+		searchLength *= param_1;
+		searchAngle *= param_1;
+		searchAware *= param_1;
 
-		if (isInSight(marioPos, searchLength * param_1, searchAngle * param_1,
-		              searchAware * param_1))
+		if (isInSight(marioPos, searchLength, searchAngle, searchAware))
 			return true;
 		else
 			return false;

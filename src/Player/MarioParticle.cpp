@@ -101,6 +101,7 @@ void TMario::emitSweat(s16 rot)
 	    && !checkFlag(MARIO_FLAG_IN_ANY_WATER) && !isUnderWater()) {
 		MtxPtr mtx = mModel->getModel()->getAnmMtx(mJointIdHead);
 		JGeometry::TVec3<f32> pos;
+		char trashAfterPos[8];
 		pos.x = mtx[0][3];
 		pos.y = mtx[1][3];
 		pos.z = mtx[2][3];
@@ -126,8 +127,10 @@ void TMario::emitGetEffect()
 
 void TMario::emitGetWaterEffect()
 {
-	gpMarioParticleManager->emitAndBindToPosPtr(PARTICLE_MS_ITEMGET1_B, &unk160,
-	                                            0, nullptr);
+	JGeometry::TVec3<f32>* unk160Ptr;
+	unk160Ptr = &unk160;
+	gpMarioParticleManager->emitAndBindToPosPtr(PARTICLE_MS_ITEMGET1_B, unk160Ptr, 0,
+	                                            nullptr);
 }
 
 void TMario::emitGetCoinEffect(JGeometry::TVec3<f32>* pos)
@@ -711,8 +714,9 @@ void TMario::elecEndEffect()
 
 void TMario::kickRoofEffect()
 {
+	char trash[8];
 	if (getMotionFrameCtrl().checkPass(8.0f)) {
-		MtxPtr mtx      = mModel->getModel()->getAnmMtx(mJointIdHead);
+		MtxPtr mtx      = mModel->getModel()->getAnmMtx(mJointIdChnFootR);
 		mFootprintPos.x = mtx[0][3];
 		mFootprintPos.y = mtx[1][3];
 		mFootprintPos.z = mtx[2][3];

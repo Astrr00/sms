@@ -217,7 +217,9 @@ TMapObjBase* TMapObjBaseManager::makeObjAppear(f32 x, f32 y, f32 z, u32 param_4,
 	if (param_5) {
 		const TBGCheckData* checkData;
 		y2 = gpMap->checkGround(x, y + 5.0f, z, &checkData);
-		if (checkData->checkFlag(BG_CHECK_FLAG_ILLEGAL))
+		// checkFlag() is a fabricated inline. That extra level
+		// leaves a dead 4-byte slot and shifts checkData to 0x34.
+		if (checkData->mFlags & BG_CHECK_FLAG_ILLEGAL ? true : false)
 			return nullptr;
 	} else {
 		y2 = y;
@@ -395,8 +397,8 @@ TMapObjBase* TMapObjBaseManager::newAndRegisterObjByEventID(u32 event_id,
 
 	switch (event_id) {
 	case 777: {
-		char buffer[64];
-		snprintf(buffer, 64, "シャイン（%s）", name);
+		char buffer[0x100];
+		snprintf(buffer, sizeof(buffer), "シャイン（%s）", name);
 		return static_cast<TMapObjBase*>(JDrama::TNameRefGen::search(buffer));
 	} break;
 

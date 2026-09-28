@@ -46,21 +46,24 @@ bool TMapObjBase::isHideObj(THitActor* param_1)
 	return false;
 }
 
+// The second pair is inlined so `b1 || ...` shares one return true.
+// A single four-way disjunction does not.
+static inline bool stateIs3Or4(u8 state)
+{
+	bool b2 = true;
+	if (state != 3 && state != 4)
+		b2 = false;
+	return b2;
+}
+
 bool TMapObjBase::isDemo()
 {
 	bool b1 = true;
 	if (gpMarDirector->unk124 != 1 && gpMarDirector->unk124 != 2)
 		b1 = false;
 
-	if (!b1) {
-		// TODO: should be OR, but need fancy inlines for that...
-		bool b2 = true;
-		if (gpMarDirector->unk124 != 3 && gpMarDirector->unk124 != 4)
-			b2 = false;
-		if (b2) {
-			return true;
-		}
-	}
+	if (b1 || stateIs3Or4(gpMarDirector->unk124))
+		return true;
 	return false;
 }
 
@@ -200,10 +203,13 @@ void TMapObjBase::startAllAnim(MActor* param_1, const char* param_2)
 
 void TMapObjBase::joinToGroup(const char* param_1, THitActor* param_2)
 {
+	char trash[4];
+
 	// TODO: The group type here is a wild guess
-	static_cast<JDrama::TViewObjPtrListT<THitActor>*>(
-	    JDrama::TNameRefGen::search(param_1))
-	    ->push_back(param_2);
+	JDrama::TNameRef* list = JDrama::TNameRefGen::search(param_1);
+	trash[0]               = 0;
+	static_cast<JDrama::TViewObjPtrListT<THitActor>*>(list)->push_back(
+	    param_2);
 }
 
 TMapCollisionWarp*
@@ -367,8 +373,9 @@ void TMapObjBase::makeLowerStr(const char* in, char* out)
 void TMapObjBase::makeRootMtxRotZ(MtxPtr ptr)
 {
 	char trash[0x18];
-	f32 fVar1 = sinf(mRotation.z * (M_PI / 180.0f));
-	f32 fVar2 = cosf(mRotation.z * (M_PI / 180.0f));
+	// 0.017453294f is the retail pi/180. M_PI / 180 is one bit low.
+	f32 fVar1 = sinf(mRotation.z * 0.017453294f);
+	f32 fVar2 = cosf(mRotation.z * 0.017453294f);
 
 	ptr[0][0] = fVar2;
 	ptr[0][1] = -fVar1;
@@ -395,8 +402,8 @@ void TMapObjBase::setRootMtxRotZ()
 void TMapObjBase::makeRootMtxRotY(MtxPtr ptr)
 {
 	char trash[0x18];
-	f32 fVar1 = sinf(mRotation.y * (M_PI / 180.0f));
-	f32 fVar2 = cosf(mRotation.y * (M_PI / 180.0f));
+	f32 fVar1 = sinf(mRotation.y * 0.017453294f);
+	f32 fVar2 = cosf(mRotation.y * 0.017453294f);
 
 	ptr[0][0] = fVar2;
 	ptr[0][1] = 0.0f;
@@ -423,8 +430,8 @@ void TMapObjBase::setRootMtxRotY()
 void TMapObjBase::makeRootMtxRotX(MtxPtr ptr)
 {
 	char trash[0x18];
-	f32 fVar1 = sinf(mRotation.x * (M_PI / 180.0f));
-	f32 fVar2 = cosf(mRotation.x * (M_PI / 180.0f));
+	f32 fVar1 = sinf(mRotation.x * 0.017453294f);
+	f32 fVar2 = cosf(mRotation.x * 0.017453294f);
 
 	ptr[0][0] = 1.0f;
 	ptr[0][1] = 0.0f;
@@ -658,10 +665,14 @@ f32 TMapObjBase::getDistance(const JGeometry::TVec3<f32>& param_1) const
 	f32 lenSq = dx * dx + dy * dy + dz * dz;
 	if (lenSq > 0.0f) {
 		f64 guess = __frsqrte((f64)lenSq);
-		volatile f32 y
-		    = (f32)((f64)lenSq
-		            * (0.5 * guess * -((f64)lenSq * (guess * guess) - 3.0)));
-		lenSq = y;
+		struct {
+			char pad[4];
+			volatile f32 y;
+		} sqrtTemp;
+		sqrtTemp.y = (f32)((f64)lenSq
+		                   * (0.5 * guess
+		                      * -((f64)lenSq * (guess * guess) - 3.0)));
+		lenSq = sqrtTemp.y;
 	}
 	return lenSq;
 }

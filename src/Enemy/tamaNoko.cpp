@@ -460,15 +460,14 @@ void TTamaNoko::calcRootMatrix()
 				gpCameraShake->startShake(CAM_SHAKE_MODE_UNK7, 1.0f);
 				SMSRumbleMgr->start(8, 1, (float*)nullptr);
 
+				JGeometry::TVec3<f32> scale(2.0f, 2.0f, 2.0f);
 				if (JPABaseEmitter* emitter = gpMarioParticleManager->emit(
 				        PARTICLE_MS_SMB_AP_ROCK, &mPosition, 0, nullptr)) {
-					emitter->setGlobalScale(
-					    JGeometry::TVec3<f32>(2.0f, 2.0f, 2.0f));
+					emitter->setGlobalScale(scale);
 				}
 				if (JPABaseEmitter* emitter = gpMarioParticleManager->emit(
 				        PARTICLE_MS_SMB_AP_SMOKE, &mPosition, 0, nullptr)) {
-					emitter->setGlobalScale(
-					    JGeometry::TVec3<f32>(2.0f, 2.0f, 2.0f));
+					emitter->setGlobalScale(scale);
 				}
 			}
 		}
@@ -915,9 +914,11 @@ DEFINE_NERVE(TNerveTamaNokoSink, TLiveActor)
 // NOTE: lil shaking when mario sprays water on a sleeping tamanoko
 DEFINE_NERVE(TNerveTamaNokoHitWater, TLiveActor)
 {
+	// Named once: the later getTime() is reloaded after setBckAnm.
+	int time        = spine->getTime();
 	TTamaNoko* self = (TTamaNoko*)spine->getBody();
 
-	if (spine->getTime() < 2) {
+	if (time < 2) {
 		self->setBckAnm(15);
 		self->getMActor()->setFrameRate(SMSGetAnmFrameRate(), ANM_TYPE_BCK);
 	}
@@ -951,9 +952,11 @@ DEFINE_NERVE(TNerveTamaNokoHitWater, TLiveActor)
 
 DEFINE_NERVE(TNerveTamaNokoWait, TLiveActor)
 {
+	// Named once: the later getTime() is reloaded after setBckAnm.
+	int time        = spine->getTime();
 	TTamaNoko* self = (TTamaNoko*)spine->getBody();
 
-	if (spine->getTime() < 2) {
+	if (time < 2) {
 		self->setBckAnm(14);
 		self->getMActor()->setFrameRate(SMSGetAnmFrameRate(), ANM_TYPE_BCK);
 	}

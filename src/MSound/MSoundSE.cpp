@@ -31,18 +31,21 @@ MSRandVol::MSRandVol(u32 param)
     , unk14(param)
     , mAmplitude(0.5f)
 {
-	mPSlopes[0] = 0.0f;
-	mPSlopes[1] = 0.25f;
-	mPSlopes[2] = 0.5f;
-	mPSlopes[3] = 0.75f;
+	// Same 0.5f as mAmplitude. The name keeps it in f4 and
+	// reserves the extra frame slot.
+	f32 half       = 0.5f;
+	mPSlopes[0]    = 0.0f;
+	mPSlopes[1]    = 0.25f;
+	mPSlopes[2]    = half;
+	mPSlopes[3]    = 0.75f;
 
-	mCSlopes[0] = 1.0f;
-	mCSlopes[1] = 1.5f;
-	mCSlopes[2] = 2.0f;
-	mCSlopes[3] = 4.0f;
+	mCSlopes[0]    = 1.0f;
+	mCSlopes[1]    = 1.5f;
+	mCSlopes[2]    = 2.0f;
+	mCSlopes[3]    = 4.0f;
 
 	mAmplitudes[0] = 0.25f;
-	mAmplitudes[1] = 0.5f;
+	mAmplitudes[1] = half;
 	mAmplitudes[2] = 0.75f;
 	mAmplitudes[3] = 1.0f;
 }

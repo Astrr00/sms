@@ -16,6 +16,7 @@
 #include <JSystem/J3D/J3DGraphAnimator/J3DJoint.hpp>
 #include <JSystem/J3D/J3DGraphBase/J3DSys.hpp>
 #include <M3DUtil/MActor.hpp>
+#include <JSystem/JMath.hpp>
 #include <MarioUtil/MathUtil.hpp>
 #include <MoveBG/MapObjBlock.hpp>
 #include <MSound/MSound.hpp>
@@ -208,24 +209,38 @@ void TTobiPukuLaunchPad::launch()
 	}
 }
 
+static s16 tobiPukuDegToJmaIndex(f32 deg)
+{
+	f32 f1 = 16384.0f;
+	f32 f4 = 90.0f;
+	f32 f0 = deg;
+	f0       = f1 * f0;
+	f0       = f0 / f4;
+	return (s16)f0;
+}
+
 void TTobiPukuLaunchPad::forceLaunch(TTobiPuku* param_1)
 {
-	JGeometry::TVec3<f32> pos = mPosition;
-	f32 sinY                  = MsSin(mRotation.y);
-	f32 cosY                  = MsCos(mRotation.y);
+	s16 idxX = tobiPukuDegToJmaIndex(mRotation.x);
+	f32 sinX = JMASSin(idxX);
+	f32 cosX = JMASCos(idxX);
 
+	JGeometry::TVec3<f32> pos = mPosition;
 	JGeometry::TVec3<f32> velocity;
 	if (((TTobiPukuLaunchPadManager*)mManager)->unk60) {
 		f32 dist = unk198->mSLFlyDist.get();
-		pos.x += sinY * dist;
-		pos.z += cosY * dist;
+		pos.x += sinX * dist;
+		pos.z += cosX * dist;
 		f32 launchVelocityY = unk198->mSLLaunchVelocityY.get();
 		f32 flyGravityY     = param_1->unk19C->mSLFlyGravityY.get();
 		velocity = calcVelocityToJumpToY(pos, launchVelocityY, flyGravityY);
 	} else {
-		velocity.set(sinY * unk19C * MsCos(mRotation.x),
-		             1.0f * unk19C * MsSin(mRotation.x),
-		             cosY * unk19C * MsCos(mRotation.x));
+		s16 idxY = tobiPukuDegToJmaIndex(mRotation.y);
+		f32 sinY = JMASSin(idxY);
+		f32 cosY = JMASCos(idxY);
+		velocity.x = sinX * unk19C * cosY;
+		velocity.y = 1.0f * unk19C * sinY;
+		velocity.z = cosX * unk19C * cosY;
 	}
 
 	param_1->reset();
@@ -853,6 +868,9 @@ DEFINE_NERVE(TNerveTobiPukuAttack, TLiveActor)
 			self->unk194                   = 0;
 			JGeometry::TVec3<f32> velocity = self->mVelocity;
 			JGeometry::TVec3<f32> newVelocity;
+			// TODO: retail frame is 0x50 and these vecs sit 12 bytes
+			// higher. An unused TVec3 here reserves that slot and
+			// matches, but it is only a stack reservation.
 			newVelocity.x   = 0.0f;
 			newVelocity.y   = velocity.y;
 			newVelocity.z   = 0.0f;
@@ -865,9 +883,10 @@ DEFINE_NERVE(TNerveTobiPukuAttack, TLiveActor)
 			spine->pushAfterCurrent(&TNerveTobiPukuFall::theNerve());
 			return true;
 		}
-		return false;
+	} else {
+		return true;
 	}
-	return true;
+	return false;
 }
 
 DEFINE_NERVE(TNerveTobiPukuHitWater, TLiveActor)
@@ -954,8 +973,9 @@ DEFINE_NERVE(TNerveTobiPukuDie, TLiveActor)
 			self->onHitFlag(HIT_FLAG_NO_COLLISION);
 			JGeometry::TVec3<f32> zero(0.0f, 0.0f, 0.0f);
 			JGeometry::TVec3<f32> velocity = self->mVelocity;
-			zero.y                         = velocity.y;
-			self->mVelocity                = zero;
+			char trashAfterVel[8];
+			zero.y          = velocity.y;
+			self->mVelocity = zero;
 			self->setDownAirAnm();
 		} else if (self->unk1AD) {
 			self->onHitFlag(HIT_FLAG_NO_COLLISION);

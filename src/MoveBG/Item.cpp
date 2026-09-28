@@ -93,6 +93,7 @@ void TItem::calcRootMatrix()
 
 void TItem::calc()
 {
+	char trash[0x20];
 	if (!checkMapObjFlag(MAP_OBJ_FLAG_UNK4000000) && !isState(STATE_HOLDING)) {
 		MtxPtr src = gpItemManager->unk40;
 
@@ -238,6 +239,7 @@ void TCoin::appearWithoutSound()
 
 void TCoin::appear()
 {
+	char trash[0x20];
 	if (isActorType(0x20000010)) {
 		if (!TFlagManager::smInstance->getBlueCoinFlag(
 		        gpMarDirector->getCurrentMap(), mEventId))
@@ -301,14 +303,15 @@ void TCoin::perform(u32 cue, JDrama::TGraphics* graphics)
 
 void TCoin::loadAfter()
 {
+	const TBGCheckData* checkData;
+	char trash[8];
 	TItem::loadAfter();
 	if (!gpMirrorModelManager->isInMirror(mPosition))
 		return;
 
 	if (gpMarDirector->getCurrentMap() == 2) {
-		const TBGCheckData* check;
-		gpMap->checkGround(mPosition, &check);
-		if (!check->isWaterSurface())
+		gpMap->checkGround(mPosition, &checkData);
+		if (!checkData->isWaterSurface())
 			return;
 	}
 
@@ -399,8 +402,11 @@ void TCoinBlue::loadBeforeInit(JSUMemoryInputStream& stream)
 void TCoinBlue::load(JSUMemoryInputStream& stream)
 {
 	TCoin::load(stream);
-	if (TFlagManager::getInstance()->getBlueCoinFlag(
-	        gpMarDirector->getCurrentMap(), getEventId()))
+	// The two call results need names. Inlined into the call,
+	// the frame stays 0x20 instead of the retail 0x28.
+	u8 area = gpMarDirector->getCurrentMap();
+	u8 coin = getEventId();
+	if (TFlagManager::getInstance()->getBlueCoinFlag(area, coin))
 		makeObjDead();
 }
 
@@ -766,11 +772,12 @@ void TShine::kill()
 
 void TShine::makeMActors()
 {
+	MActor* result;
+	char trash[8];
 	mMActorKeeper                    = new TMActorKeeper(mManager, 1);
 	mMActorKeeper->mModelLoaderFlags = J3DMLF_MaterialPEFull
 	                                   | J3DMLF_UseUniqueMaterials
 	                                   | (2 << J3DMLF_TevStageNumShift);
-	MActor* result;
 	if (TFlagManager::smInstance->getShineFlag(mEventId)
 	    && strcmp("シャイン（マニ屋用）", getName()) != 0) {
 		result = initMActor("shine_empty.bmd", nullptr, getSDLModelFlag());
@@ -1060,6 +1067,7 @@ BOOL TEggYoshi::receiveMessage(THitActor* sender, u32 message)
 
 void TEggYoshi::load(JSUMemoryInputStream& stream)
 {
+	char trash[0x18];
 	TMapObjBase::load(stream);
 
 	if (strcmp(unkF4, "eggYoshiEvent") == 0) {

@@ -497,6 +497,9 @@ void TMapObjSwitch::control()
 
 BOOL TMapObjSwitch::receiveMessage(THitActor*, u32 message)
 {
+	char trash[4];
+	trash[0] = 0;
+
 	if (message == HIT_MESSAGE_HIP_DROP) {
 		startBck("objswitch");
 		SMSGetMSound()->startSoundActor(MSD_SE_OBJ_AP_BUTTON, &mPosition, 0,
@@ -523,6 +526,10 @@ void TMapObjSwitch::registerObjInfo(THideObjInfo* info)
 
 void TMapObjSwitch::load(JSUMemoryInputStream& stream)
 {
+	s32 r;
+	s32 g;
+	s32 b;
+	char trash[0x10];
 	TMapObjBase::load(stream);
 	stream >> unk140;
 	if (unk140 <= 0)
@@ -530,9 +537,6 @@ void TMapObjSwitch::load(JSUMemoryInputStream& stream)
 	else
 		unk140 *= 10;
 
-	s32 r;
-	s32 g;
-	s32 b;
 	stream >> r;
 	stream >> g;
 	stream >> b;
@@ -608,15 +612,18 @@ void TRedCoinSwitch::loadAfter()
 	for (int i = 0; i < 8; ++i) {
 		char buf[0x40];
 		snprintf(buf, 0x40, "赤コイン %d", i);
-		static_cast<TMapObjBase*>(JDrama::TNameRefGen::search(buf))
-		    ->makeObjDead();
+		// The named search result reserves the extra 4-byte slot.
+		TMapObjBase* coin
+		    = static_cast<TMapObjBase*>(JDrama::TNameRefGen::search(buf));
+		coin->makeObjDead();
 	}
 }
 
 void TRedCoinSwitch::load(JSUMemoryInputStream& stream)
 {
-	TMapObjBase::load(stream);
 	u32 tmp;
+	char trash[8];
+	TMapObjBase::load(stream);
 	stream >> tmp;
 	unk138 = tmp;
 	if (unk138 <= 0)

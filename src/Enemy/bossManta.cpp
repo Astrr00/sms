@@ -272,6 +272,8 @@ DEFINE_NERVE(TNerveMantaSpawn, TLiveActor)
 
 DEFINE_NERVE(TNerveMantaDeath, TLiveActor)
 {
+	char trash[4];
+	trash[0] = 0;
 	TBossManta* self = (TBossManta*)spine->getBody();
 
 	if (spine->getTime() == 0) {
@@ -543,6 +545,8 @@ BOOL TBossManta::receiveMessage(THitActor* sender, u32 message)
 
 void TBossManta::initNthGeneration(int gen)
 {
+	char trash[0x20];
+	trash[0] = 0;
 	const f32 heights[6] = { 10.0f, 5.0f, 1.0f, 0.42f, 0.42f, 0.42f };
 
 	mGeneration = gen;
@@ -702,8 +706,10 @@ f32 TBossManta::getPolluteRadius()
 	case 0:
 	case 1:
 	case 2:
-	case 3:
-		return getSaveParams()->mSLPolluteRadius.get() * mScaling.x;
+	case 3: {
+		f32 pollute = getSaveParams()->mSLPolluteRadius.get();
+		return pollute * mScaling.x;
+	}
 	case 4:
 	case 5:
 		return 100.0f;
@@ -1068,10 +1074,7 @@ void TBossMantaManager::loadAfter()
 void TBossMantaManager::createModelData()
 {
 	static const TModelDataLoadEntry entry[] = {
-		{ "manta.bmd",
-		  J3DMLF_MaterialPEFull | J3DMLF_UseUniqueMaterials
-		      | (1 << J3DMLF_TevStageNumShift),
-		  0 },
+		{ "manta.bmd", 0x10210000, 0 },
 		{ nullptr, 0, 0 },
 	};
 	createModelDataArray(entry);
@@ -1282,7 +1285,9 @@ void TBossMantaManager::createEnemies(int num)
 		num = getCapacity() - getObjNum();
 
 	if (unk38 != nullptr) {
-		u8 limit = unk38->mSLActiveEnemyNum.get();
+		// Retail loads mSLInstanceNum (value at 0x90), not the active count.
+		// TODO: frame is still 0xa8 against retail 0xb0. Do not pad it.
+		u8 limit = unk38->mSLInstanceNum.get();
 		if (num + getObjNum() > limit)
 			num = limit - getObjNum();
 	}

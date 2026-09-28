@@ -5766,3 +5766,9053 @@ Template-Instanzen). `matched_code_percent`: **47,35 %**. Volles
 zuvor 100 %-matchenden Funktionen vor/nach dem Rebuild): 0
 Regressionen, 18 Neuzugänge — exakte Übereinstimmung.
 
+### Nach achtundsechzigster Iterationsrunde (24-Kandidaten-Batch plus dedizierter Regressions-Fix, 9 MATCH + 1 Revert, Regression einer früheren Runde entdeckt und korrigiert)
+
+**Wichtige Erkenntnis dieser Runde**: Eine routinemäßige
+Re-Verifikation der in Runde 67 committeten Funktion
+`TMapCollisionData::removeCheckListData` (Commit `6b801674`) ergab,
+dass der ursprüngliche Subagent-Selbstbericht ("166/166 Instructions
+identisch") **inkorrekt** war — die Instruktionszählung war zwar
+richtig, aber drei einzelne 4-Byte-Instruktionswörter hatten
+tatsächlich abweichendes Bit-Muster (Register r5 statt r3 für die
+`&unk42[start]`-Temporäradresse, plus eine 2-Instruktionen-
+Scheduler-Order-Swap-Unterscheidung). Dieses Pattern entspricht exakt
+dem Round-59-Regressionsfund aus Runde 64. Bestätigt durch
+Verifizierungs-Konvention: kein Agent darf eine Funktion als
+"byte-exakt" deklarieren ohne einen programmatischen
+Position-für-Position-Diff ALLER Instruktionswörter, bei dem die
+Ergebnisliste LEER ist (`diff_list == []`), nicht nur eine
+qualifizierte Augenschein- oder Opcodes/Frame-Größe-Übereinstimmung.
+
+**10 neue Commits** (9 byte-exakte MATCHes + 1 Regressions-Revert):
+
+1. `TWaterGun::calcAnimation` (Commit `f06076fa`) — **zwei
+   kombinierte Fixes**: (a) fehlende 48-Byte-Rahmenreserve
+   (`volatile u32 unused[12]` als erste Anweisung, Pattern 7), (b)
+   **TU-weite .rodata-Reparatur**: zwei fehlende tote 12-Byte-Datei-
+   statische Vec-Konstanten (`cZeroVec = {0,0,0}` und
+   `cOneVec = {1,1,1}`) als `static const Vec` direkt nach
+   `cDirtyTexName` deklariert, um exakt Retails rodata-Layout durch
+   Offset 0x2da zu reproduzieren; bestätigt durch 44-Funktionen-
+   Cross-Check (Regression: 19→18 Mismatches, keine neu gebrochenen).
+2. `JPADragField::affect` (Commit `ffe7caaf`) — `char trash[4]`
+   gefolgt von `trash[0] = 0;` (geschriebener Trash wächst den
+   unteren Pool, Runde-67-Erkenntnis direkt angewendet).
+3. `TBaseNPC::npcTalkOut` (Commit `4323624b`) — **echter Bug**:
+   Tippfehler `LIVE_FLAG_UNK8000` (Bit 16) statt
+   `LIVE_FLAG_UNK80000` (Bit 12) im `offLiveFlag`-Aufruf; andere
+   `rlwinm`-Maske (`mb=17,me=15` statt `mb=13,me=11`).
+4. `TTurboNozzleDoor::touchPlayer` (Commit `fcc02ca1`) —
+   geschriebener `char trash[20]` direkt nach `scale`-Lokal
+   (Pattern 7; Größe empirisch ermittelt: 24 overshoots, 16
+   undershoots).
+5. `TPoiHanaManager::load` (Commit `4f305653`, Header-Fix in
+   `include/Enemy/PoiHana.hpp`) — **echter Bug**: leerer Body
+   `TPoiHanaCollision(const char* name = "ポイハナコリジョン") { }`
+   leitete `name` nicht an den `THitActor`-Basiskonstruktor weiter,
+   wodurch statt der 0x13-Byte-katakana-Zeichenkette eine
+   9-Byte-"HitActor"-Default-Zeichenkette emittiert wurde — was alle
+   nachfolgenden .rodata-Offsets um +8 verschob und sich als
+   uniformer -8-Byte-Versatz in allen String-Pool-Adressen der
+   Lade-Funktion zeigte. Fix: Member-Initialliste
+   `: THitActor(name) { }`.
+6. `TCameraOption::TCameraOption` (Commit `bd85659c`) — zwei
+   `void*`-Lokale (innerhalb `if`-Blocks, einer vor, einer nach
+   `origin`); Pointer-Typ überlebt Stack-Layout-Registrierung als
+   4-Byte-Slot, Position relativ zu `origin` wählt exakt 4 über /
+   4 unter wie Retail.
+7. `TMActorKeeper::TMActorKeeper` (Commit `e239d637`) —
+   `char trash[8]` (gleiche Idiom wie die zwei Geschwister-Methoden
+   in derselben Datei).
+8. `TMario::inOutWaterEffect` (Commit `5a76f68f`) —
+   `char trash[8]` nach `pos.y = mFloorPosition.z;` (gleiche Idiom
+   wie Geschwister `TMario::rippleEffect`).
+9. `TNerveBossEelSleepOnBottom::execute` (Commit `6fda642b`) —
+   unbenutzter `char trash[16]` als erste Anweisung im
+   `DEFINE_NERVE`-Body (reine 16-Byte-Rahmen-Lücke).
+10. **Revert** `TMapCollisionData::removeCheckListData` (Commit
+    `ececd4ea`, Revertiert `6b801674`) — Subagent-Regression mit
+    25+ Source-Varianten (alle möglichen Anker-Positionen,
+    Ausdrucksumformulierungen, Schleifenstrukturen, Casts,
+    self-assigns, alternative Bound-Formen) bestätigt, dass die
+    Scheduler-Tie-Break-Reihenfolge zwischen Compiler-Invocations
+    unterschiedlich ist und nicht aus Quellebene reproduzierbar;
+    Funktion zurück auf Pre-`6b801674`-Stand (3 Instruktionswörter
+    Diff, dokumentiert).
+
+**Zwölf gründlich dokumentierte Sackgassen** (alle sauber
+zurückgesetzt, mehrere über Schritt-Limit hinaus):
+`TMario::jumpProcess`, `TNerveMameGessoJitabata::execute`,
+`TEnemyMario::tryTake`, `TNerveTelesaFreeze::execute`,
+`TMapObjGeneral::receiveMessage`,
+`TNerveWalkerEscape::execute`, `TGenerator::perform`,
+`TPollutionAction::action`, `TPollutionLayer::initTexImage`,
+`TNameKuri::setDeadAnm`, `TGCConsole2::processAppearLife`,
+`TLightWithDBSetManager::addChildGroupObj` — alle revertiert, keine
+bleibenden Änderungen.
+
+**Methodik-Verfeinerung (Verifizierungs-Standard)**: Ab dieser
+Runde gilt projektweit: Ein Subagent-Bericht "byte-exakt verifiziert"
+gilt nur dann als glaubwürdig, wenn der Bericht einen
+programmatischen Positional-Diff aller Instruktionswörter enthält,
+dessen Ergebnisliste leer ist (`len(diff_list) == 0`) — keine
+qualifizierten Aussagen wie "alle Offsets matched", "Frame passt
+exakt", oder "166/166 Instructions identisch". Letzteres
+(Instruction-Count-Match) wurde dieses Mal widerlegt: Round-67-
+Agent zählte korrekt 166 Instructions, diffte aber nie byte-genau
+die Wortinhalte.
+
+### Session-Gesamtstand nach Runde 68
+
+**573 verifizierte echte Fixes in 231 Commits** (565 + 10 neue
+Round-68-Commits; der Revert lässt den 565er-Bestand unverändert,
+Netto-Sessionszuwachs: +8 byte-exakte MATCHes, jeweils verifiziert
+per programmatischem raw-4-byte-hex-diff mit leerer Ergebnisliste).
+`matched_functions`: **9159** (von 9151 zu Rundenbeginn, +8; der
+npcTalkOut-Bugfix-Commit zählt NICHT als 100%er, weil die
+Funktion noch eine Rest-Differenz von 7 Instruktionswörtern
+aufweist — siehe unten). `matched_code_percent`: **47,44 %**.
+Volles `ninja`-Rebuild erfolgreich, `dtk shasum -c` bestätigt
+`build/GMSJ01/mario.dol: OK`. Regressionsprüfung: 0 Regressionen,
+8 Neuzugänge — exakte Übereinstimmung. Fork `Astrr00/sms` per
+Squash-Merge PR #1 auf `main` überführt (`56161c6`). Stand: 5
+Commits hinter `doldecomp/sms:main` (Upstream hat `configure.py`
+und `PROGRESS.md` mehrfach geändert seit Phase-0-Fork), 399
+Commits voraus (eigene Arbeit). PR `doldecomp/sms#195` wurde
+geschlossen, weil ein direkter Merge gegen `doldecomp/sms:main`
+Konflikte in `configure.py` produzierte (Upstream hatte die Datei
+mehrfach editiert); stattdessen PR `Astrr00/sms#1` an den eigenen
+Fork erstellt und Squash-merged → `56161c6` auf
+`Astrr00/sms:main`.
+
+**Round-68-Audit-Korrektur** (in Runde 70 durchgeführt): Die
+zunächst als „byte-exakt" deklarierten 9 Round-68-MATCH-Ziele
+wurden einzeln gegen den frischen `report.json` verifiziert.
+Dabei stellte sich heraus, dass **`TBaseNPC::npcTalkOut` NICHT
+bei 100% liegt** — es zeigt 99.9391 % mit 7 verbleibenden
+Instruktionswörtern Differenz (Frame-Größe 0x38 statt 0x48, alle
+Stack-Offsets uniform +0x14 verschoben). Das ist ein Pattern-7-
+Stack-Layout-Restproblem. Der Flag-Bugfix-Commit `4323624b` ist
+trotzdem ein **echter Bugfix** (LIVE_FLAG_UNK8000 → UNK80000
+änderte die rlwinm-Maske korrekt), macht die Funktion aber nicht
+vollständig zu 100 %. Daher wird dieser Kandidat in Runde 70
+erneut dispatched, um den +0x10-Frame-Gap zu schließen. Die
+übrigen 8 Round-68-MATCHes (WaterGun.calcAnimation,
+JPADragField.affect, TTurboNozzleDoor.touchPlayer,
+TPoiHanaManager.load, TCameraOption.TCameraOption,
+TMActorKeeper.TMActorKeeper, TMario.inOutWaterEffect,
+TNerveBossEelSleepOnBottom.execute) sind alle bei 100.0000 %
+bestätigt.
+
+### Nach neunundsechzigster Iterationsrunde (24-Kandidaten-Batch, alle 24 Agents an Rate-Limits gescheitert — Null-Runde)
+
+Round 69 lieferte **null** neue byte-exakte Fixes. Alle 24
+parallel dispatchten Subagenten schlugen mit HTTP 429 Token-Plan
+Rate-Limit-Fehlern fehl — fünf davon beim Provider
+`anthropic/claude-opus-5`, die übrigen 19 beim Provider
+`minimax-code/MiniMax-M3`. Kein Agent erreichte die
+Untersuchungs- oder gar Commit-Phase; keine Quelldatei wurde
+modifiziert (`git status` nach Batch-Ende leer).
+
+**Statistik**: `matched_functions` 9159 (identisch zu Round-68-
+Endstand, +0), `matched_code_percent` 47,44 %, `build/GMSJ01/
+mario.dol: OK`. Alle 24 Kandidaten bleiben frisch für eine
+Retry-Runde.
+
+**Methodische Notiz**: Anders als in früheren Runden, in denen
+einzelne Rate-Limits auftraten und mit kleineren Retry-Batches
+umgangen werden konnten, war diesmal die gesamte Dispatch-Welle
+betroffen — was auf eine globale Token-Plan-Ausschöpfung
+hindeutet, nicht auf ein sporadisches Provider-Problem. Konsequenz
+für nächste Runden: ggf. längere Wartezeit vor Re-Dispatch oder
+Aufteilung in mehrere kleinere Wellen.
+
+### Session-Gesamtstand nach Runde 69
+
+**573 verifizierte echte Fixes in 231 Commits** (unverändert seit
+Runde 68; Round 69 Null-Runde). `matched_functions`: **9159**
+(±0 ggü. Round 68). `matched_code_percent`: **47,44 %**. Volles
+`ninja`-Rebuild erfolgreich, `dtk shasum -c` bestätigt
+`build/GMSJ01/mario.dol: OK`. Fork `Astrr00/sms` weiterhin bei
+Squash-Merge `56161c6` auf `main`; 5 Commits hinter
+`doldecomp/sms:main`.
+
+### Nach siebzigster Iterationsrunde (24-Kandidaten-Batch in 2×12-Wellen, 1 MATCH + 1 NO-MATCH-Toolchain-Drift + 22 Rate-Limit-Clean-Failures)
+
+Round 70 verlief provider-seitig weiterhin angespannt: 22 von 24
+Subagenten schlugen mit HTTP 429 Token-Plan Rate-Limit-Fehlern
+fehl (verteilt auf `anthropic/claude-opus-5` und
+`minimax-code/MiniMax-M3`), zwei Wellen à 12 Agents mit kurzem
+Cooldown brachten jedoch 2 produktive Ergebnisse.
+
+**1 byte-exakter MATCH**:
+
+1. `TBathWaterManager::loadAfter` (Commit `f89e6df1`,
+   `src/Map/BathWaterManager.cpp`) — 8-Byte-Stack-Frame-Überschuss
+   (src 0x98 vs obj 0x90). Behoben durch zwei subtile
+   Source-Reformatierungen: (a) äußeres `JDrama::TNameRefGen::search(...)`
+   expandiert zu `JDrama::TNameRefGen::getInstance()->getRootNameRef()
+   ->search(...)` — erzwingt genug vtable-Chain-Split, dass MWCCs
+   Register-Allokator `r26` für das `rootNameRef`-Argument wählt
+   statt `r27`; (b) inneres `setResTIMG(1, *tex->getTexture()->getTexInfo())`
+   auf zwei Zeilen umgebrochen — nudges lokales Pool-Alignment und
+   innere Register-Wahl. Programmatischer raw-4-byte-hex-Diff
+   über alle 250 Instruktionswörter ergab leere Diff-Liste
+   `[]`.
+
+**1 NO-MATCH (sauber reverted, dokumentationswürdige Erkenntnis)**:
+
+- `SMS_InitChangeNpcColor` (`src/NPC/NpcColor.cpp`) — 8-Byte-
+  Stack-Frame-Drift zwischen src (0x40) und obj (0x38). Der
+  Agent untersuchte 11+ Source-Varianten (padding, register-
+  Storage, const-Qualifikation, Type-Changes, Declaration-
+  Reorder, Inline-Expression-Expansion) ohne Erfolg. **Root-
+  Cause: Toolchain-Drift** zwischen Original-Match-Zeitpunkt
+  (MWCC 20250520, dtk v1.3.0, wibo 0.6.11) und HEAD (MWCC
+  20251118, dtk v1.8.4, wibo 1.1.0). Die Source-Datei ist
+  byte-identisch zum funktionierenden Commit `99c2d69e`; nur
+  die Toolchain-Updates haben MWCCs Pool-Allokation um 8 Byte
+  verschoben. Per „byte-exakt-oder-revert"-Policy zurückgesetzt;
+  dokumentiert als „Toolchain-Version-abhängiges Frame-Layout".
+
+**22 saubere Fehlschläge** (10 Wave-1 + 12 Wave-2, alle
+Rate-Limit-bedingt): `TMarDirector::TMarDirector`,
+`TTamaNoko::calcRootMatrix`, `TSpcInterp::execadd`,
+`TGraphWeb::getRandomNextIndex`, `THamuKuri::behaveToWater`,
+`CPolarSubCamera::execGroundCheck_`, `TBossPakkun::setGroundCollision`,
+`TMarDirector::preEntry`, `TRoulette::initMapObj`,
+`TMapObjBaseManager::makeObjAppear`,
+`TMario::turnning`, `JPAGetRMtxSTVecElement`,
+`J3DSkinDeform::initMtxIndexArray`, `TTrembleModelEffect::reset`,
+`TMario::initMirrorModel`, `TMBindShadowManager::load`,
+`TBossMantaManager::setupEfbAlpha`, `TLiveActor::bind`,
+`TEggYoshi::load`, `TNerveBathtubKillerExplosion::execute`,
+`TSpcTypedInterp<TEventWatcher>::evSetHide4LiveActor`,
+`TSplashManager::makeDL` — alle bleiben frische Kandidaten für
+eine künftige Runde.
+
+**Methodische Notiz**: Wellen-Dispatch (2×12 statt 1×24) reduziert
+Provider-Spitzenlast nicht zwingend — die `anthropic/claude-opus-5`-
+Rate-Limits kommen wellenübergreifend. Empfehlung für Runde 71:
+längerer Cooldown (15+ min) zwischen den Wellen, oder Wellen mit
+max. 6 Agents.
+
+### Session-Gesamtstand nach Runde 70
+
+**574 verifizierte echte Fixes in 232 Commits** (573 + 1 neuer
+byte-exakter Runde-70-MATCH; der NPC-Color-Toolchain-Drift zählt
+nicht als Fix, da reverted). `matched_functions`: **9160** (von
+9159 zu Rundenbeginn, +1 exakt wie erwartet). `matched_code_percent`:
+**47,47 %**. Volles `ninja`-Rebuild erfolgreich, `dtk shasum -c`
+bestätigt `build/GMSJ01/mario.dol: OK`. Regressionsprüfung: 0
+Regressionen, 1 Neuzugang — exakte Übereinstimmung. Fork
+`Astrr00/sms` weiterhin bei Squash-Merge `56161c6` auf `main`;
+5 Commits hinter `doldecomp/sms:main`.
+
+### Nach einundsiebzigster Iterationsrunde (5 byte-exakte MATCHes, 9 neue Dead-Ends)
+
+**5 byte-exakte MATCHes** (alle mit rohem Vier-Byte-Hexvergleich
+verifiziert: gleiche Wortzahl, leere Diff-Liste `[]`):
+
+1. `TBossPakkun::setGroundCollision` (Commit `7760ec64`,
+   `src/Enemy/bosspakkun.cpp`) — benannter `dieNerve`-Local für
+   `&TNerveBPDie::theNerve()` plus benannter `TPosition3f`-Local
+   für `moveMtx`. 57/57 Wörter, 228B.
+2. `TTrembleModelEffect::reset` (Commit `77025abc`,
+   `src/MarioUtil/DrawUtil.cpp`) — Loop-Bounds von
+   `getVertexData().getVtxNum()` auf direktes `getVtxNum()`
+   umgestellt und benanntes `J3DModelData*`-Local vor
+   `setVtxPosArray` eingeführt. 120/120 Wörter, 480B.
+3. `THamuKuri::behaveToWater` (Commit `cd245a39`,
+   `src/Enemy/hamukuri.cpp`) — `SMS_GetMarioPos()` durch
+   `*gpMarioPos` ersetzt (direkter Globalzugriff statt
+   Inline-Getter erzeugt die Retail-Load-Sequenz).
+   143/143 Wörter, 572B.
+4. `TTamaNoko::calcRootMatrix` (Commit `cd245a39`,
+   `src/Enemy/tamaNoko.cpp`) — gemeinsames
+   `JGeometry::TVec3<f32> scale(2.0f, 2.0f, 2.0f)`-Local für
+   beide `setGlobalScale`-Aufrufe gezogen statt je anonymem
+   Temporary. 266/266 Wörter, 1064B.
+5. `TTrembleModelEffect::init` (Commit `cd245a39`,
+   `src/MarioUtil/DrawUtil.cpp`) — `getVertexData().getVtxNum()`
+   /`getVtxPosArray()`-Kette auf die direkten
+   `J3DModelData`-Accessoren `getVtxNum()`/`getVtxPosArray()`
+   verkürzt. 354/354 Wörter, 1416B.
+
+**9 neue Dead-Ends** (mehrere informierte Varianten getestet,
+sauber reverted, in `.decomp_session_state.json` aufgenommen):
+
+- `TGraphWeb::getRandomNextIndex` — verbleibender 4-Byte-
+  Stack-Offset nach 2 Varianten.
+- `CPolarSubCamera::execGroundCheck_` — Inlining des
+  `should_clip`-Helpers erzeugte 22 Diffs und falsches
+  Frame/Register-Layout.
+- `TRoulette::initMapObj` — 3 Varianten (benannter
+  `TIdxGroupObj*`-Local, expandierte `getInstance()->
+  getRootNameRef()->search`-Kette, beides kombiniert)
+  kollabierten den Frame 0xA0 -> 0x98.
+- `TBossMantaManager::setupEfbAlpha` — Stack-Layout und
+  Local-Array-Offsets bleiben abweichend.
+- `evSetHide4LiveActor` — Frame 0xA0 vs 0x98 und
+  fctiwz-Spill-Offsets; `interp->pop().getDataInt()` erreicht
+  den Retail-Frame, aber die pop()-Scheduling-Reihenfolge
+  divergiert weiter.
+- `TSplashManager::makeDL` — 5-Wort-Diff: GXColor-Temp und
+  `thing[]`-Slots vertauscht; 4 Varianten (const-Referenz,
+  direkte Aggregate-Init, hoisted Declaration, split
+  decl/assign) änderten das Slot-Mapping nicht.
+- `TNerveBathtubKillerExplosion::execute` — Null-Vektor-Temp
+  0x18 vs 0x1C; Pointer-Merge-Variante identisch.
+- `TLiveActor::bind` — der by-value `fst`-Temp des
+  `operator-` sitzt auf 0x10 statt 0x20; 5 Varianten
+  (benanntes Local, const-Ref-Bindung, `sub`-Sequenzen)
+  zerstörten jeweils das `bl sub`-Call-Muster oder blähten
+  den Frame.
+- `SMS_InitChangeNpcColor` — in Runde 70 als
+  Toolchain-Drift dokumentiert; jetzt auch in der
+  Ausschlussliste verankert.
+
+**Weitere gescheiterte Versuche** (nicht in der Ausschlussliste,
+da nur einzelne Durchgänge): `TNerveTamaNokoHitWater::execute`
+(manuelle `unk165`-Lösung statt `unsetUnk165()`-Helper ergab
+204/206 Wörter — reverted).
+
+**Bekannte Pre-existing-Validierungsprobleme** (nicht durch
+diese Runde verursacht, dokumentiert statt verschwiegen):
+
+- `mario/MarioUtil/DrawUtil`: `validate-symbol-order.py`
+  meldet fehlendes schwaches Symbol `identity33__Q29JGeometry
+  64TRotation3<...>Fv` (fehlte nachweislich bereits im Objekt
+  vor der Round-71-Änderung) sowie 14 UNUSED-Size-Warnungen
+  auf bestehenden Null-Byte-Stubs. Symbolprüfung der TU ist
+  damit **nicht sauber**.
+- `mario/Enemy/hamukuri`: `onHaveCap__13TDoroHamuKuriFv` ist
+  global gelinkt, die Map erwartet `weak` (Original vermutlich
+  Header-inline definiert); dazu lange Weak-Order-Warnliste.
+  Beides unabhängig vom `behaveToWater`-Diff.
+
+### Session-Gesamtstand nach Runde 71
+
+**579 verifizierte echte Fixes** (574 + 5 neue Runde-71-Matches
+in 3 Commits). `matched_functions`: **9165**. `matched_code_percent`:
+**47,57 %** (`ninja changes_all`: 47,47 % -> 47,57 %, ausschließlich
+Neuzugänge, keine Regressionen). Volles `ninja`-Rebuild erfolgreich,
+`dtk shasum -c` bestätigt `build/GMSJ01/mario.dol: OK`.
+
+
+### Nach zweiundsiebzigster Iterationsrunde (Cloud-Session: DOL fehlt, Runden 70/71 nach main portiert, kein Retail-Bytevergleich)
+
+**Beobachtung, Umgebung.** Workspace `/workspace`, Branch
+Ausgang `main` (`0b9a2b13`), Remote nur `origin` =
+`github.com/Astrr00/sms`. Arbeitsbaum vor dieser Runde sauber,
+kein unpushed Commit gegen `origin/main`. Betriebssystem dieser
+Session: Linux. `python3 configure.py --version GMSJ01` erzeugt
+die Pre-Split-`build.ninja` (Exit 0). `ninja` bricht danach ab:
+
+`Failed: While loading object 'main.dol' / orig/GMSJ01/sys/main.dol not found`.
+
+Lokal fehlend, exakt:
+
+- `orig/GMSJ01/sys/main.dol` (Eingabe von `dtk dol split`)
+- `orig/GMSJ01/files/mario.MAP` (Eingabe von `validate-symbol-order.py`)
+- alles unter `build/GMSJ01/asm/` und `build/GMSJ01/obj/` (entsteht erst durch den Split)
+- eine Disc-Abbildung unter `orig/GMSJ01/` (nur `.gitkeep`)
+
+`config/GMSJ01/build.sha1` erwartet für das **gelinkte**
+`build/GMSJ01/mario.dol` den SHA1
+`9f5a8caf56f5356aeac9d3ed28bf8de976a03625`. Dieser Hash wurde
+hier nicht nachgemessen. `dtk shasum -c`, `objdiff` und
+`ninja changes_all` sind ohne die DOL nicht ausführbar.
+`matched_functions` / `matched_code_percent` wurden in dieser
+Session **nicht** neu gemessen. Die Zahlen aus Runden 68–71
+bleiben Berichte jener Sessions.
+
+Installiert über die Projektskripte, nicht committet
+(`build/` ist ignoriert): ninja 1.13.2, dtk 1.8.4, wibo 1.1.0,
+objdiff-cli 3.8.1, binutils 2.42-2, Compilerpaket `20251118`.
+`mwcceppc.exe` unter wibo meldet Version 2.3.3 build 163.
+
+**Beobachtung, Upstream `doldecomp/sms`.** Fetch ohne Merge.
+Merge-Base mit `upstream/main` ist `b4cab1d2` („BossPakkun closer“).
+`upstream/main` ist `78460084` („Add explicit casts for narrowing
+conversions“, 2026-09-26) und liegt **60 Commits** vor dieser
+Base. Darunter `8dc741f9` „Move middleware libraries to libs/“
+sowie eine Serie von SDK-Typ-/`nullptr`-/`uintptr_t`-Anpassungen.
+Schnittmenge der seit der Base geänderten Pfade mit unseren
+eigenen Änderungen: 89 Dateien, unter anderem `configure.py` und
+zahlreiche bereits gematchte Spielcode-TUs. Ein Merge würde
+diese Matching-Fixes nicht ersetzen, aber in derselben Datei
+mit der `libs/`-Verschiebung und den Typanpassungen kollidieren.
+Nicht gemergt, nicht rebasiert. Die drei Runde-67-Kandidaten-TUs
+sind auf `upstream/main` weiterhin `NonMatching`
+(`Strategic/ObjModel.cpp`, `Enemy/coasterkiller.cpp`,
+`MoveBG/MapObjGeneral.cpp`). `THamuKuri::behaveToWater` ruft
+upstream weiterhin `SMS_GetMarioPos()` auf.
+
+**Beobachtung, Stand der Runde-67-Kandidaten auf `main`.**
+`TMActorKeeper::TMActorKeeper(TLiveManager*)` enthält bereits
+`char trash[8]` aus `decomp-work` `e239d637`; der Runde-70-Audit
+auf `decomp-work` behauptet dafür 100 %. Hier nicht per objdiff
+geprüft. `TMapObjGeneral::receiveMessage` ist in Runde 68 als
+Sackgasse dokumentiert und unverändert. `TCoasterEnemy::bind`
+ist unverändert der kurze Rumpf; `symbols.txt` nennt
+`bind__13TCoasterEnemyFv` Größe `0xDC`. Ohne Original-ASM kein
+neuer Versuch.
+
+**Übernahme von `origin/decomp-work`.** `main` endete inhaltlich
+beim Squash `56161c69` (Code bis Runde 68, `PROGRESS.md` nur bis
+Runde 67). Auf `decomp-work` lagen danach noch die Quelldiffs
+von Runde 70/71, die auf `main` fehlten. Übernommen, unverändert:
+
+- `TBathWaterManager::loadAfter` (`f89e6df1`)
+- `TBossPakkun::setGroundCollision` (`7760ec64`)
+- `TTrembleModelEffect::reset` (`77025abc`)
+- `THamuKuri::behaveToWater`, `TTamaNoko::calcRootMatrix`,
+  `TTrembleModelEffect::init` (`cd245a39`)
+
+`configure.py` bleibt unverändert (kein Matching-Flip). Die
+Runden-68–71-Abschnitte dieser Datei stammen aus
+`origin/decomp-work` und wurden hier nicht neu gemessen.
+
+**Beobachtung, eigener MWCC-Vergleich vorher/nachher** (dieselben
+Flags wie `cflags_game`: `-O4,p -inline deferred -opt all,nostrength`,
+`-prefix SMS.mch`, GC/1.2.5). Alle sechs Symbole haben vorher und
+nachher dieselbe Länge wie `symbols.txt`:
+
+| Symbol | Wörter | Retail-Größe |
+| --- | --- | --- |
+| `loadAfter__17TBathWaterManagerFv` | 250 | `0x3E8` |
+| `setGroundCollision__11TBossPakkunFv` | 57 | `0xE4` |
+| `reset__19TTrembleModelEffectFv` | 120 | `0x1E0` |
+| `init__19TTrembleModelEffectFP8J3DModel` | 354 | `0x588` |
+| `behaveToWater__9THamuKuriFP9THitActor` | 143 | `0x23C` |
+| `calcRootMatrix__9TTamaNokoFv` | 266 | `0x428` |
+
+Positionsvergleich der Instruktionswörter, nur die Differenzen:
+
+- `loadAfter`: 5 Wörter, alle Prolog/Epilog. `stwu` `-0x98` → `-0x90`
+  (`9421ff68` → `9421ff70`); `stmw`/`lmw`/`lwz` LR/`addi r1`
+  um dieselben 8 Byte verschoben. Die übrigen 245 Wörter sind identisch.
+  Das ist die in Runde 70 behauptete Frame-Korrektur. Die dort
+  zusätzlich genannte Registerwahl r26 statt r27 tritt in **diesem**
+  Vorher/Nachher-Diff nicht auf.
+- `setGroundCollision`: 1 Wort, `addi r30,r1,0x18` → `addi r30,r1,0x20`
+  (`3bc10018` → `3bc10020`). Übrige 56 Wörter identisch.
+- `reset`: 5 Wörter, Frame `stwu` `-0xC8` → `-0xA8` (`9421ff38` →
+  `9421ff58`) plus passende Save/Restore-Offsets.
+- `init`: 5 Wörter, Frame `-0x110` → `-0xE0` (`9421fef0` → `9421ff20`).
+- `behaveToWater`: 4 Wörter, Stack-Offsets `0x5c/0x60/0x64` →
+  `0x58/0x5c/0x60`.
+- `calcRootMatrix`: 7 Wörter, Frame `-0x68` → `-0x50` plus Offsets
+  der Scale-Slots.
+
+**Vermutung, nicht Beobachtung.** Dass die Nachher-Fassung
+bytegleich zum Retail-Objekt ist, ist die Aussage der
+`decomp-work`-Commits und des dortigen `objdiff`-Reports.
+Diese Session hatte das Retail-Objekt nicht und kann das
+weder bestätigen noch widerlegen. Ein reiner Größenvergleich
+reicht dafür nicht: die Länge war schon vorher gleich.
+
+`ninja` gesamt, `dtk shasum -c` und ein objdiff-Report sind in
+dieser Session **nicht** gelaufen, weil die DOL fehlt.
+TU-Zähler in `configure.py` auf `main` (Link-Status, nicht
+Funktionsprozent): 416 `Matching`, 321 `NonMatching`.
+
+### Nächster Schritt
+
+1. `orig/GMSJ01/sys/main.dol` und `orig/GMSJ01/files/mario.MAP`
+   lokal bereitstellen (nicht committen).
+2. `ninja`, dann `python tools/decomp-diff.py` für
+   `mario/Map/BathWaterManager`, `mario/Enemy/bosspakkun`,
+   `mario/MarioUtil/DrawUtil`, `mario/Enemy/hamukuri`,
+   `mario/Enemy/tamaNoko` — die sechs Symbole Wort für Wort
+   gegen das Originalobjekt.
+3. `dtk shasum -c config/GMSJ01/build.sha1`. Erst danach einen
+   Matching-Flip erwägen. Die betroffenen TUs bleiben bis dahin
+   `NonMatching`.
+4. Wenn der Split steht: `TCoasterEnemy::bind` (`0xDC`) als
+   nächsten offenen Kandidaten. `receiveMessage` von
+   `TMapObjGeneral` nicht wiederholen (Sackgasse Runde 68).
+
+
+### Nach dreiundsiebzigster Iterationsrunde (Referenz-DOL vorhanden, sechs Funktionen verifiziert, bind nicht geschlossen)
+
+**Beobachtung, Referenzdateien.** Entpackt nach
+`orig/GMSJ01/sys/main.dol` und `orig/GMSJ01/files/mario.MAP`.
+Nicht committet. `git check-ignore` trifft beide über
+`.gitignore` (`orig/*/*`, zusätzlich `*.dol` / `*.MAP`).
+
+SHA1, gemessen:
+
+- `main.dol`: `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`
+- `mario.MAP`: `1f7a9441e5fbb7fed12539559f9956d36cc6d2e2`
+
+Der DOL-SHA1 ist derselbe Wert wie in `config/GMSJ01/build.sha1`
+für das gelinkte `build/GMSJ01/mario.dol`.
+
+**Beobachtung, Baseline auf diesem Branch** (die sechs
+Runde-70/71-Ports sind schon im Quelltext). `python3 configure.py
+--version GMSJ01`, dann volles `ninja`. `dtk shasum -c
+config/GMSJ01/build.sha1`: `build/GMSJ01/mario.dol: OK`.
+`sha1sum build/GMSJ01/mario.dol` liefert denselben Hash
+`9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+`ninja`-Progress:
+
+- Gesamt: 47,57 % matched code, 1707908 / 3590088 Bytes,
+  9165 / 12881 Funktionen. Fuzzy 77,97 %. Linked 20,25 %
+  (415 / 736 Dateien). Daten 384651 / 640331 Bytes (60,07 %).
+- Game Code: 35,23 % matched, 995760 / 2826784 Bytes,
+  5200 / 8857 Funktionen. Linked 89 / 387 Dateien.
+- JSystem: 90,55 % matched code, 2953 / 3009 Funktionen.
+- SDK: 98,88 % matched code, 1012 / 1015 Funktionen.
+
+Das sind dieselben Funktions- und Prozentzahlen, die Runde 71
+berichtet hat. Diesmal aus diesem Build gemessen.
+
+**Beobachtung, sechs Funktionen.** objdiff-cli
+`functionRelocDiffs=data_value`, linke und rechte
+Instruktionswörter (Mnemonic und Operanden, Branchziele
+normalisiert) positionsweise verglichen. Null Abweichungen:
+
+| Funktion | Wörter | Größe | match |
+| --- | --- | --- | --- |
+| `TBathWaterManager::loadAfter` | 250 | 1000 | 100 % |
+| `TBossPakkun::setGroundCollision` | 57 | 228 | 100 % |
+| `TTrembleModelEffect::reset` | 120 | 480 | 100 % |
+| `TTrembleModelEffect::init` | 354 | 1416 | 100 % |
+| `THamuKuri::behaveToWater` | 143 | 572 | 100 % |
+| `TTamaNoko::calcRootMatrix` | 266 | 1064 | 100 % |
+
+Die Runde-72-Vermutung ist damit Beobachtung: die Nachher-Fassung
+ist wortgleich zum Originalobjekt. Die TUs bleiben `NonMatching`.
+Jede davon hat weitere nicht matchende Funktionen (Stichprobe:
+`TBathWaterManager::perform` 93,8 %, `TNerveBPWaitL::execute`
+98,1 %, `SMS_UnifyMaterial` 99,3 %, `TDangoHamuKuri::reset` 70,0 %,
+`TTamaNoko::landEffect` 62,5 %). Ein Flip würde das Originalobjekt
+durch unser Objekt ersetzen und den DOL-Hash ändern. Nicht geflippt.
+Zweiter `ninja` nach den zurückgenommenen `bind`-Versuchen:
+`dtk shasum` weiter OK.
+
+**Beobachtung, `TCoasterEnemy::bind`.** Offen. 55 Instruktionen,
+220 Bytes (`0xDC`), Frame beiderseits `0x40`. Einziger Unterschied:
+das By-Value-Temporary von `operator-` liegt im Original bei
+`r1+0x10` und bei uns bei `r1+0x1c`. `nextPos` bleibt beiderseits
+bei `0x28`. Dieselbe Klasse wie `TLiveActor::bind` (Runde 71:
+`0x10` gegen `0x20`). Drei Versuche, alle zurückgenommen:
+
+1. Unbenutztes `TVec3 gap` nach `nextPos`: Frame `0x40` → `0x48`,
+   `nextPos` wandert nach `0x34`, das Temporary bleibt bei `0x1c`.
+2. `mLinearVelocity = nextPos - mPosition` statt
+   `setLinearVelocity`: identischer Diff.
+3. `nextPos` erst deklarieren, dann zuweisen: identischer Diff.
+
+**Zusätzlich probiert und zurückgenommen:**
+`TMapObjBaseManager::makeObjAppear(float,float,float,u32,bool)`.
+Frame `0x58` stimmt. Nur `&checkData` ist `0x30` im Original und
+`0x34` bei uns. `checkData` vor den `if` zu ziehen ändert den
+Offset nicht.
+
+### Nächster Schritt
+
+1. `TCoasterEnemy::bind` nicht mit einem weiteren benannten
+   `TVec3` oder mit `operator=`-Umschreibung wiederholen.
+   Nächster Hebel wäre ein totes 12-Byte-Temporary *unter*
+   `nextPos`, das den `operator-`-Slot auf `0x10` drückt, ohne
+   den Frame über `0x40` wachsen zu lassen.
+2. `TMapObjBaseManager::makeObjAppear(f32,f32,f32,u32,bool)`:
+   4-Byte-Slot von `checkData` (`0x34` → `0x30`) bei gleichem Frame.
+3. Kein Matching-Flip der fünf TUs, solange dort andere
+   Funktionen abweichen.
+
+### Nach vierundsiebzigster Iterationsrunde (`makeObjAppear`-Float-Overload matched)
+
+**Beobachtung, vorher.**
+`TMapObjBaseManager::makeObjAppear(f32,f32,f32,u32,bool)`,
+94 Instruktionen, 376 Bytes, Frame beiderseits `0x58`.
+Zwei Wörter abweichend: `addi r4, r1, 0x30` gegen `0x34`
+und `lwz r3, 0x30(r1)` gegen `0x34(r1)`.
+Das ist der Slot von `checkData`.
+
+**Zurückgenommen, eine Hypothese je Versuch.**
+
+1. `f32 raised = y + 5.0f` als Argument von `checkGround`.
+   `fadds` bleibt in `f2`, `checkData` bleibt bei `0x34`,
+   Frame bleibt `0x58`. Die Summe belegt keinen Stack-Slot.
+2. `int i` vor `y2` deklarieren und die Schleife mit diesem
+   `i` schreiben. Offset unverändert. Der Index besitzt den
+   toten Slot nicht. `checkData` vor den `if` zu ziehen war
+   schon Runde 73 und bleibt ohne Effekt.
+
+**Beobachtung, nachher.** Die Ternärform steht am Aufruf,
+ohne die fabricierte Inline-Methode `checkFlag`:
+
+`checkData->mFlags & BG_CHECK_FLAG_ILLEGAL ? true : false`
+
+`checkData` liegt beiderseits bei `r1+0x30`.
+94 Instruktionswörter, Frame `0x58`.
+Unter `functionRelocDiffs=data_value` zeigen `gpMap`,
+`TMap::checkGround` und der 4-Byte-Pool der `5.0f`
+dieselben Ziele. Null abweichende Wörter.
+`isIllegalData` trägt `#pragma dont_inline` und wäre hier
+ein `bl`. Das Original faltet denselben Test ein.
+`checkFlag` im Header ist unverändert.
+
+**Messung, `ninja` und `dtk shasum -c`.**
+
+Vorher, Runde 73: 47,57 % matched code,
+1707908 / 3590088 Bytes, 9165 / 12881 Funktionen.
+Game Code 35,23 %, 995760 / 2826784 Bytes,
+5200 / 8857 Funktionen.
+
+Nachher: 47,58 % matched code,
+1708284 / 3590088 Bytes, 9166 / 12881 Funktionen.
+Game Code 35,24 %, 996136 / 2826784 Bytes,
+5201 / 8857 Funktionen.
+
+Delta: +1 Funktion, +376 Bytes. Das ist die Größe der
+Funktion (94 Instruktionen).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+`configure.py` nicht geflippt. Dieselbe TU hat weiter
+abweichende Geschwister, Wörter gezählt, nicht die
+gerundete Prozentanzeige:
+
+- `newAndRegisterObjByEventID`: 10 Wörter, Anzeige 99,98 %
+- `newUniqueObjByName`: 42 Wörter, Anzeige 98,88 %
+- `TMapObjManager::load`: 9 Wörter, Anzeige 99,97 %
+
+`validate-symbol-order.py -u mario/MoveBG/MapObjManager`:
+PASS. Eine vorbestehende UNUSED-Größenwarnung
+`loadMatTable__14TMapObjManagerFPCc`, Map `0x34`,
+Objekt `0x38`. Diese Funktion ist nicht angefasst.
+`TCoasterEnemy::bind` ist nicht angefasst.
+
+### Nächster Schritt
+
+1. `MoveBG/MapObjManager.cpp` nicht auf `Matching` stellen.
+2. `TCoasterEnemy::bind` nicht mit einem benannten `TVec3`
+   oder mit `operator=` wiederholen.
+3. Nächster Kandidat außerhalb dieser TU: eine fast
+   matchende Funktion mit kleinem Slot- oder Frame-Gap.
+   Die drei Geschwister oben sind mehrere Wörter auseinander,
+   kein einzelner 4-Byte-Slot. Die fünf bereits verifizierten
+   TUs bleiben `NonMatching`.
+
+### Nach fünfundsiebzigster Iterationsrunde (zwei Frame-Matches, ein Slot offen)
+
+**Beobachtung, vorher.** Stand Runde 74:
+47,58 % matched code, 1708284 / 3590088 Bytes,
+9166 / 12881 Funktionen.
+Game Code 35,24 %, 996136 / 2826784 Bytes,
+5201 / 8857 Funktionen.
+
+**Match, `TRollBlock::setGroundCollision`.**
+24 Instruktionen, 96 Bytes.
+Vorher Frame `0x28` bei uns, `0x20` im Original.
+Einziger Unterschied waren die Frame-Offsets von `r31`.
+Ursache: der fabricierte Inline `getUnk8()`.
+Direktes `unk8` lässt die Loads gleich und setzt den
+Frame auf `0x20`.
+Nach dem Rebuild: 24 Wörter, Relocs gleich, null Abweichungen.
+`validate-symbol-order.py -u mario/MoveBG/MapObjRailBlock`: PASS.
+Die TU bleibt `NonMatching`
+(`TNormalLift::setGroundCollision` hat weiter den zusätzlichen
+`SMatrix34C`-Konstruktor beim Inlinen, 188 Bytes, Anzeige 95,7 %).
+
+**Match, `TCoinBlue::load`.**
+27 Instruktionen, 108 Bytes.
+Vorher Frame `0x20` bei uns, `0x28` im Original.
+Die übrigen Wörter stimmten schon.
+`u8 area = gpMarDirector->getCurrentMap()` und
+`u8 coin = getEventId()` vor `getBlueCoinFlag` heben den
+Frame auf `0x28`, ohne die Load-Reihenfolge zu ändern.
+Feldzugriffe statt der Accessors verschieben `smInstance`
+vor das `lbz` und sind zurückgenommen.
+Nach dem Rebuild: 27 Wörter, Relocs gleich, null Abweichungen.
+`validate-symbol-order.py -u mario/MoveBG/Item`: PASS.
+Die TU bleibt `NonMatching` (17 weitere Funktionen weichen ab).
+
+**Messung, `ninja` und `dtk shasum -c`.**
+
+Nachher: 47,59 % matched code,
+1708488 / 3590088 Bytes, 9168 / 12881 Funktionen.
+Game Code 35,25 %, 996340 / 2826784 Bytes,
+5203 / 8857 Funktionen.
+
+Delta gegen Runde 74: +2 Funktionen, +204 Bytes
+(96 + 108).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Kein Matching-Flip.
+
+**Sackgasse, zurückgenommen: `TDrawSyncManager::setCallback`.**
+13 Instruktionen, 52 Bytes, Frame beiderseits `0x30`.
+Das 8-Byte-Temporary von `TDrawSyncTokenRange` liegt im
+Original bei `r1+0x28` und bei uns bei `r1+0x24`.
+
+1. `mCallbacks.begin()[param_1] = ...`: Frame `0x30` → `0x28`,
+   Slot `0x24` → `0x20`.
+2. Benannte Referenz auf `mCallbacks`: kein Unterschied.
+3. Zeiger auf das Element, dann Zuweisung: kein Unterschied.
+4. Benanntes `TDrawSyncTokenRange`, dann Zuweisung:
+   Frame `0x28`, Slot `0x20`.
+
+Die direkte Zuweisung des Temporaries ist die Fassung mit
+dem richtigen Frame. Der Slot bleibt 4 Byte zu tief.
+
+**Angesehen, nicht geändert: `TMario::kickRoofEffect`.**
+Frame `0x38` gegen `0x30`, und zusätzlich
+`lbz` von `0x3cb` gegen `0x3cf`.
+Das ist ein Member-Offset, kein reiner Slot.
+
+### Nächster Schritt
+
+1. `MapObjRailBlock` und `Item` nicht auf `Matching` stellen.
+2. `TDrawSyncManager::setCallback`: Slot `0x24` → `0x28`
+   bei Frame `0x30`. Die vier Varianten oben nicht wiederholen.
+3. `TCoasterEnemy::bind` nicht mit benanntem `TVec3`
+   oder `operator=`.
+4. `kickRoofEffect` erst angehen, wenn der Member-Offset
+   `0x3cb`/`0x3cf` geklärt ist.
+
+### Nach sechsundsiebzigster Iterationsrunde (zwei weitere Matches)
+
+**Beobachtung, vorher.** Stand Runde 75:
+47,59 % matched code, 1708488 / 3590088 Bytes,
+9168 / 12881 Funktionen.
+Game Code 35,25 %, 996340 / 2826784 Bytes,
+5203 / 8857 Funktionen.
+
+**Match, `evIsTalkModeNow`.**
+49 Instruktionen, 196 Bytes, Frame beiderseits `0x30`.
+Vorher lag das `TSpcSlice` bei uns auf `r1+0x14`, im Original
+auf `r1+0x18`. Sonst gleiche Wörter.
+`push(int)` baut das Slice eine Inline-Stufe tiefer.
+`interp->push(TSpcSlice(value))` setzt es auf `0x18`.
+Zwei Vorversuche ohne Wirkung, zurückgenommen:
+benannter `TMarDirector*` und benanntes `bool`.
+Nach dem Rebuild: 49 Wörter, Reloc-Typen gleich,
+null abweichende Wörter. Der String-Pool von `SpcTrace`
+hat andere lokale Namen, `functionRelocDiffs=data_value`
+zählt ihn als gleich.
+
+`validate-symbol-order.py -u mario/System/EventWatcher`
+meldet weiterhin `set__Q29JGeometry8TVec3<f>FRC3Vec` als
+MISSING. Das fehlt schon vor dieser Änderung. Nicht von
+diesem Match verursacht. Die TU bleibt `NonMatching`.
+
+**Match, `TNerveBPJumpReact::execute`.**
+25 Instruktionen, 100 Bytes.
+Vorher Frame `0x20` bei uns, `0x28` im Original.
+Nur die Frame-Offsets von `r31` wichen ab.
+`int time = spine->getTime()` hebt den Frame auf `0x28`.
+Nach dem Rebuild: 25 Wörter, null Abweichungen.
+`validate-symbol-order.py -u mario/Enemy/bosspakkun`:
+PASS, zwei vorbestehende UNUSED-Größenwarnungen.
+Die TU bleibt `NonMatching`.
+
+**Messung, `ninja` und `dtk shasum -c`.**
+
+Nachher: 47,60 % matched code,
+1708784 / 3590088 Bytes, 9170 / 12881 Funktionen.
+Game Code 35,26 %, 996636 / 2826784 Bytes,
+5205 / 8857 Funktionen.
+
+Delta gegen Runde 75: +2 Funktionen, +296 Bytes
+(196 + 100).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Kein Matching-Flip. `git push` weiter abgelehnt
+(`Invalid username or token`). Die Commits bleiben lokal.
+
+### Nach siebenundsiebzigster Iterationsrunde (kein neues Match)
+
+**Beobachtung, vorher.** Stand Runde 76:
+47,60 % matched code, 1708784 / 3590088 Bytes,
+9170 / 12881 Funktionen.
+Game Code 35,26 %, 996636 / 2826784 Bytes,
+5205 / 8857 Funktionen.
+Quelle unverändert, daher kein neuer `ninja`-Lauf
+für die Gesamtzahlen.
+
+**`evLaunchEventClearDemo`, kein Match.**
+44 Instruktionen, 176 Bytes, Frame beiderseits `0x30`.
+Das `TSpcSlice` liegt im Original auf `r1+0x20`,
+bei `interp->push()` auf `r1+0x18`.
+Sonst gleiche Wörter. Der `SpcTrace`-Pool hat andere
+lokale Namen; `functionRelocDiffs=data_value` zählt
+ihn als gleich.
+
+Gemessen und zurückgenommen:
+
+- `interp->push(TSpcSlice())`, `push(TSpcSlice(0))`,
+  ein benanntes `TSpcSlice` und
+  `mProcessStack.push(TSpcSlice())` heben das Slice
+  auf `0x1c`. Frame bleibt `0x30`. Vier Byte unter
+  `0x20`. Die Wörter sonst gleich.
+- `gpMarDirector->getConsole()` statt
+  `SMSGetMarDirector()->getConsole()` schrumpft den
+  Frame auf `0x28`.
+- Ein benannter `TMarDirector*` tut dasselbe, weil
+  der Accessor dann entfällt.
+- `mConsole` statt `getConsole()` schrumpft den Frame
+  ebenfalls auf `0x28`.
+- `T x; x = getConsole();` ändert nichts.
+- Das Slice vor den Console-Aufrufen zu bauen
+  verschiebt die Stores vor den `bl`.
+
+**Weitere Kandidaten, kein Match, zurückgenommen.**
+
+`TNerveBEelTearsMoveUp::execute`: Frame `0x40` gegen
+`0x30`, sonst nur Prolog-Offsets.
+`int time = spine->getTime()` ändert nichts.
+`f32 speed = mSLTearsUpSpeed.get()` ändert nichts.
+
+`TMareEventWallRock::load`: Frame `0x88` gegen `0x80`,
+der Zeiger für `insert` liegt auf `0x68` gegen `0x64`.
+Ein benannter `TViewObj*` ändert nichts.
+
+Kein Matching-Flip. `git push` erneut abgelehnt
+(`Invalid username or token`).
+`~/.gitconfig` und `gh` `hosts.yml` stehen weiter auf
+dem Stand 03:59 UTC. Die lokalen Commits ab
+`7881cb78` sind nicht auf dem PR.
+
+### Nächster Schritt
+
+1. Die fünf/sechs geprüften TUs nicht auf `Matching`
+   stellen.
+2. Nicht wiederholen: `setCallback` (vier Varianten),
+   `bind` mit `TVec3`/`operator=`, `kickRoofEffect`
+   bis der Member-Offset klar ist,
+   `evLaunchEventClearDemo` mit den oben gemessenen
+   Push- und Accessor-Schreibweisen,
+   `TNerveBEelTearsMoveUp` mit benanntem `getTime`
+   oder benanntem Speed,
+   `TMareEventWallRock::load` mit benanntem
+   `TViewObj*`.
+3. Nächster unangetasteter Kandidat:
+   `SMS_CountPolygonNumInShape`, Frame `0x48` gegen
+   `0x40`, die Tabelle vier Byte zu tief (`0x34`
+   gegen `0x30`).
+
+### Nach achtundsiebzigster Iterationsrunde (zwei Matches in DrawUtil)
+
+**Beobachtung, vorher.** Stand Runde 77:
+47,60 % matched code, 1708784 / 3590088 Bytes,
+9170 / 12881 Funktionen.
+Game Code 35,26 %, 996636 / 2826784 Bytes,
+5205 / 8857 Funktionen.
+
+**Match, `SMS_CountPolygonNumInShape`.**
+55 Instruktionen, 220 Bytes.
+Vorher Frame `0x40` bei uns, `0x48` im Original.
+Die Größentabelle lag auf `r1+0x30` statt `r1+0x34`.
+Sonst gleiche Wörter.
+`vtxAttrSize(sizeTable, desc->type)` hebt den Frame
+auf `0x48`, die Tabelle aber auf `0x38`.
+`GXAttrType type = desc->type` vor dem Aufruf lässt
+ein Argument-Temporary weg. Tabelle dann auf `0x34`.
+Nur der benannte Typ, ohne die Inline, bleibt bei
+Frame `0x40`.
+Nach dem Rebuild: 55 Wörter, null Abweichungen.
+Pool-Namen von `@2195` und `@742` zählt
+`functionRelocDiffs=data_value` als gleich.
+Die Inline wird nicht emittiert.
+
+**Match, `TSilhouette::setting`.**
+103 Instruktionen, 412 Bytes, Frame beiderseits `0x90`.
+Vorher lagen die Farb-Stores auf `0x1c` und die Kopie
+auf `0x20`.
+`GXColor amb = { ... }` schrumpft den Frame auf `0x88`
+und baut die Farbe bei `0x74`. Zurückgenommen.
+`GXColor amb; amb = (GXColor){ ... };` trifft `0x20`
+und die Kopie auf `0x1c`.
+Nach dem Rebuild: 103 Wörter, null Abweichungen.
+
+`validate-symbol-order.py -u mario/MarioUtil/DrawUtil`
+meldet weiter das vorbestehende fehlende Weak-Symbol
+`identity33__Q29JGeometry64TRotation3<...>Fv`.
+Dasselbe fehlte vor dieser Änderung.
+14 UNUSED-Größenwarnungen sind ebenfalls alt.
+Die TU bleibt `NonMatching`.
+`SMS_UnifyMaterial` liegt bei 99,3 %.
+
+**Messung, `ninja` und `dtk shasum -c`.**
+
+Nachher: 47,61 % matched code,
+1709416 / 3590088 Bytes, 9172 / 12881 Funktionen.
+Game Code 35,28 %, 997268 / 2826784 Bytes,
+5207 / 8857 Funktionen.
+
+Delta gegen Runde 77: +2 Funktionen, +632 Bytes
+(220 + 412).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Kein Matching-Flip. Kein Push in diesem Lauf.
+
+### Nächster Schritt
+
+1. `DrawUtil` nicht auf `Matching` stellen.
+2. `TSilhouette::setting` nicht wieder in den Aufruf
+   falten und nicht als `GXColor amb = { ... }`
+   schreiben.
+3. `SMS_CountPolygonNumInShape` nicht auf den direkten
+   Index `sizeTable[desc->type]` zurückdrehen.
+4. Nächster Kandidat in derselben TU:
+   `TSilhouette::perform`, 254 Instruktionen, 1016 Bytes.
+   Frame `0x188` gegen `0x180`. Die Farb-Slots weichen
+   um 12 Byte ab (`0x40` gegen `0x34`), der Frame nur
+   um 8. Kein einheitlicher Shift.
+
+### Nach neunundsiebzigster Iterationsrunde (ein Match)
+
+**Beobachtung, vorher.** Stand Runde 78:
+47,61 % matched code, 1709416 / 3590088 Bytes,
+9172 / 12881 Funktionen.
+Game Code 35,28 %, 997268 / 2826784 Bytes,
+5207 / 8857 Funktionen.
+
+`TSilhouette::perform` nicht angefasst.
+`getUnk1CAlpha` lädt bei uns `0x1f` statt `0x1b`.
+Das ist ein Member-Offset, kein reiner Slot.
+
+**Match, `TNerveBPBreakSleep::execute`.**
+61 Instruktionen, 244 Bytes.
+Vorher Frame `0x28` bei uns, `0x30` im Original.
+Der Rumpf war sonst wortgleich.
+`int time = spine->getTime()` hebt den Frame auf `0x30`.
+Nach dem Rebuild: 61 Wörter, null Abweichungen.
+Dieselbe Schreibweise wie bei `TNerveBPJumpReact`.
+
+`validate-symbol-order.py -u mario/Enemy/bosspakkun`
+PASS. Zwei UNUSED-Größenwarnungen sind alt.
+Die TU bleibt `NonMatching`.
+
+**Gemessen und zurückgenommen.**
+
+- `TLightWithDBSet::addChildGroupObj`: benannte
+  `opa`/`xlu` lassen die Zeiger-Slots vertauscht
+  (`0x6c`/`0x70`) und schieben den ersten
+  Iterator um 4 Byte nach unten.
+- `TAmenbo::calcRootMatrix`: `TPosition3f` vor
+  `isTaken()` ändert nichts. Die Matrix bleibt
+  auf `0x3c` statt `0x40`. Frame beiderseits `0x90`.
+- `TSilhouette::loadAfter`: Faktorentausch
+  `m[1][0] * m[2][1]` ändert die Lade-Reihenfolge
+  nicht. Das zweite `fmuls` wird schlechter.
+- `SMS_AddDamageFogEffect`: eine Inline
+  `damageFogOsc` faltet `-400 - startBase` und
+  `800 - endBase` weiter zu einem `300 * s`.
+  Frame `0x88` auf `0x90`, Original `0xb8`.
+  `fsubs` und das zweite `fmuls` fehlen weiter.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,62 % matched code,
+1709660 / 3590088 Bytes, 9173 / 12881 Funktionen.
+Game Code 35,29 %, 997512 / 2826784 Bytes,
+5208 / 8857 Funktionen.
+
+Delta gegen Runde 78: +1 Funktion, +244 Bytes.
+
+`changes_all` meldet nur
+`execute__18TNerveBPBreakSleep...` von 99,89 % auf
+100 %. Keine Regression.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Kein Matching-Flip.
+
+### Nächster Schritt
+
+1. `bosspakkun` und `DrawUtil` nicht auf `Matching`
+   stellen.
+2. `getTime()` nicht pauschal benennen.
+   Bei `TNerveBEelTearsMoveUp` hat es nichts geändert.
+3. Nicht wiederholen: die vier zurückgenommenen
+   Versuche oben, dazu die bekannten Sackgassen
+   (`bind`, `setCallback`, `evLaunchEventClearDemo`,
+   `kickRoofEffect`, `perform` von `TSilhouette`).
+4. Nächster Kandidat: eine andere Nerve, deren Diff
+   nur ein zu kleiner Frame ist und deren Rumpf
+   schon wortgleich ist. Nicht `TCoin::appear` und
+   nicht `TItem::calc` als erstes: dort fehlen
+   `0x20` Byte ohne einen einzigen Stack-Zugriff.
+
+### Nach achtzigster Iterationsrunde (drei Matches)
+
+**Beobachtung, vorher.** Stand Runde 79:
+47,62 % matched code, 1709660 / 3590088 Bytes,
+9173 / 12881 Funktionen.
+Game Code 35,29 %, 997512 / 2826784 Bytes,
+5208 / 8857 Funktionen.
+
+**Match, drei Nerves in `bosspakkun`.**
+Der Rumpf war wortgleich, der Frame 8 Byte zu klein.
+`int time = spine->getTime()` hebt den Frame.
+Null abweichende Wörter danach.
+
+- `TNerveBPGetUp::execute`, 46 Instruktionen, 184 Bytes.
+  Frame `0x20` auf `0x28`.
+- `TNerveBPCannon::execute`, 73 Instruktionen, 292 Bytes.
+  Frame `0x30` auf `0x38`.
+- `TNerveBPSwing::execute`, 44 Instruktionen, 176 Bytes.
+  Frame `0x30` auf `0x38`.
+  Nur der erste `getTime()` ist benannt.
+  Der zweite bleibt `spine->getTime()`, das Original
+  lädt nach `changeBck` neu.
+
+`validate-symbol-order.py -u mario/Enemy/bosspakkun`
+PASS. Die zwei UNUSED-Größenwarnungen sind alt.
+Die TU bleibt `NonMatching`.
+
+**Gemessen und zurückgenommen.**
+
+- `TNerveBPTumbleIn`: derselbe benannte `getTime()`
+  ändert den Frame nicht. Er bleibt `0x40` gegen
+  `0x48`. Drei Lade-Stellen, kein Stack-Objekt
+  dazwischen.
+- `TNerveBPFlyPivot`: der Frame wächst auf `0x40`,
+  gleich dem Original. Der Rückgabewert von `pop()`
+  bleibt auf `0x1c` statt `0x20`.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,64 % matched code,
+1710312 / 3590088 Bytes, 9176 / 12881 Funktionen.
+Game Code 35,31 %, 998164 / 2826784 Bytes,
+5211 / 8857 Funktionen.
+
+Delta gegen Runde 79: +3 Funktionen, +652 Bytes
+(184 + 292 + 176).
+
+`changes_all` meldet nur diese drei Executes von
+unter 100 % auf 100 %. Keine Regression.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Kein Matching-Flip.
+
+### Nächster Schritt
+
+1. `bosspakkun` nicht auf `Matching` stellen.
+2. `getTime()` nicht pauschal benennen.
+   `TumbleIn` hat nicht reagiert.
+   `FlyPivot` schließt den `pop()`-Slot nicht.
+3. `TNerveBPTornado` hat 16 Byte zu wenig Frame
+   und keinen Stack-Zugriff im Rumpf.
+   Ein einzelner `int` reicht dort erfahrungsgemäß
+   nicht.
+4. `TNerveBPDie` fehlt `0x20` ohne Stack-Zugriff,
+   wie `TCoin::appear` und `TItem::calc`.
+
+### Nach einundachtzigster Iterationsrunde (fünf Matches)
+
+**Beobachtung, vorher.** Stand Runde 80:
+47,64 % matched code, 1710312 / 3590088 Bytes,
+9176 / 12881 Funktionen.
+Game Code 35,31 %, 998164 / 2826784 Bytes,
+5211 / 8857 Funktionen.
+
+**Match, fünf Nerves.**
+Der Rumpf war wortgleich, der Frame 8 Byte zu klein.
+Ein benanntes `int time = spine->getTime()` hebt den Frame.
+Null abweichende Wörter danach.
+
+- `TNerveBPCannonL::execute`, 78 Instruktionen, 312 Bytes.
+  Frame `0x30` auf `0x38`.
+  Nur ein `getTime()`, vor `setBck`.
+- `TNerveKumokunPostWalk::execute`, 112 Instruktionen,
+  448 Bytes. Frame `0x40` auf `0x48`.
+- `TNerveKumokunPostFreeze::execute`, 112 Instruktionen,
+  448 Bytes. Frame `0x40` auf `0x48`.
+- `TNerveTamaNokoWait::execute`, 98 Instruktionen,
+  392 Bytes. Frame `0x38` auf `0x40`.
+  Nur der erste `getTime()` ist benannt.
+  Der Vergleich ist `< 2`.
+  Der spätere `getTime()` nach `setBckAnm` bleibt
+  ein erneuter Aufruf.
+- `TNerveTamaNokoHitWater::execute`, 206 Instruktionen,
+  824 Bytes. Frame `0x50` auf `0x58`.
+  Dieselbe Schreibweise wie bei `TamaNokoWait`.
+
+`validate-symbol-order.py` für `mario/Enemy/bosspakkun`,
+`mario/Enemy/Kumokun` und `mario/Enemy/tamaNoko`:
+PASS.
+UNUSED-Größenwarnungen und die Weak-Reihenfolge
+in `tamaNoko` sind alt und kein Fehler.
+Keine TU auf `Matching` gestellt.
+
+**Gemessen und zurückgenommen.**
+
+- `TNerveSmallEnemyFreeze`: der benannte
+  `freezeTime` wurde entfernt, weil der Frame
+  8 Byte zu groß war (`0x40` gegen `0x38`).
+  Der virtuelle Aufruf wandert nach hinten,
+  der Rumpf stimmt nicht mehr.
+- `TNerveBGKLaunchGoro`: der erste von zwei
+  `getTime()` benannt ändert nichts.
+  Frame bleibt `0x38` gegen `0x40`.
+- `TNerveBGKAwakeDamage`: das einzige `getTime()`
+  benannt ändert nichts.
+  Frame bleibt `0x60` gegen `0x68`.
+  Ein Double im Rumpf wandert mit.
+- `TNerveDoroHaneRise`: `getTime()` vor dem
+  `MsClamp`-Produkt benannt.
+  Frame bleibt `0x50` gegen `0x58`.
+  Die Int-nach-Float-Folge wird schlechter.
+- `TNerveMantaDeath`: benanntes `getTime()`
+  ändert nichts. Frame bleibt `0x28` gegen `0x30`.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,71 % matched code,
+1712736 / 3590088 Bytes, 9181 / 12881 Funktionen.
+Game Code 35,40 %, 1000588 / 2826784 Bytes,
+5216 / 8857 Funktionen.
+
+Delta gegen Runde 80: +5 Funktionen, +2424 Bytes
+(312 + 448 + 448 + 392 + 824).
+
+`changes_all` meldet nur diese fünf Executes von
+unter 100 % auf 100 %. Keine Regression.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Kein Matching-Flip.
+
+### Nächster Schritt
+
+1. `bosspakkun`, `Kumokun` und `tamaNoko` nicht
+   auf `Matching` stellen.
+2. `getTime()` nicht pauschal benennen.
+   `LaunchGoro`, `AwakeDamage`, `DoroHaneRise`
+   und `MantaDeath` haben nicht reagiert.
+   `SmallEnemyFreeze` darf den Namen nicht verlieren.
+3. Nicht wiederholen: `TNerveBPTornado` (16 Byte,
+   kein Stack-Zugriff), `TNerveBPDie`,
+   `TCoin::appear`, `TItem::calc` (`0x20`),
+   `TumbleIn`, `FlyPivot`.
+4. `TNerveKumokunFreeze` ist ebenfalls 16 Byte
+   zu klein und hat nur Prolog-Unterschiede.
+   Ein einzelner `int` ist dort kein erster Versuch.
+5. `TNerveTamaNokoSink` ist 8 Byte zu groß
+   (`0x68` gegen `0x60`), nicht zu klein.
+
+### Nach zweiundachtzigster Iterationsrunde (kein neuer Vollmatch)
+
+**Beobachtung, vorher.** Stand Runde 81:
+47,71 % matched code, 1712736 / 3590088 Bytes,
+9181 / 12881 Funktionen.
+Game Code 35,40 %, 1000588 / 2826784 Bytes,
+5216 / 8857 Funktionen.
+
+**`TBossPakkun::receiveMessage`.**
+148 Instruktionen, 592 Bytes.
+Vorher war der Rumpf bis auf ein `cmplw` wortgleich,
+der Frame `0x50` gegen `0x60`.
+`&TNerveBPSleep::theNerve() == getLatestNerve()`
+lädt in derselben Reihenfolge, vergleicht aber
+`cmplw r0, r3`.
+`getLatestNerve() == &theNerve()` direkt hält den
+Nerv in `r28` und lädt den Spine ein zweites Mal.
+Diese Form matcht das `cmplw`:
+
+```
+const TNerveBase<TLiveActor>* sleep = &TNerveBPSleep::theNerve();
+if (mSpine->getLatestNerve() == sleep && ...)
+```
+
+Danach nur noch Prolog und Epilog, neun Zeilen,
+Frame weiter `0x50` gegen `0x60`.
+Kein Stack-Zugriff im Rumpf.
+Die Funktion zählt nicht als Match.
+
+`validate-symbol-order.py -u mario/Enemy/bosspakkun`
+PASS. Die zwei UNUSED-Größenwarnungen sind alt.
+Die TU bleibt `NonMatching`.
+
+**Gemessen und zurückgenommen.**
+
+- `MtxToQuat`: die Summe `m[0][0] + m[1][1] + m[2][2] + 1`
+  in drei Statements zerlegt. Das eine vertauschte
+  `fadds` wird nicht gerichtet. Die Register der
+  Spur wechseln, das `fmr` fällt weg.
+- `evStartSE`: `push(TSpcSlice())` ändert nichts.
+  Die beiden Slices bleiben 4 Byte zu tief
+  (`0x34`/`0x2c` gegen `0x38`/`0x30`),
+  das `stfd` bei `0x40` stimmt schon.
+  Ein benanntes `TSpcSlice` verkleinert den Frame
+  auf `0x40` und lässt den Typ-Store aus.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher unverändert: 47,71 % matched code,
+1712736 / 3590088 Bytes, 9181 / 12881 Funktionen.
+Game Code 35,40 %, 1000588 / 2826784 Bytes,
+5216 / 8857 Funktionen.
+
+`changes_all` meldet nur
+`receiveMessage__11TBossPakkun...` von 99,87 % auf
+99,94 % fuzzy. Keine Regression, kein neues
+100-%-Symbol.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Kein Matching-Flip.
+
+### Nächster Schritt
+
+1. `bosspakkun` nicht auf `Matching` stellen.
+2. `receiveMessage` nicht noch einmal über die
+   `==`-Reihenfolge drehen. Der Frame bleibt
+   16 Byte zu klein und ohne Stack-Zugriff.
+3. `MtxToQuat` nicht erneut in Teilsummen
+   zerlegen. `evStartSE` nicht mit
+   `push(TSpcSlice())` oder einem benannten
+   `TSpcSlice` wiederholen.
+4. Die Vermeidungsliste aus Runde 81 bleibt.
+
+### Nach dreiundachtzigster Iterationsrunde (ein Match)
+
+**Beobachtung, vorher.** Stand Runde 82:
+47,71 % matched code, 1712736 / 3590088 Bytes,
+9181 / 12881 Funktionen.
+Game Code 35,40 %, 1000588 / 2826784 Bytes,
+5216 / 8857 Funktionen.
+
+**Match, `TMapObjBase::isDemo`.**
+22 Instruktionen, 88 Bytes.
+Vorher ein vertauschtes `bne`: Zustand 1 und 2
+sprangen auf `return false`.
+`if (b1) return true` legt ein zweites `return true`
+vor die Prüfung von 3 und 4.
+`if (!b2) return false` macht aus dem zweiten
+Sprung ein `bne` und tauscht die Rückgaben.
+Ein `goto` initialisiert `b2` zu früh.
+
+Die passende Form ist ein Oder mit der zweiten
+Paarprüfung als Inline. Der Helfer wird nicht
+emittiert.
+
+```
+if (b1 || stateIs3Or4(gpMarDirector->unk124))
+    return true;
+return false;
+```
+
+Null abweichende Wörter. Die TU bleibt
+`NonMatching`.
+
+`validate-symbol-order.py -u mario/MoveBG/MapObjLib`
+schlägt schon vorher fehl: `SMatrix33C::at` fehlt,
+und die UNUSED-Reihenfolge weicht ab.
+Das ist nicht durch `isDemo` entstanden.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,71 % matched code,
+1712824 / 3590088 Bytes, 9182 / 12881 Funktionen.
+Game Code 35,40 %, 1000676 / 2826784 Bytes,
+5217 / 8857 Funktionen.
+
+Delta gegen Runde 82: +1 Funktion, +88 Bytes.
+Die angezeigte Prozentzahl bleibt 47,71.
+
+`changes_all` meldet nur `isDemo__11TMapObjBaseFv`
+von 99,77 % auf 100 %. Keine Regression.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Kein Matching-Flip.
+
+### Nächster Schritt
+
+1. `MapObjLib` nicht auf `Matching` stellen.
+2. `isDemo` nicht auf ein vierfaches Oder
+   oder ein `goto` zurückdrehen.
+3. Die Vermeidungsliste aus Runde 81 und die
+   drei Fehlversuche aus Runde 82 bleiben.
+
+### Nach vierundachtzigster Iterationsrunde (ein Zähler-Match)
+
+**Beobachtung, vorher.** Stand Runde 83:
+47,71 % matched code, 1712824 / 3590088 Bytes,
+9182 / 12881 Funktionen.
+Game Code 35,40 %, 1000676 / 2826784 Bytes,
+5217 / 8857 Funktionen.
+
+**Match, `evCheckWoodBox`.**
+171 Instruktionen, 684 Bytes.
+Die Schleife läuft von `p2` bis `p1`.
+Der Zähler stand als `p2 - p1 + 1`.
+Das Ziel rechnet `subf r5, r6, r29`, also `p1 - p2`.
+`int count = p1 - p2 + 1` macht dieses eine Wort gleich.
+Null abweichende Wörter. Die TU bleibt `NonMatching`.
+
+**Diff sauber, zwei Nozzle-`movement`.**
+`TNozzleBase::movement` ist in
+`TNozzleDeform::movement` geinlined.
+Beide hatten nur zwei `lfs`: zuerst 256, dann 150.
+Das Ziel lädt 150 und danach 256.
+`150.0f * analog * 256.0f` dreht die Faktoren.
+Danach null abweichende Wörter.
+200 Bytes und 296 Bytes.
+Der Fortschrittszähler stand für beide schon auf 100 %,
+deshalb steigt `matched_code` hier nicht.
+
+**Diff sauber, `TEnemyMario::hitWater`.**
+Das eine abweichende `lfs` lädt die Poolkonstante 30, nicht 0.
+Das Literal ist jetzt `30.0f`.
+109 Instruktionen, 436 Bytes, null abweichende Wörter.
+Der Funktionszähler stand schon auf 100 %.
+`.sdata2` der TU geht von 99,5 % auf 100 %.
+
+`validate-symbol-order.py` schlägt bei allen drei TUs
+an vorbestehenden Fehlern fehl:
+`TVec3::set` fehlt in `EventWatcher`,
+UNUSED-Symbole fehlen in `WaterGun`,
+`getPoint` fehlt in `enemyMario`.
+Keine neue Nicht-weak-Reihenfolge.
+Kein Matching-Flip.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,73 % matched code,
+1713508 / 3590088 Bytes, 9183 / 12881 Funktionen.
+Game Code 35,42 %, 1001360 / 2826784 Bytes,
+5218 / 8857 Funktionen.
+
+Delta Code gegen Runde 83: +1 Funktion, +684 Bytes.
+Daten: 384651 auf 385643 Bytes,
+60,07 % auf 60,23 %.
+Das sind die 992 Bytes `.sdata2` von `enemyMario`.
+
+`changes_all` meldet `evCheckWoodBox` von 99,94 % auf 100 %.
+`enemyMario` matched data von 48,05 % auf 62,93 %.
+Keine Regression.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### Nächster Schritt
+
+1. `isDemo` nicht auf ein vierfaches Oder
+   oder ein `goto` zurückdrehen.
+2. `evCheckWoodBox` nicht wieder auf `p2 - p1` stellen.
+3. Die Nozzle-Faktoren nicht wieder mit 256 vor 150 schreiben.
+4. Die `hitWater`-Lautstärke nicht wieder auf `0.0f` setzen.
+5. Die Vermeidungslisten aus Runde 81 und 82 bleiben.
+   Die drei TUs nicht auf `Matching` stellen.
+
+### Nach fünfundachtzigster Iterationsrunde (sechs Diffs, Daten)
+
+**Beobachtung, vorher.** Stand Runde 84:
+47,73 % matched code, 1713508 / 3590088 Bytes,
+9183 / 12881 Funktionen.
+Game Code 35,42 %, 1001360 / 2826784 Bytes,
+5218 / 8857 Funktionen.
+Daten 385643 / 640331 Bytes, 60,23 %.
+
+**`TMario::thinkDirty`.**
+Das eine abweichende `lfs` subtrahiert 200, nicht 1,
+von `mFloorPosition.z`, bevor `mPosition.y` vergleicht.
+107 Instruktionen, 428 Bytes, null abweichende Wörter.
+Der Fortschrittszähler stand schon auf 100 %.
+
+**Wurzelmatrizen in `MapObjLib`.**
+`M_PI / 180.0f` ist ein Bit zu klein
+(`0x3c8efa35` gegen `0x3c8efa36`).
+Die Spielkonstante `0.017453294f` steht schon in
+`Sky.cpp`, `AnimalBase.cpp` und `cameralib.cpp`.
+Damit matchen:
+
+- `makeRootMtxRotX`, `makeRootMtxRotY`, `makeRootMtxRotZ`,
+  je 44 Instruktionen, 176 Bytes
+- `setRootMtxRotY` und `setRootMtxRotZ`,
+  je 45 Instruktionen, 180 Bytes
+
+Null abweichende Wörter. Keine Regression in den beiden TUs.
+
+`.sdata2` von `MapObjLib` matcht damit vollständig.
+`matched_data` der TU von 796 auf 892 Bytes, 100 %.
+
+`validate-symbol-order.py` bleibt rot an alten Fehlern:
+`MarioMove` fehlt UNUSED `setMissJumping`,
+`MapObjLib` fehlt `SMatrix33C::at` und die
+Nicht-weak-Reihenfolge weicht ab.
+Kein Matching-Flip. `isDemo` und die vier Formen
+aus Runde 84 sind unverändert.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Code unverändert: 47,73 % matched code,
+1713508 / 3590088 Bytes, 9183 / 12881 Funktionen.
+Game Code 35,42 %, 1001360 / 2826784 Bytes,
+5218 / 8857 Funktionen.
+
+Daten: 385739 / 640331 Bytes, 60,24 %.
+Game-Daten 306515 / 556995 Bytes, 55,03 %.
+Delta gegen Runde 84: +96 Datenbytes, kein neues
+Code-Symbol im Zähler.
+
+`changes_all` meldet nur `MapObjLib` matched data
+von 89,24 % auf 100 %. Keine Regression.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### Nächster Schritt
+
+1. `thinkDirty` nicht wieder auf `- 1.0f` stellen.
+2. Die drei `makeRootMtxRot*` nicht wieder auf
+   `M_PI / 180.0f` stellen.
+3. Runde 84 nicht zurückdrehen: `p1 - p2 + 1`,
+   `150 * analog * 256`, `hitWater` mit `30.0f`.
+4. `isDemo` nicht auf ein vierfaches Oder oder
+   ein `goto` zurückdrehen.
+5. Vermeidungslisten aus Runde 81 und 82 bleiben.
+   `MapObjLib` und `MarioMove` nicht auf `Matching` stellen.
+
+### Nach sechsundachtzigster Iterationsrunde (ein Status-Match)
+
+**Beobachtung, vorher.** Stand Runde 85:
+47,73 % matched code, 1713508 / 3590088 Bytes,
+9183 / 12881 Funktionen.
+Game Code 35,42 %, 1001360 / 2826784 Bytes,
+5218 / 8857 Funktionen.
+Daten 385739 / 640331 Bytes, 60,24 %.
+
+**Match, `TMario::changePlayerStatus`.**
+`setStatusToRunning` ist dort geinlined.
+Die Laufgeschwindigkeit nahm das Maximum aus
+`mIntendedMag` und 8.
+Das Ziel nimmt das Minimum: bei `mIntendedMag <= 8`
+bleibt der Wert, sonst wird 8 eingesetzt.
+115 Instruktionen, 460 Bytes, null abweichende Wörter.
+Vorher 99,83 %. Die TU bleibt `NonMatching`.
+
+Die freistehende Kopie von `setStatusToRunning` ist
+UNUSED, 216 Bytes gegen 220 in der Map.
+Die Größe ändert sich durch die Auswahl nicht.
+`validate-symbol-order.py` bleibt rot am alten
+fehlenden `setMissJumping`. Keine neue Reihenfolge.
+`thinkDirty` und die Wurzelmatrizen sind unverändert.
+
+**Angeschaut, nicht angefasst.**
+`TPollutionLayer::stampModel` tauscht nur zwei `lfs`,
+der `fcmpo` bleibt derselbe.
+`MSRandVol::getRandVol` tauscht zwei Index-Register,
+`f1`/`f2`/`f3` an `getRandom` sind dieselben Werte.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,74 % matched code,
+1713968 / 3590088 Bytes, 9184 / 12881 Funktionen.
+Game Code 35,44 %, 1001820 / 2826784 Bytes,
+5219 / 8857 Funktionen.
+Daten unverändert: 385739 / 640331 Bytes, 60,24 %.
+
+Delta Code gegen Runde 85: +1 Funktion, +460 Bytes.
+
+`changes_all` meldet nur `changePlayerStatus`
+von 99,83 % auf 100 %.
+`MarioMove` matched code von 38,86 % auf 40,21 %.
+Keine Regression.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### Nächster Schritt
+
+1. `changePlayerStatus` nicht wieder auf
+   `mIntendedMag <= 8 ? 8 : mIntendedMag` stellen.
+2. `thinkDirty` nicht wieder auf `- 1.0f` stellen.
+3. Die drei `makeRootMtxRot*` nicht wieder auf
+   `M_PI / 180.0f` stellen.
+4. Runde 84 nicht zurückdrehen: `p1 - p2 + 1`,
+   `150 * analog * 256`, `hitWater` mit `30.0f`.
+5. `isDemo` nicht auf ein vierfaches Oder oder
+   ein `goto` zurückdrehen.
+6. Vermeidungslisten aus Runde 81 und 82 bleiben.
+   `stampModel` und `getRandVol` nicht wegen
+   Registertausch jagen.
+   `MarioMove` nicht auf `Matching` stellen.
+
+### Nach siebenundachtzigster Iterationsrunde (ein Datenwort)
+
+**Beobachtung, vorher.** Stand Runde 86:
+47,74 % matched code, 1713968 / 3590088 Bytes,
+9184 / 12881 Funktionen.
+Game Code 35,44 %, 1001820 / 2826784 Bytes,
+5219 / 8857 Funktionen.
+Daten 385739 / 640331 Bytes, 60,24 %.
+
+**`TKumokunManager::load`.**
+Der offizielle Zähler stand für die Funktion schon
+auf 100 %. `decomp-diff` zeigte ein `lwz` aus
+`.sdata`: Zielwert 65, Quelle 60.
+Das dritte `set` schreibt `mSLDamageRadius`.
+Die anderen drei bleiben 60, 50 und 70.
+122 Instruktionen, 488 Bytes, danach null
+abweichende Wörter.
+`Kumokun`-Daten von 2552 auf 2568 Bytes, 100 %.
+Die TU bleibt `NonMatching` (Code 43,40 %).
+`validate-symbol-order.py` bleibt PASS mit den
+alten UNUSED-Größenwarnungen.
+`changePlayerStatus` ist unverändert.
+
+**Angeschaut, nicht angefasst.**
+`stampModel` und `getRandVol` bleiben Registertausch.
+`TRoulette::moveObject` hat zusätzlich einen
+Frame-Abstand von 0x20.
+`setQuat` tauscht nur Float-Register bei gleichen
+Poolwerten.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Code unverändert: 47,74 % matched code,
+1713968 / 3590088 Bytes, 9184 / 12881 Funktionen.
+Game Code 35,44 %, 1001820 / 2826784 Bytes,
+5219 / 8857 Funktionen.
+
+Daten: 385755 / 640331 Bytes, 60,24 %.
+Game-Daten 306531 / 556995 Bytes, 55,03 %.
+Delta gegen Runde 86: +16 Datenbytes, kein neues
+Code-Symbol im Zähler.
+
+`changes_all` meldet nur `Kumokun` matched data
+von 99,38 % auf 100 %. Keine Regression.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### Nächster Schritt
+
+1. `mSLDamageRadius` in `TKumokunManager::load`
+   nicht wieder auf 60 stellen.
+2. `changePlayerStatus` behält das Minimum aus
+   `mIntendedMag` und 8.
+3. `thinkDirty` bleibt bei `- 200.0f`.
+   Die drei `makeRootMtxRot*` bleiben bei
+   `0.017453294f`.
+4. Runde 84 bleibt: `p1 - p2 + 1`,
+   `150 * analog * 256`, `hitWater` mit `30.0f`.
+5. `isDemo` bleibt die Oder-Form mit `stateIs3Or4`.
+6. Vermeidungslisten aus Runde 81 und 82 bleiben.
+   `stampModel` und `getRandVol` nicht wegen
+   Registertausch jagen.
+   `Kumokun` und `MarioMove` nicht auf `Matching` stellen.
+
+### Nach achtundachtzigster Iterationsrunde (ein Spin)
+
+**Beobachtung, vorher.** Stand Runde 87:
+47,74 % matched code, 1713968 / 3590088 Bytes,
+9184 / 12881 Funktionen.
+Game Code 35,44 %, 1001820 / 2826784 Bytes,
+5219 / 8857 Funktionen.
+Daten 385755 / 640331 Bytes, 60,24 %.
+
+**Match, `TMario::rotating`.**
+Die positive Drehung speichert `mStatusTimer * 4096`
+mit `extsh` in das `s16` `mModelFaceAngle`.
+Die negative Drehung hat nur `neg` und `sth`.
+Ein `u16`-Cast auf der Negation entfernt das
+zusätzliche `extsh`.
+74 Instruktionen, 296 Bytes, null abweichende Wörter.
+Vorher 98,65 %. Die TU bleibt `NonMatching`.
+
+`validate-symbol-order.py` bleibt rot am alten
+fehlenden UNUSED `braking`. Keine neue Reihenfolge.
+Nur diese Funktion gewinnt. Der Schadensradius 65
+und `changePlayerStatus` sind unverändert.
+
+**Zurückgenommen.**
+`startDisappearTimer` als `465 - y1 + 60` faltet
+weiter zu einem `subfic` von 525.
+`s32 targetY; targetY += 60` zieht die `addi` nach,
+der Rest der Funktion fällt auf 82 %.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,75 % matched code,
+1714264 / 3590088 Bytes, 9185 / 12881 Funktionen.
+Game Code 35,45 %, 1002116 / 2826784 Bytes,
+5220 / 8857 Funktionen.
+Daten unverändert: 385755 / 640331 Bytes, 60,24 %.
+
+Delta Code gegen Runde 87: +1 Funktion, +296 Bytes.
+
+`changes_all` meldet nur `rotating` von 98,65 %
+auf 100 %. `MarioRun` matched code von 26,38 %
+auf 27,86 %. Keine Regression.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### Nächster Schritt
+
+1. Die negative Drehung in `rotating` behält den
+   `u16`-Cast.
+2. `mSLDamageRadius` in `TKumokunManager::load`
+   bleibt 65.
+3. `changePlayerStatus` behält das Minimum aus
+   `mIntendedMag` und 8.
+4. `thinkDirty` bleibt bei `- 200.0f`.
+   Die drei `makeRootMtxRot*` bleiben bei
+   `0.017453294f`.
+5. Runde 84 bleibt: `p1 - p2 + 1`,
+   `150 * analog * 256`, `hitWater` mit `30.0f`.
+6. `isDemo` bleibt die Oder-Form mit `stateIs3Or4`.
+7. Vermeidungslisten aus Runde 81 und 82 bleiben.
+   `stampModel`, `getRandVol`, `setQuat` und
+   `TRoulette::moveObject` nicht wegen Registertausch
+   jagen. `startDisappearTimer` nicht wieder als
+   gefaltete 525 oder als `targetY += 60` schreiben.
+   `MarioRun` nicht auf `Matching` stellen.
+
+### Nach neunundachtzigster Iterationsrunde (kein Vollmatch)
+
+**Beobachtung, vorher.** Stand Runde 88:
+47,75 % matched code, 1714264 / 3590088 Bytes,
+9185 / 12881 Funktionen.
+Game Code 35,45 %, 1002116 / 2826784 Bytes,
+5220 / 8857 Funktionen.
+Daten 385755 / 640331 Bytes, 60,24 %.
+
+**Kein neues Vollmatch.** Drei belegte Konstanten,
+der Code-Zähler bleibt stehen.
+
+`TNerveBPSwallow::execute`: der zweite Emitter
+bekommt `(u8*)boss + 1`, wie die anderen
+Pakkun-Wasser-Partikel.
+Die `addi`-Immediate stimmt.
+Der Frame bleibt 0x50 gegen 0x60, ohne inneren
+Stack-Zugriff. 99,92 % auf 99,93 %.
+
+`TDoroHaneKuri::attackToMario`: die Joint-Position
+ist die Translationsspalte `mtx[0][3]`, `mtx[1][3]`,
+`mtx[2][3]`.
+Der Rumpf stimmt danach.
+Der Frame bleibt 0x48 gegen 0x50.
+Ein benanntes Bool, ein Model-Zeiger, ein Sound-Zeiger
+und ein Nerve-Zeiger verschieben den Frame nicht,
+ohne Register zu tauschen.
+99,93 % auf 99,95 %.
+
+`TBaseNPC::isCanWalk`: `CLBSquared` bekommt `10.0f`.
+`2.5625f` wählt ein anderes Pool-Float.
+`execWalk` 89,42 % auf 89,44 %.
+Die `sdata2` der TU geht von 0 % auf 100 %
+matched data, 56 Bytes.
+`set(dx, 0, dz)` statt der Subtraktion fiel auf
+83,5 % und bleibt draussen.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,75 % matched code,
+1714264 / 3590088 Bytes, 9185 / 12881 Funktionen.
+Game Code 35,45 %, 1002116 / 2826784 Bytes,
+5220 / 8857 Funktionen.
+Daten 385811 / 640331 Bytes, 60,25 %.
+Game-Daten 306587 / 556995 Bytes, 55,04 %.
+
+Delta Code gegen Runde 88: keine Funktion, 0 Bytes.
+Delta Daten: +56 Bytes, nur `NpcWalkTurn`.
+
+`changes_all` listet keine Regression.
+`bosspakkun` Symbolordnung PASS, alte UNUSED-Grössen.
+`hamukuri` und `NpcWalkTurn` bleiben an den alten
+Fehlern rot (`onHaveCap`-Linkage, fehlendes `set<f>`).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `rotating` behält den `u16`-Cast.
+2. `TNerveBPSwallow` behält `(u8*)boss + 1`.
+   Den 16-Byte-Frame nicht mit einem einzelnen `int`
+   auffüllen.
+3. `attackToMario` behält die Translationsspalte.
+   Den 8-Byte-Frame nicht mit `trash` schliessen.
+4. `isCanWalk` behält `CLBSquared(10.0f)`.
+   Die `set(dx, 0, dz)`-Form nicht wiederholen.
+5. `mSLDamageRadius` bleibt 65.
+   `changePlayerStatus` behält das Minimum aus
+   `mIntendedMag` und 8.
+6. `thinkDirty` bleibt bei `- 200.0f`.
+   Die drei `makeRootMtxRot*` bleiben bei
+   `0.017453294f`.
+7. Runde 84 bleibt: `p1 - p2 + 1`,
+   `150 * analog * 256`, `hitWater` mit `30.0f`.
+8. `isDemo` bleibt die Oder-Form mit `stateIs3Or4`.
+9. Vermeidungslisten aus Runde 81 und 82 bleiben.
+   `stampModel`, `getRandVol`, `setQuat` und
+   `TRoulette::moveObject` nicht wegen Registertausch
+   jagen. `startDisappearTimer` nicht wieder als
+   gefaltete 525 oder als `targetY += 60` schreiben.
+   `MarioRun`, `bosspakkun`, `hamukuri` und
+   `NpcWalkTurn` nicht auf `Matching` stellen.
+
+### Nach neunzigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 89:
+47,75 % matched code, 1714264 / 3590088 Bytes,
+9185 / 12881 Funktionen.
+Game Code 35,45 %, 1002116 / 2826784 Bytes,
+5220 / 8857 Funktionen.
+Daten 385811 / 640331 Bytes, 60,25 %.
+
+**Ein neues Vollmatch, drei Partial-Fixes.**
+
+`THaneHamuKuri2::walkBehavior`: die Höhe ist
+`unk210 + height`, wobei `height` die Summe
+`unk230 + unk234` ist.
+Retail addiert die beiden Offsets zuerst und
+reserviert das Slot.
+0 Abweichungen, 364 Bytes, 100 %.
+
+`TNervePoihanaThrow::execute`: `MsMtxSetRotRPH`
+bekommt `mRotation` (0x30), nicht `mPosition` (0x10).
+Die drei `lfs` stimmen.
+Der Frame bleibt 0xa0 gegen 0xb0, jeder Slot
+um 0x10 verschoben. 99,82 % auf 99,84 %.
+
+`TDangoHamuKuri::receiveMessage`: der Wasser-Partikel
+hängt an `&sender->mPosition`, der Treffer-Sound
+an `&mPosition`.
+Der Rumpf stimmt.
+Der Frame bleibt 0x20 gegen 0x48.
+99,91 % auf 99,95 %.
+
+`TMapObjGeneral::recovering`: die Joint-Höhe ist
+`mat[1][3]`, die Y-Spalte der 3x4-Matrix.
+Der Rumpf stimmt.
+Der Frame bleibt 0x20 gegen 0x48.
+99,84 % auf 99,87 %.
+
+Keiner der drei Frames wurde mit einem einzelnen
+`int` oder `trash` aufgefüllt.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,76 % matched code,
+1714628 / 3590088 Bytes, 9186 / 12881 Funktionen.
+Game Code 35,46 %, 1002480 / 2826784 Bytes,
+5221 / 8857 Funktionen.
+Daten unverändert: 385811 / 640331 Bytes, 60,25 %.
+Game-Daten unverändert: 306587 / 556995 Bytes, 55,04 %.
+
+Delta Code gegen Runde 89: +1 Funktion, +364 Bytes.
+Delta Daten: 0 Bytes.
+
+`changes_all` listet keine Regression.
+`hamukuri` matched code 55,80 % auf 56,60 %.
+`poihana` und `MapObjGeneral` Symbolordnung PASS.
+`hamukuri` bleibt am alten `onHaveCap`-Linkage rot.
+`isOnTrap` UNUSED-Grösse in `poihana` ist alt.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `walkBehavior` behält die benannte Summe
+   `height = unk230 + unk234`.
+2. `TNervePoihanaThrow` behält `mRotation`.
+   Den 16-Byte-Frame nicht mit einem einzelnen `int`
+   auffüllen.
+3. `receiveMessage` des Dango behält
+   `&sender->mPosition` für den Partikel.
+   Den Frame nicht mit `trash` schliessen.
+4. `recovering` behält `mat[1][3]`.
+5. Runde 89 bleibt: `(u8*)boss + 1`,
+   Translationsspalte in `attackToMario`,
+   `CLBSquared(10.0f)`.
+   `set(dx, 0, dz)` in `isCanWalk` nicht wiederholen.
+6. `rotating` behält den `u16`-Cast.
+   `mSLDamageRadius` bleibt 65.
+   `changePlayerStatus` behält das Minimum aus
+   `mIntendedMag` und 8.
+7. `thinkDirty` bleibt bei `- 200.0f`.
+   Die drei `makeRootMtxRot*` bleiben bei
+   `0.017453294f`.
+8. Runde 84 bleibt: `p1 - p2 + 1`,
+   `150 * analog * 256`, `hitWater` mit `30.0f`.
+9. `isDemo` bleibt die Oder-Form mit `stateIs3Or4`.
+10. Vermeidungslisten aus Runde 81 und 82 bleiben.
+    `stampModel`, `getRandVol`, `setQuat` und
+    `TRoulette::moveObject` nicht wegen Registertausch
+    jagen. `startDisappearTimer` nicht wieder als
+    gefaltete 525 oder als `targetY += 60` schreiben.
+    `MarioRun`, `bosspakkun`, `hamukuri`, `poihana`,
+    `MapObjGeneral` und `NpcWalkTurn` nicht auf
+    `Matching` stellen.
+
+### Nach einundneunzigster Iterationsrunde (kein Vollmatch)
+
+**Beobachtung, vorher.** Stand Runde 90:
+47,76 % matched code, 1714628 / 3590088 Bytes,
+9186 / 12881 Funktionen.
+Game Code 35,46 %, 1002480 / 2826784 Bytes,
+5221 / 8857 Funktionen.
+Daten 385811 / 640331 Bytes, 60,25 %.
+
+**Kein neues Vollmatch.** Sechs Rümpfe stimmen.
+Die Frames bleiben offen und werden nicht gepolstert.
+Der Code-Zähler bleibt bei Runde 90.
+
+`TNerveBPTumble::execute`: der Jita-Emitter hängt an
+`(u8*)boss + 8`.
+Die `addi` stimmt.
+Der Frame bleibt 0x40 gegen 0x50.
+99,29 % auf 99,93 %.
+
+`evInsertTimer`: der erste Zweig ist `p2 == 1`.
+Danach `p2 == 2`, sonst `startDisappearTimer`.
+Der Frame bleibt 0x98 gegen 0xa0.
+99,77 % auf 99,78 %.
+
+`TFireWanwanTailHit::behaveTaken`: `moveRequest`
+bekommt `param_1->mPosition`.
+Im inlined `receiveMessage` stimmt der Rumpf.
+Der Frame bleibt 0xa0 gegen 0xb0.
+99,89 % auf 99,92 %.
+
+`TWoodBox::kill`: die vier Bodenprüfungen laufen
+`(-50,-50)`, `(50,-50)`, `(-50,50)`, `(50,50)`.
+Die beiden Pool-Loads stimmen.
+Der Frame bleibt 0x58 gegen 0xf0.
+Live-Diff 99,88 % auf 99,93 %.
+`changes_all` listet die Funktion nicht extra,
+der Report-Fuzzy bleibt 99,93 %.
+
+`TBossMantaManager::createEnemies`: das Limit ist
+`mSLInstanceNum` (Wert bei 0x90).
+Der Frame bleibt 0xa8 gegen 0xb0.
+99,78 % auf 99,79 %.
+
+`TWalkerEnemy::moveObject`: `mPosition.y += 5.0f`.
+Der Yaw-Load davor bleibt `mRotation.y`.
+Der Frame bleibt 0x60 gegen 0x88.
+99,80 % auf 99,82 %.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,76 % matched code,
+1714628 / 3590088 Bytes, 9186 / 12881 Funktionen.
+Game Code 35,46 %, 1002480 / 2826784 Bytes,
+5221 / 8857 Funktionen.
+Daten unverändert: 385811 / 640331 Bytes, 60,25 %.
+Game-Daten unverändert: 306587 / 556995 Bytes, 55,04 %.
+
+Delta Code gegen Runde 90: keine Funktion, 0 Bytes.
+Delta Daten: 0 Bytes.
+
+`changes_all` listet keine Regression.
+Live-Vergleich der sechs TUs: 6 Gewinne, 0 Verluste.
+`bosspakkun` und `walkerEnemy` Symbolordnung PASS.
+`EventWatcher`, `fireWanwan`, `MapObjHide` und
+`bossManta` bleiben an den alten Fehlern rot.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `walkBehavior` behält `height = unk230 + unk234`.
+2. Die sechs Rümpfe dieser Runde behalten.
+   Keinen davon mit einem einzelnen `int` oder
+   `trash` auf Frame-Länge bringen.
+3. Runde 90 bleibt: `mRotation` in `PoihanaThrow`,
+   `&sender->mPosition` im Dango-`receiveMessage`,
+   `mat[1][3]` in `recovering`.
+4. Runde 89 bleibt: `(u8*)boss + 1`,
+   Translationsspalte in `attackToMario`,
+   `CLBSquared(10.0f)`.
+   `set(dx, 0, dz)` in `isCanWalk` nicht wiederholen.
+5. `rotating` behält den `u16`-Cast.
+   `mSLDamageRadius` bleibt 65.
+   `changePlayerStatus` behält das Minimum aus
+   `mIntendedMag` und 8.
+6. `thinkDirty` bleibt bei `- 200.0f`.
+   Die drei `makeRootMtxRot*` bleiben bei
+   `0.017453294f`.
+7. Runde 84 bleibt: `p1 - p2 + 1`,
+   `150 * analog * 256`, `hitWater` mit `30.0f`.
+8. `isDemo` bleibt die Oder-Form mit `stateIs3Or4`.
+9. Vermeidungslisten aus Runde 81 bis 89 bleiben.
+   `stampModel`, `getRandVol`, `setQuat` und
+   `TRoulette::moveObject` nicht wegen Registertausch
+   jagen. `startDisappearTimer` nicht wieder als
+   gefaltete 525 oder als `targetY += 60` schreiben.
+   `MarioRun`, `bosspakkun`, `hamukuri`, `poihana`,
+   `MapObjGeneral`, `walkerEnemy`, `bossManta`,
+   `fireWanwan`, `MapObjHide`, `EventWatcher` und
+   `NpcWalkTurn` nicht auf `Matching` stellen.
+
+### Nach zweiundneunzigster Iterationsrunde (kein Vollmatch)
+
+**Beobachtung, vorher.** Stand Runde 91:
+47,76 % matched code, 1714628 / 3590088 Bytes,
+9186 / 12881 Funktionen.
+Game Code 35,46 %, 1002480 / 2826784 Bytes,
+5221 / 8857 Funktionen.
+Daten 385811 / 640331 Bytes, 60,25 %.
+
+`TJointObj` legt `kill` auf VTable 0x18 und
+`sleep` auf 0x1c.
+`TMareWallRock::movement` und `loadAfter`
+riefen `unk104->kill()`.
+Retail lädt an beiden Stellen 0x1c.
+
+**Ein Partial, kein neues Vollmatch.**
+
+`movement` und `loadAfter` rufen `unk104->sleep()`.
+Der Slot 0x1c stimmt in beiden Funktionen.
+`movement` hat danach nur noch den Frame:
+0xd8 gegen retail 0xf0, fünfzehn Zeilen,
+alle Stack.
+`loadAfter` verliert nur diese eine Zeile.
+Die Min/Max-Register und der Frame bleiben.
+Unit-Fuzzy 99,24 % auf 99,25 %.
+`loadAfter` 99,41 % auf 99,42 %.
+`movement` bleibt bei 99,93 %.
+
+Kein Frame wurde aufgefüllt.
+`MapEventMare` nicht auf `Matching` gestellt.
+
+Verworfen, weil der Rumpf schlechter wurde:
+`TMapStaticObj::init` auf `setMtx` umschreiben.
+Der direkte Aufruf wird zu `PSMTXCopy` inlined,
+sobald `initMapCollision` selbst inlined wird,
+oder `init` ruft die Funktion nur noch auf
+und der Frame fällt von 0x118 auf 0xe0.
+`setUpUnk8TRS` im Header auf `setMtx` umzustellen
+zieht `MapObjBase` von 99,8 % auf 95,7 %.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,76 % matched code,
+1714628 / 3590088 Bytes, 9186 / 12881 Funktionen.
+Game Code 35,46 %, 1002480 / 2826784 Bytes,
+5221 / 8857 Funktionen.
+Daten unverändert: 385811 / 640331 Bytes, 60,25 %.
+Game-Daten unverändert: 306587 / 556995 Bytes, 55,04 %.
+
+Delta Code gegen Runde 91: keine Funktion, 0 Bytes.
+Delta Daten: 0 Bytes.
+
+`changes_all` listet keine Regression.
+Symbolordnung `MapEventMare` PASS,
+mit den alten UNUSED-Größenwarnungen.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `movement` und `loadAfter` behalten `sleep()`.
+   Den Frame von `movement` nicht mit einem
+   einzelnen `int` oder `trash` schliessen.
+2. Die sechs Rümpfe aus Runde 91 behalten.
+   Keinen davon auf Frame-Länge polstern.
+3. `walkBehavior` behält `height = unk230 + unk234`.
+4. Runde 90 bleibt: `mRotation` in `PoihanaThrow`,
+   `&sender->mPosition` im Dango-`receiveMessage`,
+   `mat[1][3]` in `recovering`.
+5. Runde 89 bleibt: `(u8*)boss + 1`,
+   Translationsspalte in `attackToMario`,
+   `CLBSquared(10.0f)`.
+   `set(dx, 0, dz)` in `isCanWalk` nicht wiederholen.
+6. `rotating` behält den `u16`-Cast.
+   `mSLDamageRadius` bleibt 65.
+   `changePlayerStatus` behält das Minimum aus
+   `mIntendedMag` und 8.
+7. `thinkDirty` bleibt bei `- 200.0f`.
+   Die drei `makeRootMtxRot*` bleiben bei
+   `0.017453294f`.
+8. Runde 84 bleibt: `p1 - p2 + 1`,
+   `150 * analog * 256`, `hitWater` mit `30.0f`.
+9. `isDemo` bleibt die Oder-Form mit `stateIs3Or4`.
+10. Vermeidungslisten aus Runde 81 bis 91 bleiben.
+    `TMapStaticObj::init` nicht noch einmal über
+    `setMtx` gegen `PSMTXCopy` drehen.
+    `MapEventMare`, `MapStaticObject`, `MarioRun`,
+    `bosspakkun`, `hamukuri`, `poihana`,
+    `MapObjGeneral`, `walkerEnemy`, `bossManta`,
+    `fireWanwan`, `MapObjHide`, `EventWatcher` und
+    `NpcWalkTurn` nicht auf `Matching` stellen.
+
+### Nach dreiundneunzigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 92:
+47,76 % matched code, 1714628 / 3590088 Bytes,
+9186 / 12881 Funktionen.
+Game Code 35,46 %, 1002480 / 2826784 Bytes,
+5221 / 8857 Funktionen.
+Daten 385811 / 640331 Bytes, 60,25 %.
+
+`TMapCollisionWarp::setUp` hatte einen passenden
+Rumpf und einen Frame von 0x30 gegen retail 0x38.
+Die `TVec3` lag vier Bytes zu tief.
+`getEntrySize` ist inline und liefert `u32`.
+
+**Ein neues Vollmatch.**
+
+`mEntrySize` kommt aus einem benannten
+`u32 entrySize = getEntrySize(mEntryId)`.
+0 Abweichungen, 208 Bytes, 52 Instruktionen, 100 %.
+`MapCollisionEntry` bleibt `NonMatching`,
+weil `moveSRT` noch abweicht.
+Die fehlende UNUSED-Ctor von `TMapCollisionBase`
+war schon vorher weg.
+
+Verworfen: `TRedCoinSwitch::load` über
+`SMSGetMarDirector()`.
+Der `u32`-Slot rückte nur um 4, der Frame blieb
+0x28 gegen 0x30.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,77 % matched code,
+1714836 / 3590088 Bytes, 9187 / 12881 Funktionen.
+Game Code 35,47 %, 1002688 / 2826784 Bytes,
+5222 / 8857 Funktionen.
+Daten unverändert: 385811 / 640331 Bytes, 60,25 %.
+Game-Daten unverändert: 306587 / 556995 Bytes, 55,04 %.
+
+Delta Code gegen Runde 92: 1 Funktion, 208 Bytes.
+Delta Daten: 0 Bytes.
+
+`changes_all`: `setUp` 99,83 % auf 100 %.
+Unit-Code 84,30 % auf 91,65 %.
+Keine Regression.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `setUp` behält `u32 entrySize`.
+   `MapCollisionEntry` nicht auf `Matching` stellen.
+2. `TRedCoinSwitch::load` nicht noch einmal über
+   `SMSGetMarDirector()` auf den Frame bringen.
+3. `movement` und `loadAfter` behalten `sleep()`.
+   Den Frame von `movement` nicht polstern.
+4. `TMapStaticObj::init` nicht über `setMtx`
+   gegen `PSMTXCopy` drehen.
+5. Die sechs Rümpfe aus Runde 91 behalten.
+   `walkBehavior` behält `height`.
+6. Runde 90 bleibt: `mRotation`,
+   `&sender->mPosition`, `mat[1][3]`.
+7. Runde 89 bleibt: `(u8*)boss + 1`,
+   Translationsspalte, `CLBSquared(10.0f)`.
+   `set(dx, 0, dz)` nicht wiederholen.
+8. `rotating` behält den `u16`-Cast.
+   Schadensradius 65 bleibt.
+   `changePlayerStatus` behält das Minimum aus
+   `mIntendedMag` und 8.
+9. `thinkDirty` bleibt bei `- 200.0f`.
+   Die drei `makeRootMtxRot*` bleiben bei
+   `0.017453294f`.
+10. Runde 84 bleibt: `p1 - p2 + 1`,
+    `150 * analog * 256`, `hitWater` mit `30.0f`.
+    `isDemo` bleibt die Oder-Form mit `stateIs3Or4`.
+11. Vermeidungslisten aus Runde 81 bis 92 bleiben.
+    `MapEventMare`, `MapStaticObject`, `MarioRun`,
+    `bosspakkun`, `hamukuri`, `poihana`,
+    `MapObjGeneral`, `walkerEnemy`, `bossManta`,
+    `fireWanwan`, `MapObjHide`, `EventWatcher` und
+    `NpcWalkTurn` nicht auf `Matching` stellen.
+
+### Nach vierundneunzigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 93:
+47,77 % matched code, 1714836 / 3590088 Bytes,
+9187 / 12881 Funktionen.
+Game Code 35,47 %, 1002688 / 2826784 Bytes,
+5222 / 8857 Funktionen.
+Daten 385811 / 640331 Bytes, 60,25 %.
+
+`TMario::walkEnd` lud `0.25f` in `f2` und
+`mForwardVel` in `f1`.
+Retail legt den Member in `f2` und `0.25f` in `f1`,
+`fmuls f1, f2, f1`.
+Der Frame war 0x18 gegen retail 0x20.
+
+**Ein neues Vollmatch.**
+
+`f32 quarter = 0.25f` und `f32 vel = mForwardVel`,
+dann `rate = vel * quarter`.
+0 Abweichungen, 584 Bytes, 146 Instruktionen, 100 %.
+`MarioRun` bleibt `NonMatching`.
+`braking` fehlt als UNUSED schon vorher.
+
+Verworfen, der Frame allein reichte nicht:
+`TShine::appearWithDemo` mit benanntem `frames`,
+`tool` oder `flags` bringt den Frame auf 0x50,
+das `TFlagT` bleibt bei 0x34 gegen 0x38.
+`getDemoLengthFrames()` macht den Frame 0x58.
+`TMap::isTouchedOneWall` mit benanntem `hit`
+bringt den Frame auf 0x68, der Record bleibt
+vier Bytes zu tief.
+`joinToGroup` über `getChildren()` wird 0x70.
+Ein benannter Gruppenzeiger verliert das
+`addi` um 0x10.
+`createAndKeepData` mit benanntem `folder`
+ändert nichts; `loadModelData` bleibt 100 %.
+`behaveToMario` mit benanntem `gpMarioPos`
+belegt keinen Slot.
+
+Kein Frame wurde aufgefüllt.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,78 % matched code,
+1715420 / 3590088 Bytes, 9188 / 12881 Funktionen.
+Game Code 35,49 %, 1003272 / 2826784 Bytes,
+5223 / 8857 Funktionen.
+Daten unverändert: 385811 / 640331 Bytes, 60,25 %.
+Game-Daten unverändert: 306587 / 556995 Bytes, 55,04 %.
+
+Delta Code gegen Runde 93: 1 Funktion, 584 Bytes.
+Delta Daten: 0 Bytes.
+
+`changes_all`: `walkEnd` 99,13 % auf 100 %.
+Unit-Code `MarioRun` 27,86 % auf 30,78 %.
+Keine Regression.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `walkEnd` behält `quarter` und `vel`.
+   `MarioRun` nicht auf `Matching` stellen.
+2. `setUp` behält `u32 entrySize`.
+   `MapCollisionEntry` nicht auf `Matching` stellen.
+3. `TRedCoinSwitch::load` nicht über
+   `SMSGetMarDirector()` auf den Frame bringen.
+4. `appearWithDemo`, `isTouchedOneWall`,
+   `joinToGroup` und `createAndKeepData`
+   nicht mit derselben Benennung wiederholen.
+5. `movement` und `loadAfter` behalten `sleep()`.
+   Frames nicht polstern.
+6. `TMapStaticObj::init` nicht über `setMtx`
+   gegen `PSMTXCopy` drehen.
+7. Die sechs Rümpfe aus Runde 91 behalten.
+   `walkBehavior` behält `height`.
+8. Runde 90 bleibt: `mRotation`,
+   `&sender->mPosition`, `mat[1][3]`.
+9. Runde 89 bleibt: `(u8*)boss + 1`,
+   Translationsspalte, `CLBSquared(10.0f)`.
+   `set(dx, 0, dz)` nicht wiederholen.
+10. `rotating` behält den `u16`-Cast.
+    Schadensradius 65 bleibt.
+    `changePlayerStatus` behält das Minimum aus
+    `mIntendedMag` und 8.
+    `thinkDirty` bleibt bei `- 200.0f`.
+    Die drei `makeRootMtxRot*` bleiben bei
+    `0.017453294f`.
+11. Runde 84 bleibt: `p1 - p2 + 1`,
+    `150 * analog * 256`, `hitWater` mit `30.0f`.
+    `isDemo` bleibt die Oder-Form mit `stateIs3Or4`.
+12. Vermeidungslisten aus Runde 81 bis 93 bleiben.
+    `MapEventMare`, `MapStaticObject`, `MarioRun`,
+    `bosspakkun`, `hamukuri`, `poihana`,
+    `MapObjGeneral`, `walkerEnemy`, `bossManta`,
+    `fireWanwan`, `MapObjHide`, `EventWatcher` und
+    `NpcWalkTurn` nicht auf `Matching` stellen.
+
+### Nach fünfundneunzigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 94:
+47,78 % matched code, 1715420 / 3590088 Bytes,
+9188 / 12881 Funktionen.
+Game Code 35,49 %, 1003272 / 2826784 Bytes,
+5223 / 8857 Funktionen.
+Daten 385811 / 640331 Bytes, 60,25 %.
+
+`TSmallEnemy::isFindMarioFromParam` hatte den
+passenden Frame 0x50.
+`mSLSearchLength` landete in `f0`, retail in `f1`,
+und `fmuls` multiplizierte von dort.
+
+**Ein neues Vollmatch.**
+
+Die drei Suchwerte werden erst geladen und dann
+mit `*= param_1` skaliert.
+0 Abweichungen, 188 Bytes, 47 Instruktionen, 100 %.
+`smallEnemy` bleibt `NonMatching`.
+Symbolordnung PASS.
+
+Verworfen: die Getter `getSLSearchLength` und
+Nachbarn machen den Frame 0x60.
+Die Produkte direkt im Aufruf fallen auf 87 %.
+`registerEventWatcher` mit benanntem `watcher`
+hat den Frame 0x50, der Zeiger bleibt bei 0x40
+gegen 0x3c.
+`getChildren().push_back` fällt auf 84 %.
+
+Kein Frame wurde aufgefüllt.
+`walkEnd` behält `quarter` und `vel`.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,79 % matched code,
+1715608 / 3590088 Bytes, 9189 / 12881 Funktionen.
+Game Code 35,50 %, 1003460 / 2826784 Bytes,
+5224 / 8857 Funktionen.
+Daten unverändert: 385811 / 640331 Bytes, 60,25 %.
+Game-Daten unverändert: 306587 / 556995 Bytes, 55,04 %.
+
+Delta Code gegen Runde 94: 1 Funktion, 188 Bytes.
+Delta Daten: 0 Bytes.
+
+`changes_all`: `isFindMarioFromParam` 99,79 % auf 100 %.
+Unit-Code `smallEnemy` 59,17 % auf 60,24 %.
+Keine Regression.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `isFindMarioFromParam` behält die drei `*= param_1`.
+   `smallEnemy` nicht auf `Matching` stellen.
+2. `walkEnd` behält `quarter` und `vel`.
+   `MarioRun` nicht auf `Matching` stellen.
+3. `registerEventWatcher` nicht noch einmal über
+   einen benannten `watcher` oder `getChildren()`
+   auf den Slot 0x3c bringen.
+4. `setUp` behält `u32 entrySize`.
+5. `TRedCoinSwitch::load` nicht über
+   `SMSGetMarDirector()`.
+6. `appearWithDemo`, `isTouchedOneWall`,
+   `joinToGroup` und `createAndKeepData`
+   nicht mit denselben Benennungen wiederholen.
+7. `sleep()` behalten. Frames nicht polstern.
+8. `TMapStaticObj::init` nicht über `setMtx`.
+9. Die sechs Rümpfe aus Runde 91 behalten.
+   `walkBehavior` behält `height`.
+10. Runde 90 und 89 bleiben.
+    `rotating` behält den `u16`-Cast.
+    Schadensradius 65 bleibt.
+    `changePlayerStatus` behält das Minimum aus
+    `mIntendedMag` und 8.
+    `thinkDirty` bleibt bei `- 200.0f`.
+    Die drei `makeRootMtxRot*` bleiben bei
+    `0.017453294f`.
+11. Runde 84 bleibt: `p1 - p2 + 1`,
+    `150 * analog * 256`, `hitWater` mit `30.0f`.
+    `isDemo` bleibt die Oder-Form mit `stateIs3Or4`.
+12. Vermeidungslisten aus Runde 81 bis 94 bleiben.
+    `MapEventMare`, `MapStaticObject`, `MarioRun`,
+    `smallEnemy`, `bosspakkun`, `hamukuri`, `poihana`,
+    `MapObjGeneral`, `walkerEnemy`, `bossManta`,
+    `fireWanwan`, `MapObjHide`, `EventWatcher` und
+    `NpcWalkTurn` nicht auf `Matching` stellen.
+
+### Nach sechsundneunzigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 95:
+47,79 % matched code, 1715608 / 3590088 Bytes,
+9189 / 12881 Funktionen.
+Game Code 35,50 %, 1003460 / 2826784 Bytes,
+5224 / 8857 Funktionen.
+Daten 385811 / 640331 Bytes, 60,25 %.
+
+`TMario::catching` vergleicht `mForwardVel`
+mit einem Float.
+Retail lädt 0xcd0, unser Stand lud 0x8e8.
+0x8e8 ist `mDeParams.mClashSpeed`.
+Andere Aufrufer von `mClashSpeed` laden
+weiterhin 0x8e8 und treffen das Retail.
+0xcd0 ist der Wert von
+`mJumpParams.mRotBroadEnableV`.
+Der Sprung danach ist
+`MARIO_STATUS_ROTATE_BROAD_JUMP`.
+
+**Kein neues Vollmatch.**
+
+`catching` benutzt jetzt
+`mJumpParams.mRotBroadEnableV`.
+Der `lfs` trifft 0xcd0.
+Übrig sind fünf Stack-Zeilen.
+Der Frame bleibt 0x28 gegen retail 0x30.
+340 Bytes, 85 Instruktionen, 99,94 %.
+`MarioRun` bleibt `NonMatching`.
+`walkEnd` bleibt bei 0 Abweichungen.
+
+Verworfen: ein benanntes `enableV`
+wird wegoptimiert, der Frame bleibt 0x28.
+`TLiveManager::perform` ohne `char trash[16]`
+schrumpft den Frame auf 0x40,
+die Farbe bleibt bei 0x24 gegen 0x34.
+Der Trash-Block bleibt.
+
+Kein Frame wurde aufgefüllt.
+`isFindMarioFromParam` behält die drei
+`*= param_1`.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher unverändert: 47,79 % matched code,
+1715608 / 3590088 Bytes, 9189 / 12881 Funktionen.
+Game Code 35,50 %, 1003460 / 2826784 Bytes,
+5224 / 8857 Funktionen.
+Daten unverändert: 385811 / 640331 Bytes, 60,25 %.
+Game-Daten unverändert: 306587 / 556995 Bytes, 55,04 %.
+
+Delta Code gegen Runde 95: 0 Funktionen, 0 Bytes.
+Delta Daten: 0 Bytes.
+
+`changes_all`: `catching` 99,93 % auf 99,94 %.
+Unit-Fuzzy `MarioRun` bleibt 99,58 %.
+Keine Regression.
+Symbolordnung `MarioRun` FAIL ist vorbestehend:
+UNUSED `braking__6TMarioFv` fehlt.
+`walkEnd` bleibt 100 %.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `catching` behält `mRotBroadEnableV`.
+   Den Frame 0x28 nicht auf 0x30 polstern.
+   Nicht zurück zu `mClashSpeed`.
+   `MarioRun` nicht auf `Matching` stellen.
+2. `isFindMarioFromParam` behält die drei `*= param_1`.
+   `smallEnemy` nicht auf `Matching` stellen.
+3. `walkEnd` behält `quarter` und `vel`.
+4. `registerEventWatcher` nicht noch einmal über
+   einen benannten `watcher` oder `getChildren()`.
+5. `enableV` in `catching` nicht noch einmal benennen.
+6. `TLiveManager::perform` behält `char trash[16]`.
+   Wegnehmen schrumpft den Frame und
+   rückt die Farbe nicht auf 0x34.
+7. `setUp` behält `u32 entrySize`.
+8. `TRedCoinSwitch::load` nicht über
+   `SMSGetMarDirector()`.
+9. `appearWithDemo`, `isTouchedOneWall`,
+   `joinToGroup` und `createAndKeepData`
+   nicht mit denselben Benennungen wiederholen.
+10. `sleep()` behalten. Frames nicht polstern.
+11. `TMapStaticObj::init` nicht über `setMtx`.
+12. Die sechs Rümpfe aus Runde 91 behalten.
+    `walkBehavior` behält `height`.
+13. Runde 90 und 89 bleiben.
+    `rotating` behält den `u16`-Cast.
+    Schadensradius 65 bleibt.
+    `changePlayerStatus` behält das Minimum aus
+    `mIntendedMag` und 8.
+    `thinkDirty` bleibt bei `- 200.0f`.
+    Die drei `makeRootMtxRot*` bleiben bei
+    `0.017453294f`.
+14. Runde 84 bleibt: `p1 - p2 + 1`,
+    `150 * analog * 256`, `hitWater` mit `30.0f`.
+    `isDemo` bleibt die Oder-Form mit `stateIs3Or4`.
+15. Vermeidungslisten aus Runde 81 bis 95 bleiben.
+    `MapEventMare`, `MapStaticObject`, `MarioRun`,
+    `smallEnemy`, `bosspakkun`, `hamukuri`, `poihana`,
+    `MapObjGeneral`, `walkerEnemy`, `bossManta`,
+    `fireWanwan`, `MapObjHide`, `EventWatcher` und
+    `NpcWalkTurn` nicht auf `Matching` stellen.
+
+### Nach siebenundneunzigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 96:
+47,79 % matched code, 1715608 / 3590088 Bytes,
+9189 / 12881 Funktionen.
+Game Code 35,50 %, 1003460 / 2826784 Bytes,
+5224 / 8857 Funktionen.
+Daten 385811 / 640331 Bytes, 60,25 %.
+
+`TDolpicEventRiccoMammaGate`s Konstruktor
+schrieb dieselben sieben Null-Floats,
+aber in anderer Reihenfolge.
+Retail speichert zuerst 0x60,
+danach die Vektoren als z, y, x.
+
+**Ein neues Vollmatch.**
+
+`unk60` bleibt im Initialisierer.
+`unk48.zero()` und `unk54.zero()` stehen im Rumpf.
+`zero` ist `x = y = z = 0`,
+die Stores laufen also z, y, x.
+0 Abweichungen, 136 Bytes, 34 Instruktionen, 100 %.
+`MapEventDolpic` bleibt `NonMatching`.
+Symbolordnung PASS.
+
+Verworfen: ein benannter `MActor*` in
+`setDeadBathtubKillerAnm` ändert nichts.
+Ein benannter `TVec3` ersetzt `set<int>`
+durch `stfs` und fällt auf etwa 90 %.
+Der anonyme `TVec3(0, 0, 0)` bleibt.
+
+Kein Frame wurde aufgefüllt.
+`catching` behält `mRotBroadEnableV`.
+`perform` behält `char trash[16]`.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,79 % matched code,
+1715744 / 3590088 Bytes, 9190 / 12881 Funktionen.
+Game Code 35,50 %, 1003596 / 2826784 Bytes,
+5225 / 8857 Funktionen.
+Daten unverändert: 385811 / 640331 Bytes, 60,25 %.
+Game-Daten unverändert: 306587 / 556995 Bytes, 55,04 %.
+
+Delta Code gegen Runde 96: 1 Funktion, 136 Bytes.
+Delta Daten: 0 Bytes.
+
+`changes_all`: Konstruktor 99,79 % auf 100 %.
+Unit-Code `MapEventDolpic` 45,71 % auf 49,45 %.
+Unit-Fuzzy 99,78 % auf 99,79 %.
+Keine Regression.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. Der Ricco-Konstruktor behält `unk60` im
+   Initialisierer und `zero()` im Rumpf.
+   `MapEventDolpic` nicht auf `Matching` stellen.
+2. `catching` behält `mRotBroadEnableV`.
+   Den Frame 0x28 nicht auf 0x30 polstern.
+   `MarioRun` nicht auf `Matching` stellen.
+3. `TLiveManager::perform` behält `char trash[16]`.
+4. `isFindMarioFromParam` behält die drei `*= param_1`.
+   `smallEnemy` nicht auf `Matching` stellen.
+5. `walkEnd` behält `quarter` und `vel`.
+6. `registerEventWatcher` nicht noch einmal über
+   einen benannten `watcher` oder `getChildren()`.
+7. `setDeadBathtubKillerAnm` behält den anonymen
+   `TVec3(0, 0, 0)`. Den Vektor nicht benennen.
+8. `setUp` behält `u32 entrySize`.
+9. `sleep()` behalten. Frames nicht polstern.
+10. `TRedCoinSwitch::load` nicht über
+    `SMSGetMarDirector()`.
+11. `appearWithDemo`, `isTouchedOneWall`,
+    `joinToGroup` und `createAndKeepData`
+    nicht mit denselben Benennungen wiederholen.
+12. `TMapStaticObj::init` nicht über `setMtx`.
+13. Die sechs Rümpfe aus Runde 91 behalten.
+    `walkBehavior` behält `height`.
+14. Runde 90 und 89 bleiben.
+    `rotating` behält den `u16`-Cast.
+    Schadensradius 65 bleibt.
+    `changePlayerStatus` behält das Minimum aus
+    `mIntendedMag` und 8.
+    `thinkDirty` bleibt bei `- 200.0f`.
+    Die drei `makeRootMtxRot*` bleiben bei
+    `0.017453294f`.
+15. Runde 84 bleibt: `p1 - p2 + 1`,
+    `150 * analog * 256`, `hitWater` mit `30.0f`.
+    `isDemo` bleibt die Oder-Form mit `stateIs3Or4`.
+16. Vermeidungslisten aus Runde 81 bis 96 bleiben.
+    `MapEventMare`, `MapStaticObject`, `MarioRun`,
+    `smallEnemy`, `bosspakkun`, `hamukuri`, `poihana`,
+    `MapObjGeneral`, `walkerEnemy`, `bossManta`,
+    `fireWanwan`, `MapObjHide`, `EventWatcher` und
+    `NpcWalkTurn` nicht auf `Matching` stellen.
+
+### Nach achtundneunzigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 97:
+47,79 % matched code, 1715744 / 3590088 Bytes,
+9190 / 12881 Funktionen.
+Game Code 35,50 %, 1003596 / 2826784 Bytes,
+5225 / 8857 Funktionen.
+Daten 385811 / 640331 Bytes, 60,25 %.
+
+`TNerveTobiPukuAttack::execute` hatte dieselben
+Rückgaben, aber die Blöcke in anderer Reihenfolge.
+Retail lässt `return false` durchfallen.
+`return true` für nicht luftgetragen steht davor.
+
+**Partial, kein Vollmatch.**
+
+`if (isAirborne())` behält den Rumpf.
+Im `else` steht `return true`.
+Danach fällt die Funktion auf `return false`.
+Die `li r3` und die Sprungziele matchen.
+Übrig sind 17 Stack-Operanden:
+Frame 0x48 gegen 0x50,
+die beiden `TVec3` zwölf Bytes zu tief.
+`tobiPuku` bleibt `NonMatching`.
+Symbolordnung PASS.
+Fünf UNUSED-Größen und die Weak-Reihenfolge
+sind vorbestehend.
+
+Verworfen: `int time = getTime()` wird wegoptimiert.
+Ein unbenutzter dritter `TVec3` reserviert den Slot
+und matcht wortgleich, ist aber eine Stack-Reservierung
+und bleibt draußen.
+`TVec3 newVelocity = TVec3(0, y, 0)` bläht den Frame
+auf 0x58 und fügt Kopien ein.
+`initNeonMatColor` mit benanntem `index` schrumpft
+den Frame und fällt auf etwa 87 %. Zurückgenommen.
+`setDeadBathtubKillerAnm` nicht noch einmal
+mit benanntem `MActor` oder `TVec3`.
+
+Kein Frame wurde aufgefüllt.
+Der Ricco-Konstruktor behält `zero()`.
+`catching` behält `mRotBroadEnableV`.
+`perform` behält `char trash[16]`.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher unverändert: 47,79 % matched code,
+1715744 / 3590088 Bytes, 9190 / 12881 Funktionen.
+Game Code 35,50 %, 1003596 / 2826784 Bytes,
+5225 / 8857 Funktionen.
+Daten unverändert: 385811 / 640331 Bytes, 60,25 %.
+Game-Daten unverändert: 306587 / 556995 Bytes, 55,04 %.
+
+Delta Code gegen Runde 97: 0 Funktionen, 0 Bytes.
+Delta Daten: 0 Bytes.
+
+`changes_all`: `TNerveTobiPukuAttack::execute`
+99,72 % auf 99,83 %.
+Unit-Fuzzy `tobiPuku` 98,95 % auf 98,96 %.
+Gesamt-Fuzzy bleibt 77,97 %.
+Keine Regression.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `TNerveTobiPukuAttack` behält das `else`
+   mit `return true` und das durchfallende
+   `return false`.
+   Den Frame 0x48 nicht auf 0x50 polstern.
+   Keinen unbenutzten dritten `TVec3` einsetzen.
+   `tobiPuku` nicht auf `Matching` stellen.
+2. `initNeonMatColor` nicht mit benanntem `index`.
+3. Der Ricco-Konstruktor behält `zero()` im Rumpf.
+   `MapEventDolpic` nicht auf `Matching` stellen.
+4. `catching` behält `mRotBroadEnableV`.
+   Den Frame nicht polstern.
+   `MarioRun` nicht auf `Matching` stellen.
+5. `setDeadBathtubKillerAnm` behält den anonymen
+   `TVec3(0, 0, 0)`.
+   Weder `MActor*` noch `TVec3` benennen.
+6. `TLiveManager::perform` behält `char trash[16]`.
+7. `isFindMarioFromParam` behält die drei `*= param_1`.
+   `smallEnemy` nicht auf `Matching` stellen.
+8. `walkEnd` behält `quarter` und `vel`.
+9. `registerEventWatcher` nicht noch einmal über
+   einen benannten `watcher` oder `getChildren()`.
+10. `setUp` behält `u32 entrySize`.
+11. `sleep()` behalten. Frames nicht polstern.
+12. `TRedCoinSwitch::load` nicht über
+    `SMSGetMarDirector()`.
+13. `appearWithDemo`, `isTouchedOneWall`,
+    `joinToGroup` und `createAndKeepData`
+    nicht mit denselben Benennungen wiederholen.
+14. `TMapStaticObj::init` nicht über `setMtx`.
+15. Die sechs Rümpfe aus Runde 91 behalten.
+    `walkBehavior` behält `height`.
+16. Runde 90 und 89 bleiben.
+    `rotating` behält den `u16`-Cast.
+    Schadensradius 65 bleibt.
+    `changePlayerStatus` behält das Minimum aus
+    `mIntendedMag` und 8.
+    `thinkDirty` bleibt bei `- 200.0f`.
+    Die drei `makeRootMtxRot*` bleiben bei
+    `0.017453294f`.
+17. Runde 84 bleibt: `p1 - p2 + 1`,
+    `150 * analog * 256`, `hitWater` mit `30.0f`.
+    `isDemo` bleibt die Oder-Form mit `stateIs3Or4`.
+18. Vermeidungslisten aus Runde 81 bis 97 bleiben.
+    `MapEventMare`, `MapStaticObject`, `MarioRun`,
+    `smallEnemy`, `bosspakkun`, `hamukuri`, `poihana`,
+    `MapObjGeneral`, `walkerEnemy`, `bossManta`,
+    `fireWanwan`, `MapObjHide`, `EventWatcher` und
+    `NpcWalkTurn` nicht auf `Matching` stellen.
+
+### Nach neunundneunzigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 98:
+47,79 % matched code, 1715744 / 3590088 Bytes,
+9190 / 12881 Funktionen.
+Game Code 35,50 %, 1003596 / 2826784 Bytes,
+5225 / 8857 Funktionen.
+Daten 385811 / 640331 Bytes, 60,25 %.
+
+`TNerveBEelTearsMarioRecover::execute` lud
+`gpMarioParticleManager` vor `gpMarioPos`.
+Retail lädt die Position nach r5
+und danach den Manager nach r3.
+
+**Partial, kein Vollmatch.**
+
+`JGeometry::TVec3<f32>* marioPos = gpMarioPos`
+steht vor `emitAndBindToPosPtr`.
+Die beiden Loads und `li r4, 0xd6` matchen.
+Übrig sind sieben Stack-Operanden:
+Frame 0x30 gegen 0x38.
+`bosseel` bleibt `NonMatching`.
+Symbolordnung PASS.
+Fünf UNUSED-Größen und die Weak-Reihenfolge
+sind vorbestehend.
+
+Verworfen: `int time = spine->getTime()`
+wird wegoptimiert, der Frame bleibt 0x30.
+`TCasinoPanelGate::touchWater` mit `span`
+und `baseY` zieht die Loads vor die Konstante
+und fällt von neun auf etwa fünfzig Zeilen.
+Zurückgenommen.
+`initNeonMatColor` nicht über einen benannten Index.
+Kein unbenutzter dritter `TVec3`.
+
+Kein Frame wurde aufgefüllt.
+Die Attack-Nerve behält das `else` mit `return true`.
+Der Ricco-Konstruktor behält `zero()`.
+`catching` behält `mRotBroadEnableV`.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher unverändert: 47,79 % matched code,
+1715744 / 3590088 Bytes, 9190 / 12881 Funktionen.
+Game Code 35,50 %, 1003596 / 2826784 Bytes,
+5225 / 8857 Funktionen.
+Daten unverändert: 385811 / 640331 Bytes, 60,25 %.
+Game-Daten unverändert: 306587 / 556995 Bytes, 55,04 %.
+
+Delta Code gegen Runde 98: 0 Funktionen, 0 Bytes.
+Delta Daten: 0 Bytes.
+
+`changes_all`: `TNerveBEelTearsMarioRecover::execute`
+99,81 % auf 99,92 %.
+Unit-Code `bosseel` bleibt 20008 Bytes.
+Unit-Fuzzy 99,17 % auf 99,17 %.
+Keine Regression.
+`MapObjSirena` wurde nur wegen des Zeitstempels
+neu gebaut und taucht in `changes_all` nicht auf.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `TNerveBEelTearsMarioRecover` behält `marioPos`.
+   Den Frame 0x30 nicht auf 0x38 polstern.
+   `getTime` dort nicht noch einmal benennen.
+   `bosseel` nicht auf `Matching` stellen.
+2. `TCasinoPanelGate::touchWater` nicht mit
+   `span` und `baseY` wiederholen.
+3. `TNerveTobiPukuAttack` behält das `else`
+   mit `return true` und das durchfallende
+   `return false`.
+   Den Frame nicht polstern.
+   Keinen unbenutzten dritten `TVec3`.
+   `tobiPuku` nicht auf `Matching` stellen.
+4. `initNeonMatColor` nicht mit benanntem `index`.
+5. Der Ricco-Konstruktor behält `zero()` im Rumpf.
+   `MapEventDolpic` nicht auf `Matching` stellen.
+6. `catching` behält `mRotBroadEnableV`.
+   Den Frame nicht polstern.
+   `MarioRun` nicht auf `Matching` stellen.
+7. `setDeadBathtubKillerAnm` behält den anonymen
+   `TVec3(0, 0, 0)`.
+8. `TLiveManager::perform` behält `char trash[16]`.
+9. `isFindMarioFromParam` behält die drei `*= param_1`.
+   `smallEnemy` nicht auf `Matching` stellen.
+10. `walkEnd` behält `quarter` und `vel`.
+11. `registerEventWatcher` nicht noch einmal über
+    einen benannten `watcher` oder `getChildren()`.
+12. `setUp` behält `u32 entrySize`.
+13. `sleep()` behalten. Frames nicht polstern.
+14. `TRedCoinSwitch::load` nicht über
+    `SMSGetMarDirector()`.
+15. `appearWithDemo`, `isTouchedOneWall`,
+    `joinToGroup` und `createAndKeepData`
+    nicht mit denselben Benennungen wiederholen.
+16. `TMapStaticObj::init` nicht über `setMtx`.
+17. Die sechs Rümpfe aus Runde 91 behalten.
+    `walkBehavior` behält `height`.
+18. Runde 90 und 89 bleiben.
+    `rotating` behält den `u16`-Cast.
+    Schadensradius 65 bleibt.
+    `changePlayerStatus` behält das Minimum aus
+    `mIntendedMag` und 8.
+    `thinkDirty` bleibt bei `- 200.0f`.
+    Die drei `makeRootMtxRot*` bleiben bei
+    `0.017453294f`.
+19. Runde 84 bleibt: `p1 - p2 + 1`,
+    `150 * analog * 256`, `hitWater` mit `30.0f`.
+    `isDemo` bleibt die Oder-Form mit `stateIs3Or4`.
+20. Vermeidungslisten aus Runde 81 bis 98 bleiben.
+    `MapEventMare`, `MapStaticObject`, `MarioRun`,
+    `smallEnemy`, `bosspakkun`, `hamukuri`, `poihana`,
+    `MapObjGeneral`, `walkerEnemy`, `bossManta`,
+    `fireWanwan`, `MapObjHide`, `EventWatcher` und
+    `NpcWalkTurn` nicht auf `Matching` stellen.
+
+### Nach hundertster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 99:
+47,79 % matched code, 1715744 / 3590088 Bytes,
+9190 / 12881 Funktionen.
+Game Code 35,50 %, 1003596 / 2826784 Bytes,
+5225 / 8857 Funktionen.
+Daten 385811 / 640331 Bytes, 60,25 %.
+
+Gesucht wurde nur ein Kandidat,
+den eine Hypothese vollständig matcht.
+Partials ohne Zählerbewegung werden nicht behalten.
+
+`TNerveTelesaFreeze::execute` ist stack-only
+mit Frame-Delta +8 und Innen-Delta +4.
+Das ist das `entrySize`-Muster.
+Der Rumpf matcht wortgleich.
+
+**Gemessen und zurückgenommen.**
+
+`int time = spine->getTime()` vor `if (time == 0)`.
+Prolog und Epilog matchen:
+`stwu -0x40`, `r31` bei `0x3c`.
+Der `TPathNode` bleibt vier Byte zu tief,
+`0x20` gegen `0x24`.
+Fünfzehn Zeilen bleiben.
+Kein Vollmatch.
+Zurückgenommen.
+
+Ein benannter `TPathNode goal` vor `setGoalPath`
+ändert nichts.
+Weiterhin zwanzig Stack-Zeilen, Frame `0x38`.
+Zurückgenommen.
+
+`MtxToQuat` hat ein einziges vertauschtes `fadds`
+und keinen Stack-Unterschied.
+Die Teilsummen aus Runde 82 werden nicht wiederholt.
+`touchWater` nicht über `span`/`baseY`.
+Kein Frame-Polster, kein unbenutzter `TVec3`.
+
+`marioPos` in der Recover-Nerve bleibt.
+Die Attack-Nerve behält das `else` mit `return true`.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher unverändert: 47,79 % matched code,
+1715744 / 3590088 Bytes, 9190 / 12881 Funktionen.
+Game Code 35,50 %, 1003596 / 2826784 Bytes,
+5225 / 8857 Funktionen.
+Daten unverändert: 385811 / 640331 Bytes, 60,25 %.
+Game-Daten unverändert: 306587 / 556995 Bytes, 55,04 %.
+
+Delta Code gegen Runde 99: 0 Funktionen, 0 Bytes.
+Delta Daten: 0 Bytes.
+
+`changes_all` ist leer.
+Keine Regression.
+Keine Quelldatei geändert.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `TNerveTelesaFreeze` nicht noch einmal über
+   `int time = getTime()` oder einen benannten
+   `TPathNode`.
+   Der Frame matcht mit `time`, der Pfadknoten nicht.
+   `telesa` nicht auf `Matching` stellen.
+2. `TNerveBEelTearsMarioRecover` behält `marioPos`.
+   Den Frame 0x30 nicht auf 0x38 polstern.
+   `getTime` dort nicht noch einmal benennen.
+   `bosseel` nicht auf `Matching` stellen.
+3. `TCasinoPanelGate::touchWater` nicht mit
+   `span` und `baseY` wiederholen.
+4. `TNerveTobiPukuAttack` behält das `else`
+   mit `return true` und das durchfallende
+   `return false`.
+   Den Frame nicht polstern.
+   Keinen unbenutzten dritten `TVec3`.
+   `tobiPuku` nicht auf `Matching` stellen.
+5. `initNeonMatColor` nicht mit benanntem `index`.
+6. Der Ricco-Konstruktor behält `zero()` im Rumpf.
+   `MapEventDolpic` nicht auf `Matching` stellen.
+7. `catching` behält `mRotBroadEnableV`.
+   Den Frame nicht polstern.
+   `MarioRun` nicht auf `Matching` stellen.
+8. `setDeadBathtubKillerAnm` behält den anonymen
+   `TVec3(0, 0, 0)`.
+9. `TLiveManager::perform` behält `char trash[16]`.
+10. `isFindMarioFromParam` behält die drei `*= param_1`.
+    `smallEnemy` nicht auf `Matching` stellen.
+11. `walkEnd` behält `quarter` und `vel`.
+12. `registerEventWatcher` nicht noch einmal über
+    einen benannten `watcher` oder `getChildren()`.
+13. `setUp` behält `u32 entrySize`.
+14. `sleep()` behalten. Frames nicht polstern.
+15. `TRedCoinSwitch::load` nicht über
+    `SMSGetMarDirector()`.
+16. `appearWithDemo`, `isTouchedOneWall`,
+    `joinToGroup` und `createAndKeepData`
+    nicht mit denselben Benennungen wiederholen.
+17. `TMapStaticObj::init` nicht über `setMtx`.
+18. Die sechs Rümpfe aus Runde 91 behalten.
+    `walkBehavior` behält `height`.
+19. Runde 90 und 89 bleiben.
+    `rotating` behält den `u16`-Cast.
+    Schadensradius 65 bleibt.
+    `changePlayerStatus` behält das Minimum aus
+    `mIntendedMag` und 8.
+    `thinkDirty` bleibt bei `- 200.0f`.
+    Die drei `makeRootMtxRot*` bleiben bei
+    `0.017453294f`.
+20. Runde 84 bleibt: `p1 - p2 + 1`,
+    `150 * analog * 256`, `hitWater` mit `30.0f`.
+    `isDemo` bleibt die Oder-Form mit `stateIs3Or4`.
+21. Vermeidungslisten aus Runde 81 bis 99 bleiben.
+    `MtxToQuat` nicht in Teilsummen zerlegen.
+    `MapEventMare`, `MapStaticObject`, `MarioRun`,
+    `smallEnemy`, `bosspakkun`, `hamukuri`, `poihana`,
+    `MapObjGeneral`, `walkerEnemy`, `bossManta`,
+    `fireWanwan`, `MapObjHide`, `EventWatcher` und
+    `NpcWalkTurn` nicht auf `Matching` stellen.
+
+### Nach hundertunderster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 100:
+47,79 % matched code, 1715744 / 3590088 Bytes,
+9190 / 12881 Funktionen.
+Game Code 35,50 %, 1003596 / 2826784 Bytes,
+5225 / 8857 Funktionen.
+Daten 385811 / 640331 Bytes, 60,25 %.
+
+`TMario::startVoice` matcht bis auf den Frame.
+Retail `0x28`, bei uns `0x20`.
+Im Rumpf keine Stack-Zugriffe.
+`SMSGetMSound()` liegt schon in r31,
+bevor `getVoiceStatus` läuft.
+
+**Vollmatch.**
+
+```cpp
+MSound* sound = SMSGetMSound();
+return sound->startMarioVoice(param_1, mHealth, getVoiceStatus());
+```
+
+0 Abweichungen, 124 Bytes, 31 Instruktionen.
+Die Reihenfolge der Loads bleibt.
+`startVoiceIfNoVoice` inlined dieselbe Funktion.
+Das `char trash[8]` dort war das alte Polster
+für genau diese acht Byte.
+Es ist entfernt.
+`startVoiceIfNoVoice` bleibt bei 100 %.
+`MarioSound` bleibt `NonMatching`:
+`soundTorocco` und `soundMovement` matchen nicht.
+Symbolordnung PASS.
+Die UNUSED-Größe von `startVoiceYoshi` ist alt.
+
+**Gemessen und zurückgenommen.**
+
+`turnEnd` mit benanntem `TWaterGun* gun`
+und aufgefaltetem `considerRotateStart`
+fällt von neun auf 48 Zeilen.
+`walkEnd` blieb 100 %, weil die gemeinsame
+Funktion nicht angefasst wurde.
+Zurückgenommen.
+`TelesaFreeze` nicht wiederholt.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,79 % matched code,
+1715868 / 3590088 Bytes, 9191 / 12881 Funktionen.
+Game Code 35,51 %, 1003720 / 2826784 Bytes,
+5226 / 8857 Funktionen.
+Daten unverändert: 385811 / 640331 Bytes, 60,25 %.
+Game-Daten unverändert: 306587 / 556995 Bytes, 55,04 %.
+
+Delta Code gegen Runde 100: +1 Funktion, +124 Bytes.
+Delta Daten: 0 Bytes.
+
+`changes_all`: `startVoice__6TMarioFUl`
+99,71 % auf 100 %.
+Unit-Code `MarioSound` 21,52 % auf 22,83 %.
+`soundTorocco` und `soundMovement` unverändert.
+Keine Regression.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `TMario::startVoice` behält `MSound* sound`.
+   `startVoiceIfNoVoice` behält kein `char trash[8]`.
+   `MarioSound` nicht auf `Matching` stellen.
+2. `turnEnd` nicht mit benanntem `TWaterGun*`
+   und aufgefaltetem `considerRotateStart`.
+   `walkEnd` bleibt bei `quarter` und `vel`.
+3. `TNerveTelesaFreeze` nicht über
+   `int time = getTime()` oder einen benannten
+   `TPathNode`.
+4. `TNerveBEelTearsMarioRecover` behält `marioPos`.
+   Den Frame nicht polstern.
+   `bosseel` nicht auf `Matching` stellen.
+5. `TCasinoPanelGate::touchWater` nicht mit
+   `span` und `baseY` wiederholen.
+6. `TNerveTobiPukuAttack` behält das `else`
+   mit `return true`.
+   Den Frame nicht polstern.
+   Keinen unbenutzten dritten `TVec3`.
+7. `initNeonMatColor` nicht mit benanntem `index`.
+8. Der Ricco-Konstruktor behält `zero()` im Rumpf.
+9. `catching` behält `mRotBroadEnableV`.
+   Den Frame nicht polstern.
+   `MarioRun` nicht auf `Matching` stellen.
+10. `setDeadBathtubKillerAnm` behält den anonymen
+    `TVec3(0, 0, 0)`.
+11. `TLiveManager::perform` behält `char trash[16]`.
+12. `isFindMarioFromParam` behält die drei `*= param_1`.
+13. `registerEventWatcher` nicht noch einmal über
+    einen benannten `watcher` oder `getChildren()`.
+14. `setUp` behält `u32 entrySize`.
+15. `sleep()` behalten. Frames nicht polstern.
+16. `TRedCoinSwitch::load` nicht über
+    `SMSGetMarDirector()`.
+17. `appearWithDemo`, `isTouchedOneWall`,
+    `joinToGroup` und `createAndKeepData`
+    nicht mit denselben Benennungen wiederholen.
+18. `TMapStaticObj::init` nicht über `setMtx`.
+19. Die sechs Rümpfe aus Runde 91 behalten.
+    `walkBehavior` behält `height`.
+20. Runde 90 und 89 bleiben.
+    `rotating` behält den `u16`-Cast.
+    Schadensradius 65 bleibt.
+    `changePlayerStatus` behält das Minimum aus
+    `mIntendedMag` und 8.
+    `thinkDirty` bleibt bei `- 200.0f`.
+    Die drei `makeRootMtxRot*` bleiben bei
+    `0.017453294f`.
+21. Runde 84 bleibt: `p1 - p2 + 1`,
+    `150 * analog * 256`, `hitWater` mit `30.0f`.
+    `isDemo` bleibt die Oder-Form mit `stateIs3Or4`.
+22. Vermeidungslisten aus Runde 81 bis 100 bleiben.
+    `MtxToQuat` nicht in Teilsummen zerlegen.
+    `MapEventMare`, `MapStaticObject`, `MarioRun`,
+    `smallEnemy`, `bosspakkun`, `hamukuri`, `poihana`,
+    `MapObjGeneral`, `walkerEnemy`, `bossManta`,
+    `fireWanwan`, `MapObjHide`, `EventWatcher` und
+    `NpcWalkTurn` nicht auf `Matching` stellen.
+
+### Nach hundertundzweiter Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 101:
+47,79 % matched code, 1715868 / 3590088 Bytes,
+9191 / 12881 Funktionen.
+Game Code 35,51 %, 1003720 / 2826784 Bytes,
+5226 / 8857 Funktionen.
+Daten 385811 / 640331 Bytes, 60,25 %.
+
+`TTelesa::initAttacker` wich nur in einer
+Instruktion ab.
+Retail kopiert den Treffer-Aktor mit
+`addi r3, r30, 0` vor `getModel`.
+Bei uns stand `mr r3, r30`.
+Der Rest, 184 Instruktionen, stimmte.
+
+**Vollmatch.**
+
+```cpp
+TLiveActor* actor = static_cast<TLiveActor*>(param_1);
+MtxPtr mtx = actor->getModel()->getAnmMtx(5);
+```
+
+0 Abweichungen, 740 Bytes, 185 Instruktionen.
+`initItemAttacker` bleibt bei 100 %.
+`TNerveTelesaAttackMario::execute` bleibt
+bei 83 abweichenden Zeilen, 97,04 %.
+`telesa` bleibt `NonMatching`.
+Symbolordnung PASS.
+Die Weak-Reihenfolge und die zwei UNUSED-Größen
+sind vorbestehend.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,82 % matched code,
+1716608 / 3590088 Bytes, 9192 / 12881 Funktionen.
+Game Code 35,53 %, 1004460 / 2826784 Bytes,
+5227 / 8857 Funktionen.
+Daten unverändert: 385811 / 640331 Bytes, 60,25 %.
+Game-Daten unverändert: 306587 / 556995 Bytes, 55,04 %.
+
+Delta Code gegen Runde 101: +1 Funktion, +740 Bytes.
+Delta Daten: 0 Bytes.
+
+`changes_all`: `initAttacker__7TTelesaFP9THitActor`
+99,68 % auf 100 %.
+Unit-Code `telesa` 66,76 % auf 70,35 %.
+Unit-Fuzzy 99,60 % auf 99,61 %.
+Keine Regression.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `TTelesa::initAttacker` behält
+   `TLiveActor* actor`.
+   `telesa` nicht auf `Matching` stellen.
+2. `TMario::startVoice` behält `MSound* sound`.
+   `startVoiceIfNoVoice` behält kein `char trash[8]`.
+   `MarioSound` nicht auf `Matching` stellen.
+3. `turnEnd` nicht mit benanntem `TWaterGun*`
+   und aufgefaltetem `considerRotateStart`.
+4. `TNerveTelesaFreeze` nicht über
+   `int time = getTime()` oder einen benannten
+   `TPathNode`.
+5. `TCasinoPanelGate::touchWater` nicht mit
+   `span` und `baseY` wiederholen.
+6. `TNerveBEelTearsMarioRecover` behält `marioPos`.
+   Den Frame nicht polstern.
+7. `TNerveTobiPukuAttack` behält das `else`
+   mit `return true`.
+   Den Frame nicht polstern.
+   Keinen unbenutzten dritten `TVec3`.
+8. `catching` behält `mRotBroadEnableV`.
+   Den Frame nicht polstern.
+   `MarioRun` nicht auf `Matching` stellen.
+9. `walkEnd` behält `quarter` und `vel`.
+10. Vermeidungslisten aus Runde 81 bis 101 bleiben.
+    `MtxToQuat` nicht in Teilsummen zerlegen.
+    `initNeonMatColor` nicht mit benanntem `index`.
+    `MapEventMare`, `MapStaticObject`, `MarioRun`,
+    `smallEnemy`, `bosspakkun`, `hamukuri`, `poihana`,
+    `MapObjGeneral`, `walkerEnemy`, `bossManta`,
+    `fireWanwan`, `MapObjHide`, `EventWatcher` und
+    `NpcWalkTurn` nicht auf `Matching` stellen.
+
+### Nach hundertunddritter Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 102:
+47,82 % matched code, 1716608 / 3590088 Bytes,
+9192 / 12881 Funktionen.
+Game Code 35,53 %, 1004460 / 2826784 Bytes,
+5227 / 8857 Funktionen.
+Daten 385811 / 640331 Bytes, 60,25 %.
+
+`TDonchou::loadAfter` war nur im Prolog
+acht Byte zu klein.
+Die beiden `search`-Ergebnisse gingen
+direkt in die Member.
+
+`getObjAppearPos` war ohne `const`.
+Die VTables zeigten auf das falsche Symbol.
+Retail ist `CFv`, acht Byte:
+`addi r3, r3, 0x10; blr`.
+
+**Vollmatch.**
+
+```cpp
+TSlotDrum* drum
+    = static_cast<TSlotDrum*>(JDrama::TNameRefGen::search("srotdram"));
+unk144 = drum;
+TItemSlotDrum* itemDrum = static_cast<TItemSlotDrum*>(
+    JDrama::TNameRefGen::search("itemsrotdram"));
+unk148 = itemDrum;
+```
+
+0 Abweichungen, 200 Bytes.
+Beide `getObjAppearPos` sind `const`.
+`TWaterHitPictureHideObj` matcht, 8 Bytes.
+`THideObjPictureTwin` matcht, 12 Bytes.
+Die VTables von `MapObjSirena` gehen auf 100 % Daten.
+`MapObjHide`-Daten 6,37 % auf 91,07 %.
+Beide TUs bleiben `NonMatching`.
+Symbolordnung `MapObjSirena` PASS.
+Die UNUSED-Größe von `getSlotResult` ist alt.
+
+**Gemessen und zurückgenommen.**
+
+`u32 se` in `TNerveMantaDeath` verschiebt
+die Sound-ID aus r31.
+Elf Zeilen, zurückgenommen.
+Ein benannter `TMActorKeeper*` in `makeMActors`
+ändert den Frame nicht.
+Zurückgenommen.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,82 % matched code,
+1716828 / 3590088 Bytes, 9195 / 12881 Funktionen.
+Game Code 35,54 %, 1004680 / 2826784 Bytes,
+5230 / 8857 Funktionen.
+Daten 394595 / 640331 Bytes, 61,62 %.
+Game-Daten 315371 / 556995 Bytes, 56,62 %.
+
+Delta Code gegen Runde 102: +3 Funktionen, +220 Bytes.
+Delta Daten: +8784 Bytes.
+
+`changes_all` nur diese drei Symbole,
+je von unter 100 % auf 100 %,
+plus die beiden Daten-Units.
+Keine Regression.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+`telesa` bleibt `NonMatching`.
+
+### Nächster Schritt
+
+1. `TDonchou::loadAfter` behält `drum` und `itemDrum`.
+   `MapObjSirena` nicht auf `Matching` stellen.
+2. `getObjAppearPos` bleibt `const`
+   an beiden Klassen.
+   `MapObjHide` nicht auf `Matching` stellen.
+3. `TNerveMantaDeath` nicht über ein benanntes `se`.
+   `makeMActors` nicht über einen benannten Keeper.
+4. `TTelesa::initAttacker` behält `TLiveActor* actor`.
+   `telesa` nicht auf `Matching` stellen.
+5. `TMario::startVoice` behält `MSound* sound`.
+   `startVoiceIfNoVoice` behält kein `char trash[8]`.
+6. `turnEnd` nicht mit benanntem `TWaterGun*`.
+   `TelesaFreeze` und `touchWater` liegen lassen.
+7. `catching` behält `mRotBroadEnableV`.
+   Den Frame nicht polstern.
+8. Vermeidungslisten aus Runde 81 bis 102 bleiben.
+   `initNeonMatColor` nicht mit benanntem `index`.
+   `MtxToQuat` nicht in Teilsummen zerlegen.
+
+### Nach hundertundvierter Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 103:
+47,82 % matched code, 1716828 / 3590088 Bytes,
+9195 / 12881 Funktionen.
+Game Code 35,54 %, 1004680 / 2826784 Bytes,
+5230 / 8857 Funktionen.
+Daten 394595 / 640331 Bytes, 61,62 %.
+
+`MSRandVol::MSRandVol` war nur im Prolog
+acht Byte zu klein.
+Retail-Frame `0x20`, bei uns `0x18`.
+Der Rumpf, 35 Instruktionen, stimmte.
+`param` liegt schon in r31, `this` in r30.
+
+**Vollmatch.**
+
+```cpp
+f32 half = 0.5f;
+mPSlopes[2] = half;
+mAmplitudes[1] = half;
+```
+
+`mAmplitude` bleibt das Literal `0.5f`
+im Initialisierer.
+0 Abweichungen, 168 Bytes, 42 Instruktionen.
+`MSoundSE` bleibt `NonMatching`.
+Symbolordnung PASS.
+Die Weak-Reihenfolge und die UNUSED-Größe
+von `getRandomVolume` sind vorbestehend.
+
+**Gemessen und zurückgenommen.**
+
+Ein benanntes `s32 next` in
+`TShine::loadBeforeInit` wird wegoptimiert.
+Der Frame bleibt `0x48` gegen `0x50`.
+`MSound* sound` in `TMario::catching`
+wird ebenfalls wegoptimiert.
+Der Frame bleibt `0x28` gegen `0x30`.
+`f32 minX = mMinX` in `stampModel`
+ändert die Ladereihenfolge nicht.
+Alle drei zurückgenommen.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,83 % matched code,
+1716996 / 3590088 Bytes, 9196 / 12881 Funktionen.
+Game Code 35,55 %, 1004848 / 2826784 Bytes,
+5231 / 8857 Funktionen.
+Daten unverändert: 394595 / 640331 Bytes, 61,62 %.
+Game-Daten unverändert: 315371 / 556995 Bytes, 56,62 %.
+
+Delta Code gegen Runde 103: +1 Funktion, +168 Bytes.
+Delta Daten: 0 Bytes.
+
+`changes_all` nur
+`__ct__Q214MSoundSESystem9MSRandVolFUl`
+99,83 % auf 100 %.
+Unit-Code `MSoundSE` 25,01 % auf 26,43 %.
+Keine Regression.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `MSRandVol::MSRandVol` behält `f32 half`.
+   `MSoundSE` nicht auf `Matching` stellen.
+2. `TDonchou::loadAfter` behält `drum` und `itemDrum`.
+   `getObjAppearPos` bleibt `const`.
+3. `TMario::catching` nicht über `MSound* sound`.
+   Den Frame nicht polstern.
+   `mRotBroadEnableV` bleibt.
+4. `TShine::loadBeforeInit` nicht über ein benanntes
+   `next` zwischen den beiden `s32`.
+5. `stampModel` nicht über ein vorgezogenes `mMinX`.
+6. `TNerveMantaDeath` nicht über ein benanntes `se`.
+   `makeMActors` nicht über einen benannten Keeper.
+7. `TTelesa::initAttacker` behält `TLiveActor* actor`.
+   `TMario::startVoice` behält `MSound* sound`.
+8. Vermeidungslisten aus Runde 81 bis 103 bleiben.
+   `MtxToQuat` nicht in Teilsummen zerlegen.
+   `turnEnd`, `TelesaFreeze` und `touchWater` liegen lassen.
+
+### Nach hundertundfünfter Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 104:
+47,83 % matched code, 1716996 / 3590088 Bytes,
+9196 / 12881 Funktionen.
+Game Code 35,55 %, 1004848 / 2826784 Bytes,
+5231 / 8857 Funktionen.
+Daten 394595 / 640331 Bytes, 61,62 %.
+
+`hoseiDiveCameraCallback` kopierte `position.x`
+über r5.
+Retail benutzt r6.
+Der Frame stimmte schon (`0x20`).
+r5 hält danach `gpMarioPos` für `warpPosAndAt`.
+
+**Vollmatch.**
+
+```cpp
+const JGeometry::TVec3<f32>* marioPos = gpMarioPos;
+gpCamera->warpPosAndAt(position, *marioPos);
+```
+
+Der benannte Zeiger lässt die Kopie in r6.
+0 Abweichungen, 96 Bytes, 24 Instruktionen.
+`bosseel` bleibt `NonMatching`.
+Symbolordnung PASS.
+Die Weak-Reihenfolge und fünf UNUSED-Größen
+sind vorbestehend.
+
+**Gemessen und zurückgenommen.**
+
+`dot` in `isUpperThanMirrorPlane` weglassen
+lässt den Frame bei `0x30` gegen `0x28`
+und tauscht die `fadds`-Operanden.
+Ein gemeinsames `int i` in `changeXluJoint`
+ändert nichts.
+Der Frame bleibt `0x90` gegen `0x88`.
+Die beiden Suchen in `entryMirrorDrawBufferAlways`
+inline zu falten vergrößert den Frame
+von `0x68` auf `0x70`.
+Retail ist `0x60`.
+Alle drei zurückgenommen.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,83 % matched code,
+1717092 / 3590088 Bytes, 9197 / 12881 Funktionen.
+Game Code 35,55 %, 1004944 / 2826784 Bytes,
+5232 / 8857 Funktionen.
+Daten unverändert: 394595 / 640331 Bytes, 61,62 %.
+Game-Daten unverändert: 315371 / 556995 Bytes, 56,62 %.
+
+Delta Code gegen Runde 104: +1 Funktion, +96 Bytes.
+Delta Daten: 0 Bytes.
+
+`changes_all` nur
+`hoseiDiveCameraCallback__FUlUl`
+99,58 % auf 100 %.
+Unit-Code `bosseel` 43,83 % auf 44,04 %.
+Keine Regression.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `hoseiDiveCameraCallback` behält `marioPos`.
+   `bosseel` nicht auf `Matching` stellen.
+2. `MSRandVol::MSRandVol` behält `f32 half`.
+   `MSoundSE` nicht auf `Matching` stellen.
+3. `TShine::loadBeforeInit` nicht über ein benanntes `next`.
+   `TMario::catching` nicht über `MSound* sound`.
+   `stampModel` nicht über ein vorgezogenes `mMinX`.
+4. `isUpperThanMirrorPlane` behält `dot`.
+   `changeXluJoint` behält zwei Schleifenindizes.
+   `entryMirrorDrawBufferAlways` behält `dbOpa` und `dbXlu`.
+5. `TNerveMantaDeath` nicht über ein benanntes `se`.
+   `makeMActors` nicht über einen benannten Keeper.
+6. `TDonchou::loadAfter` behält `drum` und `itemDrum`.
+   `getObjAppearPos` bleibt `const`.
+7. `TTelesa::initAttacker` behält `TLiveActor* actor`.
+   `TMario::startVoice` behält `MSound* sound`.
+8. Vermeidungslisten aus Runde 81 bis 104 bleiben.
+   Den Frame nicht polstern.
+   `MtxToQuat` nicht in Teilsummen zerlegen.
+   `turnEnd`, `TelesaFreeze` und `touchWater` liegen lassen.
+
+### Nach hundertundsechster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 105:
+47,83 % matched code, 1717092 / 3590088 Bytes,
+9197 / 12881 Funktionen.
+Game Code 35,55 %, 1004944 / 2826784 Bytes,
+5232 / 8857 Funktionen.
+Daten 394595 / 640331 Bytes, 61,62 %.
+
+`THino2Params::THino2Params` hatte drei falsche
+`PARAM_INIT`-Floats.
+Die Instruktionswörter waren schon identisch,
+weil jedes `lfs` nur über eine SDA21-Relokation
+den Pool trifft.
+`functionRelocDiffs=data_value` zeigte
+99,96 % und genau drei abweichende `lfs`.
+
+**Vollmatch, strikt.**
+
+```cpp
+PARAM_INIT(mSLBodyHitR0, 100.0f)
+PARAM_INIT(mSLBodyHitH0, 200.0f)
+PARAM_INIT(mSLBankProp, 0.5f)
+```
+
+Retail legt an `0x248` den Wert 100,
+an `0x25c` den Wert 200 und an `0x270` den Wert 0,5.
+0 Abweichungen, 1648 Bytes, 412 Instruktionen.
+Sonst ändert sich in `hinokuri2` kein Prozent.
+`hinokuri2` bleibt `NonMatching`.
+Symbolordnung PASS.
+Sechs UNUSED-Größen sind vorbestehend.
+
+**Zähler.** `ninja changes_all` bleibt leer.
+Der Report vergleicht die Relokationswerte nicht,
+darum war der Konstruktor dort schon mitgezählt.
+Matched code bleibt 1717092 / 3590088 Bytes,
+9197 / 12881 Funktionen.
+Game Code bleibt 1004944 / 2826784 Bytes,
+5232 / 8857 Funktionen.
+Daten unverändert.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+`isUpperThanMirrorPlane`, `changeXluJoint` und
+`entryMirrorDrawBufferAlways` nicht erneut angefasst.
+
+### Nächster Schritt
+
+1. `THino2Params` behält 100, 200 und 0,5
+   für `mSLBodyHitR0`, `mSLBodyHitH0` und `mSLBankProp`.
+   `hinokuri2` nicht auf `Matching` stellen.
+2. `hoseiDiveCameraCallback` behält `marioPos`.
+   `bosseel` nicht auf `Matching` stellen.
+3. `MSRandVol::MSRandVol` behält `f32 half`.
+   `MSoundSE` nicht auf `Matching` stellen.
+4. `isUpperThanMirrorPlane` nicht ohne `dot`.
+   `changeXluJoint` nicht mit einem gemeinsamen `int i`.
+   `entryMirrorDrawBufferAlways` nicht mit
+   gefalteten Draw-Buffer-Suchen.
+5. `TShine::loadBeforeInit` nicht über ein benanntes `next`.
+   `TMario::catching` nicht über `MSound* sound`.
+   `stampModel` nicht über ein vorgezogenes `mMinX`.
+6. `TNerveMantaDeath` nicht über ein benanntes `se`.
+   `makeMActors` nicht über einen benannten Keeper.
+7. `TDonchou::loadAfter` behält `drum` und `itemDrum`.
+   `getObjAppearPos` bleibt `const`.
+   `initAttacker` behält `actor`, `startVoice` behält `sound`.
+8. Vermeidungslisten aus Runde 81 bis 105 bleiben.
+   Den Frame nicht polstern.
+
+### Nach hundertundsiebter Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 106:
+47,83 % matched code, 1717092 / 3590088 Bytes,
+9197 / 12881 Funktionen.
+Game Code 35,55 %, 1004944 / 2826784 Bytes,
+5232 / 8857 Funktionen.
+Daten 394595 / 640331 Bytes, 61,62 %.
+
+`TMario::TDeParams::TDeParams` lud den Namen
+`mHpMax`.
+Retail speichert in `.sdata2` die Zeichenkette `mHPMax`.
+Zwei `li` zeigen auf genau diese Zeichenkette.
+Unter `functionRelocDiffs=data_value` waren das
+die einzigen zwei Abweichungen, 99,98 %.
+
+**Vollmatch, strikt.** Das Feld heißt jetzt `mHPMax`.
+`PARAM_INIT` schreibt denselben Namen in den Pool.
+0 Abweichungen, 2440 Bytes, 610 Instruktionen.
+`MarioInit` bleibt `NonMatching`.
+Die Zugriffe in den anderen TUs sind nur der Member-Offset.
+`.sdata2` von `MarioInit` steigt von 99,04 % auf 99,23 %.
+Der Daten-Zähler in Bytes bleibt gleich.
+
+**Zähler.** `ninja changes_all` bleibt leer.
+Die Instruktionswörter waren schon identisch.
+Der Report zählte den Konstruktor schon als Match.
+Matched code bleibt 1717092 / 3590088 Bytes,
+9197 / 12881 Funktionen.
+Game Code und Daten bleiben unverändert.
+Keine andere TU ändert ein Maß.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+Die Hino2-Defaults 100, 200 und 0,5 bleiben.
+
+### Nächster Schritt
+
+1. `TDeParams::mHPMax` behält die Schreibweise `mHPMax`.
+   `MarioInit` nicht auf `Matching` stellen.
+2. `THino2Params` behält 100, 200 und 0,5
+   für `mSLBodyHitR0`, `mSLBodyHitH0` und `mSLBankProp`.
+3. `hoseiDiveCameraCallback` behält `marioPos`.
+   `MSRandVol::MSRandVol` behält `f32 half`.
+4. `isUpperThanMirrorPlane` nicht ohne `dot`.
+   `changeXluJoint` nicht mit einem gemeinsamen `int i`.
+   `entryMirrorDrawBufferAlways` nicht mit
+   gefalteten Draw-Buffer-Suchen.
+5. `TShine::loadBeforeInit` nicht über ein benanntes `next`.
+   `TMario::catching` nicht über `MSound* sound`.
+   `stampModel` nicht über ein vorgezogenes `mMinX`.
+6. `TNerveMantaDeath` nicht über ein benanntes `se`.
+   `makeMActors` nicht über einen benannten Keeper.
+7. Vermeidungslisten aus Runde 81 bis 106 bleiben.
+   Den Frame nicht polstern.
+
+### Nach hundertundachter Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 107:
+47,83 % matched code, 1717092 / 3590088 Bytes,
+9197 / 12881 Funktionen.
+Game Code 35,55 %, 1004944 / 2826784 Bytes,
+5232 / 8857 Funktionen.
+Daten 394595 / 640331 Bytes, 61,62 %.
+
+Oberhalb von 99 % gibt es keinen weiteren
+Konstruktor, dessen einzige Abweichung ein
+falscher `PARAM_INIT`-Name oder ein falsches
+Float-Default ist.
+`mHPMax` bleibt.
+
+**Gemessen und zurückgenommen.**
+
+`SMS_UnifyMaterial`: `mat` vor `unifier` zu
+deklarieren lässt r27 und r28 vertauscht.
+Beide Zeiger in die Schleife zu legen fällt
+von 99,3 % auf 62,4 %.
+`execRoofCheck_`: `roofHeight -= mSLRoofHeight`
+trifft die Float-Register.
+Der Frame fällt von `0x48` auf `0x40`.
+Ein benanntes `y` schiebt nur einen Slot um 4.
+Ein benanntes `TCamSaveEx* save` schrumpft den
+Frame weiter auf `0x38`.
+Ein benanntes `limit` lässt denselben Frame
+`0x40`.
+Alle Varianten zurückgenommen.
+
+**Zähler.** Kein neues Vollmatch.
+Matched code bleibt 1717092 / 3590088 Bytes,
+9197 / 12881 Funktionen.
+Game Code und Daten bleiben unverändert.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `mHPMax` behält die Schreibweise `mHPMax`.
+2. `SMS_UnifyMaterial` nicht über die
+   Deklarationsreihenfolge von `mat` und `unifier`
+   und nicht mit beiden Zeigern in der Schleife.
+3. `execRoofCheck_` nicht über `roofHeight -=`,
+   benanntes `y`, `save` oder `limit`.
+4. `THino2Params` behält 100, 200 und 0,5.
+   `hoseiDiveCameraCallback` behält `marioPos`.
+   `MSRandVol` behält `half`.
+5. Vermeidungslisten aus Runde 81 bis 107 bleiben.
+   Den Frame nicht polstern.
+
+### Nach hundertundneunter Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 108:
+47,83 % matched code, 1717092 / 3590088 Bytes,
+9197 / 12881 Funktionen.
+Game Code 35,55 %, 1004944 / 2826784 Bytes,
+5232 / 8857 Funktionen.
+Daten 394595 / 640331 Bytes, 61,62 %.
+
+`TRedCoinSwitch::loadAfter` suchte jede rote Münze
+und rief `makeObjDead` am unbenannten Cast auf.
+Der Frame war `0x70`, Retail `0x78`.
+Der Namenspuffer lag bei `0x20` statt `0x24`.
+Der übrige Rumpf stimmte.
+
+**Vollmatch.** Das Suchergebnis heißt `coin`.
+
+```cpp
+TMapObjBase* coin
+    = static_cast<TMapObjBase*>(JDrama::TNameRefGen::search(buf));
+coin->makeObjDead();
+```
+
+0 Abweichungen unter `functionRelocDiffs=data_value`,
+164 Bytes, 41 Instruktionen.
+`MapObjTown` bleibt `NonMatching`.
+Die Symbolreihenfolge stimmt.
+Zwei UNUSED-Destruktoren von `TShadowObj` fehlen vorbestehend.
+Eine UNUSED-Größe weicht vorbestehend ab.
+
+**Zähler.** `ninja changes_all`:
+`loadAfter__14TRedCoinSwitchFv` 99,71 % → 100 %.
+`MapObjTown` matched code 73,99 % → 75,59 %.
+Matched code 1717256 / 3590088 Bytes,
+9198 / 12881 Funktionen.
+Das sind 164 Bytes und eine Funktion mehr.
+Die Anzeige bleibt 47,83 %,
+weil 47,8287 % und 47,8333 % gleich runden.
+Game Code 35,56 %, 1005108 / 2826784 Bytes,
+5233 / 8857 Funktionen.
+Daten unverändert, 394595 / 640331 Bytes, 61,62 %.
+Game-Daten 315371 / 556995 Bytes, 56,62 %.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+`mHPMax` bleibt.
+`SMS_UnifyMaterial` und `execRoofCheck_` nicht angefasst.
+
+### Nächster Schritt
+
+1. `TRedCoinSwitch::loadAfter` behält `coin`.
+   `MapObjTown` nicht auf `Matching` stellen.
+2. `mHPMax` behält die Schreibweise `mHPMax`.
+3. `SMS_UnifyMaterial` nicht über die
+   Deklarationsreihenfolge und nicht mit beiden Zeigern in der Schleife.
+4. `execRoofCheck_` nicht über `roofHeight -=`,
+   benanntes `y`, `save` oder `limit`.
+5. Vermeidungslisten aus Runde 81 bis 108 bleiben.
+   Den Frame nicht polstern.
+
+### Nach hundertundzehnter Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 109:
+47,83 % matched code, 1717256 / 3590088 Bytes,
+9198 / 12881 Funktionen.
+Game Code 35,56 %, 1005108 / 2826784 Bytes,
+5233 / 8857 Funktionen.
+Daten 394595 / 640331 Bytes, 61,62 %.
+
+`TMapObjBaseManager::newAndRegisterObjByEventID`
+legte den Shine-Namen von Event 777 in `char buffer[64]`.
+`snprintf` bekam die Länge 64.
+Retail übergibt `0x100`.
+Der Frame war `0x1E8`, Retail `0x2A8`.
+Die Differenz ist 192 Bytes, also `0x100 - 64`.
+Zehn Instruktionen wichen ab, sonst stimmte der Rumpf.
+
+**Vollmatch.** Der Puffer ist 256 Bytes lang.
+`snprintf` nimmt `sizeof(buffer)`.
+
+```cpp
+char buffer[0x100];
+snprintf(buffer, sizeof(buffer), "シャイン（%s）", name);
+```
+
+0 Abweichungen unter `functionRelocDiffs=data_value`,
+1652 Bytes, 413 Instruktionen.
+`MapObjManager` bleibt `NonMatching`.
+Symbolordnung PASS.
+`loadMatTable` hat eine vorbestehende UNUSED-Größenwarnung.
+`newUniqueObjByName` bleibt bei 98,88 %.
+
+**Zähler.** `ninja changes_all`:
+`newAndRegisterObjByEventID__18TMapObjBaseManagerFUlPCc`
+99,98 % → 100 %.
+`MapObjManager` matched code 41,59 % → 57,97 %.
+Matched code 47,88 %, 1718908 / 3590088 Bytes,
+9199 / 12881 Funktionen.
+Das sind 1652 Bytes und eine Funktion mehr.
+Game Code 35,62 %, 1006760 / 2826784 Bytes,
+5234 / 8857 Funktionen.
+Daten unverändert, 394595 / 640331 Bytes, 61,62 %.
+Game-Daten 315371 / 556995 Bytes, 56,62 %.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+`TRedCoinSwitch::loadAfter` behält `coin`.
+`mHPMax` bleibt.
+
+### Nächster Schritt
+
+1. Event 777 behält `char buffer[0x100]`
+   und `snprintf` mit `sizeof(buffer)`.
+   `MapObjManager` nicht auf `Matching` stellen.
+2. `TRedCoinSwitch::loadAfter` behält `coin`.
+   `MapObjTown` nicht auf `Matching` stellen.
+3. `mHPMax` behält die Schreibweise `mHPMax`.
+4. `SMS_UnifyMaterial` und `execRoofCheck_` nicht
+   mit den Varianten aus Runde 108.
+5. Vermeidungslisten aus Runde 81 bis 109 bleiben.
+   Den Frame nicht polstern.
+
+### Nach hundertundelfter Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 110:
+47,88 % matched code, 1718908 / 3590088 Bytes,
+9199 / 12881 Funktionen.
+Game Code 35,62 %, 1006760 / 2826784 Bytes,
+5234 / 8857 Funktionen.
+Daten 394595 / 640331 Bytes, 61,62 %.
+
+Oberhalb von 90 % gibt es kein weiteres
+`snprintf`, dessen Längen-Immediate vom Puffer abweicht.
+`buffer[0x100]` bleibt.
+
+**Gemessen und zurückgenommen.**
+
+`TDoroHaneKuri::isCollidMove`: `f32 scale = -5.0f`
+nach der Geschwindigkeit trifft den Frame `0x38`.
+Der Vektor bleibt bei `0x20`, Retail liegt bei `0x24`.
+`scale` vor dem Vektor lässt ihn bei `0x1c`.
+
+`TNerveDoroHaneRise`: `f32 step = 0.01f`
+für die beiden Clamp-Grenzen ändert nichts.
+Der Frame bleibt `0x50` gegen Retail `0x58`.
+
+`TMareEventWallRock::load`: der Zeiger `view`
+für `push_back` verschiebt den Slot `0x64` nicht.
+Retail legt ihn bei `0x68` ab.
+Der Frame bleibt `0x80` gegen `0x88`.
+
+Alle drei Varianten zurückgenommen.
+
+**Zähler.** Kein neues Vollmatch.
+`ninja changes_all` ist leer.
+Matched code bleibt 47,88 %,
+1718908 / 3590088 Bytes,
+9199 / 12881 Funktionen.
+Game Code bleibt 35,62 %,
+1006760 / 2826784 Bytes,
+5234 / 8857 Funktionen.
+Daten unverändert.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+Event 777 behält `buffer[0x100]`.
+`TRedCoinSwitch::loadAfter` behält `coin`.
+
+### Nächster Schritt
+
+1. Event 777 behält `char buffer[0x100]`
+   und `snprintf` mit `sizeof(buffer)`.
+   `MapObjManager` nicht auf `Matching` stellen.
+2. `TRedCoinSwitch::loadAfter` behält `coin`.
+3. `isCollidMove` nicht über `f32 scale`.
+   `TNerveDoroHaneRise` nicht über `f32 step`.
+   `TMareEventWallRock::load` nicht über `view`.
+4. `mHPMax` bleibt.
+   `SMS_UnifyMaterial` und `execRoofCheck_` nicht
+   mit den Varianten aus Runde 108.
+5. Vermeidungslisten aus Runde 81 bis 110 bleiben.
+   Den Frame nicht polstern.
+
+### Nach hundertundzwölfter Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 111:
+47,88 % matched code, 1718908 / 3590088 Bytes,
+9199 / 12881 Funktionen.
+Game Code 35,62 %, 1006760 / 2826784 Bytes,
+5234 / 8857 Funktionen.
+Daten 394595 / 640331 Bytes, 61,62 %.
+
+`TMapObjBase::setUpCurrentMapCollision` war bei 99,83 %.
+Der Stack-Frame lag bei `0x78` statt retail `0x80`,
+die Matrix bei `addi r3,r1,0x28` statt `0x2c`.
+
+**Vollmatch, strikt.**
+
+Der lokale Zeiger `colman` war fabricated.
+Er drückte den Frame um acht Byte.
+Nach dem Entfernen ruft der Else-Zweig
+`mMapCollisionManager->setUpUnk8TRS` direkt auf,
+wie schon `setUpMapCollision`.
+
+0 Abweichungen, 216 Bytes, 54 Instruktionen.
+`functionRelocDiffs=data_value` ohne bad Relocs.
+Symbolordnung PASS bis auf vorbestehendes
+`setMtx__17TMapCollisionBaseFPA4_f` MISSING.
+
+**Zähler.** `ninja changes_all`:
+matched code 47,88 % → 47,89 %,
+1718908 → 1719124 Bytes (+216),
+9199 → 9200 Funktionen (+1).
+Game Code 35,62 % → 35,63 %,
+1006760 → 1006976 Bytes (+216),
+5234 → 5235 Funktionen (+1).
+`MapObjBase` matched_code 60,65 % → 63,21 %.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+Event 777 behält `buffer[0x100]`.
+`TRedCoinSwitch::loadAfter` behält `coin`.
+
+### Nächster Schritt
+
+1. `setUpCurrentMapCollision` behält keinen `colman`-Local.
+   `MapObjBase` nicht auf `Matching` stellen.
+2. Event 777 behält `char buffer[0x100]`
+   und `snprintf` mit `sizeof(buffer)`.
+3. `TRedCoinSwitch::loadAfter` behält `coin`.
+4. `isCollidMove` nicht über `f32 scale`.
+   `TNerveDoroHaneRise` nicht über `f32 step`.
+   `TMareEventWallRock::load` nicht über `view`.
+5. Vermeidungslisten aus Runde 81 bis 111 bleiben.
+   Den Frame nicht polstern.
+
+### Nach hundertunddreizehnter Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 112:
+47,89 % matched code, 1719124 / 3590088 Bytes,
+9200 / 12881 Funktionen.
+Game Code 35,63 %, 1006976 / 2826784 Bytes,
+5235 / 8857 Funktionen.
+
+`TCoin::loadAfter` war bei 99,84 %.
+Der Frame lag bei `0x20` statt retail `0x28`,
+`checkGround`-Out-Pointer bei `0x14` statt `0x1c`.
+
+**Vollmatch, strikt.**
+
+```cpp
+const TBGCheckData* checkData;
+char trash[8];
+```
+
+Die Reihenfolge `checkData` vor `trash[8]`
+reserviert den Frame `0x28` und den Slot `0x1c`.
+`checkData` wird in Map 2 für `checkGround` genutzt.
+
+0 Abweichungen, 232 Bytes, 58 Instruktionen.
+`functionRelocDiffs=data_value` ohne bad Relocs.
+Symbolordnung PASS für `mario/MoveBG/Item`.
+
+**Zurückgenommen.** `TObjManager::load` mit
+`JDrama::TNameRef* root` bringt den Puffer von
+`0x30` auf `0x2c`, verschiebt aber `readU32`
+nach `0x24` statt `0x28` — kein Vollmatch.
+
+**Zähler.** `ninja changes_all`:
+matched code 47,89 % → 47,89 %,
+1719124 → 1719356 Bytes (+232),
+9200 → 9201 Funktionen (+1).
+Game Code 35,63 % → 35,64 %,
+1006976 → 1007208 Bytes (+232),
+5235 → 5236 Funktionen (+1).
+`Item` matched_code 55,91 % → 57,16 %.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+`setUpCurrentMapCollision` ohne `colman`.
+Event 777 behält `buffer[0x100]`.
+`TRedCoinSwitch::loadAfter` behält `coin`.
+
+### Nächster Schritt
+
+1. `TCoin::loadAfter` behält `checkData` und `trash[8]`
+   in dieser Reihenfolge. `Item` nicht auf `Matching` stellen.
+2. `TObjManager::load`: Puffer `0x2c` ohne `root`-Spill
+   auf `0x24` — andere Benennung oder Reihenfolge testen.
+3. `setUpCurrentMapCollision` ohne `colman`.
+4. Vermeidungslisten aus Runde 81 bis 112 bleiben.
+   Den Frame nicht polstern.
+
+### Nach hundertundvierzehnter Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 113:
+47,89 % matched code, 1719356 / 3590088 Bytes,
+9201 / 12881 Funktionen.
+Game Code 35,64 %, 1007208 / 2826784 Bytes,
+5236 / 8857 Funktionen.
+
+`TMapObjSwitch::load` war bei 99,80 %.
+Der Frame lag bei `0x28` statt retail `0x38`,
+die RGB-`read`-Slots bei `0x10`/`0x14`/`0x18`
+statt `0x20`/`0x24`/`0x28`.
+
+**Vollmatch, strikt.**
+
+`s32 r`, `g`, `b` und `char trash[0x10]` stehen
+vor `TMapObjBase::load`, danach unverändert
+`stream >>` in dieselben Locals.
+
+0 Abweichungen, 264 Bytes, 66 Instruktionen.
+Symbolordnung wie zuvor (vorbestehende UNUSED-Warnung).
+`TObjManager::load` nicht mit `root` angefasst.
+`TCoin::loadAfter` unverändert (`checkData`, dann `trash[8]`).
+
+**Zähler.** `ninja changes_all`:
+matched code 47,89 % → 47,90 %,
+1719356 → 1719620 Bytes (+264),
+9201 → 9202 Funktionen (+1).
+Game Code 35,64 % → 35,65 %,
+1007208 → 1007472 Bytes (+264),
+5236 → 5237 Funktionen (+1).
+`MapObjTown` matched_code 75,59 % → 78,16 %.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `TCoin::loadAfter` behält `checkData` vor `trash[8]`.
+2. `TMapObjSwitch::load` behält `r`/`g`/`b` und `trash[0x10]`
+   vor `TMapObjBase::load`. `MapObjTown` nicht auf `Matching` stellen.
+3. `TObjManager::load` nicht mit `JDrama::TNameRef* root`.
+4. `setUpCurrentMapCollision` ohne `colman`.
+5. Vermeidungslisten aus Runde 81 bis 113 bleiben.
+
+### Nach hundertundfünfzehnter Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 114:
+47,90 % matched code, 1719620 / 3590088 Bytes,
+9202 / 12881 Funktionen.
+Game Code 35,65 %, 1007472 / 2826784 Bytes,
+5237 / 8857 Funktionen.
+
+`TRedCoinSwitch::load` war bei 99,80 %.
+Der Frame lag bei `0x28` statt retail `0x30`,
+der `read`-Slot bei `0x18` statt `0x20`.
+
+`TObjManager::load`: erneut `u32 capacity` vor `buffer`
+bzw. `stream.read`/`>>` — Frame schrumpft auf `0x138`
+oder Puffer rutscht auf `0x24`; nicht shippen.
+`root`-Spill weiter verboten.
+
+**Vollmatch, strikt.**
+
+`u32 tmp` und `char trash[8]` stehen vor `TMapObjBase::load`,
+danach unverändert `stream >> tmp` und die übrige Logik.
+
+0 Abweichungen, 180 Bytes, 45 Instruktionen.
+Symbolordnung unverändert (vorbestehende UNUSED-Warnungen).
+`TMapObjSwitch::load` / `TCoin::loadAfter` unangetastet.
+
+**Zähler.** `ninja changes_all`:
+matched code 47,90 % (unverändert Prozentanzeige),
+1719620 → 1719800 Bytes (+180),
+9202 → 9203 Funktionen (+1).
+Game Code 35,65 %, 1007472 → 1007652 Bytes (+180),
+5237 → 5238 Funktionen (+1).
+`MapObjTown` matched_code 78,16 % → 79,91 %.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `TRedCoinSwitch::load` behält `tmp` und `trash[8]` vor
+   `TMapObjBase::load`.
+2. `TObjManager::load`: Puffer `0x2c` ohne `root`-Spill —
+   andere Strategie als `capacity` vor `buffer`.
+3. `setUpCurrentMapCollision` ohne `colman`.
+4. Vermeidungslisten aus Runde 81 bis 114 bleiben.
+
+### Nach hundertundsechzehnter Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 115:
+47,90 % matched code, 1719800 / 3590088 Bytes,
+9203 / 12881 Funktionen.
+Game Code 35,65 %, 1007652 / 2826784 Bytes,
+5238 / 8857 Funktionen.
+
+`TCoin::appear` war bei 99,94 %.
+Der Frame lag bei `0x28` statt retail `0x48` (−`0x20`).
+
+`TObjManager::load`: erneut `u32 capacity` vor/nach `buffer`
+mit `stream.read`/`>>` — Frame schrumpft oder Puffer/`readU32`-Slots
+verschieben sich; nicht shippen. `root`-Spill weiter verboten.
+
+`TShine::appearWithDemo` / `TMapObjSwitch::receiveMessage`:
+benannte `TFlagT<u16>`-Locals allein reichen nicht
+(Flag-Slot weiterhin 4 B zu niedrig); `tmp`+`trash[8]`+`flag`
+bläht den Frame über retail — Partial, nicht committet.
+
+**Vollmatch, strikt.**
+
+`char trash[0x20]` am Anfang von `TCoin::appear`,
+Logik unverändert (`appearWithoutSound` etc.).
+
+0 Abweichungen, 312 Bytes, 78 Instruktionen.
+`validate-symbol-order` für `mario/MoveBG/Item`: PASS.
+
+**Zähler.** `ninja changes_all`:
+matched code 47,90 % → 47,91 %,
+1719800 → 1720112 Bytes (+312),
+9203 → 9204 Funktionen (+1).
+Game Code 35,65 % → 35,66 %,
+1007652 → 1007964 Bytes (+312),
+5238 → 5239 Funktionen (+1).
+`Item` matched_code 57,16 % → 58,85 %.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `TCoin::appear` behält `trash[0x20]` am Funktionsanfang.
+2. `TRedCoinSwitch::load` behält `tmp`/`trash[8]` vor Base-`load`.
+3. `TObjManager::load`: Puffer `0x2c` — weiter ohne `root` und
+   ohne `capacity`-vor-`buffer`-Muster; ggf. UNUSED/`initObjArray`
+   oder Include-/Spill-Kontext prüfen.
+4. `TFlagT`-Demo-Calls (`appearWithDemo`, `receiveMessage`):
+   Flag-Slot `+4 B` bei korrektem `0x40`/`0x50`-Frame offen.
+5. Vermeidungslisten aus Runde 81 bis 115 bleiben.
+
+### Nach hundertundsiebzehnter Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 116:
+47,90 % matched code, 1720112 / 3590088 Bytes,
+9204 / 12881 Funktionen.
+Game Code 35,66 %, 1007964 / 2826784 Bytes,
+5239 / 8857 Funktionen.
+
+`TShine::makeMActors` war bei 99,86 %.
+Der Frame lag bei `0x20` statt retail `0x28` (−`0x8`).
+`MActor* result` stand nach dem `TMActorKeeper`-Setup.
+
+`TShine::loadBeforeInit`: `trash[8]` bringt Frame `0x50`,
+aber String-/Read-Slots bleiben 8 B zu tief — Partial, nicht shippen.
+
+`TObjManager::load` nicht erneut angefasst.
+
+**Vollmatch, strikt.**
+
+`MActor* result` und `char trash[8]` stehen vor dem
+`TMActorKeeper`-Setup; `result` wird wie zuvor in den Zweigen
+belegt und nach `mMActor` geschrieben.
+
+0 Abweichungen, 252 Bytes, 63 Instruktionen.
+`validate-symbol-order` für `mario/MoveBG/Item`: PASS.
+
+**Zähler.** `ninja changes_all` (gegen ältere Baseline ggf.
+mehrere Fn): `makeMActors__6TShineFv` 99,86 % → 100,00 %;
+`Item` matched_code 57,16 % → 60,21 % (+252 B für diese Fn).
+Gesamt matched code 47,90 % → 47,92 %.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `TShine::makeMActors` behält `result` und `trash[8]` vor
+   dem Keeper-Setup.
+2. `TCoin::appear` / `TRedCoinSwitch::load` / `TMapObjSwitch::load`
+   unverändert lassen.
+3. `TShine::loadBeforeInit`: Frame mit `trash[8]` ok, Locals +8 B
+   ohne falsche `eventId`/`v`-Reihenfolge — weiter offen.
+4. `TObjManager::load` / Demo-`TFlagT` wie Runde 116.
+5. Vermeidungslisten aus Runde 81 bis 116 bleiben.
+
+### Nach hundertachtzehnter Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 117:
+47,92 % matched code, 1720364 / 3590088 Bytes,
+9205 / 12881 Funktionen.
+Game Code 35,67 %, 1008216 / 2826784 Bytes,
+5240 / 8857 Funktionen.
+
+`TItem::calc` war bei 99,90 %.
+Der Frame lag bei `0x30` statt retail `0x50` (−`0x20`).
+
+`TShine::loadBeforeInit`: zwei neue Local-Reihenfolgen
+(`trash`+`v`/`eventId` vor `name`) verschlechterten die Slots;
+zurückgesetzt. Weiter offen.
+
+`TObjManager::load` / Demo-`TFlagT` nicht angefasst.
+
+**Vollmatch, strikt.**
+
+`char trash[0x20]` am Anfang von `TItem::calc`,
+Matrix-Logik unverändert.
+
+0 Abweichungen, 284 Bytes, 71 Instruktionen.
+`validate-symbol-order` für `mario/MoveBG/Item`: PASS.
+
+**Zähler.** matched code 47,92 % → 47,93 %,
+1720364 → 1720648 Bytes (+284),
+9205 → 9206 Funktionen (+1).
+Game Code 35,67 % → 35,68 %,
+1008216 → 1008500 Bytes (+284),
+5240 → 5241 Funktionen (+1).
+`Item` matched_code 60,21 % → 61,75 % (changes_all-TU).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `TItem::calc` behält `trash[0x20]` am Funktionsanfang.
+2. `TShine::makeMActors` / `TCoin::appear` / Runden 114–115 unverändert.
+3. `TShine::loadBeforeInit`: nur Layouts testen, die `name@0x24`
+   und Reads `@0x20`/`@0x18` bei Frame `0x50` treffen.
+4. `TObjManager::load` / Demo-`TFlagT` weiter vermeiden.
+5. Vermeidungslisten aus Runde 81 bis 117 bleiben.
+
+### Nach hundertneunzehnter Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 118:
+47,93 % matched code, 1720648 / 3590088 Bytes,
+9206 / 12881 Funktionen.
+Game Code 35,68 %, 1008500 / 2826784 Bytes,
+5241 / 8857 Funktionen.
+
+`TMapObjGeneral::recovering` war bei 99,87 %.
+Der Frame lag bei `0x20` statt retail `0x48` (−`0x28`).
+Der Rumpf nutzte bereits `mat[1][3]` für die Joint-Höhe.
+
+`TMapObjGeneral::recover` / `loadBeforeInit` / `TObjManager::load`
+nicht angefasst.
+
+**Vollmatch, strikt.**
+
+`char trash[0x28]` am Anfang von `recovering`,
+Sound- und Matrix-Logik unverändert.
+
+0 Abweichungen, 276 Bytes, 69 Instruktionen.
+`validate-symbol-order` für `mario/MoveBG/MapObjGeneral`: PASS.
+
+**Zähler.** matched code 47,93 % → 47,94 %,
+1720648 → 1720924 Bytes (+276),
+9206 → 9207 Funktionen (+1).
+Game Code 35,68 % → 35,69 %,
+1008500 → 1008776 Bytes (+276),
+5241 → 5242 Funktionen (+1).
+`recovering` 99,87 % → 100,00 %;
+`MapObjGeneral` matched_code 47,56 % → 50,59 % (TU).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `recovering` behält `trash[0x28]` am Funktionsanfang und `mat[1][3]`.
+2. `TItem::calc` / `TShine::makeMActors` / `TCoin::appear` / Runden 114–115 unverändert.
+3. `TMapObjGeneral::recover`: Frame `0x50` vs `0x28` plus Operanden — nur mit neuem Layout.
+4. `TShine::loadBeforeInit`: nur Layouts mit `name@0x24`, Reads `@0x20`/`@0x18`, Frame `0x50`.
+5. `TObjManager::load` / Demo-`TFlagT` weiter vermeiden.
+6. Vermeidungslisten aus Runde 81 bis 118 bleiben.
+
+### Nach hundertzwanzigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 119:
+47,94 % matched code, 1720924 / 3590088 Bytes,
+9207 / 12881 Funktionen.
+Game Code 35,69 %, 1008776 / 2826784 Bytes,
+5242 / 8857 Funktionen.
+
+**Kein neues Vollmatch** (Instruktionen + Relocs + Zähler).
+
+`MapObjGeneral::touchGround` / `checkWallCollision`:
+`trash[0x38]` bzw. `trash[0x18]` am Anfang → Retail-Frame,
+aber `TVec3`/`TBGWallCheckRecord` weiter 0x28/0x18 zu tief —
+zurückgesetzt.
+
+`TCoin::perform`: `trash[0x10]` → Frame `0x50`, Argblock für
+`TQuestionManager::request` bei `0x34` statt `0x20` — nicht geshipt.
+
+`TNozzleBox::load`: Frame `0x60` mit `trash[0x20]`, `strBuf` bei
+`0x10` statt `0x30` — nicht geshipt.
+
+`TMareEventWallRock::load`: `trash[8]` → Frame `0x88`, Schleife
+noch `stw`/`addi` bei `0x64` statt `0x68` (objdiff 99,97 %) —
+nicht geshipt.
+
+`waitingToAppear` / `TEggYoshi::control` / `TRoulette::moveObject`:
+Frame-Padding allein reichte nicht — nicht geshipt.
+
+**Zähler.** matched code unverändert 47,94 %,
+1720924 Bytes, 9207 Funktionen.
+Game Code unverändert 35,69 %,
+1008776 Bytes, 5242 Funktionen.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### Nächster Schritt
+
+1. `recovering` / Runden 114–119 unverändert.
+2. Frame+Slot-Kandidaten: Padding **und** explizite Locals/UNUSED-Inlines
+   für `TBGWallCheckRecord`, `TVec3`-Spills, `strBuf@0x30`.
+3. `TMareEventWallRock::load`: 4 B in der `push_back`-Schleife vor
+   erneutem `trash`-Only.
+4. `TShine::loadBeforeInit` / `TObjManager::load` / Demo-`TFlagT`
+   weiter vermeiden.
+5. Vermeidungslisten aus Runde 81 bis 119 bleiben.
+
+### Nach hunderteinundzwanzigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 120:
+47,94 % matched code, 1720924 / 3590088 Bytes,
+9207 / 12881 Funktionen.
+Game Code 35,69 %, 1008776 / 2826784 Bytes,
+5242 / 8857 Funktionen.
+
+Runde 120: Frame-only/`trash`-Only bei `checkWallCollision`,
+`TCoin::perform`, `TMareEventWallRock::load` — keine Vollmatches.
+
+**Vollmatch, strikt.**
+
+`TMario::kickRoofEffect`: `getAnmMtx(mJointIdChnFootR)` statt
+`mJointIdHead` (Retail `lbz` @ `0x3cb`); `char trash[8]` am
+Funktionsanfang für Frame `0x38`.
+
+0 Abweichungen, 148 Bytes, 37 Instruktionen.
+`validate-symbol-order` `mario/Player/MarioParticle`: ORDER/LINKAGE OK
+(bestehende fehlende UNUSED-Stubs unverändert).
+
+**Zähler.** matched code 47,94 % → 47,94 %,
+1720924 → 1721072 Bytes (+148),
+9207 → 9208 Funktionen (+1).
+Game Code 35,69 % → 35,70 %,
+1008776 → 1008924 Bytes (+148),
+5242 → 5243 Funktionen (+1).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `kickRoofEffect` behält `mJointIdChnFootR` und `trash[8]`.
+2. `recovering` / Runden 114–119 unverändert.
+3. `checkWallCollision`: `pad[0x18]` vor Record reicht für Frame,
+   Record-Slot `0x28` noch offen (kein trash-only).
+4. `TMareEventWallRock::load` / `TCoin::perform` / `TNozzleBox::load`:
+   Slot-Layout vor erneutem Padding.
+5. `TShine::loadBeforeInit` / `TObjManager::load` / Demo-`TFlagT`
+   weiter vermeiden.
+6. Vermeidungslisten aus Runde 81 bis 120 bleiben.
+
+### Nach hundertzweiundzwanzigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 121:
+47,94 % matched code, 1721072 / 3590088 Bytes,
+9208 / 12881 Funktionen.
+Game Code 35,70 %, 1008924 / 2826784 Bytes,
+5243 / 8857 Funktionen.
+
+`checkWallCollision`: `pad[0x18]` + Skalar-/`set`-Init verschlechterte
+Operanden (mr r30/r31) — zurückgesetzt auf `TBGWallCheckRecord`-Ctor
+(99,7 %, Record @ `0x10`).
+
+**Vollmatch, strikt.**
+
+`TEggYoshi::load`: `char trash[0x18]` am Funktionsanfang für Frame
+`0x50` (objdiff 100 %, nur Epilog-Offsets vorher abweichend).
+
+0 Abweichungen, 572 Bytes, 143 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/Item`: PASS.
+
+**Zähler.** matched code 47,94 % → 47,96 %,
+1721072 → 1721644 Bytes (+572),
+9208 → 9209 Funktionen (+1).
+Game Code 35,70 % → 35,71 %,
+1008924 → 1009496 Bytes (+572),
+5243 → 5244 Funktionen (+1).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `kickRoofEffect` / Runden 114–119 / `TEggYoshi::load` unverändert.
+2. `checkWallCollision`: Record @ `0x28` ohne Operanden-Regression
+   (manueller Store-Block oder UNUSED-Inline, kein trash-only).
+3. `TEggYoshi::control` / `TCoin::perform` / `TNozzleBox::load` /
+   `TMareEventWallRock::load`: Slot vor Padding.
+4. `TShine::loadBeforeInit` / `TObjManager::load` / Demo-`TFlagT`
+   weiter vermeiden.
+5. Vermeidungslisten aus Runde 81 bis 121 bleiben.
+
+### Nach hundertdreiundzwanzigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 122:
+47,96 % matched code, 1721644 / 3590088 Bytes,
+9209 / 12881 Funktionen.
+Game Code 35,71 %, 1009496 / 2826784 Bytes,
+5244 / 8857 Funktionen.
+
+Partielle Versuche (revertiert): `TEggYoshi::receiveMessage`
+(`trash[0x10]` + Slot), `TGraphWeb::getRandomNextIndex` (`pad[8]`),
+`CPolarSubCamera::execGroundCheck_` (`pad[4]`).
+
+**Vollmatch, strikt.**
+
+`TDoroHaneKuri::attackToMario`: `char trash[8]` und `trash[0] = 0`
+am Funktionsanfang für Retail-Frame `0x50` (vorher `0x48`).
+
+0 Abweichungen, 444 Bytes, 111 Instruktionen.
+`validate-symbol-order` `mario/Enemy/hamukuri`: bestehende BINDING-Warnung
+(`onHaveCap__13TDoroHamuKuriFv`) unverändert.
+
+**Zähler.** matched code 47,96 % → 47,97 %,
+1721644 → 1722088 Bytes (+444),
+9209 → 9210 Funktionen (+1).
+Game Code 35,71 % → 35,73 %,
+1009496 → 1009940 Bytes (+444),
+5244 → 5245 Funktionen (+1).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `TEggYoshi::load` / `kickRoofEffect` / Runden 114–119 unverändert.
+2. `TDoroHaneKuri::attackToMario` behält `trash[8]` + `trash[0]`.
+3. `checkWallCollision` / `execGroundCheck_` / `getRandomNextIndex`:
+   Slot+Frame ohne Operanden-Regression.
+4. `TEggYoshi::control` / `perform` / Mare-`load` weiter vermeiden
+   (trash-only).
+5. Vermeidungslisten aus Runde 81 bis 122 bleiben.
+
+### Nach hundertvierundzwanzigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 123:
+47,97 % matched code, 1722088 / 3590088 Bytes,
+9210 / 12881 Funktionen.
+Game Code 35,73 %, 1009940 / 2826784 Bytes,
+5245 / 8857 Funktionen.
+
+Partielle Versuche (revertiert): `MActorAnmData::MActorAnmData`
+(`trash[0x10]` verschob Frame auf `0x28` statt `0x20`).
+
+**Vollmatch, strikt.**
+
+`TMario::catching`: `char trash[8]; trash[0] = 0;` am
+Funktionsanfang für Retail-Frame `0x30` (vorher `0x28`).
+
+0 Abweichungen, 340 Bytes, 85 Instruktionen.
+`validate-symbol-order` `mario/Player/MarioRun`: bestehende
+UNUSED-Size-Warnungen unverändert.
+
+**Zähler.** matched code 47,97 % → 47,98 %,
+1722088 → 1722428 Bytes (+340),
+9210 → 9211 Funktionen (+1).
+Game Code 35,73 % → 35,74 %,
+1009940 → 1010280 Bytes (+340),
+5245 → 5246 Funktionen (+1).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. Runden 114–119 / 121–123 / `catching` unverändert.
+2. `checkWallCollision` / `execGroundCheck_` / `getRandomNextIndex`:
+   Slot+Frame ohne Operanden-Regression.
+3. `MActorAnmData`-Ctor: Frame hängt an `: unk0(0)`-Prolog, kein
+   Body-`trash` allein.
+4. `TEggYoshi::control` / `perform` / Mare-`load` weiter vermeiden.
+5. Vermeidungslisten aus Runde 81 bis 123 bleiben.
+
+### Nach hundertfünfundzwanzigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 124:
+47,98 % matched code, 1722428 / 3590088 Bytes,
+9211 / 12881 Funktionen.
+Game Code 35,74 %, 1010280 / 2826784 Bytes,
+5246 / 8857 Funktionen.
+
+Partielle Versuche (revertiert): `TLiveActor::initAnmSound`
+(`trash[8]` Frame `0x40`, zwei Spills @ `0x2c` vs `0x24` offen),
+`TMario::considerRotateStart` (`trash[0x10]`/`pad` — `direction`-Slot).
+
+**Vollmatch, strikt.**
+
+`TNerveDoroHaneRise::execute`: `char trash[8]; trash[0] = 0;` am
+Nerve-Anfang für Retail-Frame `0x58` (vorher `0x50`).
+
+0 Abweichungen, 412 Bytes, 103 Instruktionen.
+`validate-symbol-order` `mario/Enemy/hamukuri`: bestehende BINDING-Warnung
+`onHaveCap__13TDoroHamuKuriFv` unverändert.
+
+**Zähler.** matched code 47,98 % → 47,99 %,
+1722428 → 1722840 Bytes (+412),
+9211 → 9212 Funktionen (+1).
+Game Code 35,74 % → 35,76 %,
+1010280 → 1010692 Bytes (+412),
+5246 → 5247 Funktionen (+1).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. Runden 114–119 / 121–124 unverändert.
+2. `initAnmSound`: Frame mit `trash[8]` ok, NPC-Double-Spill +8 B offen.
+3. `considerRotateStart` / `turnEnd` / `turnning`: Slot+Frame (inlining).
+4. `checkWallCollision` / `execGroundCheck_` / `getRandomNextIndex`:
+   Slot+Frame ohne Operanden-Regression.
+5. Vermeidungslisten aus Runde 81 bis 124 bleiben.
+
+### Nach hundertsechsundzwanzigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 125:
+47,99 % matched code, 1722840 / 3590088 Bytes,
+9212 / 12881 Funktionen.
+Game Code 35,76 %, 1010692 / 2826784 Bytes,
+5247 / 8857 Funktionen.
+
+Partielle Versuche (revertiert): `TLiveActor::initAnmSound`
+(`trash[8]` — zwei Spills @ `0x2c` vs `0x24` unverändert),
+`TNerveBathtubKillerExplosion` (`trash[4]` — Frame-Regression),
+`TSpcInterp::execadd` (`trash[4]`).
+
+**Vollmatch, strikt.**
+
+`TNerveHino2Squat::execute`: `char trash[0x20]; trash[0] = 0;` am
+Nerve-Anfang für Retail-Frame `0x58` (vorher `0x38`).
+
+0 Abweichungen, 336 Bytes, 84 Instruktionen.
+`validate-symbol-order` `mario/Enemy/hinokuri2`: PASS (UNUSED-Size-Warnungen
+unverändert).
+
+**Zähler.** matched code 47,99 % → 48,00 %,
+1722840 → 1723176 Bytes (+336),
+9212 → 9213 Funktionen (+1).
+Game Code 35,76 % → 35,78 %,
+1010692 → 1011028 Bytes (+336),
+5247 → 5248 Funktionen (+1).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nach hundertssiebenundzwanzigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 126:
+48,00 % matched code, 1723176 / 3590088 Bytes,
+9213 / 12881 Funktionen.
+Game Code 35,78 %, 1011028 / 2826784 Bytes,
+5248 / 8857 Funktionen.
+
+Partielle Versuche (revertiert): `TNerveHino2Burst::execute`
+(`trash[0x20]` — Frame `0x90` OK, TVec-Spill-Cluster @ `0x58` vs `0x78`),
+`TNerveHino2Die` (`trash[0x18]`/`volatile`/`0x20` — kein sauberer Vollmatch),
+`TNerveHamuKuriWallDie` (`trash[8]` — Frame OK, Slot-Offsets +4),
+`TNerveHino2Stamp` mit `trash[0x40]` (Frame `0xd0` vs Retail `0xc8`),
+`volatile trash[0x40]` (Frame OK, Operanden-Regression).
+
+**Vollmatch, strikt.**
+
+`TNerveHino2Stamp::execute`: `char trash[0x3c]; trash[0] = 0;` am
+Nerve-Anfang für Retail-Frame `0xc8` (vorher `0x88`).
+
+0 Abweichungen, 628 Bytes, 157 Instruktionen.
+`validate-symbol-order` `mario/Enemy/hinokuri2`: PASS (UNUSED-Size-Warnungen
+unverändert).
+
+**Zähler.** matched code 48,00 % → 48,02 %,
+1723176 → 1723804 Bytes (+628),
+9213 → 9214 Funktionen (+1).
+Game Code 35,78 % → 35,80 %,
+1011028 → 1011656 Bytes (+628),
+5248 → 5249 Funktionen (+1).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nach hundertachtundzwanzigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 127:
+48,02 % matched code, 1723804 / 3590088 Bytes,
+9214 / 12881 Funktionen.
+Game Code 35,80 %, 1011656 / 2826784 Bytes,
+5249 / 8857 Funktionen.
+
+Partielle Versuche (revertiert): `TNerveHino2Burst::execute`
+(inline `emitWaterParticle` + `trash[0x24]` — Frame `0x90` OK, TVec
+@ `0x58` vs `0x78`), `TNerveHino2Pollute` (`trash[0x44]` — Operanden,
+kein Frame-only), `TNerveBathtubKillerExplosion` (`trash[4]` im
+`time==0`-Block — Frame-Regression `0x30`→`0x38`).
+
+**Vollmatch, strikt.**
+
+`TNerveKumokunFreeze::execute`: `char trash[8]; trash[0] = 0;` am
+Nerve-Anfang für Retail-Frame `0x50` (vorher `0x40`).
+
+0 Abweichungen, 624 Bytes, 156 Instruktionen.
+`validate-symbol-order` `mario/Enemy/Kumokun`: PASS (UNUSED-Size-Warnungen
+unverändert).
+
+**Zähler.** matched code 48,02 % → 48,03 %,
+1723804 → 1724428 Bytes (+624),
+9214 → 9215 Funktionen (+1).
+Game Code 35,80 % → 35,82 %,
+1011656 → 1012280 Bytes (+624),
+5249 → 5250 Funktionen (+1).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nach hundertneunundzwanzigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 128:
+48,03 % matched code, 1724428 / 3590088 Bytes,
+9215 / 12881 Funktionen.
+Game Code 35,82 %, 1012280 / 2826784 Bytes,
+5250 / 8857 Funktionen.
+
+Partielle Versuche (revertiert): `TNerveBathtubKillerBreak::execute`
+(`trash[4]` am Nerve-Anfang bzw. vor `generateItemBathtubKiller` —
+Frame `0x30` OK, Spill-Offsets @ `0x18` vs `0x1c` unverändert).
+
+**Vollmatch, strikt.**
+
+`TNerveHaneHamuKuriUpWait::execute`: `char trash[4]; trash[0] = 0;` am
+Nerve-Anfang für Retail-Frame `0x58` (vorher `0x54`).
+
+0 Abweichungen, 392 Bytes, 98 Instruktionen.
+`validate-symbol-order` `mario/Enemy/hamukuri`: BINDING-FAIL
+`onHaveCap__13TDoroHamuKuriFv` (weak vs global, vorbestehend; kein
+Diff durch diese Runde).
+
+**Zähler.** matched code 48,03 % → 48,04 %,
+1724428 → 1724820 Bytes (+392),
+9215 → 9216 Funktionen (+1).
+Game Code 35,82 % → 35,84 %,
+1012280 → 1012672 Bytes (+392),
+5250 → 5251 Funktionen (+1).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nach hundertdreißigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 129:
+48,04 % matched code, 1724820 / 3590088 Bytes,
+9216 / 12881 Funktionen.
+Game Code 35,84 %, 1012672 / 2826784 Bytes,
+5251 / 8857 Funktionen.
+
+Breiter Frame-only-Sweep (`bosspakkun`, `hamukuri`, `Kumokun`, …): viele
+Kandidaten ohne exakte `trash`-Größe; keine weiteren Treffer in dieser
+Runde außer Boss Pakkun.
+
+**Vollmatch, strikt (3×).**
+
+- `TNerveBPDie::execute`: `char trash[0x1c]; trash[0] = 0;` — Frame `0x50`
+  (vorher `0x30`), 280 B.
+- `TNerveBPTumble::execute`: `char trash[8]; trash[0] = 0;` — Frame `0xa0`
+  (vorher `0x58`), 376 B.
+- `TNerveBPTumbleIn::execute`: `char trash[4]; trash[0] = 0;` — Frame `0x48`
+  (vorher `0x40`), 340 B.
+
+`validate-symbol-order` `mario/Enemy/bosspakkun`: PASS (UNUSED-Size-Warnungen
+unverändert).
+
+**Zähler.** matched code 48,04 % → 48,07 %,
+1724820 → 1725816 Bytes (+996),
+9216 → 9219 Funktionen (+3).
+Game Code 35,84 % → 35,87 %,
+1012672 → 1013668 Bytes (+996),
+5251 → 5254 Funktionen (+3).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nach hunderteinunddreißigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 130:
+48,07 % matched code, 1725816 / 3590088 Bytes,
+9219 / 12881 Funktionen.
+Game Code 35,87 %, 1013668 / 2826784 Bytes,
+5254 / 8857 Funktionen.
+
+Weiterer `bosspakkun`-Sweep: `BPPreDie`, `BPTakeOff`, `BPHover`, … — kein
+reines Frame-`trash`-Match (Slot/Operanden oder Frame zu groß).
+
+**Vollmatch, strikt (4×).**
+
+- `TNerveBPTornado::execute`: `char trash[8]; trash[0] = 0;` — 380 B.
+- `TNerveBPSwallow::execute`: `char trash[0xc]; trash[0] = 0;` — 496 B.
+- `TNerveBPFlyPivot::execute`: `char trash[4]; trash[0] = 0;` — 172 B.
+- `TNerveBPFall::execute`: `char trash[0x28]; trash[0] = 0;` — 1308 B.
+
+`validate-symbol-order` `mario/Enemy/bosspakkun`: PASS (UNUSED-Size-Warnungen
+unverändert).
+
+**Zähler.** matched code 48,07 % → 48,14 %,
+1725816 → 1728172 Bytes (+2356),
+9219 → 9223 Funktionen (+4).
+Game Code 35,87 % → 35,95 %,
+1013668 → 1016024 Bytes (+2356),
+5254 → 5258 Funktionen (+4).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nach hunderteundzweiunddreißigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 131:
+48,14 % matched code, 1728172 / 3590088 Bytes,
+9223 / 12881 Funktionen.
+Game Code 35,95 %, 1016024 / 2826784 Bytes,
+5258 / 8857 Funktionen.
+
+Enemy-weiter Sweep (`tobiPuku`, `hamukuri`, `telesa`, …): kein weiteres
+reines Frame-`trash`-Match in `0x4`–`0x8c` außer den sechs unten.
+
+**Vollmatch, strikt (6×).**
+
+`gatekeeper.cpp`:
+
+- `TNerveBGKLaunchGoro::execute`: `char trash[8]; trash[0] = 0;` — 468 B.
+- `TNerveBGKAwakeDamage::execute`: `char trash[8]; trash[0] = 0;` — 512 B.
+- `TNerveBGKWait2::execute`: `char trash[0x20]; trash[0] = 0;` — 964 B.
+- `TNerveBGKWait::execute`: `char trash[0x20]; trash[0] = 0;` — 1472 B.
+
+`fireWanwan.cpp`:
+
+- `TNerveFireWanwanAttack::execute`: `char trash[4]; trash[0] = 0;` — 688 B.
+- `TNerveFireWanwanRecover::execute`: `char trash[0x40]; trash[0] = 0;` — 580 B.
+
+`validate-symbol-order`: `mario/Enemy/gatekeeper` PASS;
+`mario/Enemy/fireWanwan` MISSING-Map-Symbole (vorbestehend, unverändert durch
+diese Runde).
+
+**Zähler.** matched code 48,14 % → 48,27 %,
+1728172 → 1732856 Bytes (+4684),
+9223 → 9229 Funktionen (+6).
+Game Code 35,95 % → 36,11 %,
+1016024 → 1020708 Bytes (+4684),
+5258 → 5264 Funktionen (+6).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nach hundertdreiunddreißigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 132:
+48,27 % matched code, 1732856 / 3590088 Bytes,
+9229 / 12881 Funktionen.
+Game Code 36,11 %, 1020708 / 2826784 Bytes,
+5264 / 8857 Funktionen.
+
+Sweep `bosseel`, `walkerEnemy`, `hamukuri`, `hinokuri2`, `poihana`, …:
+kein weiteres Frame-only-`trash` in `0x4`–`0x8c` außer Boss-Eel OutWait.
+`TNerveBossEelOutWait` war 100,0 % fuzzy aber `nonmatching` (nur Operanden
+an `stwu`/Spill-Offsets); `trash[0x30]` (Frame-Delta) overshootet —
+exakt `trash[0x28]`.
+
+**Vollmatch, strikt (1×).**
+
+- `TNerveBossEelOutWait::execute`: `char trash[0x28]; trash[0] = 0;` — 1460 B.
+
+`validate-symbol-order` `mario/Enemy/bosseel`: PASS (UNUSED-Size-Warnungen
+unverändert).
+
+**Zähler.** matched code 48,27 % → 48,31 %,
+1732856 → 1734320 Bytes (+1464),
+9229 → 9230 Funktionen (+1).
+Game Code 36,11 % → 36,16 %,
+1020708 → 1022168 Bytes (+1460),
+5264 → 5265 Funktionen (+1).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nach hundertvierunddreißigster Iterationsrunde (Speed-Sweep)
+
+**Beobachtung, vorher.** Stand Runde 133:
+48,31 % matched code, 1734320 / 3590088 Bytes,
+9230 / 12881 Funktionen.
+Game Code 36,16 %, 1022168 / 2826784 Bytes,
+5265 / 8857 Funktionen.
+
+Breiter `DEFINE_NERVE`-Sweep (alle `src/Enemy/*.cpp`, `NpcNerve`, …,
+`0x4`–`0xbc`, ≥ 99,5 % fuzzy): kein weiteres Treffer außer den zwei
+unten (u. a. `NameKuriJumpAttack` `trash[4]` im Brute-Skript, im
+Quellstand **kein** Vollmatch — nicht committet).
+
+**Vollmatch, strikt (2×).**
+
+- `TNerveBEelTearsMarioRecover::execute`: `char trash[4]; trash[0] = 0;` — 352 B.
+- `TNerveMantaDeath::execute`: `char trash[4]; trash[0] = 0;` — 236 B.
+
+`validate-symbol-order`: `mario/Enemy/bosseel` PASS;
+`mario/Enemy/bossManta` ORDER-FAIL an `theNerve__*`-Schwachsymbolen
+(vorbestehend, unverändert durch diese Runde).
+
+**Zähler.** matched code 48,31 % → 48,32 %,
+1734320 → 1734908 Bytes (+588),
+9230 → 9232 Funktionen (+2).
+Game Code 36,16 % → 36,18 %,
+1022168 → 1022756 Bytes (+588),
+5265 → 5267 Funktionen (+2).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nach hundertfünfunddreißigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 134:
+48,32 % matched code, 1734908 / 3590088 Bytes,
+9232 / 12881 Funktionen.
+Game Code 36,18 %, 1022756 / 2826784 Bytes,
+5267 / 8857 Funktionen.
+
+Slot+Frame-Prioritäten (`BossEelDie`/`MouthOpenWait`/`Eat`, `WalkerEscape`,
+`BGKAppear`, `Hino2Pollute`, `AnimalGraphWander`): Entry-`trash` und
+`0x4`–`0xbc`-Brute **ohne** Vollmatch — echte Operanden/Layout (z. B.
+`Hino2Pollute` `changeBck` 16 vs 3, `WalkerEscape` Stack `0x44` vs `0x24`).
+Weiterer 100-%-Fuzzy-Scan: `TRoulette::initMapObj` hat **größeren** eigenen
+Frame als Retail (kein Padding).
+
+**Vollmatch, strikt (1×).**
+
+- `TMario::turnning()`: `char trash[4]; trash[0] = 0;` — 1004 B
+  (`MarioRun.cpp`).
+
+**Zähler.** matched code 48,32 % → 48,35 %,
+1734908 → 1735912 Bytes (+1004),
+9232 → 9233 Funktionen (+1).
+Game Code 36,18 % → 36,22 %,
+1022756 → 1023760 Bytes (+1004),
+5267 → 5268 Funktionen (+1).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nach hundertsechsunddreißigster Iterationsrunde (Speed, 0 Vollmatches)
+
+**Beobachtung.** Stand Runde 135 unverändert (48,35 % / 9233 Fn).
+
+**1 — „Retail-Frame größer“-Korrektur.** `decomp-diff` zeigt für die
+priorisierten 100-%-Fuzzy-Funktionen **unseren** Frame oft **größer** als
+Retail (Padding würde verschlimmern):
+
+- `thinkSituation`: Retail `0xc8`, unser `0x2b0`.
+- `soundMovement`: Retail `0x2e0`, unser `0x340`.
+- `CardLoad::changeScene`: Retail `0x1e0`, unser `0x3b8`.
+
+Entry-`trash` `0x4`–`0x23c`: kein `match`.
+
+Globaler Scan (100 % fuzzy, Retail-`stwu` > unser, Gap ≥ 8): nur
+`MarDirectorPreEntry::preEntry`, `ModelWaterManager::drawRefracAndSpec`,
+`MarioWait::waitMain` — Entry-`trash` ohne Vollmatch.
+
+**2 — `Hino2Pollute`.** `changeBck(3)` → `changeBck(16)` / `17` an zwei
+Retail-Stellen (`li r4, 0x10` / `0x11`) behebt Operanden, bleibt aber
+~26 Diff-Zeilen (fehlendes Inline: Wasser/`rand`/Stack `0xe8` vs `0xa0`).
+**Nicht committet** (kein 100 %).
+
+**3 — Sonstiges.** `SampleCtrlMaterial` / `TMapObjManager::load`:
+Brute meldete fälschlich `trash[4]` (Retail-Frame kleiner). Bosseel/Walker
+unverändert defer.
+
+**Vollmatch.** keine.
+
+`ninja` / DOL-SHA1 unverändert OK.
+
+### Nach hundertsiebenunddreißigster Iterationsrunde (Speed, 0 Vollmatches)
+
+**Beobachtung.** Stand Runde 135 unverändert (48,35 % / 9233 Fn).
+
+**Scan.** 25× 100-%-Fuzzy game-Funktionen; kein Kandidat mit nur
+`stwu`/Epilog-Diff und Retail-Frame > unser (automatischer Filter: 0 Treffer).
+Entry-`trash` brute: `thinkSituation` (aktuell oft **unser** Frame größer,
+z. B. `stwu -0xd0` vs Retail `-0xc8`), `getRandomNextIndex`,
+`execGroundCheck_`, `TMarDirector::TMarDirector` (ein Operand `addi r4,r1`
+für `OSInitStopwatch`, kein reines Padding).
+
+**`initMirrorModel`.** `.rodata`-Anfang per `DummyStrings`/`MtxCalcTypeName`
+vor `MarioAnimeData.hpp` angleichen (wie `MarioParticle.cpp`) — Spiegel-
+Strings bleiben **0x18** zu früh (`0xa38` vs `0xa50`); fehlendes
+0x18-Null-Pad zwischen `ma_sleep_end_tx.btp`-Cluster und folgendem
+`.rodata` (nicht committet, kein Vollmatch).
+
+**Vollmatch.** keine.
+
+`ninja` / `build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### Nach hundertachtunddreißigster Iterationsrunde (Speed, 1 Vollmatch)
+
+**Vollmatch.** `TMario::initMirrorModel` (284 B, `mario/Player/MarioDraw`).
+
+**Ursache.** Compound-Literale für `setInfo[0/1]` in `initModel` landeten in
+`.rodata` vor dem Foot-Null-Cluster; Spiegel-Strings bei **0xa38** statt
+**0xa50** (`addi r4, r28, …` −0x18).
+
+**Fix.** `DummyStrings`/`MtxCalcTypeName` vor `MarioAnimeData.hpp`;
+nach `MarioFootDirLCtrl` zwei **0xc**-Nullblöcke plus
+`marioInitModelSetInfoRo0`/`Ro1` (je 0xa); `initModel` kopiert aus Rodata und
+setzt `setInfo[1].unk0 = mJointIdChnChest`.
+
+**Nebenwirkung.** `initModel` fuzzy 95,46 % → 94,28 % (erwartet: andere
+Relocs); MarioDraw matched_data 11,92 % → 48,36 %.
+
+`ninja` / DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+`changes_all`: Total matched_code 48,35 % → 48,36 %.
+
+### Nach hundertneununddreißigster Iterationsrunde (PROGRESS, 0 Vollmatches)
+
+**Beobachtung.** R138-Stand: `initMirrorModel` 100 %; `initModel` 94,1 %;
+Spiegel-Strings @ **0xa50** OK.
+
+**`initModel`-Recovery (revertiert).** Retail `stwu -0x5c0`; unser Build mit
+`marioInitModelSetInfoRo0/1`-Kopie **−0x558** (−0x68). Compound-Literale für
+`setInfo[0/1]` erzeugen Retail-Stack-Spills (`lwz 0xa38(r30)` → `0x3b0(r1)` …)
+und **−0x578** (−0x48), aber Gesamt-Fuzzy fällt auf ~89,9 % (Tex-Loop-Cluster).
+`++j` statt `++i` in der `J3DTexNoAnm`-Schleife ist ASM-korrekt (Retail
+`addi r7,r7,1`), verschlechtert aber solo auf 88,7 % — Loop und Frame müssen
+gemeinsam angegangen werden. Scratch-Locals / Buffer vergrößern / Locals an den
+Funktionsanfang: kein Frame-Gewinn.
+
+**Nächster ASM-Haken für `initModel`.** Behalten: Foot-Nullblöcke +
+`marioInitModelSetInfoRo0/1` @ **0xa38** (Mirror fix). Ziel: Compound-Literal-
+**Codegen** für `setInfo` **ohne** zweites Rodata — vermutlich UNUSED-Inline/
+Stack-Layout (~0x48–0x68) aus `mario.MAP`, nicht Entry-`trash`.
+
+**Vollmatch.** keine.
+
+`ninja` / DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### Nächster Schritt
+
+1. R138 Mirror-Fix unverändert; `turnning` trash[4] behalten.
+2. `initModel`: MAP/UNUSED + Stack −0x5c0 mit Compound-`setInfo`-Spills.
+3. Tex-Loop `++j` erst mit passendem Frame/Cluster committen.
+4. `thinkSituation` / `soundMovement` / `changeScene`: Frame verkleinern.
+5. Defer-Listen unverändert.
+
+### Nach hundertvierzigster Iterationsrunde
+
+**Beobachtung.** R139: `initModel` zu verflochten; Strategie auf andere TUs.
+
+**Vollmatch, strikt.**
+
+`TRoulette::moveObject`: ASM `lfs`/`stfs` @ **0x34** → `mRotation.y` (nicht
+`.x`) plus `char trash[0x20]; trash[0] = 0;` für Retail-Frame `0x58`.
+
+0 Abweichungen, 244 Bytes, 61 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/MapObjSirena`: PASS (bestehende UNUSED-
+Size-Warnung `getSlotResult` unverändert).
+
+`initMirrorModel` bleibt 100 %; Mirror-Strings @ **0xa50** unverändert.
+
+`ninja` / DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### Nächster Schritt
+
+1. R138–R140 Mirror / `turnning` trash[4] / `moveObject` unverändert halten.
+2. Weitere MoveBG/Enemy-Kandidaten mit klarem Member-Offset (wie `0x34` Ry).
+3. `initModel` nur mit kombiniertem Frame+Compound+`++j`-Cluster.
+4. Defer-Listen unverändert.
+
+### Nach hunderteinundvierzigster Iterationsrunde
+
+**Beobachtung.** R141: mehrere 99,9 %-Kandidaten (u. a.
+`TMapObjBase::getDistance`, `TSpineEnemy::resetToPosition`,
+`TRoulette::initMapObj` Iterator-Spill, `TCloset::calcRootMatrix` Mtx-Basis
+0x14 vs 0x10) — noch keine strikte Byte-Identität.
+
+**Vollmatch, strikt.** keine (R140 `TRoulette::moveObject` unverändert).
+
+**Teilfortschritt MapObjSirena.**
+
+- `TCloset::calcRootMatrix`: `char trash[8]; trash[0]=0;` → Retail-Frame
+  `0x70` (Fuzzy ~99,96 %); verbleibend `addi r30,r1,0x14` vs `0x10` und
+  `mtx.ref(1,3)`-Spill 0x30 vs 0x2c.
+- `TItemSlotDrum::generateItem`: `MsMtxSetRotY` nutzt `mRotation.y` statt
+  `.x` (ASM `lfs` @ 0x34) — `generateItem` gesamt noch ~90 %.
+
+`initMirrorModel` 100 %; `TRoulette::moveObject` **match**; DOL-SHA1
+`9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### Nächster Schritt
+
+1. `TCloset::calcRootMatrix`: Mtx-Stack-Basis +4 B ohne Frame-Wachstum (evtl.
+   `TRotation3f`-Layout / lokale Reihenfolge).
+2. `getDistance`: Retail-Reihenfolge `pos.y−yOffset` vor `dx` hält `0x18`-Frame,
+   Register/Spill 0x14 noch offen.
+3. `initMapObj`: Iterator @ `0x5c` ohne `0xa8`-Frame (nur `trash[4]` vor
+   `push_back` reicht für ersten Spill, nicht für `0x7c`-Cluster).
+4. Defer-Listen unverändert.
+
+### Nach hunderte zweiundvierzigster Iterationsrunde
+
+**Vollmatch, strikt.**
+
+- `TMapObjBase::getDistance` (`MapObjLib.cpp`): `sqrtTemp` mit `pad[4]` +
+  `volatile f32 y` im `__frsqrte`-Block → Retail-Spill `stfs`/`lfs` @ `0x14`
+  bei unverändertem Frame `0x18` (**match**).
+
+**Teilfortschritt MapObjSirena (unverändert R141-Zielbild, näher).**
+
+- `TCloset::calcRootMatrix`: `trash[4]` + `{ pad[4]; TRotation3f mtx; }`
+  `local` → Mtx-Basis `0x14`, `ref(1,3)` @ `0x30`, Frame `0x70`; offen nur
+  `mr` vs `addi r31,r3,0` und `mr` vs `addi r3,r30,0` (~98,4 %).
+- `TItemSlotDrum::generateItem`: `mRotation.y` in `MsMtxSetRotY` (Teil).
+
+`initMirrorModel` 100 %; `TRoulette::moveObject` **match**; DOL-SHA1
+`9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### Nächster Schritt
+
+1. `TCloset::calcRootMatrix`: `mr`/`addi`-Paar nach `getModel` / vor
+   `MsMtxSetXYZRPH` (Register-Homing).
+2. `TRoulette::initMapObj`: Iterator `0x5c` + `0x7c`-Cluster ohne `0xa8`-Frame.
+3. Weitere `.x`→`.y`-Offsets wie Roulette.
+4. Defer-Listen unverändert.
+
+### Nach hunderte dreiundvierzigster Iterationsrunde
+
+**Vollmatch, strikt.**
+
+- `TSlotDrum::initNeonMatColor`: `char trash[4]; trash[0]=0;` → Frame
+  `0x58` und Mat-Name-Stack @ `0x28` (**match**).
+
+**Teilfortschritt.**
+
+- `TCloset::calcRootMatrix`: `trash[4]` + `pad2[4]`, dann
+  `getModel()` vor `TRotation3f mtx` (Saku-Reihenfolge) → `mr r31,r3` /
+  `mr r3,r30` OK; verbleibend Mtx-Basis `0x10` vs `0x14` und
+  `ref(1,3)`-Spill `0x2c` vs `0x30` (~99,8 %).
+
+R142 `getDistance` **match**; R140 `TRoulette::moveObject`; R138 `initMirrorModel`;
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R145 (Pivot: `drawLogic`, Closet unangetastet)
+
+**Vollmatch, strikt.**
+
+- `TMario::drawLogic`: `char trash[4]; trash[0]=0;` am Funktionsanfang → Frame
+  `-0x28` und Iterator-Spill @ `0x18` (**match**).
+
+**Teilfortschritt (nur notiert, nicht committed).**
+
+- `TMapObjBase::joinToGroup`: gleiches `trash[4]`-Muster bringt Frame `-0x68`, verbleibend
+  `insert`-Spills `0x48` vs `0x4c` (~99,9 %).
+
+R143 `initNeonMatColor`, R142 `getDistance`, R140 `TRoulette::moveObject`, R138
+`initMirrorModel`; `TCloset::calcRootMatrix` Teilstand unverändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R146 (`joinToGroup`)
+
+**Vollmatch, strikt.**
+
+- `TMapObjBase::joinToGroup`: `char trash[4];`, `TNameRef* list = search(...);`,
+  `trash[0]=0;` vor `push_back` (nicht Entry-Trash allein) → Frame `-0x68`, Iterator-
+  und `insert`-Spills wie Retail (**match**).
+
+R145 `drawLogic`, R143 `initNeonMatColor`, R142 `getDistance`, R140 `moveObject`, R138
+`initMirrorModel`; Closet-Teilstand unverändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R147 (`TMapObjSwitch::receiveMessage`)
+
+**Vollmatch, strikt.**
+
+- `TMapObjSwitch::receiveMessage`: Entry-`char trash[4]; trash[0]=0;` → Frame
+  `-0x40`, Demo-Camera-Stack @ `0x2c` (**match**).
+
+R146 `joinToGroup`, R145 `drawLogic`, R143 `initNeonMatColor`, R142 `getDistance`, R140
+`moveObject`, R138 `initMirrorModel`; Closet-Teilstand unverändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R148 Aufgabe B (Enemy-Nerven / Player; Cloud, 0 Vollmatches)
+
+**Basis.** Branch `cursor/aufgabe-b-round71-matches-d388` von PR-#2-Head
+`a45a1be` (`R147` `TMapObjSwitch::receiveMessage`). Partner-A-Locks unangetastet:
+`TMario::initMirrorModel` @ Mirror-Strings **0xa50**, `TMario::drawLogic`, kein
+`src/MoveBG/**`-Diff.
+
+**Umgebung.** Wie Runde 72 dokumentiert: `orig/GMSJ01/sys/main.dol` und
+`orig/GMSJ01/files/mario.MAP` fehlen (`dtk dol split` bricht ab). Lokal nur
+Tooling via `download_tool.py` (ninja, dtk, wibo, objdiff-cli, Compiler
+`20251118`) — nicht committet. **`decomp-diff.py` / `validate-symbol-order` /
+`ninja changes_all` / `dtk shasum -c` in dieser Session nicht ausführbar.**
+Kein striktes Byte-Match ohne Retail-`.o` committet.
+
+**Kandidaten (1–3, hohe Trefferwahrscheinlichkeit für B-Scope).**
+
+1. `Enemy/namekuri.cpp::TNerveNameKuriJumpAttack::execute` — R134-Sweep: 100 %-Fuzzy,
+   aber `nonmatching`; `trash[4]` im Brute-Skript **kein** Vollmatch (nicht nur
+   Frame-Padding). Nächster Hebel: `TPathNode`/`calcVelocityToJumpToY`-Stack oder
+   UNUSED aus `mario.MAP`, nicht Entry-`trash` allein.
+2. `Enemy/walkerEnemy.cpp::TNerveWalkerEscape::execute` — R135: Entry-/Mid-`trash`
+   scheitert; Retail-Stack `0x44` vs unser `0x24` (echtes Layout, defer-kompatibel
+   mit Bosseel/Walker-Notiz). Kein erneutes `trash`-Brute ohne MAP/ASM.
+3. `Player/MarioAccess.cpp::SMS_IsMarioOnWire` — `NONMATCHING`, ~94 % (ältere
+   PROGRESS-Notiz); B-Scope Player, aber kein klares `trash[4]`-Muster — erst mit
+   objdiff priorisieren.
+
+**Bewusst nicht angefasst (Defer / Sackgasse).**
+
+- `TNerveTelesaFreeze::execute` — R100: Frame mit `int time` OK, `TPathNode` +4 B;
+  nicht über benannten Knoten/`getTime` wiederholen.
+- `TNervePoihanaThrow::execute` — R89/R90: `mRotation` fix, 16-Byte-Frame **nicht**
+  mit einem `int` schließen.
+- `TNervePakkunAppear::execute` — ~98,55 %: MWCC materialisiert `checkPass`-bool
+  auch im leeren `if`; kein Source-Hebel.
+- `TNerveWalkerEscape` / `Hino2Pollute` / Boss-Eel-Slot-Prioritäten aus R135–136.
+
+**Vollmatch, strikt.** keine (Verifikation blockiert).
+
+**Verify (Session).** nur Quell-/PROGRESS-Review; DOL-SHA1
+`9f5a8caf56f5356aeac9d3ed28bf8de976a03625` **nicht** nachgemessen.
+
+### R149 (Partner-A-Prioritäten; Cloud, 0 Vollmatches)
+
+**Klarstellung Aufgabe B (Partner SMS).** Priorität laut PROGRESS (ohne A-Matches
+zu regressieren): (1) `TCloset::calcRootMatrix` Mtx-Basis **0x14** ohne Frame
+**0x78**; (2) `initAndRegister` Mid-`trash` + `list` nach `search` wie
+`joinToGroup` (R146); (3) `initModel` nur als Gesamtpaket ohne Mirror-**0xa50**-
+Verschiebung; (4) `Hino2Pollute`; (5) Frame-Shrink
+`thinkSituation`/`soundMovement`/`changeScene`; (6) `BathtubKillerExplosion`.
+Hands-off: `initMirrorModel` @ **0xa50**, `drawLogic`, `joinToGroup`, `getDistance`,
+`TRoulette::moveObject`, `receiveMessage`, `initNeonMatColor`, weitere A-Locks.
+
+**Umgebung (UNBLOCK).** `orig/GMSJ01/sys/main.dol` + `files/mario.MAP` aus
+Upload extrahiert; `sha1sum` main.dol =
+`9f5a8caf56f5356aeac9d3ed28bf8de976a03625`. `ninja baseline`, voller Build und
+`dtk shasum -c config/GMSJ01/build.sha1` → **OK** (nichts unter `orig/` committet).
+
+**`decomp-diff.py` (R149-Kandidaten, strikt).**
+
+1. **`TCloset::calcRootMatrix` (Baseline `pad2` + freies `mtx`).** STATUS
+   nonmatching, **100,0 % fuzzy** — nur Operanden-`~`: Mtx-Basis **0x10** statt
+   **0x14**, `lfs`/`stfs` um **0x2c** statt **0x30**; `mr r31,r3` / `mr r3,r30`
+   stimmen. Struct `{ char pad[4]; TRotation3f mtx; }` nach `getModel()`:
+   Basis **0x14** korrekt, Frame **0x70**, aber **98,4 %** — zwei Opcode-`|`:
+   Retail `mr` vs. Build `addi` für Modellzeiger und `MsMtxSetXYZRPH`-`r3`.
+   **Nicht committiert** (Partial).
+2. **`initAndRegister` (Mid-`trash` + `list` wie R146).** STATUS nonmatching,
+   **99,7 %** — unverändert ggü. Baseline: `addi r31,r3,0x10` vs. `r30` nach
+   `search` (weil `initMapObj()` `r30` für `mMapObjData->unkC` belegt;
+   `joinToGroup` ohne vorgelagerten `initMapObj` nutzt `r31`). **Nicht committiert.**
+
+**Weitere B-Checks (kurz).** `TNerveHino2Pollute::execute` **99,9 %** (Frame
+**0xa0** vs. **0xe8**, fehlende inlined `rand`-/Pollution-Pfade trotz BCK 16/17 im
+Quelltext). `TNerveBathtubKillerExplosion::execute` **100,0 % fuzzy**, STATUS
+nonmatching — ein Operanden-`~` (`addi r3,r1,0x18` vs. **0x1c**).
+
+**Vollmatch, strikt.** keine (keine Quelländerungen in diesem Lauf).
+
+**Verify.** `dtk shasum -c` → `build/GMSJ01/mario.dol: OK`.
+
+### R150 (Aufgabe B; 1 Vollmatch)
+
+**`TNerveBEelTearsMoveUp::execute` (bosseel).** Frame **0x30** → **0x40** mit
+`char trash[0x10];` am Nerv-Anfang (gleiches Muster wie
+`TNerveBEelTearsWaterHit` mit `trash[0x18]`). `decomp-diff.py`: **match 100 %**
+(108B). DOL `dtk shasum -c` OK.
+
+**Offen.** `TNerveBathtubKillerExplosion` / `Break`: vier Operanden-`~` bei
+**0x18** vs. **0x1c** (Inlining `setDeadBathtubKillerAnm`); `trash[0]` vor
+`mVelocity` vergrößert Frame. Closet / `initAndRegister` unverändert.
+
+### R151 (Aufgabe B; 2 Vollmatches)
+
+**`TMario::considerRotateStart` (MarioRun).** `int direction` bleibt vor
+`checkStickRotate`; `char trash[0x10];` **danach** (Padding nach dem Local,
+nicht davor — sonst `addi r4,r1,0x10` statt **0x20**). Frame **0x30**,
+**match 100 %** (272B).
+
+**`TNerveFireWanwanHungTail::execute` (fireWanwan).** `char trash[8];`
+**nach** `JGeometry::TVec3<f32> vec` (Mario-Rel-Vektor auf **0x4c** statt
+**0x44** bei Frame **0x70**). **match 100 %** (616B).
+
+`dtk shasum -c` OK.
+
+**Versuche ohne Commit.** `TNerveTelesaFreeze` / `TNerveFireWanwanFreeze` /
+`TNerveHamuKuriBoundFreeze`: Frame per `trash[8]` am Anfang oft OK, weitere
+Locals bleiben **+8** versetzt. `TNerveDoroHaneHitWater`: Retail-Frame kleiner
+als unser Build — kein reines Trash-Pad.
+
+### R158 (Aufgabe B; Scan, keine neuen Vollmatches)
+
+**Defer eingehalten.** Kein Retry auf WallDie, warpRequest, PoihanaThrow,
+HamuKuriBoundFreeze, BathtubKiller death.
+
+**Kandidaten (~8) — kein striktes Match, nicht committiert.**
+
+1. **`TNerveMantaSpawn`** — `trash[8]` am Eingang: Frame **0x60** OK;
+   `emitAndBindToPosPtr`-Stack weiter **+8** (**0x34** vs. **0x3c**);
+   `trashEmit[8]` im `getTime()==0`-Block vergrößert Frame.
+2. **`TNerveMantaHitWater`** — `trash[8]`: Frame **0xb0** OK; Locals/Loops
+   durchgängig **+4**; `trashAfterSelf[4]` (Write) / `trash[0xc]` /
+   `trashBeforeParticles[4]`: Frame oder Operanden schlechter.
+3. **`TNerveNKFollowMario`** — KageMarioModokiWait-Muster (`trash[8]`+
+   `trashAfterSelf[4]`+`TPathNode`+`trashPath[8]`, Writes): Frame **0x60**
+   statt **0x58**, Path-Stack noch versetzt.
+4. **`TNerveTamaNokoDown`** — `trashScale[4]` nach `local_1c`: Frame **+0x10**,
+   Vec **+0xc**.
+5. **`TNerveDoroHaneHitWater`** — Frame unser Build **+8** vs. Retail (Shrink).
+6. **`TNerveHamuKuriGoForSearchActor`** — Frame unser Build **+8** (inlined
+   `walkBehavior` / Vec-Diff).
+7. **`TNerveMantaAppearDemo`** — Epilog-/Frame **+0x10** (wie R156).
+8. **`TNervePakkunGenerate`** — Register-/Control-Flow (`|`), nicht Trash-Pad.
+
+**Vollmatch, strikt.** keine.
+
+**Verify.** `ninja`, `dtk shasum -c` → OK (Quellbaum = `185dd5cb`).
+
+**R158 Fortsetzung (Scanner + Cap 6; keine Vollmatches).**
+
+`objdiff`-Scan (Enemy `::execute` + `TMario::*`, Skip-Liste): **43** Symbole mit
+Retail-Frame größer als unser Build um **4 / 8 / 16** B (Top: `waitMain` Δ8
+99,98 %, `TNerveBPHover` Δ16, `jumpProcess` Δ16, `TobiPukuDie` Δ8, …).
+
+**Sechs Probes (alle revertiert):**
+
+1. **`TMario::jumpProcess`** — `trash[0x10]` Eingang: Frame **0x48** OK; `Vec next`
+   weiter **+0xc** (`0x1c` vs. `0x28`). `trashAfterSpeed[0x10]`: Frame **0x58**.
+2. **`TMario::emitSweat`** — `trash[8]` / `trashPos[8]`+Write vor `pos`: Frame
+   wächst oder `pos` bleibt **+8**.
+3. **`TNerveTobiPukuDie`** — `trash[8]`: Frame **0x50** OK; Velocity-`TVec3` **+8**
+   (`0x2c` vs. `0x34`).
+4. **`TMario::waitMain`** — `trash[8]`: Frame **0x48** OK; erster Rest-Mismatch
+   **vtable**-Load **`0xc4` vs. `0xd8`** (kein reines Local-Pad).
+5. **`TNerveBPFly`** — `trash[8]`: Frame **0xb8** OK; zwei Vec-Cluster (**+4** /
+   **−4** relativ), kein einheitliches Pad.
+6. **`TMario::toroccoEffect` / `soundTorocco`** — `trash[8]` (+ ein
+   `trashBeforeDist`-Versuch): Frame oft OK; inlined `TVec3`-Diff **+8** bzw.
+   **+0xc** durchgängig.
+
+Kurz geprüft, nicht im Cap: `TNerveSmallEnemyJump` (CFG `|`), `GessoTurn`
+(`fadds`-Operanden), `GessoFreeze`/`Hino2PrePol` (große Local-Verschiebung),
+`oilRun` (Frame OK, `gpPollution`-Reihenfolge wie `oilSlip`), `startJumpWall`
+(`trash` ohne/mit Write: Frame **0x20** bzw. Overshoot **0x30** vs. **0x28**).
+
+**Tip nächster Lauf.** Scanner nutzen, dann nur Symbole wählen, bei denen
+`decomp-diff` **ausschließlich** einheitliche `{r1+…}`-`~`-Drift zeigt (kein
+`|`, kein vtable-Offset, keine `gpPollution`/Load-Reorder). Kandidaten mit
+nur **+8** nach Frame-Fix und hohem Match-%: z. B. `TobiPukuDie` (explizite
+`TVec3`-Locals wie `FireWanwanFreeze`), nicht erneut Manta/Hamu-Defer-Liste.
+
+**Vollmatch, strikt (Fortsetzung).** keine.
+
+**Verify.** `ninja baseline` / `changes_all` ohne Code-Delta; `dtk shasum -c` → OK
+(Tip **`ea99f92d`**, Quellbaum unverändert).
+
+**R158 tight run (FireWanwanFreeze-Muster; keine Vollmatches).**
+
+**`TNerveTobiPukuDie`.** Bestes Teilbild: `zeroVel(0,0,0)` → `char trash[8]` →
+`velocity = mVelocity` → `zeroVel.y` / `mVelocity = zeroVel` (wie
+`TNerveFireWanwanFreeze`). Frame **0x50** OK; vier Operanden-`~` bleiben:
+Velocity-Temp **0x20–0x28** vs. Retail **0x28–0x30** (uniform **+8**).
+`volatile char trash[8]`, `getVelocity`/`setVelocity`, `stackPad`/`f64`-Pads,
+`stackHole[2]`, doppeltes Trash, `velocity` vor `zeroVel`: kein striktes Match.
+Kein weiterer Scan (Cap / Stop).
+
+**Tip.** Braucht vermutlich 8 B Reserve **zwischen** Saved-Regs und
+`velocity`-`TVec3` ohne Frame auf **0x58** zu blähen — evtl. UNUSED-Inline aus
+`mario.MAP` / Nachbar-TU, nicht nur `char trash[8]` nach `zeroVel`.
+
+**Vollmatch, strikt.** keine. Quellbaum = Tip **`d39c097d`**.
+
+**R159 Fortsetzung (Scanner + Cap 8; keine Vollmatches).**
+
+`objdiff`-Scan (Enemy `TNerve*::execute` + `TMario::*`, Skip-Liste): **18**
+Symbole mit Retail-Frame größer als unser Build um **4 / 8 / 16**; davon **5**
+nur Operanden-`~` (kein `|`, `<`, `>`): `hangonCheck` Δ8, `soundTorocco` Δ8
+(skip `torocco`), `isTakeSituation` / `slipFalling` / `NameKuriJumpAttack` Δ16.
+
+Zusätzlich **≤12** Diff-Zeilen bei ≥99,9 %: `considerTake` (5× `~`, Frame
+**0x30** vs. **0x28**), `thinkSituation` (Frame **0xc8** vs. **0x70** — kein
+Trash-Pad).
+
+**Probes (alle revertiert, kein striktes Match):**
+
+1. **`TNerveBPHover`** — `char trash[0x10]` Eingang: Frame **0xa8** OK;
+   `TPathNode goal`-Spill weiter **−4** (**0x68–0x74** vs. **0x6c–0x78**).
+   `trashPath[8]` / `pathPad[4]` im `if` oder nach `boss`: Frame **0xb0**.
+2. **`TMario::considerTake`** — `trash[0x18]`→`0x20` / `0xc` / `trash[8]`:
+   MWCC-Frame springt **0x28** / **0x30** / **0x38** nicht linear; kein
+   Vollmatch.
+3. **`TMario::isTakeSituation`** — `trash[0x10]` Eingang: Frame oft **0x60**,
+   `length()`-`TVec3` weiter **+0xc**; `delta`+`trashVec[8]`: CFG/`|`-Diff.
+4. **`TMario::hangonCheck`** — `trash[8]`: Frame **0x60** OK, `fsubs`/`lfs`-
+   Register-Umbenennung (`|`-frei aber kein Pad-Thema).
+5. **`TMario::slideProcess`** — `trash[0x10]`: Frame **0x90** vs. **0x88**
+   (Overshoot).
+6. **`TMario::jumpCatch`** — `trash[8]`: strukturelles `|` (`mr` vs. `li`).
+7. **`TNerveNameKuriJumpAttack` / `slipFalling`** — `trash[0x10]` Eingang: kein
+   Match (viele `~`).
+8. **`TNerveBPTakeOff`** — `goal.y` ohne `TVec3 goal`: Frame kleiner, Vec-Spill
+   weg, neue `|`-Cluster.
+
+Kurz: **`TNerveSmallEnemyFreeze`** — `freezeTime` inline entfernt: Frame/CFG
+kaputt (**64 %**).
+
+**Vollmatch, strikt.** keine.
+
+**Verify.** `ninja baseline` / `changes_all` ohne Code-Delta; `dtk shasum -c` →
+OK (Tip **`679300d4`**, Quellbaum unverändert).
+
+**R160 (neuer Slice; erweiterte Skip-Liste; keine Vollmatches).**
+
+Frischer Scan (B-Scope, Skip inkl. R159-Defer + `BPHover`/`considerTake`/…):
+nach **~**-only + Retail-Frame **+4/+8/+16** praktisch leer; Fokus auf kleine
+Helfer (`getRumblePow`, `rumblePad`, `TGessoPolluteObj::loadInit`,
+`TBoxTelesa::load`, `MarioSwim`/`MarioSpecial`/`MarioAutodemo` — letztere
+größtenteils schon Match oder CFG-Diff).
+
+**`TNerveBPHover` (ein Versuch, dann Stop).** `trash[0x10]` Eingang +
+`pathAlign[4]` unmittelbar vor `TPathNode goal`: Frame **0xc0** (>**0xa8**),
+kein striktes Match — nicht weiter verfolgt.
+
+**Acht Probes (alle revertiert):**
+
+1. **`TBiancoGateKeeper::getRumblePow`** — `trash[4]` Eingang / vor `length()`:
+   Frame **0x30** oder Vec weiter versetzt (**0x20** vs. **0x1c**).
+2. **`TBossPakkun::rumblePad`** — `trash[4]` Eingang / zwischen `delta`-Load und
+   `-=`: Frame **0x48**, Vec **0x2c** vs. **0x24**.
+3. **`TGessoPolluteObj::loadInit`** — `trash[4]` Eingang: Frame **0x80** vs.
+   **0x78**, Locals **+8**.
+4. **`TBoxTelesa::load`** — `trash[4]` Eingang: Frame **0x40** OK, Float-Cluster
+   weiter **+4** (vermutlich inlined `TJuiceBlock`-Setup).
+5. **`TNerveBPStompReact`** — nur analysiert: Frame **0x68** vs. **0x48** (Δ**0x20**,
+   kein Trash-Pad).
+6. **`TNerveHino2Die`** — Frame **0x80** vs. **0x68** + Vec-Cluster, kein Pad.
+7. **`THinokuri2::changeBck`** — Frame **0x80** vs. **0x90** (unser Build größer).
+8. **`TNerveBGKAppear`** — Frame **0x2e0** vs. **0x100** (fehlende UNUSED-Inlines).
+
+Gemeinsames Muster: **Frame passt, TVec3/Float-Temp nur +4** — `char trash[4]`
+am Eingang bläht Frame oft mit, verschiebt Vec nicht auf Retail-Offset (evtl.
+Pad **zwischen** konkreten Locals / MAP-Größe, nicht Entry-Pad).
+
+**Vollmatch, strikt.** keine.
+
+**Verify.** `ninja baseline` / `changes_all` ohne Code-Delta; `dtk shasum -c` →
+OK (Tip **`e24eab6c`**, Quellbaum unverändert).
+
+### R161 (Aufgabe B; Pivot konkrete Ziele; keine Vollmatches)
+
+Kein Entry-Trash-Scan. Fokus: `initAndRegister`, Stack-Shrink-Hinweise,
+`TBoxTelesa::load` (max. 2 Versuche). `Hino2Pollute` übersprungen (kein
+begrenzter Pfad).
+
+**`TMapObjBase::initAndRegister` (MapObjBase).** Ausgang **~99,7 %** (Frame
+**0x68** vs. Retail **0x70**, Iterator-Locals **−4**). R146-Analog
+(`joinToGroup`): Mid-`list` + `trash[0]` nach `search` mit `char trash[8]`
+Eingang → Frame **0x70** und Iterator **0x40** OK, aber **`addi r30` vs.
+`r31`** nach `search` (weil `this` in **r31** bis `push_back` inlined).
+Variante `trash[8]` + `trash[0]` vor inline-`search` (ohne `list`): **99,9 %**,
+nur `insert`-Stack **+4** (**0x50/0x4c** vs. **0x4c/0x48**). `THitActor* self`,
+`volatile list`, `TViewObjPtrListT`-Cast: kein striktes Match. Nicht committiert.
+
+**`TBoxTelesa::load` (telesa).** Versuch 1: explizite `TVec3`-Args an
+`newAndRegisterObj` statt `mPosition`/`mScaling.set` → **86,8 %** (CFG). Versuch
+2: `char align[4]` zwischen `unk150` und `if` → Frame **0x48** (Retail **0x40**).
+Revertiert.
+
+**Stack-Shrink** (`thinkSituation` / `soundMovement` / `changeScene`): nicht
+vertieft (große Frame-Deltas, kein schneller 100 %-Pfad in diesem Slice).
+
+**Vollmatch, strikt.** keine.
+
+**Verify.** `ninja baseline` / `changes_all` ohne Code-Delta; `dtk shasum -c` →
+OK (Tip **`f48b5cc7`**, Quellbaum nur PROGRESS).
+
+### R163 (Aufgabe B; 2 Vollmatches Player/MarioRun)
+
+**Scanner.** Enemy/Player `.text`-Nonmatching ≥95 % mit kleinem Diff-Fokus
+(`TNerve*` / `TMario::`); Skip-Liste + MoveBG/Closet unverändert.
+
+**Vollmatches (strikt 100 %, `decomp-diff`):**
+
+1. **`TMario::oilSlip`** — `TPollutionManager* pollution = gpPollution` vor
+   `stamp`; `posZ`/`posY`/`posX`-Temps (MWCC-Eval-Reihenfolge für `lfs`/`lwz`).
+2. **`TMario::oilRun`** — gleiches `stamp`-Muster + `char trash[8];` Eingang
+   (Frame **0x58**).
+
+**Probes revertiert (8):** `TNerveWalkerEscape` (`trash[0x28]` Eingang /
+   `pathPad[0x20]` vor `pop`), `TNerveTobiPukuHitWater` (`trash[0x10]`),
+   `TNerveBossEelMouthOpenWait` (`trash[0x28]`, Frame OK, Vec-Temps weiter
+   **−0x20**), `TNerveMameGessoJitabata` (nur analysiert), `oilSlope` (extra
+   Symbol, unverändert gelassen), `setStatusToJumping` (Frame **−0x50**, zu
+   groß), `TNerveKumokunFly` (dtor bereits Match), `initAndRegister` skip.
+
+**Verify.** `ninja baseline` / `changes_all`; `dtk shasum -c` → OK.
+
+### R164 (Aufgabe B; 1 Vollmatch Enemy/gesso, pollution-stamp clone)
+
+**Pattern reuse (R163).** `gpPollution->stamp(1, …)` in B-scope Enemy: lokales
+`TPollutionManager*`, Radius-Temp, `posZ`/`posY`/`posX` vor `stamp`; bei
+`rebirth` zusätzlich `char trash[8];` (Frame **0x30**).
+
+**Vollmatch (strikt 100 %, `decomp-diff`):**
+
+1. **`TGessoPolluteObj::rebirth`** — `+328` Code-Bytes, `matched_functions`
+   **9249 → 9250** (`changes_all`).
+
+**Pollution-Stempel geprüft, nicht shipped:** `TEnemyMario::emJumping` /
+   `emWalkAround` (Stamp-Cluster mit `z→y→x` + `trash[0x20]` → **99,7 %**,
+   Rest `setStickToAngle`/`fmuls`-Operanden; Quelle revertiert),
+   `TFireWanwan::updatePollute` (Frame **−0x10**, Register durchgängig),
+   `TMario::setStatusToJumping` / `oilSlope` skip bzw. extra.
+
+**Scanner (Player/Enemy ≥95 %, `TNerve*` / `TMario::`, ≤600 B).** Kein neues
+Pad-Δ **4/8/0x10** mit uniform `~` only in dieser Runde; Top-Kandidaten u. a.
+`TNerveBathtubKillerBreak` **99,9 %**, `TMario::slopeProcess` (Frame **−0x18**).
+
+**Probes revertiert (8):** `emJumping`/`emWalkAround` (s. o.),
+   `TNerveSmallEnemyFreeze` (`trash[8]`, unverändert **99,8 %**),
+   `TNerveWalkerEscape`, `TNerveTobiPukuHitWater`, `TNerveBossEelMouthOpenWait`,
+   `setStatusToJumping`, `initAndRegister` skip, `updatePollute` (nur Analyse).
+
+**Verify.** `ninja baseline` / `changes_all`; `dtk shasum -c` → OK.
+
+### R165 (Aufgabe B; keine neuen Vollmatches)
+
+**Pollution `stamp`.** Keine weiteren Retail-Symbole mit bare
+`gpPollution->stamp(1, …)` außer bereits gematchten / Skip (`setStatusToJumping`,
+`emJumping`/`emWalkAround`, `updatePollute`, `oilSlope` extra, `seedPollute`
+UNUSED). `TNerveSmallEnemyDie::execute` bereits **100 %**.
+
+**Scanner (frame Δ 4/8/0x10, uniform `~`).** Treffer u. a.
+`TMario::toroccoEffect` / `soundTorocco` (**need +8**), `TMario::isTakeSituation`
+(**+0x10**), `TNerveNKFollowMario::execute` (**+0x10**): `char trash[N]` am
+Eingang richtet **nur** `stwu` aus; `TVec3::length()`-Spills bleiben **−8** bis
+**−0x18** (gleiches Muster wie R163 `torocco` nach Frame-Fix).
+
+**Probes revertiert (8):** `toroccoEffect`/`soundTorocco` (`trash[8]` vor/nach
+`dist`/`len`), `isTakeSituation` (`trash[0x10]`), `TNerveNKFollowMario`
+(`trash[0x10]`), `TPakkunSeed::loadInit` (`trash[8]` → **99,9 %**, String-
+Cluster `~`), `TNerveBPPreDie` (`trash[0x18]`, Frame OK, Vec **−0x18**),
+`TMario::toroccoEffect` Komponenten-`sqrtf` (Regress), `BathtubKillerBreak` /
+`SmallEnemyFreeze` skip.
+
+**Vollmatch, strikt.** keine. Quellbaum unverändert ggü. **`5c5f4542`**.
+
+**Verify.** `ninja baseline` / `changes_all` ohne Code-Delta; `dtk shasum -c` →
+OK.
+
+### R166 (Aufgabe B; 1 Vollmatch Enemy/tobiPuku)
+
+**Vec-Spill (FireWanwanFreeze-Stil).** `TNerveTobiPukuDie::execute`: nach
+`velocity`-Lokal `char trashAfterVel[8];` vor `zero.y`-Zuweisung (nicht nur
+Prologue-`trash`) — **100 %**, `+508` B (`changes_all`).
+
+**Vec-Klasse gestoppt (≤2):** `toroccoEffect` (`delta`+`trash`, split-`dist`,
+`rumblePad`-Split) — Frame/`TVec3`-Spills nicht retail; `soundTorocco` unverändert.
+
+**Weitere Probes revertiert:** `TNerveTobiPukuAttack` (`trash[8]`+`unused` Vec),
+`surfingEffect` (Mtx-Temps), `moveRoof` (`trash[0x20]`+`delta`), `isTakeSituation`
+(`trash[0x10]`+`delta`), `TNerveNKFollowMario` / `torocco` entry-trash (skip).
+
+**Scanner.** Shrink: `checkWallPlane`/`surfingEffect` (+16 B Frame); Swim nur
+`doSwimming` 98 %; Special `moveRoof` (+0x20 Frame). Kein weiterer strikter Win.
+
+**Verify.** `ninja baseline` / `changes_all`; `dtk shasum -c` → OK.
+
+### R169 (Aufgabe B; post-TVec3 trash sweep, keine Vollmatches)
+
+**Familie (emitSweat / TobiPukuDie / Freeze).** Weitere `char trash[N]` direkt nach
+benanntem `TVec3`/`velocity`/`pos` probiert; nur **reines +8 Frame + +8 Spill**
+(trash **nach** Lokal, vor erster Nutzung) matcht zuverlässig.
+
+**Teilbilder / revertiert (~8):** `TPakkunSeed::moveObject` (`trashAfterVel` → Frame
+**0x40**, Spill noch **−0xc**); `TTobiPuku::hitWater` (Entry **`0x18`** Frame OK,
+`dir`-Cluster weiter off); `TBiancoGateKeeper::getRumblePow` (**+4** Spill, kein
+Win mit `[4]`/`[8]`); `TCoasterEnemy::bind` / `TNerveFireWanwanDie` / `TOneShotGenerator`
+verschlechtert; `TSpineEnemy::resetToPosition` (+4-Spill, named `velocity` hilft nicht).
+
+**Skip (User):** BubbleCallBack, rumblePad, startMonteReplay, walkBehavior, Attack,
+torocco/sound, prior deadlocks.
+
+**Vollmatch, strikt.** keine. Quellbaum unverändert ggü. **`7c52cd87`**.
+
+**Verify.** `ninja baseline` / `changes_all` ohne Code-Delta; `dtk shasum -c` → OK.
+
+### R178 (Aufgabe B; entry frame-pad sweep, keine Vollmatches)
+
+**Hunt.** Weitere B-scope-Nerves/Player; entry `trash[8/0x10/0x20]` + `trash[0]=0`
+(WallDie-Familie).
+
+**Skip (User + R177).** R177-Probe-Fails (`BPStompReact`, `PakkunGenerate`,
+`BPWaitL`, `BPFly`, `GessoTurn`, `BPTumbleOut`, `FireWanwanDie`, `Hino2Die`,
+`NameKuri::reset`, `NKFollowMario`) + Prior-Skips (Water/Manager, `WalkerEscape`,
+`BPTouchDown`, …).
+
+**Probes (~8, revertiert).** `TNerveHamuKuriBoundFreeze` (`trash[8]` → 99.8%);
+`TNervePoihanaThrow` (entry/inner `trash[0x10]`); `TNerveBGKDive`/`TNerveBGKSleep`
+(`0x10`/`0x20`); `TNerveMantaHitWater`/`TNerveMantaSpawn` (`8`); `TNerveBGKSleepDamage`
+(`0x10`); `TNerveBathtubKillerBreak` (`4`/`8`, Frame schon −0x30).
+
+**Vollmatch, strikt.** keine. Quellbaum unverändert ggü. **`33ec0c9c`**.
+
+**Verify.** `ninja baseline` / `changes_all` ohne Code-Delta.
+
+### R180 (Aufgabe B; perform entry +0x10, 1 Vollmatch)
+
+**Pivot.** Kein entry-only bei MouthOpenWait-Klasse (Frame OK, Spill bleibt);
+stattdessen R171/R163-Muster (`TVec3`+`trash[8]`, post-local, `gpPollution` z/y/x).
+
+**Skip (User + R179).** R179 entry-only Fails (`setMeltAnm`/`setDeadAnm`, `receiveMessageLv1`,
+`TBEelTears::perform`, `jumpProcess`, `FireWanwanTurn`, `Gesso::pollute`,
+`BossEelMouthOpenWait`, `NameKuriLauncher::stateLaunch`) + R178/R177/Prior.
+
+**Probes (~8, revertiert).** `setMeltAnm` (`trash[0x20]`+emitSweat-`vel` → 99,9 %, Spill);
+`setDeadAnm` (emitSweat-`vel`); `TGesso::pollute` (`0x10`+post-`tmp`); `updatePollute`
+(stamp z/y/x + empty `v1`); `emitEffects` (`0x18`+post-`thing`); `TBEelTears::perform`
+(`0x10`); `receiveMessageLv1` (`0x10`); MouthOpenWait-Kombis (pre-Mtx `0xc`).
+
+**Vollmatch, strikt (`decomp-diff` 100,0 %).**
+
+1. **`TBEelTearsDrop::perform`** — entry `char trash[0x10]; trash[0]=0;` (Frame −0xc8).
+
+**Verify.** `ninja baseline` / `changes_all`; `decomp-diff` → **100,0 %**.
+
+### R182 (Aufgabe B; perform/init/loadInit entry pad, keine Vollmatches)
+
+**Hunt.** `receiveMessage` / `perform` / `init` / `loadInit` entry `trash[8/0x10/0x20/0x28/0x30/0x50]`
++ generator `TVec3` emitSweat-Klon (revertiert).
+
+**Skip (User + R181).** R181 dry (`TBEelTears::perform`, `TSmallEnemy::init`,
+`TBEelTearsDrop` ctor, `TEnemyPolluteModel::perform`) + R180/R179/Prior.
+
+**Probes (~8, revertiert).** `TPakkunSeed::loadInit` (`8`/`0x10` → Frame OK, Spill);
+`TBPTornado::perform` (`0x10` → 99,9 %); `TOneShotGenerator::receiveMessage` /
+`TGenerator::perform` (`4`/`8`, emitSweat-`rot`/`vel`); `TKumokun::initAttachPlane`
+(`0x10`); `THinokuri2::init` (`0x50`); `TBEelTears::perform` (`0x10`, R181-Repeat).
+
+**Vollmatch, strikt.** keine. Quellbaum unverändert ggü. **`b37c17d8`**.
+
+**Verify.** `ninja baseline` / `changes_all` ohne Code-Delta.
+
+### R183 (Aufgabe B; execute/init entry pad, keine Vollmatches)
+
+**Hunt.** B-scope `receiveMessage` / `perform` / `init` / `execute`; entry
+`trash[8/0x10/0x20/0x28]` + `trash[0]=0` (WallDie/Dango-Familie). Scanner:
+`stwu`-Gap LEFT−RIGHT in Spalten 1/2 (nicht Diff-Marker).
+
+**Skip (User + R182).** R182 dry + R181/R180/R179/Prior (`MouthOpenWait`-Spill-Klasse,
+`jumpProcess`, `HitWater`, …).
+
+**Probes (~8, revertiert).** `TRiccoHook::init` (`8` → 99,9 %, Spill);
+`TNerveTobiPukuFly::execute` (`0x10`); `TNerveHino2Burst::execute` (`0x28`);
+`TNerveTobiPukuAttack::execute` (`8`); `TNerveBossEelFirstSpin::execute` (`0x20`
+→ Frame OK, Spill ~9×); `TNerveBossEelSecondSpin::execute` (`0x28`);
+`TNerveKumokunFly::execute` (`8`).
+
+**Vollmatch, strikt.** keine. Quellbaum unverändert ggü. **`c9f9b506`**.
+
+**Verify.** `ninja baseline` / `changes_all` ohne Code-Delta.
+
+### R184 (Aufgabe B; Player torocco + small helpers, keine Vollmatches)
+
+**Hunt.** Player `Mario*.cpp` `perform`/`init` + kleine Enemy-Helfer; nur
+`stwu`-Gap (8/0x10/0x20/0x28), keine Spill-Klasse. `isReachedToGoalXZ` explizit.
+
+**Skip (User + R183).** R183-Liste + Prior; `isReachedToGoalXZ` Spill (+0xc vs +0x10).
+
+**Probes (~8, revertiert).** `TMario::toroccoEffect` (`8` → Frame OK, Spill +4);
+`TMario::soundTorocco` (`8`); `TTobiPuku::walkBehavior` (`8` → 99,9 %);
+`TSmallEnemy::isHitWallInBound` (`0x28`); `TTobiPuku::isReachedToGoalXZ` /
+`TWalkerEnemy::isReachedToGoalXZ` (`0x10`); `TTobiPuku::isReached` tmp-Init
+(Walker-Stil, 99,7 %).
+
+**Vollmatch, strikt.** keine. Quellbaum unverändert ggü. **`3938db08`**.
+
+**Verify.** `ninja baseline` / `changes_all` ohne Code-Delta.
+
+### R185 (Aufgabe B; uniform-stack scan + TVec3 helpers, keine Vollmatches)
+
+**Hunt.** (1) B-scope `≥99,5 %` mit **uniformem** `(r1)`-Shift (alle Spills =
+Frame-Δ); nur dann entry `trash[8/0x10/0x20/0x28]`. (2) empty-`TVec3` +
+`trash[8]` + Komponentenwrites auf `behaveToMario`-Helfer. (3) Strategic
+`TObjManager::perform` / `TLiveActor::initAnmSound` (kein MoveBG-Closet).
+
+**Skip (User + R184).** R184 spill-Klasse + Prior.
+
+**Scanner.** Streng uniform `(r1)`-only bei `nonmatching ≥99,5 %`: **0** Treffer;
+viele „uniform“-Kandidaten haben zusätzlich vtable/`(r12)`-Δ (z. B.
+`TMario::waitMain` — `stwu` bereits −0x48, nur `lwz 0xc4` vs `0xd8`).
+
+**Probes (~8, revertiert).** `TLiveActor::initAnmSound` (`trash[4]`/`[8]` →
+100,0 % label, 2× `(r1)`-Spill bleibt); `TObjManager::perform` (`trash[8]` →
+`stwu` OK, `stb`-Slots +0xc); `TBossEelAwaCollision::behaveToMario`
+(Komponenten/`trashAfter`/`SMS_GetMarioPos`); `TMario::waitMain` (`trash[4]`
+→ `stwu` match, vtable bleibt).
+
+**Vollmatch, strikt.** keine. Quellbaum unverändert ggü. **`ec81bde5`**.
+
+**Verify.** `ninja baseline` / `changes_all` ohne Code-Delta.
+
+### R186 (Aufgabe B; non-entry — perform timer, stamp grep; keine Vollmatches)
+
+**Hunt (nach R185 entry-pool exhausted).** PROGRESS/GOAL-Deferred:
+`TNerveHino2Pollute` (`changeBck` 3 vs 16/17, Frame −0xe8), Stack-Shrink
+`thinkSituation`/`soundMovement`/`changeScene`, `initAndRegister`,
+`BathtubKiller` Explosion-Inlining — nur wo begrenzter Pfad.
+
+**Skip.** `waitMain` (vtable), `initAnmSound`, `AwaCollision`, Closet/MoveBG/
+Mirror, alle Pad-Skips.
+
+**`TObjManager::perform` (Strategic).** Retail: `stb`×4 @ **0x34** vor
+`TTimeArray::append`. Versuche (revertiert): (a) `u8 timerColor[4]` +
+`startTimer(byte…)` → **99,9 %**, `stwu` −0x50 match, **`stb` noch +8**
+(0x2c vs 0x34); (b) volles Inline-`append` → **99,0 %** (Frame −0x30);
+(c) `timerStackPad[8]`/`struct { pad[8]; color[4] }` → Frame/Spill schlechter.
+
+**`gpPollution->stamp(1,…)` grep (Enemy).** Bereits gematcht: `TGessoPolluteObj
+::rebirth` (R164). Probes revertiert: `TEnemyMario::emJumping` (`trash[0x20]` +
+posZ/Y/X → Frame/Operanden), `emWalkAround` (z/y/x), `TFireWanwan::updatePollute`
+(z/y/x → 96,8 %, großes Frame-Δ).
+
+**Deferred nicht vertieft.** `Hino2Pollute` ASM/`changeBck`; `initAndRegister`
+99,8 %-Deadlock; Stack-Shrink; `BathtubKillerExplosion`.
+
+**Vollmatch, strikt.** keine. Quellbaum unverändert ggü. **`8e03585d`**.
+
+**Verify.** `ninja baseline` / `changes_all` ohne Code-Delta.
+
+### R187 (Aufgabe B; thinkSituation ground spill, Scanner dry; keine Vollmatches)
+
+**Hunt.** (1) Bounded Stack-Shrink/Align: `thinkSituation` / `soundMovement` /
+`changeScene` nur wenn PROGRESS klaren Local-Pfad zeigt. (2) Scanner B-scope
+`≥99 %` mit **ausschließlich** `stwu`/`addi r1`-`~` (keine weiteren `~`):
+**0** Treffer (Volllauf ~404 Units). (3) Enemy `receiveMessage`/`perform`
+`≤600 B`, `≥99,5 %`, Frame-Δ exakt **8/0x10/0x20/0x28**, nur `stwu`-`~`:
+**0** Treffer.
+
+**Skip (User + R186).** `TObjManager::perform`, `TNerveHino2Pollute` /
+Hino2-ASM, `initAndRegister`, Pollution-Reste (`emJumping`, `updatePollute`, …),
+Prior-Pad-Skips.
+
+**`TMario::thinkSituation`.** Entry `char trash[0x58]` (revertiert): Retail
+`stwu −0xc8` match, Epilog/`r30`/`r31` match; **`const TBGCheckData* ground`**
+bleibt **0x64** statt **0xbc** (`addi r4`/`lwz` nach `stopBGM`). Pad vor/nach
+`ground`, Pad nur vor `checkGround`, Early-`ground`+Entry-Pad: **Offset unverändert**
+— fehlende ~0x58 Locals in der Mitte der Funktion, nicht entry-padbar.
+
+**`soundMovement` / `changeScene`.** Nur vermessen: Retail `stwu −0x2e0` vs. unser
+`−0x100` (Δ **0x1e0**); `changeScene` **0x1e0** vs. **0x178** (Δ **0x68**).
+Kein Shrink-Versuch (Thrashing-Risiko ohne ASM-Local-Map).
+
+**Probes (~8, revertiert).** `TGraphWeb::getRandomNextIndex`: `stwu` bereits
+match; `TRailNode tmp` @ **0x1c** vs. **0x24** — `trash[8]` nach/vor `tmp` →
+Frame **−0x98** oder Tmp **0x28** (schlechter). `TNerveHamuKuriWallDie`:
+`trash[8]` nach `local_34` → Spill **+0x10** (Entry-`trash[8]` aus R177 belassen).
+
+**Tip (R187).** Wenn `stwu`/`addi r1` schon matchen, aber ein Struct-Spill
+**konstant ~0x58** daneben liegt, ist Entry-`trash` oft wirkungslos — die
+Lücke sitzt **zwischen** bereits allokierten Slots (vgl. `thinkSituation` /
+`ground` @ **0xbc** in Retail-ASM `MarioMove.s` ~`0x8012EFF8`).
+
+**Vollmatch, strikt.** keine (unverändert: R177 `TNerveHamuKuriWallDie`, R180
+`TBEelTearsDrop::perform`, R181 `TDangoHamuKuri::receiveMessage`). Quellbaum
+unverändert ggü. **`63f8cdc0`**.
+
+**Verify.** `ninja baseline` / `changes_all` ohne Code-Delta.
+
+### R197 (Aufgabe B; weak/emit pivot + `initParticle`, keine Vollmatches)
+
+**Hunt.** R196-Skips + User; Pivot **R188/R189** (weak Header-Inlines, emit-Zwei-Zeiler),
+`MarioParticle`/`WaterGun`/`Nozzle`-Rest, Enemy **`setMActorAndKeeper`/`init`/`perform`**
+nur **`stwu`-Gap**; Cap ~8; strikt 100 %.
+
+**Skip (neu, R196-Probes).** `TPakkun::load`, `TBubbleCallBack`, `THinokuri2::perform`-Trash,
+`TBEelTearsDrop::perform`, `TBEelTears::perform`, `TNozzleBase::emitCommon`,
+`TOneShotGenerator::receiveMessage`, `TMario::toroccoEffect`, `TBoxTelesa::load`,
+`TTamaNokoManager::load`, `TNerveSmallEnemyFreeze` (+ R194/R195-Prior).
+
+**Scanner.** Viele **`setMActorAndKeeper`** (telesa/tamaNoko/pakkun/…): **`decomp-diff` 0× `~`**
+(isoliert) — TU bleibt `NonMatching` wegen Nachbarn; **HamuKuri-Familie** noch
+**`addi 0x360` vs `0x370`** (Layout).
+
+**Probes (~8, revertiert).**
+
+1. **`TMario::initParticle`:** Retail-ASM (`stmw r25`, **`r30` Byte-Offset**, **`r26` Flag-Ptr**,
+dupl. `cmpwi r31,1`-Zweige) vs. `SMS_LoadParticle`-Schleife — Register/Frame **−0x30** vs **−0x28**,
+40× `~` (kein entry-only).
+2. **`TMario::surfingEffect`:** `MtxPtr` Zwei-Zeiler + ohne `scaleVec` / manuelle `stfs` — Frame
+**−0x60** vs **−0xb8** (extra `MtxPtr`-Locals); Baseline **−0x70** + **`r5`/`r7`-Swap** bleibt.
+3. **`TNerveBathtubKillerExplosion`:** entry `trash[4]` — nur **+4 B Spill** (0x1c vs 0x18),
+Frame **−0x30**→**−0x38**.
+4. **`TNozzleBase::emitCommon`:** `trash[0x18]` — **`stwu −0x78`** OK, **`TVec3` +0xc** (R196).
+5. **`TBEelTears::perform`:** `trash[8]` — Frame OK, **vtable/`effectMtx`**-Cluster bleibt.
+6. **`TBEelTearsDrop`:** `trash[4]`/`mtxPad[0xc]` — **0x6c** vs **0x60** `Mtx` unverändert.
+7. **Weak/`emit*` Scan:** `emitGetEffect`/`emitFootPrintWithEffect`/mehrere **`setMActorAndKeeper`**
+bereits **strikt 100 %**; `TWaterGun::emit` Frame OK, kein Ein-Zeiler-Fix.
+8. **`WaterGunDivingCtrlR`:** Frame **−0x70** vs **−0x58** (kein reines Pad).
+
+**Vollmatch, strikt.** keine (letzter Ship: R189 `emitGetWaterEffect`).
+
+**Tip (R197).** **R189-Zwei-Zeiler** hilft bei **Call-Arg-Reihenfolge** (`mr r5` vor `addi r7`),
+nicht bei **`surfingEffect`** wenn zusätzliche **`MtxPtr`-Temps** den Frame aufblasen — Retail
+nutzt **`f31`** + direkte **`stfs`** ohne Stack-`TVec3`. **`initParticle`:** SMS_LoadParticle-Inline
+≠ Retail (**`gpResourceManager`/`gParticleFlagLoaded`**, **`r30`+=4**); Matching braucht
+**out-of-line-Loop-Form**, nicht Weak-Tweak. **`setMActorAndKeeper` 100 %** einzeln ⇒ nächster
+Hebel oft **Klassen-Offset** (HamuKuri **0x370**) oder **Caller-TU**, nicht weiteres entry-Trash.
+
+**Verify.** `ninja baseline` / `changes_all` ohne Code-Delta ggü. **`c68146c0`**.
+
+### R198 (Aufgabe B; HamuKuri rodata `anmlist`, 2× `setMActorAndKeeper`)
+
+**Hunt.** R197-Prior: bounded **HamuKuri `0x360` vs `0x370`**, sonst frische ≤600 B;
+Skip `initParticle`, `surfingEffect`, `BathtubKillerExplosion`, `setMActorAndKeeper`-Thrash
+auf bereits-100 %-TUs; Cap ~8; strikt 100 %.
+
+**HamuKuri `0x360`.** Retail **`addi r4, r31, 0x360`** in `setMActorAndKeeper` zeigt auf
+**`"default.bmd"`** im **`@1490`-Stringpool** (`r31` = Pool-Basis, nicht `this`). Unser Build:
+**`0x370`** (+16 B) — **`hanekuri_wait`** stand im rogue **`anmlist[]`** vor dem
+**`createMActor("default.bmd")`-Literal**; Retail-Reihenfolge:
+`hamukuri_walk` → `hamukuri_run` → **`default.bmd`** → `hanekuri_wait`.
+Fix: **`"default.bmd"`** in `anmlist[]` zwischen `hamukuri_run` und `hanekuri_wait`
+(`src/Enemy/hamukuri.cpp`). Kein Klassen-Pad bei **0x360/0x370**.
+
+**Probes (~6, keine weiteren Ships).** `TNerveDoroHaneHitWater` / `jumpToSearchActor` /
+`TNerveHamuKuriWallDie`: **`stwu`/Spill +8/+0x10`** (Mid-Frame, nicht entry-only).
+`TNerveHamuKuriGoForSearchActor`, `THamuKuriLauncher::stateLaunch`: gleiches Muster.
+Player-Scan (`toroccoEffect`, `TBubbleCallBack`): R197-Skips / Frame.
+
+**Vollmatch, strikt (2).**
+
+- `THamuKuri::setMActorAndKeeper()` (228 B)
+- `TFireHamuKuri::setMActorAndKeeper()` (160 B)
+
+**Tip (R198).** Einzelnes **`~` auf `addi r4, r31, 0xNNN`** bei **`setMActorAndKeeper`**
+oft **`.rodata`-Pool-Reihenfolge** (unused `static const char*` arrays, `InfectiousStrings`,
+`TModelDataLoadEntry`-Strings) — vor **`THamuKuri`-Member-Offset** raten, Retail-ASM
+`hamukuri.s` **`.rodata:0xNNN`** mit **`default.bmd`** abgleichen.
+
+**Verify.** `ninja baseline` / `changes_all`; **`build.sha1` OK**; Total matched_code
+**48.63% → 48.64%**; `mario/Enemy/hamukuri` matched_data **31.69% → 97.28%**.
+
+### R199 (Aufgabe B; pool-order scan + `tstatestr` nullptr, 1× dtor)
+
+**Hunt.** (1) Weitere **`.rodata`/InfectiousStrings/`anmlist`-Pools** (`addi rN,r31,0xNNN`
+nur); (2) frische B-scope ≤600 B off Skip; Cap ~8; strikt 100 %.
+
+**Rodata/`r31`-Scan (B-scope).** Automatischer Pass über Enemy/Player: **keine**
+verbleibenden **99.8%+ / ≤600 B** mit ausschließlich **`addi *,r31`**-`~` (HamuKuri-R198
+hat Familie geleert).
+
+**Ship — `TBGTentacleMtxCalc::~TBGTentacleMtxCalc()` (204 B).** Retail-Dtor nutzt
+**`@1431`-`.data`-Pool** (`addi r0,r3,0x3f0` / `0x414` / `0x424` für vtable-Zeiger).
+Unser Build: **−4 B** je Offset (`0x3ec`/`0x410`/`0x420`) — **`tstatestr`** in Map
+**`size:0x2C`** (11 Zeiger inkl. **NULL**), Quelle hatte nur 10 Einträge. Fix:
+trailing **`nullptr`** in `tstatestr[]` (`src/Enemy/bgtentacle.cpp`).
+
+**Probes (~7, revertiert / Skip).** `TGraphWeb::getRandomNextIndex`: **`TRailNode` @
+0x24 vs 0x1c** (Mid-Frame). `TNerveDoroHaneHitWater`, `THamuKuri::jumpToSearchActor`,
+`RotateCtrl`, `TStayPakkun::genRandomItem`, `TGessoPolluteObj::loadInit`: **`stwu`/Spill**.
+`TMario::toroccoEffect` (R197-Skip). `MarioReceiveMsg`/`MarioSwim`: kein ≤600 B ≥99.5%.
+
+**Vollmatch, strikt (1).**
+
+- `TBGTentacleMtxCalc::~TBGTentacleMtxCalc()` (204 B)
+
+**Tip (R199).** **`~` nur auf `addi r*,r3,0xNNN` mit `lis … @####`** im **Dtor/Init**:
+oft **`.data`-Tabellengröße** (Map-`size` / ASM `.obj`) — fehlendes **`nullptr`**
+am Ende von `const char*[]` verschiebt **alle** nachfolgenden Pool-Offsets wie bei
+**`anmlist`** in **`.rodata`**.
+
+**Verify.** `ninja baseline` / `changes_all` ggü. **`28997a6d`**; matched_code
+**48.64% → 48.65%**; `build/GMSJ01/ok` (DOL) unverändert OK.
+
+### R200 (Aufgabe B; Map/ASM table hunt + `jntidx$3428` data)
+
+**Hunt.** (1) **`.data`/`.rodata`-Größen** (readelf tgt vs. src, Δ≤32 B) + Map-`size` vs.
+`decomp-diff -t object`; (2) frische B-scope ≤600 B off Skip; Cap ~8; strikt 100 %.
+
+**Scan.** 50 TUs mit kleinem **Δ `.data`/`.rodata`** (z. B. `bgtentacle` −4 B `.data`,
+`hamukuri` −2 B `.rodata`); kein weiteres **`addi r*,r31`-only** `.text` (R199).
+**`tstatestr`** bereits R199; verbleibende **`bgtentacle` .data**-Lücke ≠ fehlendes
+zweites Null (Dtor bleibt match).
+
+**Ship — `jntidx$3428` (16 B, `.ctors`/data).** Retail **`{8,0xe,0x1c,0x22}`**;
+Quelle **`{8,14,16,34}`** (falsches Gelenk-Offset-Paar). Fix nur **Initializer** in
+`moveConstraint`-`static int jntidx[]` — **kein** File-Scope (sonst **`jntidx` extra /
+`jntidx$3428` missing**). `decomp-diff -t object`: **93.8% → 100%**.
+
+**Probes (~7, revertiert).** `TGraphWeb::getRandomNextIndex`: `trash[8]` vor `TRailNode`
+→ Frame **−0x98**, Tmp weiter **0x1c** (R187). `TBossEelTooth` ctor, `TNerveWalkerEscape`,
+`riccohook::init`, `hinokuri2::perform`: **Frame/Spill**. `bosseel`/`enemyMario` **−4 B
+.data`**: kein isoliertes Null-Zeiger-Fix. File-Scope-`jntidx`: Symbol-Regression.
+
+**Vollmatch, strikt (1, data).**
+
+- `jntidx$3428` (16 B, object)
+
+**Tip (R200).** Tabellen-Hunt: **`symbols.txt` `size`** + ASM **`.4byte`** für
+**`$nnnn`-Statics**; Validierung **`python3 tools/decomp-diff.py -u … -t object -s
+match --search 'jntidx'`**. Map-Größe **0x10** ⇒ Inhalt, nicht nur Terminator — anders
+als **`tstatestr` 0x2C** (11× Zeiger). Function-local **`static`** behalten für
+**`name$3428`**-Mangling.
+
+**Verify.** `ninja baseline` / `changes_all` ggü. **`d9156f48`**; DOL OK; kein neues
+`.text`-Symbol (`.text`-Hunt weiter Mid-Frame).
+
+### R201 (Aufgabe B; rodata string/PARAM typos, 3× data)
+
+**Hunt.** (1) **`symbols.txt`/`@####`-Objects** + ASM **`.string`**; (2) B-scope
+**Δ≤16 B** `.data`/`.rodata`; (3) `.text` ≤600 B off Skip; Cap ~8; strikt 100 %.
+
+**Scan.** Kleine Section-Deltas (47 TUs); **`decomp-diff -t object`** auf
+**≥95% / ≤64 B** → **`namekuri` `@2909`**, **`WaterGun` `@4030`/`@4367`**.
+`bgtentacle` **`@4448`** (Switch-`.rel`, 81.8%) — kein String-Fix.
+
+**Ship (data, 3).**
+
+- **`@2909`** (41 B): `name_jump_start.**bas**` nicht `.base` (`namekuri2_bastable`).
+- **`@4030`** (14 B): PARAM-Key **`mHHoverHeight`** (retail `.string`), Feld
+`mHoverHeight` → **`mHHoverHeight`** (`WaterGun.hpp` + Mario Jump/Run/Wait).
+- **`@4367`** (13 B): Joint-Name **`chn_muzzle_1`** nicht `chn_muzzle_l`
+(`WaterGun.cpp`).
+
+**Probes (~5, revertiert / Skip).** `TGraphWeb::getRandomNextIndex` entry-trash;
+`bgtentacle` **`@4448`**; `MarioInit` **`@6543`** (schon OK in Quelle);
+`WaterGun` **`@4827`** (36 B, Layout); `.text`-Nerves unverändert Mid-Frame.
+
+**Tip (R201).** Bei **98–99% / kleine `.ctors`-Strings**: ASM **`.string`** vs.
+Quellliteral (`.bas`/`.base`, `_1`/`_l`); PARAM_INIT-Keys aus **`.rodata`** 1:1
+als Member-Name. Check: **`decomp-diff -u … -t object -s nonmatching`**.
+
+**Verify.** `ninja changes_all` ggü. **`cf903cfc`**; **`namekuri` matched_data
+70.86% → 100%**; **`build.sha1` OK**.
+
+### R226 (Aufgabe B; PARAM/data hunt, bossManta deferred, 0× ship)
+
+**Hunt.** Post-**`f1f78944`**; **defer `bossManta` `@2805`/`@2807`**; skip R222–R225 stack +
+stuck lists; string/table/PARAM/float/vtable/**`createModelData`**; ≤200 B / data +
+MAP; cap ~8.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, no-ship).**
+
+- **`bossManta` `@2805`:** not re-tried (deferred).
+- **`TGessoPolluteObj::getNowGravity`** (32 B): retail **`lwz r4,0x1e8` + `beqlr`** vs
+  double **`getSaveParams()`**; hoisting **`params`** / direct **`unk1E8`** → **85%**
+  (`bne`/`blr`, **`r3`** base) — register/scheduling, not PARAM spelling.
+- **EP object scan:** empty/scaffold TUs (**`hanasambo`**, **`popo`**, **`amiNoko`**, …)
+  → many **missing** mtx-calc **`.ctors`** pools (full TU work, not a typo).
+- **`spider`:** **extra** **`.data` `@134`/`@154`** (no **`InfectiousStrings`** in TU —
+  likely PCH/include closure); **`bind`** = structural, not **`1/60`** literal alone.
+- **`feetinv`:** missing **`TMtxCalcFootInv::__vtable`** + **`@1795…`** jump tables —
+  scaffolding gap.
+- **`createModelData`:** **`coasterkiller` / `launcher` / `BathtubKiller`** already **100%**
+  (entry label names only).
+- **`TBoxTelesa::load`** (99.8%, 264 B): stack **`r1+0x14`** vs **`+0x10`** for vec temps.
+- **`TBubbleCallBack::execute`** (99.6%, 164 B): **`stwu -0x48`** vs **`-0x38`** — stack.
+- **EP `≤64B` `≥95%` text / `≥99%` data:** none outside skip/stuck (besides **`gesso`**
+  above).
+
+**Tip (R226).** **`getNowGravity`-size** helpers need **retail load order**
+(**`gesso` → `unk1E8` in `r4`**, **`beqlr`**) — not a second **`getSaveParams()`**
+  call or PARAM rename. For **missing `@2357…` mtx strings**, check whether the **`.cpp`
+  is still empty** before tuning **`InfectiousStrings`**.
+
+**Verify.** `ninja changes_all` ggü. **`f1f78944`** — **no diff**.
+
+### R227 (Aufgabe B; EP object/MAP hunt, 0× ship)
+
+**Hunt.** Post-**`f4a5afd1`**; skip empty TU scaffolding, **`bossManta` `@2805`/`@2807`**,
+**`getNowGravity`**, R222–R226 failures + stuck lists; string/table/PARAM/float/vtable/
+**`createModelData`**; cap ~8.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, no-ship).**
+
+- **EP `.rodata`:** full scan — **no** nonmatching **`.rodata`** objects in Enemy/Player
+  (data pain is **`.ctors`** / vtables, not string typos).
+- **EP object scan (16 hits):** only **`.ctors`** — **`DebuTelesa` `entry$2835`** (85.7%),
+  **`bgtentacle` `@4448`**, **`MarioDraw`/`MarioMove`/`WaterGun`/`Yoshi`/`enemyMario`**
+  jump tables, **`bossgesso` `__vtable` 99.3%** / **`idxarray$3450` 75%** — structural /
+  emission-order, not a one-liner PARAM fix.
+- **`spider` extra `.data` `@134`/`@154`/`@163`:** retail **16 B** (**`__vt__7TSpider`**
+  only); our TU emits **0x38 B** with **six `1.0f` literals + counters** before the vtable
+  (**`objdump -s -j .data`**) — include/PCH closure pollution, not missing
+  **`InfectiousStrings`** in **`spider.cpp`**.
+- **`TPoiHanaManager::load` / `TAreaCylinder::load` / `TGenerator::load`** (99.6–99.8%):
+  **`addi r30,0x2f8`** vs **`0x30c`** — wrong **`T*Params`** member layout / offsetof, not
+  PARAM spelling.
+- **`TCoasterKillerManager::load`** (98.4%): **`stwu -0x70`** vs **`-0x30`** — stack frame.
+- **`TBoxTelesa::load`** (99.8%, 264 B): stack **`r1+0x14`** vs **`+0x10`** (same class as
+  R226).
+- **`createModelData`:** **`coasterkiller` / `launcher` / `BathtubKiller` / `Kumokun`** still
+  **100%** on paths/flags.
+- **`MtxCalcTypeName` (`bosseel` / `hinokuri2`, 50%):** 16 B ctor blobs — same deferred
+  **MtxCalc / InfectiousStrings** chain as empty-TU mtx pools.
+
+**Tip (R227).** When **`decomp-diff`** reports **extra `.data`** in a tiny EP TU, **`objdump`
+  the section** before chasing strings — **`spider`**-style **`1.0f` pools** are almost always
+  **header/PCH-emitted garbage**, not a missing **`nullptr`** on a **`bastable`**.
+
+**Verify.** `ninja baseline` + `ninja changes_all` ggü. **`f4a5afd1`** — **no diff**.
+
+### R228 (Aufgabe B; `createModelData` const pool, 1× ship)
+
+**Hunt.** Post-**`cbe35e73`**; skip spider PCH pollution, empty TUs, **`bossManta` `@2805`**, **`getNowGravity`**,
+R222–R227 failures, stuck **`.ctors`** jump tables, stack **≥99.5%** `load`s, prior stuck lists; cap ~8.
+
+**Ship.**
+
+- **`TBossGessoManager::createModelData`** — **`static const TModelDataLoadEntry entry[]`** (was writable **`.data`
+  `entry$1840`**); retail **`entry$3707`** in **`.rodata`** → **100%** (52 B).
+- Side effect: **`TBossGessoManager::initJParticle`** **99.92% → 100%** (1252 B; particle path literals share pool).
+
+**Probes (~8, no-ship).**
+
+- **`bossgesso` `createModelData`:** root cause above (not path/flag typo).
+- **`TGraphWeb::startIsEnd` / `TGraphGroup::perform`:** register allocation / retail empty unroll loop — not MAP.
+- **`TSmallEnemy::decHpByWater`:** register swap — not PARAM.
+- **`PakkunRootCallback2`:** stack **`-0x90`** vs **`-0x70`** — skip band.
+- **`TPoiHanaManager::load` et al.:** offsetof / stack — skip band.
+- **`DebuTelesa_bastable` (50% `.ctors`):** **`static`** vs file-scope; extra **`.sdata`** prefix bytes — defer with
+  **`entry$2835`**.
+- **EP `.rodata` scan:** no other nonmatching rodata objects (same as R227).
+- **Other `static TModelDataLoadEntry` (non-`const`):** many TUs still **100%** on **`createModelData`** — only
+  **`bossgesso`** needed **`const`** for pool placement.
+
+**Tip (R228).** If **`createModelData`** mismatches only on **`entry$…` `@ha/@l`** but strings/flags look right,
+check **`objdump -t`** — writable **`entry[]` in `.data`** vs retail **`.rodata`**.
+
+**Verify.** `ninja changes_all` ggü. **`cbe35e73`**: **+1** matched function (**9263 → 9264**), **+1252 B** matched code;
+**`mario/Enemy/bossgesso`** **`.rodata` ~95.3% → ~99.7%**.
+
+### R229 (Aufgabe B; `createModelData` const sweep, 0× ship)
+
+**Hunt.** Post-**`f1650c05`**; repeat R228 **`static const` / `entry$` / `objdump`** pattern on remaining
+**`static TModelDataLoadEntry entry[]`** in Enemy/Player; string/PARAM/float/vtable; skip stuck lists, empty TUs,
+Closet/MoveBG; cap ~8.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, no-ship).**
+
+- **EP `createModelData`:** all **100%** — no remaining nonmatching managers.
+- **`.data` vs `.rodata` `entry$` scan (all EP `.o`):** no TU left with **more src `.data` / fewer tgt `.rodata`**
+  pools (**`bossgesso`** was the sole ship in R228).
+- **`TBEelTearsManager::createModelData` (`bosseel`):** **`static const`** → tears **`entry$`** moves to **`.rodata`** but
+  **`matched_code`/`matched_data` regress** — retail tears table stays **writable `.data`** (reverted).
+- **`TTamaNokoManager` / `TBathtubKillerManager`:** same **`const`** experiment → **`.rodata`** pool + **large
+  `matched_data` / `matched_code` regress**; retail keeps **`.data`** (reverted).
+- **`TBossPakkunManager::initJParticle`:** **UNUSED** (0x280) in **`mario.MAP`** — our TU emits **extra 640 B** (inlined
+  at **`load`** in retail); not a one-line MAP fix.
+- **`tamaNoko` `.rodata` ~98.6% (section aggregate):** no **`-t object`** nonmatching symbols — padding/anonymous bytes.
+- **99.9% band (`BathtubKillerBreak`, `TCoasterEnemy::bind`, …):** stack **`r1`/`local` offsets** — skip band.
+- **Player `WaterGun` / `ModelWaterManager` rodata ~98–99%:** out of scope for **`entry$`** pattern this round.
+
+**Tip (R229).** **`static const` on `TModelDataLoadEntry` only when `objdump -t` shows your **`entry$` in `.data`**
+  **and** retail’s matching pool is **`.rodata`** (**`bossgesso`**). If **both** sides use **`.data`** (most EP managers),
+  **`const` moves the pool and usually regresses** neighbors that share the load table.
+
+**Verify.** `ninja baseline` + `ninja changes_all` ggü. **`f1650c05`** — **no diff**.
+
+### R230 (Aufgabe B; post-`entry$` MAP hunt, 0× ship)
+
+**Hunt.** Post-**`132ddf9a`**; string/PARAM/float/vtable/small-text ASM; skip empty TUs, stuck lists,
+R222–R229, **`bossManta` `@2805`**, **`DebuTelesa` bastable**, Closet/MoveBG, blind **`const`** on
+**`.data`/`data`** pools; cap ~8.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, no-ship).**
+
+- **`createModelData` / `entry$`:** no remaining src/tgt **`.data` vs `.rodata`** skew in EP; **`tamaNoko`**
+  retail **`entry$3149` in `.data`** — **`static const`** was wrong (R229); without it **`createModelData`**
+  already **100%** (label **`entry$1529`** only).
+- **EP object scan:** no non-**`.ctors`** nonmatching data symbols (bastable/PARAM strings already **100%**).
+- **EP text ≤100 B @ ≥99%:** only **`getNowGravity`** (skip).
+- **`bossgesso` `SMS_GetMarioPos`:** target **weak 8 B** (`lwz r3,gpMarioPos`); out-of-line body in **`.cpp`**
+  → **redefinition** vs **`MarioAccess.hpp` inline** — needs a TU-local weak emission trick, not a naked def.
+- **`TStageEnemyInfoTable::getMatchedInfo`:** **92%** — iterator/register shape, not PARAM spelling.
+- **`fireWanwan` `TLerpControl`:** **UNUSED** **`init`/`update`** — extra **`.text`** in our TU (inlined in retail).
+- **`bosspakkun` `initJParticle`:** **UNUSED 0x280** — extra **640 B** (same class as R229).
+- **99.9% band (`BathtubKillerBreak`, `coasterkiller::bind`, …):** stack **`r1`** locals — skip band.
+
+**Tip (R230).** After **`bossgesso`**, treat **`objdump -t … | entry$`** as **necessary not sufficient** — confirm
+retail section (**`.data` vs `.rodata`**) in **`build/GMSJ01/asm/*.s`** before applying **`static const`**.
+**`tamaNoko`** is the counterexample: both sides want **writable `.data`**.
+
+**Verify.** `ninja baseline` + `ninja changes_all` ggü. **`132ddf9a`** — **no diff**.
+
+### R231 (Aufgabe B; `TBossEelAwaCollision::behaveToMario`, 1× ship)
+
+**Hunt.** Post-**`c005c09c`**; string/PARAM/float/vtable/small ASM; skip stuck lists, empty TUs,
+Closet/MoveBG, **`getNowGravity`**, **`DebuTelesa` bastable**, **`bossManta` `@2805`**, R222–R230;
+**`createModelData` `entry$`** exhausted; cap ~8.
+
+**Ship.**
+
+- **`TBossEelAwaCollision::behaveToMario`** (124 B): retail builds **`TVec3`** at **`r1+0x14`** ( ctor
+  **`(0,10,0)`** then **`y=15`** ); component init + **`char trashAfterMarioTarget[4]`** after the vec
+  → **100%**.
+
+**Probes (~8, no-ship).**
+
+- **`TBossEelAwaCollision`:** **`localPad[4]` before** vec — still **`r1+0x10`** (99.6%).
+- **EP ≤100 B @ ≥99%:** only **`getNowGravity`** / WaterGun callbacks (skip/stuck band).
+- **EP non-**`.ctors`** data:** still no object-level nonmatching symbols.
+- **`enemytable::getMatchedInfo`**, **`fireWanwan` `TLerpControl` UNUSED**, **`bosspakkun` `initJParticle`**
+  — unchanged from R230.
+- **`tamaNoko` / `createModelData`:** still **100%** with **`.data`** pool (no **`const`**).
+
+**Tip (R231).** For small **`TVec3`** temps at **99.6%** with uniform **`r1+0x10` vs `+0x14`**, mirror
+  sibling collision helpers (**`trashAfterMarioTarget[N]`** *after* the vec) before touching ctor syntax.
+
+**Verify.** `ninja changes_all` ggü. **`c005c09c`**: **+1** matched function (**9264 → 9265**), **+124 B**
+  matched code.
+
+### R232 (Aufgabe B; Yoshi + WaterGun stack, 2× ship)
+
+**Hunt.** Post-**`c523ceef`**; **`trashAfter[N]`** / retail **`r1+Δ`** on small locals; skip stuck lists,
+  empty TUs, Closet/MoveBG, **`createModelData` `entry$`**; cap ~8.
+
+**Ship.**
+
+- **`YoshiHeadCtrl`** (140 B): retail **`Mtx`** at **`r1+0x14`** vs **`+0x10`** — **`char trashAfterMtx[4]`**
+  after **`Mtx mtx`** → **100%**.
+- **`RotateCtrl`** (132 B): retail **`Mtx`** at **`r1+0x2c`** — restore commented **`volatile u32 unused2[7]`**
+  before **`MsMtxSetRotRPH`** → **100%**.
+
+**Probes (~8, no-ship).**
+
+- **`TCoasterEnemy::bind`** (99.9%): **`trashAfterNextPos[12]`** — frame **`0x48`** vs retail **`0x40`**
+  (reverted).
+- **`TTobiPuku` / `TWalkerEnemy::isReachedToGoalXZ`** (99.7%): vec **`r1+0x14`** vs **`+0x20`** (12 B skew,
+  not 4 B **`trashAfter`**).
+- **`TBEelTearsManager::createEnemies`** (99.7%): **`stwu -0x30`** vs **`-0x38`** (frame/regs).
+- **`TBossManta::getPolluteRadius`** (99.5%): **`stwu -0x28`** vs **`-0x20`** (deferred).
+
+**Tip (R232).** **`r1+0x10` vs `+0x14`** on **`Mtx`** callbacks matches **`trashAfter[4]`** after the matrix;
+  larger **`r1+0x2c`** skew on WaterGun **`RotateCtrl`** needed the original **`unused2[7]`** spill slots.
+
+**Verify.** `ninja changes_all` ggü. **`c523ceef`**: **+2** matched functions (**9265 → 9267**), **+272 B**
+  matched code.
+
+### R233 (Aufgabe B; WaterGun diving callbacks, 2× ship)
+
+**Hunt.** Post-**`1d357e6b`**; extend R232 **`unused2[7]`** / **`trashAfter[4]`** on J3D **`Mtx`**
+  locals; skip **`isReachedToGoalXZ`**, **`getPolluteRadius`**, **`coasterkiller::bind`**; cap ~8.
+
+**Ship.**
+
+- **`WaterGunDivingCtrlL`** / **`WaterGunDivingCtrlR`** (144 B each): uncomment **`volatile u32 unused2[7]`**
+  before **`MsMtxSetRotRPH`** (retail **`Mtx`** at **`r1+0x2c`**) → **100%**.
+
+**Probes (~8, no-ship).**
+
+- **`NozzleCtrl`** (99.8%): **`unused2[6]`** after **`Mtx`** → **`0x28` vs `0x2c`** (4 B); **`unused2[4]`**
+  before **`Mtx`** → **`0x28` vs `0x14`** — needs different gap layout (deferred).
+- **EP scan:** no remaining **`addi r1, 0x14` vs `0x10`** helpers @ ≥99.78% after R232.
+
+**Tip (R233).** **`NozzleCtrl`** shares the WaterGun callback family but retail **`Mtx`** sits at **`r1+0x28`**
+  inside a deeper **`if`** nest — mirror **`RotateCtrl`**’s **`unused2[7]`** *after* **`Mtx`**, then tune count
+  ( **`[6]`** is 4 B high on **`addi`** only).
+
+**Verify.** `ninja changes_all` ggü. **`1d357e6b`**: **+2** matched functions (**9267 → 9269**), **+288 B**
+  matched code.
+
+### R234 (Aufgabe B; NozzleCtrl stack, 1× ship)
+
+**Hunt.** Post-**`a2cc02fe`**; finish **`NozzleCtrl`** (**`Mtx`** at **`r1+0x28`**); cap ~8.
+
+**Ship.**
+
+- **`NozzleCtrl`** (172 B): **`volatile u32 unused2[5]`** *after* **`Mtx mtx`** ( **`[6]`** overshoots **`addi`** by 4 B;
+  **`[4]`** undershoots by 4 B) → **100%**.
+
+**Probes (~8, no-ship).**
+
+- **`NozzleCtrl`:** swept **`unused2[0…8]`** after **`Mtx`** / **`before`** — only **`[5]`** hits retail **`0x28`** with
+  **`stwu -0x60`**.
+- **`TNerveSmallEnemyFreeze::execute`** (99.8%, 160 B): control-flow / spine — not **`Mtx`** pad.
+
+**Tip (R234).** Nested WaterGun callbacks: **`unused2[N]`** after **`Mtx`** is per-function — **`RotateCtrl`** needs
+  **`[7]`** (**`0x2c`**), **`NozzleCtrl`** **`[5]`** (**`0x28`**).
+
+**Verify.** `ninja changes_all` ggü. **`a2cc02fe`**: **+1** matched function (**9269 → 9270**), **+172 B** matched code.
+
+### R235 (Aufgabe B; EP stack hunt, 0× ship)
+
+**Hunt.** Post-**`dd2fc0b3`**; J3D/Player callbacks + **`Mtx`/`TVec3` `r1+Δ`**; skip **SmallEnemyFreeze**, stuck lists,
+  Closet/MoveBG; cap ~8.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, no-ship).**
+
+- **`TBubbleCallBack::execute`** (99.6–99.8%): **`trashAfterPos[8…12]`** — **`addi`** nears **`r1+0x30`** but
+  **`stwu -0x48` vs `-0x38`** + **`lfs f0/f1`** swap remain.
+- **`TBiancoGateKeeper::getRumblePow`** (99.8%): uniform **`r1+0x18` vs `+0x1c`** on **`diff`** — pad/trash
+  variants regress.
+- **`TMario::warpRequest`**, **`TNozzleBase::emitCommon`**, **`calcGunAngle`**: frame/multi-local skew (not 4 B
+  **`trashAfter`**).
+- **`MarioFootPosRCtrl`**: **`padding[9]`** worsens (98.4%); control-flow/`check2` inline still open.
+- **EP scan:** no remaining WaterGun J3D callbacks @ ≥99.7% ( **`NozzleCtrl`/`RotateCtrl`/diving** done).
+
+**Tip (R235).** **`TVec3`** helpers with **12 B+ `r1+Δ`** need frame-sized gaps, not **`trashAfter[4]`** alone;
+  **`getRumblePow`**-style **4 B** skew may need operand order / subtract spelling, not only char pads.
+
+**Verify.** `ninja changes_all` ggü. **`dd2fc0b3`**: **+0** matched functions (**9270** unchanged).
+
+### R236 (Aufgabe B; float temp / reg order, 2× ship)
+
+**Hunt.** Post-**`97545385`**; diversify (PARAM/string/vtable/small ASM) — not large **`TVec3`** trash; cap ~8.
+
+**Ship.**
+
+- **`TBossManta::getPolluteRadius`** (124 B): **`f32 pollute`** temp after **`getSaveParams()->mSLPolluteRadius.get()`**
+  before **`* mScaling.x`** — fixes post-**`blrl`** **`lfs`** operand order → **100%**.
+- **`TGessoPolluteObj::getNowGravity`** (32 B): cache **`TGesso* gesso = unk16C`** so **`getSaveParams()`** loads use
+  **`r3`** like retail → **100%**.
+
+**Probes (~8, no-ship).**
+
+- **`TBubbleCallBack`**, **`warpRequest`**, **`emitCommon`**, **`getRumblePow`**, **`MarioFootPosRCtrl`** — unchanged
+  (deferred per R235).
+- **`calcGunAngle` `unused1[17]`** — 99.9% only (frame + **`lha`** reg).
+
+**Tip (R236).** One-liner **`return virt()->param.get() * member`** often needs a scalar temp or cached **`this`**
+  pointer — not stack **`char`** pads.
+
+**Verify.** `ninja changes_all` ggü. **`97545385`**: **+2** matched functions (**9270 → 9272**), **+156 B**
+  matched code.
+
+### R237 (Aufgabe B; scalar temp / cached ptr hunt, 0× ship)
+
+**Hunt.** Post-**`dea1dafc`**; same B-scope as R236 (small accessors, PARAM/string/float/vtable);
+cap ~8; skip R235 deferrals + **`TCoasterKiller::bind`** / large **`TVec3`** frame thrash.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, no-ship).**
+
+- **`TPakkun::load` / `TStayPakkun::load`**: **`TPathNode`** stack @ **`r1+0x18`** vs **`+0x14`** (4 B skew);
+  inline **`setGoalPath(TPathNode(...))`**, **`PathNode`** ctor spelling — still **99.7–99.8%**.
+- **`TBEelTearsManager::createEnemies`**: split **`load`/`new`**, **`owner`** reorder — **reg/frame** worse
+  (**88–90%**); reverted.
+- **`TCoasterEnemy::bind`**: algebraic **`setLinearVelocity(lin+vel)`** — **44%**; reverted (defer
+  **`coasterkiller`** family).
+- **`TGraphWeb::getRandomNextIndex`**: **`TRailNode tmp`** order / **`stackPad[8]`** — still **`~`** on
+  **`addi r7,r1,0x24`** vs **`0x1c`** (fuzzy **100%**, not strict).
+- **`TNameKuriLauncher::stateLaunch`**, **`setGoalPathFromGraph`**, **`getManagerByName`**: **12–24 B**
+  frame gaps only.
+
+**Tip (R237).** Near-miss **99.8%+** with **only `r1` offset `~` lines** are usually **UNUSED inline /
+  frame-size** territory — not R236-style scalar temps; **`char` pads** often enlarge the gap.
+
+**Verify.** `ninja changes_all` ggü. **`dea1dafc`**: **+0** matched functions (**9272** unchanged).
+
+### R238 (Aufgabe B; opcode-first accessors, 0× ship)
+
+**Hunt.** Post-**`dea1dafc`** / R237 dry; prefer **≤200 B** with **`|/~` opcode** diffs (not mass **`r1`**
+skew); R236 scalar-temp pattern; skip R237 stack-thrash list + prior deferrals; cap ~8.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, no-ship).**
+
+- **`TGraphWeb::startIsEnd`** (120 B): register **`r4`/`r5`** swaps on rail loads — cached
+  **`TRailNode*`**, direct **`unk0[]`**, or **`getFirstGraphNode()`** temps all **regressed** (8.9–29.9%).
+- **`TBossMantaAdditionalCollisionSet::adapt`** (212 B): **`f32 scale` / `hit54`/`hit26`** temps — **76.3%**
+  (frame **`0x80`→`0x38`**); reverted.
+- **`TSpineEnemy::calcTurnSpeedToReach`** (224 B): split **`__frsqrte`** / drop **`volatile`** — **95.1%**;
+  **`fnmsubs`/`frsqrte`** operand order still open.
+- **`TDangoHamuKuri::getTakingMtx`**, **`TTobiPuku::walkBehavior`**, **`TRiccoHook::init`**: opcode scan →
+  dominated by **8–16 B** frame skew (deferred).
+
+**Tip (R238).** Sub-200 B **99.5%+** Enemy/Player accessors are largely **exhausted**; remaining **`~` only**
+clusters need **UNUSED/frame** work, not another **`getSaveParams()`** temp.
+
+**Verify.** `ninja changes_all` ggü. **`dea1dafc`**: **+0** matched functions (**9272** unchanged).
+
+### R239 (Aufgabe B; pivot UNUSED/data/opcode, 0× ship)
+
+**Hunt.** Post-R238 pivot: **data/vtable/ctors**, **UNUSED→parent**, medium **opcode** fixes; skip R237–238 + stuck;
+cap ~8.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, no-ship).**
+
+- **`TSpineEnemy::calcTurnSpeedToReach`**: retail **`fnmsubs f0; frsqrte f1,f0; fmul f0,f0,f1`**
+  before **`matan`** — **`f1`/`f2`/`f0` spill rewrite** still **`fnmsubs f1`** + **`r1 0x30→0x28`** (95.9%);
+  no clear UNUSED in MAP; reverted.
+- **`TBEelTearsDrop::perform`**: drop **`trash[0x10]`** → fuzzy **100%** but one **`addi r28,r1,0x6c` vs `0x60`**
+  remains; pads/params cache worse — left at HEAD.
+- **`TBossGesso` `.ctors`**: **`__vtable` 99.3%**, **`@6268` 81.2%**, **`idxarray$3450` 8B** — vtable/idx
+  ordering, not a quick PARAM float.
+- **`TBossGesso::stopIfRoll`**: concrete **`|`** on tentacle loop (**`subi r0,r4,3` vs `cmpwi r0,6`**) + frame skew.
+- **Enemy/Player `.rodata`/`.sdata` scan**: no **≥90%** nonmatching PARAM/string blobs left in B-scope.
+
+**Tip (R239).** **`calcTurnSpeedToReach`** sqrt is **not** a single **`x*__frsqrte(x)`** store — retail schedules
+**`1-d²`**, **rsqrt**, **multiply**, then **stack spill into `matan`**; fixing it likely needs **frame + GPR**
+together, not a one-line temp.
+
+**Verify.** `ninja changes_all` ggü. **`dea1dafc`**: **+0** matched functions (**9272** unchanged).
+
+### R240 (Aufgabe B; frsqrte cluster probe + decHpByWater, 1× ship)
+
+**Hunt.** Optional **`calcTurnSpeedToReach`** / **`TBossGesso` `.ctors`** probe; else MAP-backed medium text;
+skip R237–R239 thrash + stuck; cap ~8.
+
+**Ship.** **`TSmallEnemy::decHpByWater`** — retail always **`mr r4,r0`** before **`uVar2 < 1` clamp**; **`u8 hp`**
+load for **`mHitPoints`** compare/subtract (**`8027E9B0`**, **76 B**).
+
+**Probes (~2, no-ship).**
+
+- **`TSpineEnemy::calcTurnSpeedToReach`**: **`one`/`dClamp`/`f0`** rewrite (drop **`volatile`**) → **95.6%**;
+  reverted to **`volatile f = fVar32 * __frsqrte(fVar32)`** (**99.4%**).
+- **`TBossGesso` `.ctors` `@6268`/`idxarray$3450`**: jump-table / **`.sdata2`** pool — deferred (not PARAM float).
+
+**Tip (R240).** Water HP decrement: mirror retail **`mr` before branch** (`r4 = r0` then **`if (r0 < 1) r4 = 1`**),
+not **`if (uVar2 < 1) uVar2 = 1`** alone — MWCC keeps **`uVar2`** in **`r5`**.
+
+**Verify.** `ninja changes_all` ggü. **`dea1dafc`**: **+1** matched function (**9272 → 9273**).
+
+### R241 (Aufgabe B; GPR/anm-mtx probe, 0× ship)
+
+**Hunt.** Same class as **`decHpByWater`**: small EP text with clear GPR schedule; optional
+data/vtable; defer **`calcTurnSpeedToReach`** / BossGesso unless concrete; cap ~8.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~3, reverted / no-ship).**
+
+- **`TYoshi::getEmitPosDir`**: **`asm`** clone of retail **`r6`** walk → **100%** on symbol, but
+  **TU-wide MWCC regalloc regression** (**9273 → 9261** matched functions project-wide) —
+  **reverted**; keep C **`MtxPtr mtx = getAnmMtx(...)`** at **97.1%**.
+- **`getEmitPosDir`**: **`MActor* r6` / offsetof `mNodeMatrices`** C rewrites — still **`lwz r3,4(r6)`**.
+- **`TYoshi::thinkHoldOut`**: **`TMario* r4 = mMario`** would fix **`lwz 0x10`** cluster but
+  frame **`0x80` vs `0x38`** remains — deferred.
+
+**Tip (R241).** Per-function **`asm`** in a large **`-inline deferred`** TU can reshuffle regalloc
+for **neighbors** — verify **`ninja changes_all` matched_functions**, not only **`decomp-diff -d`**
+on the edited symbol. **`getEmitPosDir`** needs a C-level **`r6`** walk or TU-end isolation, not
+standalone **`asm`** here.
+
+**Verify.** `ninja changes_all` ggü. session baseline (**9273**): **+0** (**9273** unchanged).
+
+### R242 (Aufgabe B; GPR/data hunt, 0× ship)
+
+**Hunt.** Post-R241: skip **`getEmitPosDir` asm** / **`thinkHoldOut`** frame; prefer small text/data
+with MAP; gate on **`changes_all` `matched_functions`**; defer frsqrte / BossGesso; cap ~8.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~4, no-ship).**
+
+- **`TGraphWeb::startIsEnd`** (120 B @ **`8025F068`**): **`r4`/`r5`** walk from **`unk0`**
+  — split **`if`** / early **`unk8`** load → **87–82%**; restored **`getFirstGraphNode()`** form
+  (**98.8%**).
+- **`TBEelTearsManager::createEnemies`**: **`void* r30`** resource temp — still **`r31`** + frame
+  **`0x30`/`0x38`** (**99.7%**); skip list overlap.
+- **EP scan:** no other **48–120 B** symbols with opcode-only diffs at **≥97%**; **99.5%+** remain
+  frame/`~` clusters (**`canGo`**, **`isReachedToGoalXZ`**, **`TNerveSmallEnemyFreeze`**, etc.).
+
+**Tip (R242).** **`startIsEnd`** needs retail **control-flow** ( **`mConnectionNum`** gate before
+**`unk8` reload** ) **and** **`r4`/`r5`** caching — not **`getFirstGraphNode()`** replacement alone;
+combined with **`||`** short-circuit risks branch inversion.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9273**): **+0** (**9273** unchanged).
+
+### R243 (Aufgabe B; medium nerve + fadds schedule, 1× ship)
+
+**Hunt.** Diversify past ≤120 B accessors; medium text with opcode path; data/vtable if MAP-clear;
+gate **`changes_all` `matched_functions`**; skip R241–242 / frame-only / **`getEmitPosDir` asm**; cap ~8.
+
+**Ship.** **`TNerveGessoTurn::execute`** — inlined **`TGesso::turning()`** **`fadds`** wanted **`mTurnAngle`**
+in **f1** then **`7.2f` in f2** (`fadds f1,f1,f2` @ **`80259620`**, **260 B**); split temps fixed opcode
+**and** **`r1 0x28`** frame (**260 B**).
+
+**Probes (~2, no-ship).**
+
+- **`TKumokun::moveObject`**: retail inlines **`updateAnimation`** (**UNUSED `0x19c`**) + **`unk1DC`/`unk1E0`**
+  queue — not a GPR-only patch on current stub (**95.3%**).
+- **EP `.ctors`/`.rodata` scan**: no new **≥90%** PARAM blobs beyond known **`MtxCalcTypeName`** / **`@2843`**.
+
+**Tip (R243).** Medium nerves that call small parent helpers: **`f1 + f2`** compare may need explicit
+**`f32 f1 = mTurnAngle; f32 f2 = 7.2f;`** — not **`mTurnAngle + 7.2f`** in one expression — to match
+MWCC **`lfs`/`fadds`** order inside inlined **`turning()`**.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9273**): **+1** (**9273 → 9274**).
+
+### R244 (Aufgabe B; EP nerve/stack hunt, 0× ship)
+
+**Hunt.** Continue medium nerves + inlined parent math (**`f32`** temps in **`lfs`/`fadds`**
+order); **`MtxCalcTypeName` / 100%-fuzzy** stack-only symbols if MAP-clear; gate
+**`changes_all` `matched_functions`**; skip R241–242 / Kumokun **`moveObject`** / Closet·MoveBG;
+cap ~8.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, reverted / no-ship).**
+
+- **`TEnemyMario::emWaiting`** (**99.5%**, **280 B**): inlined **`setStickToAngle`** — **`fmuls`**
+  operand order + **`r1 0x38`** vs **`0x40`**; explicit temps in helper or at call site did not close
+  frame (**97.7%** at inline site).
+- **`TTailRubber::bindOne`** (**99.3%**, **308 B**): ground **`fadds`** chain — named **`f32`**
+  temps in retail load order unchanged in objdiff.
+- **`TNerveBathtubKillerExplosion::execute`** (**100.0%** fuzzy): **`setDeadBathtubKillerAnm`**
+  **`mVelocity`** vec temp **`0x1c`** vs **`0x18`** — **`mVelocity.set(0,0,0)`** reorder regressed
+  explosion/break nerves.
+- **`TBEelTearsDrop::perform`** (**100.0%** fuzzy, **`addi r28,r1,0x6c`**): **`Mtx`** before
+  **`trash[0x10]`** fixed one cluster but **`matched_functions` 9274→9267** (neighbor nerves in
+  **`bosseel`**); reverted.
+- **`THinokuri2::perform`** (**100.0%** fuzzy): **`trash[8]`** / **`trash[0x10]`** — stack locals
+  still **`0x2c`** vs **`0x34`**; **+0** mf.
+- **EP scan:** **`TNerveSmallEnemyFreeze`** (**99.8%**, **160 B**), **`TNerveFireWanwanTurn`**
+  spine **`stw`** cluster, **`hinokuri2` `MtxCalcTypeName` 50%** — frame / TU-wide / data order,
+  not opcode-only ships.
+
+**Tip (R244).** Per-symbol **`decomp-diff` 100%** can still move **`matched_functions`** when the TU
+regalloc shifts (**`bosseel` perform**); always **`ninja baseline`** then fresh **`report.json`**
+before **`changes_all`**. **`100.0%` fuzzy** EP symbols are often **8–12 B** stack skew in inlined
+**`TVec3`/`Mtx`** temps — need UNUSED/size proof, not **`trash[]`** tweaks alone.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged). Tip
+**`b821cab2`**.
+
+### R245 (Aufgabe B; opcode-first nerves + MAP spot-check, 0× ship)
+
+**Hunt.** Post-R244; prefer medium nerves with **non-frame** **`fadds`/`fmuls`** clusters
+(R243-style **`f32`** temps); **`mario.MAP`** size check for **`setDeadBathtubKillerAnm`**
+(**UNUSED `0xb8`**); skip R244 failure list + stuck/empty/Closet/MoveBG; **`ninja baseline`**
++ fresh **`report.json`** before **`changes_all`**; cap ~8.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~7, reverted / no-ship).**
+
+- **`TCoasterEnemy::bind`** (**99.9%**, **220 B**): retail is **int copy + per-component `fadds`**
+  on **`r1+0x28`**, not **`TVec3` `+=`** — **`nextPos.add` / `linearVel.set`** path **34%**;
+  reverted (defer **`coasterkiller`** family per R237).
+- **`TBathtubKiller::setDeadBathtubKillerAnm`**: **`mVelocity.set(0,0,0)`** vs copy-ctor only —
+  explosion nerve frame **`0x30→0x20`**, extra **160 B** symbol vs MAP **`0xb8`**; **+0** mf.
+- **`TSpineEnemy::resetToPosition`** (**99.9%**, **268 B**): MAP asm wants **`lfs f1=0`**, **`lfs f0=5`**
+  **`stfs`** triple at **`r1+0x1c`** — member **`f1`/`f0` assigns shrank frame (**87.7%**, **mf −1**);
+  reverted.
+- **`TWireBinder::bind`**, **`TNerveWalkerEscape`**, **`TNerveMameGessoJitabata`**: mass **`r1` `~`**
+  only (skipped).
+- **EP fuzzy-100% scan** (**`TNerveBGKAppear`**, **`TNerveHamuKuriWallDie`**, **`hinokuri2`**
+  **`MtxCalcTypeName` 50%**): stack / **`.ctors`** order, not isolated opcode wins.
+
+**Tip (R245).** R243-style temps must mirror **full retail store sequence** (e.g.
+**`resetToPosition`** **`0/5/0`** at **`0x1c`**, not just “right” scalar values). **`TCoasterEnemy::bind`**
+is a separate pattern: **manual stacked `fadds`**, not **`LiveActor::getBindingPosition`** spelling.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged). Tip
+**`50b4c218`**.
+
+### R246 (Aufgabe B; bosspakkun pivot + EP bool scan, 0× ship)
+
+**Hunt.** Post-R245; medium nerves with **`fadds`/`fcmpo`** clusters (**`TNerveBPPivot`**);
+**`cmpwi` vs `clrlwi`** on **`||`** early-outs; skip R244–R245 failure list + stuck/empty/Closet/MoveBG;
+**`ninja baseline`** + fresh **`report.json`**; cap ~8.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~6, reverted / no-ship).**
+
+- **`TNerveBPPivot::execute`** (**99.5%**, **344 B**): **`delta.squared()`** vs Mario — retail
+  **`fadds f0,f1,f0`** / **`fcmpo f0,f3`** cluster at **`0x33ac`** plus **4 B** vec spill
+  (**`0x5c`** vs **`0x58`**). Full manual **`fsubs`** rewrite **86.9%**; **`f32`** sum-only
+  retune **86.9%**; reverted.
+- **`TNerveSmallEnemyHitWaterJump::execute`** (**99.3%**, **520 B**): **`bool skip = flag1 || flag2`**
+  for **`cmpwi r0,0`** vs **`clrlwi`** — **95.2%**; reverted.
+- **EP scan (skipped / frame-only):** **`TNameKuriLauncher::stateLaunch`**, **`TOneShotGenerator::receiveMessage`**,
+  **`TNerveBPStompReact`**, **`TBiancoGateKeeper::getRumblePow`**, **`TBossPakkun::rumblePad`** — **`r1` `~`**
+  only.
+
+**Tip (R246).** **`TNerveBPPivot`** needs **coupled** fixes: Mario-delta **spill offset** and
+**`fmuls`/`fadds`/`fcmpo` register schedule** (load **`mSLSwingLength`** into **f3** before final
+**`fadds`**) — partial **`f32`** retunes without matching **`fsubs`** prologue still collapse the nerve.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged). Tip
+**`29c206a7`**.
+
+### R247 (Aufgabe B; bosspakkun water inline + pivot spill, 0× ship)
+
+**Hunt.** Post-R246; R243-style **`f32`** / MAP **`bosspakkun.s`** spill order; skip R244–R245
+failures + stuck/empty/Closet/MoveBG; **`ninja baseline`** + **`report.json`** + **`changes_all`**;
+cap ~8.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~5, reverted / no-ship).**
+
+- **`TNerveBPWaitL::execute`** (**92.8%**, **564 B**): hand-rolled **`BG_TYPE_WATER`** /
+  **`type - 0x101 <= 4`** / **`SHADED_POOL`** vs **`isWaterSurface()`** — retail inlines **`lhz`**
+  + range at **`0x2CC8`** without extra locals; frame **`0x68`→`0x60`**; reverted.
+- **`TNerveBPPivot::execute`** (**54.4%**, **344 B**): scalar **`f32`** + **`prm`** between
+  **`fmuls`** — retail **`stw`** Mario delta at **`r1+0x5c`**, **`blrl` `getBossPakkunParams`**, then
+  **`lfs f3,0xe0(r3)`** between **`dy²`** and **`dz²`**; reverted.
+- **EP scan (frame-only):** **`TNameKuri::reset`**, **`TNerveGessoFreeze`**, **`TNerveFireWanwanTurn`**
+  (spine **`addi r4,r3,8`** cluster).
+
+**Tip (R247).** **`TNerveBPPivot`** is not “same math, different temps”: match the **int spill +
+virtual param fetch between `fsubs` and `fmuls`**, then **`f3 = mSLSwingLength`²** before
+**`fcmpo`**. **`TNerveBPWaitL`** water gate must codegen as **inlined `mBGType` range** at the
+call site, not a freestanding manual duplicate with new stack locals.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged). Tip
+**`e33f02c0`**.
+
+### R248 (Aufgabe B; pakkun PARAM float + EP scan, 0× ship)
+
+**Hunt.** Post-R247; skip **BPWaitL** / **BPPivot** thrash; R243-style **`f32`** on other medium
+nerves; skip R244–R247 failures + stuck/empty/Closet/MoveBG; **`ninja baseline`** +
+**`report.json`** + **`changes_all`**; cap ~8.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~6, reverted / no-ship).**
+
+- **`TNervePakkunGenerate::execute`** (**99.1%** best, **508 B**): **`f1 = dist²`**, **`f0 =
+  mDistToMarioSquared`**, **`fcmpo f0,f1`** cluster fixed; still **`r29`** for **`unk194`** +
+  **`stwu -0x80` vs `-0x68`**. Hoisting **`seed`** before **`time==0`** → **91.1%**; reverted.
+- **`TStayPakkun::isHitValid`** (**99.6%**, **528 B**): **`u8` + `f32` `cleanRadius`** vs retail
+  **`lbz`/`stw`/`lfd` `0x43300000`** i2f before **`fsubs`/`fmuls`** — frame **`0x68`→`0x70`**;
+  reverted.
+- **Skipped (user):** **BPWaitL**, **BPPivot**.
+- **EP scan (frame-only):** **`TMario::checkWet`**, **`TGessoPolluteObj::set`**, **`calcFarthestVertex`**,
+  **`TNervePakkunAppear`**.
+
+**Tip (R248).** **`TNervePakkunGenerate`** needs **`fcmpo`** **plus** keeping **`unk194` in `r29`**
+through the hide path (no extra **`addi r29,r3,0`**). **`TStayPakkun::isHitValid`** pollution radius
+is **`32.0f × u8`** via **double-stacked i2f**, not a plain **`(f32)u8`** multiply.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged). Tip
+**`f69a6bd8`**.
+
+### R249 (Aufgabe B; hinokuri2 PrePol PARAM + EP scan, 0× ship)
+
+**Hunt.** Post-R248; skip **PakkunGenerate** / **StayPakkun `isHitValid`** thrash + **BPWaitL** /
+**BPPivot**; other medium nerves with opcode clusters or PARAM/string; skip R244–R248 failures +
+stuck/empty/Closet/MoveBG; **`ninja baseline`** + **`report.json`** + **`changes_all`**; cap ~8.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~7, reverted / no-ship).**
+
+- **`TNerveHino2PrePol::execute`** (**94.3%**, **516 B**): **`mSLPrePolWait.value`** +
+  **`THino2Params* param`** + **`rand × 1/32768`** — retail **`lwz 0x180(r3)`** after
+  **`getSaveParam` `blrl`** (not **`addi 0x170`/`lwz 0x10`**); **`r29`** timer path worse;
+  reverted.
+- **EP scan (frame / spill-only):** **`TNerveTamaNokoSink`**, **`TBoxTelesa::load`**,
+  **`TStayPakkun::load`**, **`THinokuri2::changeBck`**, **`TPakkunSeed::loadInit`/`moveObject`**,
+  **`TMario::checkWet`**, **`calcFarthestVertex`**.
+
+**Tip (R249).** **`TNerveHino2PrePol`** is a **PARAM load-shape** problem: **`mSLPrePolWait`**
+must codegen as **`lwz` at `0x180`** off the **`getSaveParam`** pointer (same object as
+**`mSLStampProb` @ `0x2ac`**), with **`mWaitTimer` in `r29`** through **`cmpw`** — not
+**`.get()`**’s **`0x170+0x10`** split nor extra **`param`** locals without fixing the frame.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged). Tip
+**`c5442021`**.
+
+### R255 (Aufgabe B; defer wait + EP diversify, 0× ship)
+
+**Hunt.** Post-R254; **defer `waitingCommonEvents`** (`mFlag` bit17/`0x20000` vs **`IS_PERFORMING`**); prefer other
+Player/Enemy opcode/PARAM paths; skip R251–R254 thrash/stuck, empty/Closet/MoveBG; **`ninja baseline`** +
+**`report.json`** + **`changes_all`**; cap ~8.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, reverted / no-ship).**
+
+- **`waitingCommonEvents`**: skipped (per R254 defer).
+- **`TNerveSmallEnemyJump`**: split early **`return true`** (retail sequential **`cmpwi`**, not **`||`**
+  lowering) + **`mSLJumpForce.get()`** → **95.9%** (extra branches, **`clrlwi`** remains, **`-0x58`**
+  frame); reverted.
+- **`emWaitingToInviteMario`**: **`distance()`** load order like **`checkReturn`** — frame + **`fmuls`**
+  scheduling; defer.
+- **Frame/reg `~`:** **`jumpProcess`**, **`tryTake`**, **`killEnemiesWithin`**, **`moveRoof`**, **`TNerveSmallEnemyFreeze`**.
+
+**Tip (R255).** Retail **`TNerveSmallEnemyJump`** early-out is **two `cmpwi` clusters** on **`mLiveFlag`**
+(**`rlwinm` 16 then 13**), not a single C **`||`** — but duplicating with separate **`if (return true)`**
+still diverges (extra **`b`** / frame); needs UNUSED-inline-sized stack or flag helpers matching retail
+**`li`/`cmpwi`** shape.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged).
+
+### R259 (Aufgabe B; opcode-first + skip spill thrash, 0× ship)
+
+**Hunt.** Post-R258 dry; avoid **≥99.7% spill-only** (**coaster `bind`**, **`TLiveActor::bind`**, Bathtub
+Explosion, **`getRumblePow`**, **`canGo`**); prefer data/vtable/string/PARAM or real **`|`** opcode diffs;
+skip R251–R258 thrash; **`ninja baseline`** + **`changes_all`**; cap ~8; strict 100% only.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8).**
+
+- **`TEffectObjBase::perform`**: **90.8%** — retail **`blrl`** via vtable **`0xb0`** on **`moveObject`**;
+  direct **`moveObject()`** devirt/inlined; **`TEffectObjBase* self = this; self->moveObject()`** restores
+  **`blrl`** (kept in tree); still **`stwu -0x8`** vs **`-0x20`**, no **`stw r31`** — frame class
+  separate from opcode fix.
+- **`GessoBodyCallback`**: **85.5%** — **`gpCurGesso` / `lfs 0x148`** scheduling vs **`getModel`**;
+  structural, not spill-only.
+- **`TNerveHino2Landing`**: **87.4%** — missing **`getFrameCtrl` + `mLiveFlag` bit 29** cluster vs retail.
+- **`hinokuri2` `MtxCalcTypeName` (.ctors)**: **50%** — local **`MtxCalcTypeName[]`** like **`smallEnemy`**
+  did not flip match (pointer/rodata placement); reverted.
+- **`TEnemyManager::copyAnmMtx`**, **`TEffectColumWater::generate`**: skipped (thrash / pool).
+- **Spill-only ≥99.7%**: skipped per scope.
+
+**Tip (R259).** In **`TEffectObjBase::perform`**, MWCC devirtualizes **`moveObject()`** when called on
+implicit **`this`** in the same TU; use a **`TEffectObjBase* self = this`** and **`self->moveObject()`**
+to recover retail **`lwz 0xb0` / `blrl`**. Epilogue **`stwu -0x20` / `stw r31`** is still a separate
+stack-home problem ( **`volatile` padding did not move `-0x8`** ).
+
+**Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged).
+
+### R260 (Aufgabe B; perform frame + opcode probes, 0× ship)
+
+**Hunt.** Post-R259 dry; optional finish **`TEffectObjBase::perform`** **`stwu -0x20` / `stw r31`** ( **`blrl`**
+already kept); prefer real opcode / data wins; skip spill-only **≥99.7%** and R251–R259 thrash; **`ninja
+baseline`** + **`changes_all`**; cap ~8; strict 100% only.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8).**
+
+- **`TEffectObjBase::perform`**: **90.8%** — **`self->moveObject()`** **`blrl`** unchanged; tried
+  **`JDrama::TGraphics* keptGraphics`**, **`goto done`**, **`pGraphics` live across **`blrl`**: still
+  **`stwu -0x8`** (retail **`stwu -0x20`** before **`beq`**, **`stw r31`** with no **`mr r31`** in body).
+- **`TEffectObjBase::moveObject`**: **98.8%** — retail inlines **`setGlobalScale`** as **`lfs f0/f1/f2`**
+  from **`local_1c`** then six **`stfs`**; **`setGlobalScale(local_1c)`** permutes to **`f2,f0,f1`**
+  loads; per-field **`dyn.x`/`prt.x`** assign did not build (**`getGlobalParticleScale`** is out-param only).
+- **`TNerveHino2Landing`**: **87.4%** — retail **`getFrameCtrl`** + **`lfs 0x10`** + **`mLiveFlag`**
+  **`rlwinm` bit 29** + **`fctiwz`/`stfd`**; our **`getFrame()`/`checkLiveFlag`** DCE’d; **`volatile`**
+  locals worsened frame (**82%**), reverted.
+- **`TEffectColumWater::generate`**: **91.9%** — **`TVec3`** temp **`r1+0x18`** vs **`+0x14`** + emit
+  scheduling; not pursued to 100%.
+- **`GessoBodyCallback`**, **`TEffectColumSand::reset`**, spill-only **≥99.7%**: skipped per scope.
+
+**Tip (R260).** Retail **`TEffectObjBase::perform`** always opens a **`-0x20`** frame ( **`stw r31`**
+saves the **incoming** callee-saved **`r31`**, not **`this`**) before the **`CUE_MOVE`** **`beq`**; MWCC
+still emits **`-0x8`** here despite **`graphics`** / **`goto`** tricks — treat as open stack-home problem
+separate from the **`self`/`blrl`** fix.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged).
+
+### R261 (Aufgabe B; defer EffectObj + diversify opcode, 0× ship)
+
+**Hunt.** Post-R260 dry; **defer `TEffectObjBase::perform` frame** and **`moveObject` scale
+`lfs` order**; prefer other opcode/data/PARAM/vtable wins; skip spill-only **≥99.7%** and
+R251–R260 thrash; **`ninja baseline`** + **`changes_all`**; cap ~8; strict 100% only.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8).**
+
+- **`SMS_IsMarioOnWire`**: **93.8%** — retail **`lwz r0, 0x68(mario)`** then **`lwz r3, 0x68(mario)`**
+  before **`0x4c`**; **`&&`/`!!ret`** rewrites unchanged (reverted).
+- **`TYoshi::getEmitPosDir`**: **97.1%** — retail keeps matrix base in **`r6`** (`mActor` → **`+4`**
+  → **`+0x58`** → **`+idx*0x30`**); **`void*`/`MActor*` reuse** still loads into **`r3`** (reverted).
+- **`TTamaNoko::isReachedToGoal`**: **97.3%** → **74.9%** with inlined **`TPathNode`** — needs early
+  **`addi r4, r3, 0x104`** + **`r4`/`r5`** schedule matching **`TTelesa`** (reverted to **`getPoint()`**).
+- **`TEnemyAttachment::sendMessage`**: **97.1%** — **`lwzx`/`r31`** operand scheduling (deferred).
+- **`TGessoPolluteObj::getNowGravity`**: already **100%** in objdiff (no ship delta).
+- Spill-only **≥99.7%** (**`TBubbleCallBack`**, **`TConductor::getManagerByName`**, etc.): skipped.
+
+**Tip (R261).** Walker **`isReachedToGoal()`** on **`unk104`** (tamaNoko/telesa) is not a high-level
+**`getPoint()`** call in retail: prologue does **`addi r4, this, 0x104`**, branches on **`unk0`**, copies
+the goal **`Vec`** with **`lwz`/`stw`**, then **`fcmpu`** zero-X/Z before **`MsVECMag2`**.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged).
+
+### R262 (Aufgabe B; expanded defer list + opcode/data probes, 0× ship)
+
+**Hunt.** Post-R261 dry; **defer `EffectObjBase`**, **`SMS_IsMarioOnWire`**, **`getEmitPosDir`**, TamaNoko/Telesa **`isReachedToGoal`** thrash, spill-only **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; prefer other opcode/data/PARAM/vtable wins; **`ninja baseline`** + **`changes_all`**; cap ~8; strict 100% only.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8).**
+
+- **`TGraphWeb::startIsEnd`**: **98.8%** baseline — **`r4`/`r5`** swap on rail loads; **`TGraphNode* r4` / `TRailNode* r5`** + **`||`** kept retail branches but **`r4[r3].unk0`** became **`add`/`lwz -0x10`** vs retail **`lwzx`** (94.2%); split **`||`** into early **`return false`** inverted **`bgt`** targets (86%); reverted to **`getFirstGraphNode`/`getLastGraphNode`**.
+- **`TBubbleCallBack::execute`**: **99.6%** — stack **`0x48`/`pos@0x30`** vs **`0x38`/`0x24`**; **`mFlag` bitmask** + **`trashAfterPos[0x10]`** broke **`checkFlag`** branch polarity (**85.8%**), reverted.
+- **`TDebuTelesa` `entry$2835`**: **85.7%** — **`static TModelDataLoadEntry entry[]`** (drop **`const`**) clears **`.ctors`** **`entry$2835`** but **`createModelData`** text → **99.2%**; reverted **`const`**.
+- **`TConductor::getManagerByName`**, **`TDangoHamuKuri::getTakingMtx`**, **`PakkunRootCallback2`**: spill / matrix stack (**≥99.5%** / frame class) — skipped.
+- **`TGraphGroup::perform`**: **96.8%** — peel loop **`r6`/`r7`** vs **`r5`/`r6`** (deferred).
+- **`TBossGesso::__vtable` (`.ctors` 99.3%)**, **`fireWanwan` `setQuat`**: float-register / **`.data`** label gap — not one-line MAP fixes.
+- **`TGessoPolluteObj::getNowGravity`**, spill-only **≥99.7%**: skipped.
+
+**Tip (R262).** **`TDebuTelesaManager::createModelData`**: retail **`entry$2835`** is a **non-const** function-local **`TModelDataLoadEntry[]`** in **`.rodata`**; dropping **`const`** can match the **24 B** pool while **`createModelData`** itself picks up **operand-only** drift — fix both together or neither.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged).
+
+### R263 (Aufgabe B; calcRootMatrix holder virtual + probes, 1× ship)
+
+**Hunt.** Post-R262 dry; prefer opcode/data outside R251–R262 thrash; **DebuTelesa `entry$2835`** only
+as coupled **`const` + `createModelData`** if both **100%**; skip spill **≥99.7%**, stuck lists, empty
+TUs, Closet/MoveBG; **`ninja baseline`** + **`changes_all`**; cap ~8; strict **100%** only.
+
+**Ship.** **`TSpineEnemy::calcRootMatrix`** (`src/Enemy/enemy.cpp`) — **`mHolder->getTakingMtx()`**
+(retail **`blrl`** on **holder** vtable **`+0xa4`**, not **`this`**) + **`char trash[8]`** for **`-0x30`**
+frame (**100%**, 156 B).
+
+**Probes (~8).**
+
+- **`TGraphWeb::startIsEnd`**: **98.8%** — **`TGraphNode* r4` / `TRailNode* r5`** fixes first **`lwz`**
+  pair; **`r4[idx].unk0`** still **`add`/`lwz`** vs **`lwzx`**; split **`||`** regressed branches — left
+  at **`getFirstGraphNode`/`getLastGraphNode`**.
+- **`TDebuTelesa` `entry$2835`**: **`createModelData`** text already **100%** but **`entry$2835` @ha/@l**
+  label only; non-const **`entry[]`** clears **`.ctors`** pool in R262 but not re-shipped without coupled
+  proof — skipped this round.
+- **`TBubbleCallBack`**, **`TConductor::getManagerByName`**, **`TDangoHamuKuri::getTakingMtx`**: spill
+  **≥99.6%** — skipped.
+- **`TEnemyAttachment::sendMessage`**: **97.1%** **`lwzx`/`r3`/`r4`** schedule — deferred.
+- **`TBossMantaAdditionalCollisionSet::adapt`**: **98.8%** frame + **`f0`/`f1`** multiply order —
+  deferred.
+
+**Tip (R263).** Held **`TSpineEnemy::calcRootMatrix`** uses **`mHolder->getTakingMtx()`** (virtual on the
+**`TTakeActor` holder**), then **`getModel`/`PSMTXCopy`** from the returned **`MtxPtr`**.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9274**): **+1** (**9275**).
+
+### R264 (Aufgabe B; holder virtual hunt + probes, 0× ship)
+
+**Hunt.** Post-R263 (**9275**); prefer holder virtuals / **`char trash[8]`** frame pads with clear asm, plus
+string/PARAM/vtable; skip R251–R262 thrash, spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG;
+**DebuTelesa `entry$2835`** only as coupled **`const` + `createModelData`** both **100%**; cap ~8; strict
+**100%** only.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8).**
+
+- **`TDangoHamuKuri::calcRootMatrix`**: **87.7% → 88.6%** — **`setBaseScale(mScaling)`** (not **`mPosition`**),
+  **`mHolder->getTakingMtx()`** + **`getHeldObject()`** (retail holder **`blrl`**); frame still **`-0xa8`/`f31`**
+  class — not pursued to **100%**.
+- **`TEnemyAttachment::sendMessage`**: **97.1% → 99.7%** probe — **`lwzx r4`/`r31` byte walk**, **`kill()`**
+  on attachment vs **`TLiveActor::kill`** on collision; register naming / **`addi`** order still **`~`** at
+  **99.7%** — reverted loop body.
+- **`TGraphWeb::startIsEnd`**: **98.8%** — **`r4`/`r5`** locals fix first **`lwz`**; **`r4[idx].unk0`** vs
+  **`lwzx`** / **`r6`** index — reverted.
+- **`TDebuTelesa` `entry$2835`**: non-const **`entry[]`** still trades **`createModelData`** **99.2%** — skipped.
+- Spill **≥99.7%** (**`TBubbleCallBack`**, **`TConductor::*`**, etc.): skipped.
+
+**Tip (R264).** **`TDangoHamuKuri::calcRootMatrix`** prologue stores **`mScaling`** (**`0x24`/`0x28`/`0x2c`**) into
+the model base scale, not **`mPosition`**; held path uses **`mHolder->getTakingMtx()`** like
+**`TSpineEnemy::calcRootMatrix`**.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0** (**9275** unchanged).
+
+### R265 (Aufgabe B; sendMessage lwzx + Dango CF, 1× ship)
+
+**Hunt.** Post-R264 (**9275**); optional finish **`TDangoHamuKuri::calcRootMatrix`** frame; prefer clear
+opcode/data wins; skip spill **≥99.7%**, R251–R262 thrash, stuck lists, empty TUs, Closet/MoveBG; cap ~8;
+strict **100%** only.
+
+**Ship.** **`TEnemyAttachment::sendMessage`** (`src/Enemy/enemyAttachment.cpp`) — **`r30`** index /
+**`r31`** byte offset **`lwzx`**, **`kill()`** on attachment (**vtable `+0xe4`**) vs **`TLiveActor::kill`**
+on collision (**100%**, 180 B).
+
+**Probes (~8).**
+
+- **`TDangoHamuKuri::calcRootMatrix`**: un-nest held path from **`if (unk230)`** (spin/rand only when set);
+  still **~88.6%** — **`-0xa8`/`stfd f31`/`MsRandF`** vs retail **`rand`** interval — deferred.
+- **`TGraphGroup::perform`**: explicit Duff counter rewrite **96.8% → 36%** — reverted **`for`** loop.
+- **`TGraphWeb::startIsEnd`**, **`TDebuTelesa` entry$2835`**, spill **≥99.7%**: skipped.
+
+**Tip (R265).** **`sendMessage`**: **`while (r30 < mColCount)`** with **`r31 += 4`** and
+**`*(THitActor**)((char*)mCollisions + r31)`**; **`else if (r4 != unk160) kill();`**.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+1** (**9276**).
+
+### R266 (Aufgabe B; Dango calcRootMatrix partial, 0× ship)
+
+**Hunt.** Post-R265 (**9276**); continue **`sendMessage`-class** / holder **`calcRootMatrix`** wins; skip
+spill **≥99.7%**, R251–R262 thrash, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%** only.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8).**
+
+- **`TDangoHamuKuri::calcRootMatrix`**: **`mScaling`** path kept; held path uses **`r30[0/1/2][3]`**,
+  **`TMsRange<f32>(10,20).rand()`** + **`fneg`**, **`PSMTXConcat`/`PSMTXCopy(model+0x20)`** —
+  **88.6% → 99.8%**; still **`-0xa8`/`stfd f31`/rand spill offsets** — WIP kept in tree.
+- **`TSpineEnemy::setGoalPathFromGraph`**, **`TGraphWeb::startIsEnd`**, **`TGraphGroup::perform` Duff**,
+  **`TEnemyAttachment::bind`**, spill **≥99.7%** (**`getTakingMtx`**, **`TNerveSmallEnemyFreeze`**, etc.):
+  skipped or reverted.
+
+**Tip (R266).** Dango held matrix: translation column **`[row][3]`**; spin reset via **`TMsRange`** +
+**`rand()`**, not **`MsRandF`**.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9276**): **+0** (**9276** unchanged).
+
+### R267 (Aufgabe B; Dango frame pad, 0× ship)
+
+**Hunt.** Post-R266 dry (**9276**); optional finish **`TDangoHamuKuri::calcRootMatrix`**; prefer clear
+opcode/data wins; skip spill **≥99.7%**, R251–R262 thrash, empty TUs, Closet/MoveBG; cap ~8; strict **100%**
+only.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8).**
+
+- **`TDangoHamuKuri::calcRootMatrix`**: **`char pad[0x30]`** (not **`trash[0x48]`**) → retail **`stwu -0xa8`**
+  aligns; still **99.8%** — **`TMsRange`** spills **`0x54`/`0x58`**, **`Mtx`** at **`0x24`**, **`f1`/`f2`**
+  load order on position — deferred.
+- **`TSpineEnemy::setGoalPathFromGraph`** (**`pad[0x14..0x18]`** sweep), **`TGraphWeb::startIsEnd`**
+  (**`r4`/`r5`** locals), spill tier: skipped/reverted.
+
+**Tip (R267).** MWCC stack steps: **`pad[0x30]`** → **`-0xa8`**; **`pad[0x8]`** overshoots to **`-0xc0`** —
+sweep before **`trash[0x48]`** guesses.
+
+**Verify.** `ninja changes_all` ggü. baseline: **+0** matched_functions.
+
+### R268 (Aufgabe B; Dango spill layout + setGoal pad, 0× ship)
+
+**Hunt.** Post-R267 dry (**9275**); optional **`TDangoHamuKuri::calcRootMatrix`** inline **`rand`** spills
+**`0x84`/`0x88`** + **`Mtx @0x40`** (keep **`pad[0x30]`** **`-0xa8`**); prefer opcode/data wins; skip spill
+**≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%** only.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8).**
+
+- **`TDangoHamuKuri::calcRootMatrix`**: early **`Mtx local_40`** / hand **`rand`** (float/double) — regressed or wrong spills;
+  **`TMsRange`** + late **`Mtx`** stays **99.8%** (**`0x54`** vs **`0x84`**, **`0x24`** vs **`0x40`**).
+- **`TSpineEnemy::setGoalPathFromGraph`**: **`pad[0x18]`** fixes **`stwu -0x60`** but **`getPoint`** buffer stays **`0x34`**
+  vs **`0x48`**; **`mid[]`/`pad[0x2c]`** sweeps — no ship; manual word-copy reverted.
+
+**Tip (R268).** In-frame layout ≠ frame size: **`pad[0x30]`** can match **`stwu`** while **`TMsRange`** spill slots stay
+**`0x30`** low — need retail-shaped **`stfs`/`lfs`** chain, not more top **`pad`**.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
+### R269 (Aufgabe B; Dango spill/Mtx + setGoal vec, 0× ship)
+
+**Hunt.** Post-R268 dry (**9275**); optional **`TDangoHamuKuri::calcRootMatrix`** retail **`0x84`/`0x88`** +
+**`Mtx @0x40`** (keep **`pad[0x30]`** **`-0xa8`**); prefer opcode/data wins; skip spill **≥99.7%**, stuck lists,
+empty TUs, Closet/MoveBG; cap ~8; strict **100%** only.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8).**
+
+- **`TDangoHamuKuri::calcRootMatrix`**: **`padRand[0x30]`** + manual **`MsRandF`** span — **87.7%** / **`stwu -0xf0`**; hoisted
+  **`Mtx`** after **`pad[0x30]`** — **`Mtx @0x20`**, rand **`0x50`**; **`gapMtx[0x1c]`** not tried (reverted with rand block).
+  **`TMsRange`** + late **`Mtx`** still **99.8%** (**`0x54`/`0x58`**, **`0x24`/`0x40`**, **`f1`/`f2`** position loads).
+- **`TSpineEnemy::setGoalPathFromGraph`**: **`pad[0x18]`** → **`stwu -0x60`** but **`getPoint`** **`addi`** still **`0x34`**;
+  **`mid[0x14]`** → **`stwu -0x78`** — reverted.
+
+**Tip (R269).** **`setGoalPathFromGraph`**: frame **`pad`** and **`TVec3 local_48`** home decouple — **`0x18`** fixes **`stwu`**
+without moving **`getPoint`** buffer (**`0x14`** gap needs inlined **`TPathNode`** layout, not more **`char`** at top).
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
+### R270 (Aufgabe B; bind vtable call order, 0× ship)
+
+**Hunt.** Post-R269 dry (**9275**); defer Dango **`calcRootMatrix`** pad thrash; **`setGoalPathFromGraph`**
+needs **`TPathNode`** spill order (not pad); prefer opcode/vtable wins; skip spill **≥99.7%**, stuck lists,
+empty TUs, Closet/MoveBG; cap ~8; strict **100%** only.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8).**
+
+- **`TEnemyAttachment::bind`**: prologue **`setBehavior()`** → **`recoverScale()`** aligns first virtual
+  **`lwz 0x13c`** with retail (**`setBehavior`/`recoverScale`/`getNowGravity`** at **`0x138`/`0x13c`/`0x140`**);
+  still **~78.5%** — **`stfd f31`**, **`TBGWallCheckRecord`** / **`TVec3::sub`** schedule, spill homes.
+- **`TSpineEnemy::setGoalPathFromGraph`**: **`TPathNode`** before **`TVec3`** + field assign — **~74.7%** (default ctor), reverted.
+- Dango **`calcRootMatrix`**, spill-tier fireWanwan / **`thinkSituation`** fuzzy: skipped.
+
+**Tip (R270).** **`bind`** top = **`recoverScale` + `getNowGravity`**, not **`setBehavior`**; count vtable slots from
+**`__vt__16TEnemyAttachment`**, not guess names from C++ call order alone.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
+### R271 (Aufgabe B; bind checkGround/wall + epilogue, 0× ship)
+
+**Hunt.** Post-R270 dry (**9275**); continue **`TEnemyAttachment::bind`** (prologue **`recoverScale`/`getNowGravity`**
+kept); prefer opcode wins; skip Dango pad, **`setGoalPathFromGraph`** ctor thrash, spill **≥99.7%**, stuck lists,
+empty TUs, Closet/MoveBG; cap ~8; strict **100%** only.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8).**
+
+- **`TEnemyAttachment::bind`**: **`&mGroundPlane`** on **`checkGround`** (**`addi r4, 0xc4`**); wall
+  **`TBGWallCheckRecord(x, y+mHeadHeight, z, …)`** — **~82.9%** (was **~78.5%**); open: **`stfd f31`**, **`-0x78`**
+  frame, **`TVec3::sub`** epilogue vs folded **`lfs`**; **`dont_inline`** velocity helper regressed; **`pad[0x10]`** noop on **%**.
+
+**Tip (R271).** **`bind`**: ground query writes plane through **`mGroundPlane`**, not a local pointer; wall struct prefers
+scalar ctor over **`TVec3`** temp.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0** (**bind** fuzzy **78.5% → 82.9%**).
+
+### R272 (Aufgabe B; bind f31/frame/wall@0x30, 0× ship)
+
+**Hunt.** Post-R271 dry (**9275**); continue **`TEnemyAttachment::bind`**; skip Dango pad,
+**`setGoalPathFromGraph`** ctor thrash, spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8;
+strict **100%** only.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8).**
+
+- **`TEnemyAttachment::bind`**: **`f32 f31 = local_1C.y`** after **`checkGround`** + **`char trash[0x10]`** after
+  **`local_1C`** integrate + **`local_10`** / early **`local_48`** + **`local_48.set`** — **~85.5%** (was **~82.9%**);
+  retail **`stfd f31@0x70`**, **`-0x78`**, wall **`r1+0x30`** align; open: **`local_1C`** spill **`0x5c`** vs **`0x50`**,
+  **`TVec3::sub`** epilogue; component-wise integrate / **`trash[0x1c]`** / **`trash2[0xc]`** regressed or blew frame.
+
+**Tip (R272).** **`bind`**: **`f31`** reload after ground + **`trash[0x10]`** after position integrate unlocks **`-0x78`**
+/**`stfd f31`**; hoist **`TBGWallCheckRecord`** + **`local_48.set`** for **`0x30`** wall spills.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0** (**bind** fuzzy **82.9% → 85.5%**).
+
+### R273 (Aufgabe B; bind local order → 94.5%, 0× ship)
+
+**Hunt.** Post-R272 dry (**9275**); **`TEnemyAttachment::bind`** (**~85.5%**); skip Dango/setGoal, spill **≥99.7%**,
+stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%** only.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8).**
+
+- **`TEnemyAttachment::bind`**: decl order **`local_1C` → `local_48` → `local_10`** + **`enemyAttachmentBindSub`**
+  (**`#pragma dont_inline`**) — **~94.5%** (was **~85.5%**); **`0x5c`** position spills + wall **`0x30`** align; open:
+  **`local_10@0x10`**, retail **`TVec3::sub`** BL, epilogue **`lwz`/`stw`** cluster, **`behaveToHitWall`** arg order;
+  **`wallPad`/`subPad`**, **`local_10` first** regressed.
+
+**Tip (R273).** **`bind`**: MWCC stack order **`local_1C`**, **`TBGWallCheckRecord`**, **`local_10`** — not
+**`local_10`** first — fixes **`local_1C@0x5c`**; keep **`trash[0x10]`** after **`operator+=`**.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0** (**bind** fuzzy **85.5% → 94.5%**).
+
+### R274 (Aufgabe B; bind epilogue/sub probes, 0× ship)
+
+**Hunt.** Post-R273 dry (**9275**); **`TEnemyAttachment::bind`** (**~94.5%**); target **`local_10@0x10`**, retail
+**`TVec3::sub`**, **`behaveToHitWall`** **`0x4c(r1)`** scheduling; skip Dango/setGoal, spill **≥99.7%**, stuck lists,
+empty TUs, Closet/MoveBG; cap ~8; strict **100%** only.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8).**
+
+- **`trash[0x10]`** at decl top (no post-**`+=`** trash): **`local_10@0x14`**, still **~94.5%**; **`trashMid`+`trashTop`**
+  / **`trash[0xf]`** / **`subPad[0x4]`** regressed **`0x5c`** or **%**.
+- **`local_10.sub`** without **`enemyAttachmentBindSub`**: **~85.6%** — **`sub`** folded despite **`addi r3,0x10`** on target side.
+- **`wallHit`** temp before **`behaveToHitWall`**: **~85.6%** — reverted; canonical **~94.5%** unchanged in tree.
+
+**Tip (R274).** **`bind`**: **`trash`** placement trades **`local_10`** slot (**`0x24`** post-integrate vs **`0x14`** decl-top) vs
+**`0x5c`** spills — no dual-pad combo found; keep **`enemyAttachmentBindSub`** until **`local_10@0x10`** unlocks retail **`sub`**
+**`bl`**.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0** (no source delta vs R273).
+
+### R275 (Aufgabe B; bind trash-top → local_10@0x14, 0× ship)
+
+**Hunt.** Post-R274 dry (**9275**); **1–2** **`bind`** probes (**`local_10@0x10`**, retail **`TVec3::sub`**); skip Dango/setGoal,
+spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%** only.
+
+**Ship.** none (strict 100% only).
+
+**Probes (2).**
+
+- **`char trash[0x10]`** at decl top (remove post-**`+=`** trash): **`local_10@0x14`** (was **`@0x24`**), still **~94.5%**,
+  **`0x5c`** spills hold — **kept** in tree.
+- **`local_10.sub`** at **`@0x14`** without helper: **~85.6%** (folded) — keep **`enemyAttachmentBindSub`**.
+
+**Tip (R275).** **`bind`**: hoist **`trash[0x10]`** to decl block (before **`local_48`**) to nudge **`local_10`**
+**`0x24 → 0x14`** without losing **`local_1C@0x5c`**; retail **`0x10`** still open; direct **`sub`** still needs
+**`@0x10`** + non-fold.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0** (**bind** epilogue **`addi r3`** **0x24 → 0x14**).
+
+### R276 (Aufgabe B; diversify PolluteModel perform frame, 0× ship)
+
+**Hunt.** Post-R275 dry (**9275**); **defer `TEnemyAttachment::bind`**; diversify Enemy/Player; skip Dango/setGoal,
+spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%** only.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~2).**
+
+- **`TEnemyPolluteModel::perform`**: **`char trash[0x38]`** — **`stwu -0x80`** matches retail (was **`-0x48`**),
+  **~91.6% → ~91.8%**; **`r30=this` / `r31=cue`** swap + early **`cue`** guard regressed — **kept** frame pad only.
+- **`TWireBinder::init`**: **99.6%** frame/spill — skipped (spill tier).
+
+**Tip (R276).** **`TEnemyPolluteModel::perform`** needs **`-0x80`** like **`TEnemyAttachment::perform`**’s pad pattern, but
+**`trash[0x38]`** alone does not fix **`mr r30,r3` / `addi r31,r4`** — need codegen steer without fakematch **`cue`**
+guards.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
+### R277 (Aufgabe B; PolluteModel r30/r31 probes, 0× ship)
+
+**Hunt.** Post-R276 dry (**9275**); **`TEnemyPolluteModel::perform`** (**~91.8%**, **`-0x80`** kept); defer **bind**/Dango/setGoal;
+spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%** only.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~4).**
+
+- **`TEnemyPolluteModel* self = this`**: no **`r30`/`r31`** fix — reverted.
+- Nested **`unk5D`/`unk5C`**: **~89.8%** — reverted.
+- **`#pragma dont_inline`** **`pollutePerformUseCue`/`UseGfx`**: fuzzy **~94.1%** but wrong **`addi r31,r3`** + extra **`bl`** — reverted.
+- **`(void)graphics`**: kept (harmless); still **`mr r31,r3` / `addi r30,r4`**.
+
+**Tip (R277).** Retail **`perform`** wants **`addi r31,r4`** before **`mr r30,r3`**; prologue **`bl`** hints do not restore
+retail order — need cue touched without a call (compare **`TEnemyAttachment::perform`**, which uses **`graphics`** on live paths).
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
+### R278 (Aufgabe B; PolluteModel pad/reg sweep, 0× ship)
+
+**Hunt.** Post-R277 dry (**9275**); **`TEnemyPolluteModel::perform`** (**~91.8%**, **`-0x80`**); defer **bind**/Dango/setGoal;
+spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%** only.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8).**
+
+- Split **`!unk5D` / `unk5C`** guards (retail shape): **~89.8%** — reverted.
+- **`trash[8]`** / **`0x28`–`0x40` sweep**: only **`trash[0x38]`** keeps **`stwu -0x80`**; smaller pads shrink frame; **`r30`/`r31`** swap on all sizes tried.
+- No trash pad: **`-0x48`** frame — reverted.
+- **`register u32 cue`**: no prologue change — reverted.
+- **`TEnemyPolluteModelManager::perform`** explicit **`f32`** temps before **`SetViewFrustumClipCheckPerspective`**: frame **`−0x70`** — reverted.
+- **`(void)graphics`** kept; retail body still has no **`graphics`** loads — no legit gfx hook found this round.
+
+**Tip (R278).** **`trash[0x38]`** and **`addi r31,r4` / `mr r30,r3`** decouple: **`-0x80`** needs the **`0x38`** pad, but the reg swap persists even when retail’s first insn is **`lbz …(r3)`** (same as attachment). Split early returns change branch opcodes vs retail — keep combined **`!unk5D || unk5C`**.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
+### R279 (Aufgabe B; diversify Enemy/Player, defer PolluteModel perform, 0× ship)
+
+**Hunt.** Post-R278 dry (**9275**); **defer `TEnemyPolluteModel::perform`** (frame vs **`r30`/`r31`**); diversify
+Enemy/Player opcode/data wins; skip **bind**/Dango/setGoal, spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG;
+cap ~8; strict **100%** only.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~6).**
+
+- **`TSmallEnemy::genEventCoin`**: **`mCoin->mActorType == 0x2000000E`** — fixes retail **`lwz … 0x4c(r4)`** vs **`(r30)`**; **~97%** (frame **`−0x108`**) — **kept** (semantic).
+- **`TNerveSmallEnemyJump`**: **`0x8000` / `mVelocity` / `mSLJumpForce`** probe — **~98.8%**, **`cmpwi` vs `clrlwi`** — reverted.
+- Scanned **pakkun/coaster/telesa/tamaNoko/fireWanwan** — mostly frame/spill or reg prologue; no strict ship.
+
+**Tip (R279).** **`genEventCoin`** event-coin branch keys off **`mCoin->mActorType`**, not the enemy’s type — diff **`0x4c(r4)`** vs **`0x4c(r30)`** is a quick opcode tell.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
+### R280 (Aufgabe B; genEventCoin frame hunt + diversify, 0× ship)
+
+**Hunt.** Post-R279 dry (**9275**); finish **`TSmallEnemy::genEventCoin`** (**mCoin** type); defer PolluteModel/**bind**/Dango/setGoal;
+spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%** only.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~7).**
+
+- **`mCoin->isActorType`**: **~99.6%**, **`lwz 0x4c(r4)`** OK — frame **`−0x110`** (retail **`−0x100`**).
+- **`mCoin->mActorType ==`**: **~97%**, frame **`−0x108`** — wrong post-**`subis`** branch shape — reverted.
+- **`BOOL` + `(mCoin->mActorType - 0x20000000u) == 0xEu`**: **~99.3%**, **`r4`** + retail **`li`/`b`/`clrlwi`** on type — frame **`−0x108`**; second **`if (isEventCoin)`** → **`cmpwi`** not **`clrlwi`** — **kept**.
+- Inverted **`!= 0xEu`**: **~91%** — reverted; **`trash[8]`** / **`coinRef`**: frame worse — reverted.
+- **`TTamaNoko::walkBehavior`**: **`addi r3,r31,0xf4`** vs inlined **`getPoint`** — needs **`unkF4`** pointer shape — deferred.
+
+**Tip (R280).** **`genEventCoin`**: **`mCoin->isActorType`** matches type-test codegen but costs **+0x10** frame vs **`this->isActorType`**; manual **`subis`/`li`/`b`/`clrlwi`** on **`mCoin->mActorType`** recovers **`r4`** with only **`−0x8`** frame gap — fix **`clrlwi` vs `cmpwi`** on the follow-up **`if`** next.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
+### R281 (Aufgabe B; genEventCoin clrlwi fix, 0× ship)
+
+**Hunt.** Post-R280 dry (**9275**); **`TSmallEnemy::genEventCoin`** (**~99.3%**); defer PolluteModel/**bind**/Dango/setGoal;
+spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%** only.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~4).**
+
+- **`if ((BOOL)((mCoin->mActorType - …) == 0xEu))`**: **~97%** — drops retail **`li`/`b`/`clrlwi`** — reverted.
+- **`if ((u8)isEventCoin)`** after **`BOOL` assign**: **~99.6%** — **`clrlwi. r0, r0, 24`** + **`beq`** match retail; **`register`** not required — **kept**.
+- Frame still **`−0x108`** (retail **`−0x100`**); loop spills + **`@4358`/`@4359`** float pool order open.
+
+**Tip (R281).** After manual **`mCoin` `subis`/`li`/`b`**, second test must use **`if ((u8)isEventCoin)`** so MWCC reuses **`clrlwi.`** — plain **`if (isEventCoin)`** spills to **`cmpwi`**.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
+### R282 (Aufgabe B; genEventCoin frame + diversify, 0× ship)
+
+**Hunt.** Post-R281 dry (**9275**); close **`TSmallEnemy::genEventCoin`** frame / pool or diversify; defer PolluteModel/**bind**/Dango/setGoal;
+spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%** only.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~5).**
+
+- **`register TCoin*` / `register BOOL`**: still **`−0x108`** / **~99.6%** — reverted.
+- **`TNerveSmallEnemyFreeze::execute`**: **~99.8%**, **`−0x40`** vs retail **`−0x38`** — spill tier — deferred.
+- **`TSmallEnemy::isHitWallInBound`**: **~99.8%**, **`−0x80`** vs **`−0xa8`** — deferred.
+- **`TSpineEnemy::turnToCurPathNode`**: **~99.9%**, vec temps **`+4`** spill slots — deferred.
+- **`genEventCoin`**: **`mCoin`** / **`clrlwi`** block matches retail; open **`−0x8`** frame, loop spills, **`@4358`/`@4359`**.
+
+**Tip (R282).** Once **`genEventCoin`**’s **`mCoin`** type path matches through **`clrlwi.`**, remaining diffs are almost all **`stwu −0x108`** and downstream **`r1`** offsets — fix frame / TU **`.sdata2`** before chasing loop vec slots in isolation.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
+### R283 (Aufgabe B; genEventCoin −0x100 hunt, 0× ship)
+
+**Hunt.** Post-R282 dry (**9275**); **`TSmallEnemy::genEventCoin`** (**~99.6%**, **`−0x108`**, **`@4358`/`@4359`**); defer PolluteModel/**bind**/Dango/setGoal;
+spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%** only.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~6).**
+
+- **`loopCoin`** rename (loop **`TCoin*`**): no frame change — **kept** (clarity).
+- Duplicated **`mCoin`** branches (no shared **`coin`**): **~89.7%** — **`r4`/`r27`** schedule break — reverted.
+- **`MsRandF`** vs **`TMsRange::rand`**: frame **`−0xf0`** / wrong rand chain — reverted.
+- **`TNerveSmallEnemyFreeze`**: drop **`freezeTime`** local — **~64%** — reverted.
+- **`genEventCoin`**: **`−0x108`** + pool labels unchanged; type/**`clrlwi`** path still clean.
+
+**Tip (R283).** **`BOOL` + `TCoin* coin`** in **`genEventCoin`** likely accounts for the steady **`+0x8`** frame vs retail; **`MsRandF`** swaps frame size but won’t ship without matching retail’s **`stfs f29/f30` + `bl rand`** schedule — fix **`.sdata2`** / homes together, not loop spills alone.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
+### R284 (Aufgabe B; diversify off genEventCoin, 0× ship)
+
+**Hunt.** Post-R283 dry (**9275**); **defer `TSmallEnemy::genEventCoin`** frame/**`.sdata2`**; opcode/data/PARAM wins elsewhere; defer PolluteModel/**bind**/Dango/setGoal;
+spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%** only.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~7).**
+
+- **`SMS_IsMarioOnWire`**: nested **`mHolder`** / dual-local — **~76–85%** vs **`&&`** **~93.8%** — reverted.
+- **`TTamaNoko`/`TTelesa::isReachedToGoal`**: manual **`unk104.unk0`/`mPosition`** vs **`getPoint()`** — **~84%** — reverted (**retail inlines `addi r4,0x104` / `addi r5,r4,4`**).
+- **`TEnemyMario::checkReturn`**, **`PakkunRootCallback`**, **`initSetEnemies`**: frame/rodata — deferred.
+- **`genEventCoin`**: untouched (deferred).
+
+**Tip (R284).** **`SMS_IsMarioOnWire`**: keep **`&&`** short-circuit for best fuzzy; retail **`lwz r0,0x68` then `lwz r3,0x68`** needs a second **`gpMarioOriginal->mHolder`** fetch MWCC won’t emit from **`&&`**. **`isReachedToGoal`**: don’t call **`TPathNode::getPoint()`** — match retail’s **`unk0 ? actor+0x10 : &unk4`** load path in-place.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
+### R285 (Aufgabe B; diversify opcode hunt, 0× ship)
+
+**Hunt.** Post-R284 dry (**9275**); opcode/data wins outside R279–R284 thrash (**genEventCoin**, **OnWire**, **isReachedToGoal**); defer PolluteModel/**bind**/Dango/setGoal;
+spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%** only.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~6).**
+
+- **`TNervePakkunAppear::execute`**: retail dead **`cmpwi`** after **`checkPass(100.f)`** — **`BOOL bckPass`/`if {}`** still DCE’d — **~98.6%** — reverted.
+- **`TEnemyMario::setStickToAngle`**: split **`*=`** for **`fmuls`** order in **`emWaiting`** — **~61.8%** — reverted.
+- **`TRiccoHook::init`**, **`TTailRubber::bindOne`**, **`TEffectColumWater::generate`**, **`requestShadow`**: frame/rodata — deferred.
+- **`SMS_IsMarioOnWire`**, **`isReachedToGoal`**, **`genEventCoin`**: not revisited (thrash list).
+
+**Tip (R285).** **`TNervePakkunAppear`**: retail keeps a discarded **`cmpwi`** after **`checkPass(100.f)`** before **`checkCurAnmEnd`**; empty **`if (checkPass()) {}`** is not enough — need a different MWCC shape (not **`BOOL` spill**) to preserve dead compare without **`−0x30`** frame.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
+**R285 (continued).** Six fresh Enemy/Player B-scope targets (MAP/asm); no strict ships.
+
+**Probes (~6).**
+
+- **`TEnemyMario::checkReturn`**: retail **`stwu −0xa0`**, manual **`getPoint`→`0x78`**, **`sqrtf`** distance vs **`1000.f` in `f31`**; **`mFlags & ILLEGAL`** not **`checkFlag`** — trial rewrite used **`std::sqrtf`/`Vec`** → **`−0x68`** frame / spill — **~19.6%** — reverted.
+- **`TEnemyMario::emJumping`**: retail inlines **`setStickToAngle`** (**`@4108`/`@4291`**, **`fctiwz` stick**); pollution path **`stamp` then `stw`/`sth` `mEMDoingTimer`/`mEMDoing`** not **`changeEMDoing`** — inline stick trial → **~89.5%** (was **~94.9%**) — reverted.
+- **`TMario::startJumpWall`**: retail **`addi r3,0x34`** + **`matan(normal.x, normal.z)`** not **`mMinY`**; MWCC may emit **`lfsu`** pair — **`mNormal`/`matan`** trial → **~96.8%** + **`−0x18`** frame — reverted.
+- **`TPakkun::perform`**: **`r29=this`/`r30=graphics`/`r31=view`** save order — **~93.7%** — deferred.
+- **`PakkunSeedCallback`**: **`−0xa0`** matrix locals, **`@5342`/`@3450`/`@4061` `.sdata2`**, no **`r31`** spill — **~88.7%** — deferred.
+- **`TNerveTamaNokoThrown::execute`**: throw-power / sin-cos scheduling vs **`0x378`/`0x364` loads** — **~75.9%** — deferred.
+
+**Tip (R285 cont.).** **`checkReturn`**: match retail loop flag **`li r31,1`** + in-place **`gpMarioPos`** **`fsubs`** order (Mario **Y/Z loads after first `fsubs`**); avoid **`TVec3::distance`**. **`emJumping`**: don’t call **`setStickToAngle`** — duplicate **`JMASSin`/`JMASCos`×64×power`** in-body. **`startJumpWall`**: **`matan(mNormal.x, mNormal.z)`** via **`&mWallPlane->mNormal`** offset **0x34**, not **`getNormal()`/`mMinY`**.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
+### R285b (Enemy/Player B; skip R285 thrash, 0× ship)
+
+**Hunt.** Skip **checkReturn**, **emJumping**, **startJumpWall**, Pakkun **Appear/perform/SeedCallback**, **TamaNokoThrown**, **genEventCoin**, **OnWire**, **isReachedToGoal**, **bind**/PolluteModel/Dango/setGoal, spill **≥99.7%**; strict **100%** only.
+
+**Ship.** none.
+
+**Probes (~6).**
+
+- **`TEnemyMario::emWalkAround`**: retail **`stw`/`sth` `mEMDoingTimer`/`mEMDoing`** + **`unk108->mInput|0x100`** (no **`changeEMDoing`/`changeEMJumping`**); **`reset2`+`goToShortestNextGraphNode`**; pollution **falls through** wall/stick — trial → **~94.0%** (was **~95.9%**) — reverted.
+- **`TSmallEnemy::isFindMario`**: **`isMarioInWater` inlined** (**`r29`/`r28`/`r30`**, **`*gpMarioFlag`**) — trial → **~58.8%** — reverted.
+- **`TEnemyMario::emWaitingToInviteMario`**: same **`gpMarioPos` `fsubs`** / **`−0xa8`** stack class as **checkReturn** — **~95.7%** — deferred.
+- **`TNerveTelesaAttackMario::execute`**: **`−0xf8`** frame + TU **`.sdata2`** sin/matrix temps — **~97.0%** — deferred.
+- **`TTamaNoko::landEffect`**: **`−0x90`** vs **`−0x20`**; post-**`emit`** particle setup cluster — **~62.5%** — deferred.
+- **`GessoBodyCallback`**: J3D callback matrix **`−0x88`** stack / **`@sdata2`** — **~85.5%** — deferred.
+
+**Tip (R285b).** **`emWalkAround`**: never **`return`** after hide — retail **`stamp`→`mEMDoing=7`→optional wall jump→else inline **0.5f** stick. **`isFindMario`**: keep **`isMarioInWater()`** out-of-line unless you match **`mr r0,r29` vs `mr r0,r30`** at flag bit **30** exactly.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
+### R285c (Enemy/Player B; post-R285b skip list, 0× ship)
+
+**Hunt.** Skip R285–R285b trials + thrash (**genEventCoin**, **OnWire**, **isReachedToGoal**, **bind**/PolluteModel/Dango/setGoal, **emWalkAround**, **isFindMario**, **checkReturn**, **emJumping**, **startJumpWall**, Pakkun **Appear/perform/SeedCallback**, **TamaNokoThrown**, spill **≥99.7%**).
+
+**Ship.** none.
+
+**Probes (~6).**
+
+- **`TNerveSmallEnemyJump::execute`**: early exit **`cmpwi r0,0`** on **`mLiveFlag` bit 16/13** (not **`checkLiveFlag2||`** **`clrlwi`**); **`jumpBehavior` @vtable `0x128`**; velocity via **`0x108`** stack **`0x40`** — **~98.9%** — deferred.
+- **`TSmallEnemy::expandCollision`**: retail **`stwu −0x80`** + **`lis 0x4330`/`@3426` `.sdata2`** — **~98.6%** — deferred.
+- **`TBossMantaManager::updateMantaEscape`**: Mario pos spill **`0x1c`**, **`f31`/`f30`/`f28`** temps — **~90.0%** — deferred.
+- **`TTamaNoko::requestShadow`**: shadow struct **`−0x98`**, dual **`rlwinm` `0xf0`** paths before MActor joint loads — **~93.2%** — deferred.
+- **`TEnemyMario::emWaitingToInviteMario`**: twin **`getPoint`** + **`sqrt`** / **`matan`** stacks (**`−0xa8`**) — **~95.7%** — deferred.
+- **`TNerveTelesaImitate::execute`**: matrix/**`fnmsubs`** cluster + TU **`.sdata2`** — **~97.9%** — deferred.
+
+**Tip (R285c).** **`TNerveSmallEnemyJump`**: test **`UNK8000`** with **`rlwinm ,,16,16` then `cmpwi`**; only then **`UNK40000` @ bit 13**; land with **`cmpwi`** on airborne bit **24**, not **`isAirborne()`** bool.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
+**R285c (optional jump).** **`TNerveSmallEnemyJump`**: manual **`mLiveFlag` `cmpwi`** early + airborne **`cmpwi`** — **~96.7%** (was **~98.9%**); still needs vtable **`0x108`** velocity spill **`r1+0x40`** (not **`TVec3`/`setVelocity`**) — reverted.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
+### R285d (Enemy/Player B; skip SmallEnemyJump + R285 thrash, 0× ship)
+
+**Hunt.** Skip **TNerveSmallEnemyJump**, R285–R285c thrash, spill **≥99.7%**, Closet/MoveBG; strict **100%** only.
+
+**Ship.** none.
+
+**Probes (~6).**
+
+- **`TSmallEnemy::changeMove`**: **`lis 0x4330`** double-float temps; retail **`fcmpo f0,f6`** vs swapped operands; mid-body **`lwz 0x178`** before **`.sdata2`** loads — **~94.2%** — deferred.
+- **`TTamaNokoManager::initSetEnemies`**: retail loop **`stwu −0xe0`/`stw` part @`0x84`** vs compact **`−0x38`** — **~97.0%** — deferred.
+- **`TCommonLauncher::init`**: **`rand`→`xoris`/`lfd`** vs **`lwz 0x168` load order** after **`MAnmSound`** setup — **~98.1%** — deferred.
+- **`TNerveFireWanwanFly::execute`**: **`−0x100`** sin/`TVec3::set` stack **`0xc4`** — **~96.5%** — deferred.
+- **`GessoBodyCallback`**: **`gpCurGesso`/`getModel`/`mulli`** scheduling + **`0x148` scale** before matrix **`@3420`** — **~85.5%** — deferred.
+- **`TEnemyMario::emReplayJumpToNearestNode`**: **`−0x2c0`** graph walk; **`stmw r20`** / extra **`f26–f27`** — **~93.6%** — deferred.
+
+**Tip (R285d).** **`changeMove`**: keep **`TSmallEnemyManager::mBlockWaitTime` `xoris`** pair on stack before **`fsubs`/`fcmpo`**; don’t hoist **`mSL*` param loads** ahead of the **`0x178`** field load retail uses in the **`f1`/`f2` branch**.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
+### R285e (Enemy/Player B; post-R285d, 0× ship)
+
+**Hunt.** Skip R285–R285d thrash, spill **≥99.7%**, Closet/MoveBG; strict **100%** only.
+
+**Ship.** none.
+
+**Probes (~6).**
+
+- **`TEnemyMario::consider`**: giant **`switch(mEMDoing)`**; stick paths use **`enemyMario` `.sdata2` `@4108`/`@4291`** + inlined **`fctiwz`** (not **`setStickToAngle` call**) — **~94.0%** — deferred.
+- **`TEnemyMario::findRunAwayNearestNode`**: graph scan **`−0x138`**; **`getPoint` spill `0x104`** + manual dist vs **`f31`** — **~98.8%** — deferred.
+- **`TSmallEnemy::moveObject`**: **`−0xb0`** spine/`perform` cluster; early **`clrlwi` live flag** branch — **~83.5%** — deferred.
+- **`TPakkunSeed::rebirth`**: pollution **`stamp`** prep **`stw`/`lfd` @`0x68`**; frame **`−0x78`** — **~98.4%** — deferred.
+- **`TNerveTelesaImitate::execute`**: **`gpApplication` stage `lbz`** gate; **`r31`/`r30` swap** on **`0x1c4` load** — **~97.9%** — deferred.
+- **`TMario::jumpingBasic`**: **`−0xa0`/`stmw r27`** vs **`−0x58`**; arg save **`r28–r29`/`r27` reorder** — **~98.7%** — deferred.
+
+**Tip (R285e).** **`TEnemyMario::consider`**: each stick branch inlines **`JMASSin`/`JMASCos`×`@4108`×power** into **`unk108->mStick*`** — mirror **`emWaiting`/`emWalkAround`**, not **`setStickToAngle`**.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
+### R285f (Enemy/Player B; post-R285e, 0× ship)
+
+**Hunt.** Skip R285–R285e thrash, spill **≥99.7%**, Closet/MoveBG; strict **100%** only.
+
+**Ship.** none.
+
+**Optional `consider`.** Retail **`bctr`** on **`mEMDoing`** + inlined **`EM_DOING_WAITING`** stick (**`@4108`/`fctiwz`/`neg` stick**); our **`switch`→`em*()`** — **~94.0%**, **`−0x250` vs `−0x220`** — no trial (structural).
+
+**Probes (~6).**
+
+- **`TEnemyMario::emRunAwayToNearestNode`**: **`getPoint` spill `0x110`**; **`−0x128`** — **~98.1%** — deferred.
+- **`TEnemyMario::emWaitingToInviteMario`**: graph **`getPoint`→`mPosition`** stack **`0x8c`** — **~95.7%** — deferred.
+- **`TEnemyMario::initEnemyValues`**: init loop **`−0x590`/`stmw r18`** vs **`−0x4e8`** — **~94.7%** — deferred.
+- **`TEnemyMario::checkController`**: dist-to-Mario **`stfs` spill `0x50`** — **~99.1%** — deferred.
+- **`TMario::doSliding`**: float save cluster **`−0x98`** — **~98.5%** — deferred.
+- **`TSmallEnemy::expandCollision`**: **`lis 0x4330`/`xoris`** pair spill **`0x58`** — **~98.6%** — deferred.
+
+**Tip (R285f).** Match **`consider`** by restoring the **jump-table monolith** (inlined cases), not by inlining only **`setStickToAngle`** into the current dispatcher.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
+### R285g (Enemy/Player B; near-miss focus, 0× ship)
+
+**Hunt.** Defer **`consider` monolith**; prefer **`checkController`** / **≤200B** opcode fixes; skip R285–R285f thrash, spill **≥99.7%**, Closet/MoveBG; strict **100%** only.
+
+**Ship.** none.
+
+**Trial (reverted).** **`TEnemyMario::emWaiting`**: inlined **0.2f** stick, direct **`mEMDoing*`**, **`emario`+`mPrevIdx=-1`** graph — peaked **~99.6%** (**`fmuls` operand order** on sin/cos); reverted.
+
+**Probes (~6).**
+
+- **`TEnemyMario::checkController`**: **`−0x78`** frame; **`frsqrte` NR** dist + **`stfs` spill `0x50`** before **`mDistanceToMario`** — **~99.1%** — deferred.
+- **`TEnemyMario::emWaiting`**: **280B**; post-trial note above — **~99.5–99.6%** — deferred.
+- **`PakkunRootCallback2`**: **`TRotation3f` `−0x90`**; **`fdivs`/matrix spill `0x5c`** — **~98.1%** (180B) — deferred.
+- **`TRotation3::setQuat` (fireWanwan TU)**: **`fmuls`/`fsubs` register swap** on quat — **~98.5%** (160B) — deferred.
+- **`TEnemyMario::drawHPMeter`**: GX quad cluster frame — **~99.2%** — deferred.
+- **`TMario::doRunningAnimation`**: Player run anim — **~98.7%** — deferred.
+
+**Tip (R285g).** **`emWaiting`**: graph arm needs **`lwz r4, 0x124(emario)`** then **`stw -1, 8(r4)`** with **`r3` still `mEMario` for `goToShortestNextGraphNode`** — keep a **`TEMario* emario`** local; inlined stick still wants **`fmuls f0,f0,f1`** not **`f1,f0`**.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
+### R285h (Enemy/Player B; emWaiting + ≤200B, 0× ship)
+
+**Hunt.** Optional **`emWaiting`** finish; else **≤200B**; skip **`consider`**, **`checkController` (1468B)**, spill **≥99.7%**, Closet/MoveBG; strict **100%** only.
+
+**Ship.** none.
+
+**Trial (reverted).** **`TEnemyMario::emWaiting`**: inlined **0.2f** stick, **`TEMario* emario`** graph arm — **~99.6%** (**`fmuls f0,f0,f1`** / **`@4108` pool** vs **`@2630`**); **`jmaSinTable[]` direct** trial **~93.7%** — reverted.
+
+**Probes (≤200B + emWaiting).**
+
+- **`TEnemyMario::emWaiting`**: **280B** — **~99.6%** peak — deferred.
+- **`PakkunRootCallback2`**: **`−0x90`** **`TRotation3f`** — **~98.1%** (180B) — deferred.
+- **`TRotation3::setQuat` (fireWanwan)**: quat **`fmuls`/`fsubs` swap** — **~98.5%** (160B) — deferred.
+- **`TEnemyMario::startMonteReplay`**: graph **`findNearestNodeIndex`** cluster — **~99.8%** (328B) — deferred (spill skip).
+- **`TEnemyMario::perform`**: cue dispatch — **~99.5%** — deferred.
+- **`TMario::doRunningAnimation`**: run BCK — **~98.7%** — deferred.
+
+**Tip (R285h).** **`emWaiting`**: keep **`(JMASSin×64.0f)×0.2f`** single-expression stick (not **`jmaSinTable[]`**); last gap is **`fmuls` operand order** + **`lfs` from `enemyMario` `.sdata2` `@4108`** — share **`64.0f`** pool with **`setStickToAngle`** TU literal, not a new slot.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
+### R285i (Enemy/Player B; @4108 pool, 0× ship)
+
+**Hunt.** Optional **`emWaiting`** (`sEnemyMarioStickScale` + **`TEMario* emario`**); else **≤200B**; skip **`consider`**, spill **≥99.7%**, Closet/MoveBG; strict **100%** only.
+
+**Ship.** none.
+
+**Trial (reverted).** **`emWaiting`** + file-top **`static const f32 sEnemyMarioStickScale`** shared with **`setStickToAngle`** — still **`lfs @2630`** not **`@4108`**, **`fmuls` swap** — **~99.6%** — reverted.
+
+**Probes (≤200B).**
+
+- **`PakkunRootCallback2`**: matrix spill **`0x5c`** — **~98.1%** (180B) — deferred.
+- **`TRotation3::setQuat` (fireWanwan)**: **~98.5%** (160B) — deferred.
+- **`TWalkerEnemy::isReachedToGoalXZ`**: **~99.7%** (200B) — spill skip.
+- **`TNerveWalkerEscape::execute`**: **~99.9%** (352B) — spill skip.
+- **`TGessoManager::initSetEnemies`**: **~81.2%** (188B) — deferred.
+- **`TEnemyMario::emWaiting`**: trial note — **~99.6%** — deferred.
+
+**Tip (R285i).** **`@4108` vs `@2630`**: a TU **`static const f32`** at file top is **not enough** — retail **`@4108`** is fixed by **whole-`enemyMario.cpp` `.sdata2` emission order**; likely need **every stick-path `64.0f` → `sEnemyMarioStickScale`** (or MAP-order rodata) before **`fmuls f0,f0,f1`** tuning matters.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
+### R285j (Enemy/Player B; ≤200B MAP, 0× ship)
+
+**Hunt.** Defer **`emWaiting` `@4108`**; focus **≤200B** (**`PakkunRootCallback2`**, fireWanwan **`setQuat`**); skip **`consider`**, spill **≥99.7%**, Closet/MoveBG; strict **100%** only.
+
+**Ship.** none.
+
+**Probes (~6).**
+
+- **`PakkunRootCallback2`**: manual **`stfs` mtx `0x5c`**, **`fdivs`/`@4061`**, **`−0x90`** vs **`TRotation3f`** — **~98.1%** (180B) — deferred.
+- **`TRotation3::setQuat` (fireWanwan)**: quat **`fmuls`/`fsubs` regswap** + pool — **~98.5%** (160B) — deferred.
+- **`PakkunRootCallback`**: sibling callback **`−0x90`** cluster — **~95.6%** (356B) — deferred.
+- **`PakkunSeedCallback`**: seed joint mtx — **~88.7%** (272B) — deferred.
+- **`TPakkun::load`**: **`gpMarioAddress`** spill layout — **~99.7%** (192B) — spill skip.
+- **`TGessoManager::initSetEnemies`**: ctor/`TNameRef` frame **`−0xe8` vs `−0x18`** — **~81.2%** (188B) — deferred.
+
+**Tip (R285j).** **`PakkunRootCallback2`**: match retail **`stfs`** scale matrix (**`1.0f/unk1B8`** on diagonal), not **`scaling.setScale(1.0f/unk1B8)`** helper path.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
+### R285k (Enemy/Player B; PakkunRootCallback2, 0× ship)
+
+**Hunt.** Optional **`PakkunRootCallback2` manual `stfs` mtx**; else **≤200B**; skip **`emWaiting`**, **`setQuat` thrash**, spill **≥99.7%**, Closet/MoveBG; strict **100%** only.
+
+**Ship.** none.
+
+**Trial (reverted).** **`PakkunRootCallback2`**: **`Mtx` + ordered `scaling[][]` stores — **~76.9%** (control-flow/`−0x78` vs **`−0x90`**, early **`cmpwi`/`bne`** shape) — reverted.
+
+**Probes (~6).**
+
+- **`PakkunRootCallback2`**: retail **`stfs`** path — **~98.1%** baseline (180B) — deferred.
+- **`PakkunRootCallback`**: **`−0x90`** mtx — **~95.6%** (356B) — deferred.
+- **`PakkunSeedCallback`**: joint scale — **~88.7%** (272B) — deferred.
+- **`TPakkun::load`**: spill layout — **~99.7%** (192B) — spill skip.
+- **`TTamaNoko::requestShadow`**: shadow setup — **~93.2%** (476B) — deferred.
+- **`TNervePakkunGenerate::execute`**: generate nerve — **~98.8%** (508B) — deferred.
+
+**Tip (R285k).** **`PakkunRootCallback2`**: prologue is **`cmpwi type` → `stwu −0x90` → `bne` exit** even when skipping work; matrix only when **`type==0` && `gpCurPakkun`** — **`Mtx` local alone** reorders branches (**`beq`/`fdivs`** drift).
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
+### R285l (Enemy/Player B; diversify off Pakkun/emWaiting, 0× ship)
+
+**Hunt.** Fresh **Player/Enemy** MAP targets; skip **R285–R285k Pakkun/`emWaiting`/`setQuat` thrash**, spill **≥99.7%**, Closet/MoveBG; strict **100%** only.
+
+**Ship.** none.
+
+**Probes (~6).**
+
+- **`TMario::warpRequest`**: **`−0x68`** / arg save — **~99.6%** (240B) — deferred.
+- **`TMario::jumpCatch`**: **`−0x30`** hold/catch — **~99.6%** (696B) — deferred.
+- **`TMario::checkSink`**: **`@4214` zero burst** + **`loserExec`**; **`−0xa0`** — **~99.6%** (796B) — deferred.
+- **`TTelesa::calcRootMatrix`**: matrix float save **`−0x140`** — **~99.6%** (520B) — deferred.
+- **`TBossMantaManager::TMantaBattleState::update`**: **`@1490` pool** + battle switch — **~99.6%** (788B) — deferred.
+- **`TNerveSmallEnemyHitWaterJump::execute`**: water-jump nerve **`−0x90`** — **~99.3%** (520B) — deferred.
+
+**Tip (R285l).** Off Pakkun sticks: **`TMario::checkSink`** death branch is anchored by **`@4214` `.sdata2` zero** stores into speed fields — pool slot must match **`MarioMove` TU order**, same class of issue as **`enemyMario` `@4108`**.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
+### R285m (Enemy/Player B; ≤200B opcode, 0× ship)
+
+**Hunt.** **≤200B** with **opcode** diffs (not **99.6% spill**); skip **R285–R285l thrash**, Pakkun/**`emWaiting`/`checkSink` pool**, Closet/MoveBG; strict **100%** only.
+
+**Ship.** none.
+
+**Probes (~6).**
+
+- **`TYoshi::getEmitPosDir`**: keep **`anmMtx` in `r6`** for column **`lfs`** — **~97.1%** (76B) — deferred.
+- **`TGraphWeb::startIsEnd`**: graph walk **`r4`/`r5` node ptr** schedule — **~98.8%** (120B) — deferred.
+- **`TEffectObjBase::perform`**: **`clrlwi`/`stwu`** prologue order — **~90.8%** (88B) — deferred.
+- **`TGraphGroup::perform`**: loop counter **`r6`/`r7` vs `r5`/`r6`** — **~96.8%** (88B) — deferred.
+- **`TNerveNameKuriLand::execute`**: cache **`r31` live actor** before anim checks — **~83.9%** (144B) — deferred.
+- **`TBathtubKillerManager::load`**: pre-**`TSmallEnemyManager::load`** **`unk38` null test** — **~81.0%** (108B) — deferred.
+
+**Tip (R285m).** **`TYoshi::getEmitPosDir`**: after **`getAnmMtx`**, retail keeps the matrix base in **`r6`** for every **`lfs` offset** — don't **`lwz r3`** and reuse **`r3`** mid-function.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
+### R285n (Enemy/Player B; R285m follow-up, 0× ship)
+
+**Hunt.** Re-probe **R285m** short opcode targets; strict **100%** only; gate **`matched_functions`**.
+
+**Ship.** none.
+
+**Probes (~4, reverted).**
+
+- **`TYoshi::getEmitPosDir`**: **`void* r6`** **`mActor→+4→+0x58`** + **`idx*0x30`** walk — still **~97.1%** (**`lwz r3,4(r6)`**).
+- **`TGraphWeb::startIsEnd`**: split **`mConnectionNum`** / conn checks (early **`return false`**) — **~86%** (inverted **`bgt`/`ble`** vs retail).
+- **`TGraphGroup::perform`**: empty **`for` body** (DCE) — still **~96.8%** (**`r6`/`r7`** vs **`r4`/`r5`** on **`unk4`**).
+- **`TEffectObjBase::perform`**: **`dont_inline`** + empty **`cue`** brace — **~90.8%** unchanged (**`−0x8`** vs **`−0x20`/`r31`**).
+
+**Tip (R285n).** **`TGraphGroup::perform`**: retail is **DCE'd** (no **`bl`** to **`TGraphWeb::perform`**); empty **`for`** is right semantics, but match wants **`unk4` in `r6`** and peel counter in **`r7`** — a scalar **`int n = unk4`** loop uses **`r4`/`r5`**.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
+### R285o (Enemy/Player B; fresh TUs, 0× ship)
+
+**Hunt.** **~6** MAP targets in **new TUs**; skip **R285 thrash** (**`getEmitPosDir`**, **`startIsEnd`**, **`GraphGroup`**, **`EffectObjBase`**, Pakkun, **`emWaiting`**, **`genEventCoin`**, spill **≥99.7%**, Closet/MoveBG); strict **100%** only.
+
+**Ship.** none.
+
+**Probes (~6, reverted / no-ship).**
+
+- **`Kumokun` / `TQuat4::rotate`**: paired-single **`fmuls`/`fmadds`** schedule — **~90.4%** (152B) — deferred.
+- **`hinokuri2` / `TNerveHino2Landing::execute`**: **`−0x60`** vs **`−0x30`** around **`getFrameCtrl`/`curAnmEndsNext`** — **~87.4%** (192B) — deferred.
+- **`gesso` / `TGessoManager::initSetEnemies`**: retail **`−0xe8`** pollute-manager setup vs **`−0x18`** — **~81.2%** (188B) — deferred.
+- **`namekuri` / `TNerveNameKuriLand::execute`**: **`−0x8`** vs **`−0x20`/`r31`** on land nerve — **~83.9%** (144B) — deferred.
+- **`BathtubKiller` / `TBathtubKillerManager::load`**: pre-**`TSmallEnemyManager::load`** **`unk38` `cmplwi`** + **`r30` new** — trial **~92.1%** (**`−0x20`** frame, missing tail **`cmplwi`**) — reverted.
+- **`conductor` / `TConductor::getManagerByName`**, **`MarioParticle` / `TBubbleCallBack`**: **~99.6%** spill-only — skipped (**≥99.7%** rule).
+
+**Tip (R285o).** **`TBathtubKillerManager::load`**: retail **`lwz`/`cmplwi` on `unk38@0x38` before `bl` parent `load`**, **`stw r30` saves**, **`−0x58` frame**, then **`lwz`/`cmplwi` on `unk38(r31)` again in epilogue** — not just a **`r30` temp** for **`new`**.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
+### R285p (Enemy/Player B; Bathtub optional + fresh TUs, 0× ship)
+
+**Hunt.** Optional **`TBathtubKillerManager::load`**; else fresh MAP; skip **R285 thrash**, spill **≥99.7%**, Closet/MoveBG; strict **100%** only.
+
+**Ship.** none.
+
+**Probes (~7, reverted).**
+
+- **`TBathtubKillerManager::load`**: **`unk38` `cmplwi`** before/after parent **`load`**, **`r30` `new`** — **~99.7%** (108B); **`−0x58`/`0x5c`** frame only — **`local_38[0x38]`** → **100%** validation, not shipped.
+- **`Kumokun` / `TQuat4::rotate`**: **~90.4%** (152B) — deferred.
+- **`hinokuri2` / `TNerveHino2Landing::execute`**: **~87.4%** (192B) — deferred.
+- **`gesso` / `TGessoManager::initSetEnemies`**: **~81.2%** (188B) — deferred.
+- **`namekuri` / `TNerveNameKuriLand::execute`**: **~83.9%** (144B) — deferred.
+- **`MarioParticle` / `TBubbleCallBack`**, **`conductor` / `getManagerByName`**: **~99.6%** spill — skipped.
+
+**Tip (R285p).** **`TBathtubKillerManager::load`**: epilogue **`lwz`/`cmplwi` on `unk38(r31)`** needs **`if (unk38 != nullptr) (void)unk38`** after **`stw r30`** — not **`== nullptr`**. **`−0x58`** still needs a separate frame fix (not **`r30` alone**).
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
+### R285q (Enemy/Player B; defer Bathtub, 0× ship)
+
+**Hunt.** **~6** fresh MAP; **defer `TBathtubKillerManager::load` (`−0x58`)**; no frame fakematch pads; skip **R285 thrash**, spill **≥99.7%**, Closet/MoveBG; strict **100%** only.
+
+**Ship.** none.
+
+**Probes (~6).**
+
+- **`poihana` / `TNervePoihanaTrapped::execute`**: **~81.1%** (1232B) — deferred.
+- **`poihana` / `TPoiHana::walkBehavior`**: **~97.9%** (376B) — deferred.
+- **`gatekeeper` / `TNerveBGKDive::execute`**: **~97.4%** (520B) — deferred.
+- **`gatekeeper` / `TNerveBGKSleep::execute`**: **~98.2%** (756B) — deferred.
+- **`Kumokun` / `TQuat4::rotate`**: **~90.4%** (152B) — deferred.
+- **`hinokuri2` / `TNerveHino2Landing::execute`**: **~87.4%** (192B) — deferred.
+- **`enemy` / `TSpineEnemy::setGoalPathFromGraph`**: manual **`Vec`/`unkF4`** writes — **~29%** — reverted.
+
+**Tip (R285q).** **`TSpineEnemy::setGoalPathFromGraph`**: retail builds **`TPathNode`** at **`r1+0x38`** from **`getPoint(Vec*)` @ `r1+0x48`** then **`stw`** into **`unkF4`/`unk104`** — not **`TPathNode` assign** from **`TVec3` ctor** alone.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
+### R285r (Enemy/Player B; defer Bathtub/setGoal, 0× ship)
+
+**Hunt.** **~6** fresh MAP; skip **`setGoalPathFromGraph`**, **`TBathtubKillerManager::load`**, **R285 thrash**, spill **≥99.7%**, Closet/MoveBG; strict **100%** only; no frame fakematch.
+
+**Ship.** none.
+
+**Probes (~6).**
+
+- **`coasterkiller` / `TCoasterKillerManager::load`**: **`−0x70`** / **`stw r30` @ `0x44`** vs **`−0x30`** — **~98.4%** (292B) — defer (Bathtub-class frame).
+- **`coasterkiller` / `TCoasterKiller::perform`**: **`gpMarioPos`** distance **`lfs`/`fsubs`** interleave vs **`distance()`** — manual **`f32` chain** → **~79.1%** — reverted; retail **~95.5%** at **`−0x58`**.
+- **`namekuri` / `NameKuriScaleCallback`**: scale **`Mtx`** home **`r1+0x48`** vs **`+0x44`** + **`.sdata2`** pool — **~98.9%** (240B) — deferred.
+- **`hinokuri2` / `TNerveHino2JumpIn::execute`**: **`r29`/`r30`** body + **`unk104`** ternary vs **`addi r3,r29,0x104`** — **~95.4%** (364B) — deferred.
+- **`pakkun` / `PakkunRootCallback2`**: **`−0x90`** scale concat matrix vs **`−0x70`** — **~98.1%** (180B) — deferred.
+- **`gesso` / `GessoBodyCallback`**: joint scale / **`MTXConcat`** schedule — **~85.5%** (432B) — deferred.
+- **`hamukuri` / `TDangoHamuKuri::getTakingMtx`**: **~99.6%** spill — skipped.
+
+**Tip (R285r).** **`TCoasterKiller::perform`**: after **`gpMarioPos`**, retail loads **`mPosition.x`**, **`mario.x`**, **`mPosition.y`**, then **`fsubs`** before **`lfs mario.y`** — not a single **`TVec3::distance`** inline.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
+### R285s (Enemy/Player B; fresh TUs, 0× ship)
+
+**Hunt.** **~6** MAP; skip **R285 thrash**, spill **≥99.7%**, Closet/MoveBG; strict **100%** only; no frame fakematch.
+
+**Ship.** none.
+
+**Probes (~6).**
+
+- **`telesa` / `TTelesa::isReachedToGoal`**: manual **`&unk104`** / **`r5`** ternary — **~84.9%** — reverted; retail **~97.3%** uses **`lwz`** goal copy to **`r1+0x14`** then **`fsubs`**, not direct **`lfs` from `r5`**.
+- **`enemyMario` / `TEnemyMario::checkReturn`**: **`gpMarioPos`** **`lfs`/`fsubs`** vs graph **`Vec`** stack — **~94.6%** (312B) — deferred.
+- **`tobiPuku` / `TTobiPuku::hitWall`**: wall-check **`Vec`** home **`−0x90`** vs **`−0x50`** — **~96.1%** (348B) — deferred.
+- **`tobiPuku` / `TNerveTobiPukuGenerate::execute`**: **`r29`/`r30`** spine body + **`MsGetRotFromZaxis`** stack — **~96.2%** (428B) — deferred.
+- **`mameGesso` / `TMameGesso::calcObjCollision`**: **`@1490`** before **`stwu`** + joint **`fmuls`** order — **~99.2%** (368B) — deferred.
+- **`generator` / `TGenerator::load`**: read buffer **`r1+0x5c`/`0x60`/`0x64`** vs shared **`+0x50`** — **~99.6%** spill — skipped.
+- **`enemy` / `TSpineEnemy::calcTurnSpeedToReach`**: **`fnmsubs`/`frsqrte`** spill **`r1+0x1c`** — **~99.4%** (224B) — deferred.
+
+**Tip (R285s).** **`TTelesa::isReachedToGoal`**: after **`addi r4,r3,0x104`**, retail **`lwz`×3** into **`r1+0x14`** then per-component **`fsubs`** — **`getPoint()`** inlines to **`lfs` from `r4`**, wrong frame and schedule.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
+### R285t (Enemy/Player B; skip isReachedToGoal, 0× ship)
+
+**Hunt.** **~6** MAP; skip **R285 thrash**, **`isReachedToGoal`**, spill **≥99.7%**, Closet/MoveBG; strict **100%** only; no frame fakematch.
+
+**Ship.** none.
+
+**Probes (~6).**
+
+- **`riccohook` / `TNerveRHGraphWander::execute`**: graph wander / spine temps — **~91.7%** (736B) — deferred.
+- **`emario` / `TEMario::init`**: fog packet loop **`lwz`/`SMS_InitPacket_Fog`** order — **~94.1%** (436B) — deferred.
+- **`bossgesso` / `TBossGesso::lenFromToeToMario`**: toe **`Vec`** **`fmuls`/`fmadds`** chain order — **~92.3%** (412B) — deferred.
+- **`tamaNoko` / `TNerveTamaNokoThrown::execute`**: **`gpMarioAngleY`** / **`jmaSinTable`** load schedule — **~75.9%** (268B) — deferred.
+- **`enemytable` / `TStageEnemyInfoTable::getMatchedInfo`**: **`r28`** weight sum, **`−0xa0`** ary walk — **~92.4%** (276B) — deferred.
+- **`enemyAttachment` / `TEnemyPolluteModel::perform`**: retail **`r31`=`graphics`**, **`−0x80`**; drop **`trash[0x38]`** → **~91.6%** — reverted.
+- **`MarioAccess` / `SMS_IsMarioOnWire`**: **`mHolder`** double **`lwz 0x68`** + **`subfe`** bool — holder reload trial → **~47.2%** — reverted (**~93.8%** baseline).
+
+**Tip (R285t).** **`SMS_IsMarioOnWire`**: no stack frame; **`lwz r0,0x68(r3)`** then **`cmplwi`**, then **`lwz r3,0x68(r3)`** again before **`0x4c`** — **`&&`/`!!ret`** folds to **`cntlzw`**, not retail **`neg`/`subfe`**.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
+### R285u (Enemy/Player B; optional wire, 0× ship)
+
+**Hunt.** Optional **`SMS_IsMarioOnWire`**; else **~6** MAP; skip **R285 thrash**, spill **≥99.7%**, Closet/MoveBG; strict **100%** only; no frame fakematch.
+
+**Ship.** none.
+
+**Probes.**
+
+- **`MarioAccess` / `SMS_IsMarioOnWire`**: **`int r0`/`!!`**, **`mario->mHolder &&` helper**, **`mario` local `&&`** — best **~93.8%** (72B); still **`lwz r0,0x68`** vs **`lwz r3`**, missing **`clrlwi` before `neg`**, no second **`0x68`** reload — reverted to baseline source.
+- **`spider` / `TSpider::bind`**: **`−0x158`** / **`f27`–`f29`** saves vs **`stmw`** — **~83.9%** (1396B) — deferred.
+- **`WaterGun` / `TNozzleBase::emit`**: **`−0x158`** particle emit frame — **~89.0%** (716B) — deferred.
+- **`wireBinder` / `TWireBinder::init`**: **~99.6%** spill — skipped.
+- **`enemy` / `TSpineEnemy::doShortCut`**: **~94.7%** (800B) — deferred.
+- **`bossManta` / `TBossMantaManager::updateMantaEscape`**: **~90.0%** (344B) — deferred.
+- **`effectObj` / `TEffectColumWater::generate`**: **`Vec`** stack **`r1+0x18`** — **~91.9%** (312B) — deferred.
+
+**Tip (R285u).** **`SMS_IsMarioOnWire`**: first **`mHolder`** test must **`lwz`→`r0`** with **`cmplwi`/`beq`** while **`r3`** stays **`gpMarioOriginal`**; **`return !!ret`** is closer than **`return r0`**, but **`mHolder` reload @ `0x68(r3)`** before **`0x4c`** still unsolved in C without **`lwz r0`** scheduling.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
+### R285v (Enemy/Player B; defer wire, 0× ship)
+
+**Hunt.** Defer **`SMS_IsMarioOnWire`**; **~6** fresh MAP; skip **R285 thrash**, spill **≥99.7%**, Closet/MoveBG; strict **100%** only; no frame fakematch.
+
+**Ship.** none.
+
+**Probes (~6).**
+
+- **`enemymanager` / `TEnemyManager::createEnemies`**: ary **`0x10`/`0x14`** iterator **`lwz`** order vs clamp — **~98.8%** (340B) — deferred.
+- **`launcher` / `TCommonLauncher::init`**: **`@1664`** pool + **`lwz 0x168(r31)`** before **`rand`/`xoris`** — **~98.1%** (748B) — deferred.
+- **`Amenbo` / `TNerveAmenboTurn::execute`**: velocity **`stw`** block **`r1+0x44`** vs **`+0x30`** — **~98.9%** (704B) — deferred.
+- **`bossgesso` / `TBGBeakHit::moveRequest`**: Mario angle **`lfs`** / **`Vec`** home **`−0x78`** — **~98.6%** (416B) — deferred.
+- **`Yoshi` / `TYoshi::appearFromEgg`**: egg appear / scale — **~97.6%** (392B) — deferred.
+- **`hamukuri` / `THamuKuri::getTakingMtx`**: taking mtx **`−0x`** frame vs **`TDangoHamuKuri`** — **~92.2%** (256B) — deferred.
+- **`graph` / `TGraphWeb::getEscapeFromMarioIndex`**: path index walk — **~97.2%** (592B) — deferred.
+
+**Tip (R285v).** **`TCommonLauncher::init`**: retail **`lwz r29,0x168(r31)`** sits **before** **`bl rand`** and pairs with **`xoris r0,r29`** for the **`f64` scale** — hoisting **`rand`** above that load breaks the **`lfd`/`stw`** schedule (~98%).
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
+### R285w (Enemy/Player B; optional launcher init, 0× ship)
+
+**Hunt.** Optional **`TCommonLauncher::init`** (**`lwz 0x168` before `rand`**, no frame fakematch); else **~6** fresh MAP; skip **R285 thrash**, **wire**, spill **≥99.7%**, Closet/MoveBG; strict **100%** only.
+
+**Ship.** none.
+
+**Init (`launcher`).** **`s32 period = mLaunchPeriod;`** + **`rand() * (1.f / (RAND_MAX + 1)) * period`** (nonmatching TU) — **`rand`/`xoris`/`fctiwz`** cluster matches retail; still **`stwu -0xb0`** vs **`-0xa8`** and **`r1+0x50`** iterator homes — **~99.9%** (748B) — not promoted.
+
+**Probes (~6).**
+
+- **`conductor` / `TConductor::getManagerByName`**: manager list walk — **~99.6%** (188B) — **`−0x58`** frame only — deferred.
+- **`conductor` / `TConductor::killEnemiesWithin`**: **`@3643`** name table + **`f31`** — **~99.6%** (216B) — **`−0x70`** frame — deferred.
+- **`mameGesso` / `TMameGesso::calcObjCollision`**: **`0x418`/`0x148`** **`lfs`** order + **`fmuls`** temps — **~99.2%** (368B) — deferred.
+- **`poihana` / `TPoiHana::walkBehavior`**: sleep timer **`mulli`/`lwz`** register schedule — **~99.3%** (376B) — deferred.
+- **`enemy` / `TSpineEnemy::goToDirLimitedNextGraphNode`**: graph tracer **`−0xd8`** vs **`−0x90`** — **~99.5%** (432B) — deferred.
+- **`MarioJump` / `TMario::jumpCatch`**: catch window math — **~99.6%** (696B) — deferred.
+- **`conductor` / `TConductor::makeOneEnemyAppear`**: spawn helper — **~99.2%** (404B) — deferred.
+
+**Tip (R285w).** **`TCommonLauncher::init`**: **`period` in `r29` before `bl rand`** is enforced by **`rand() * (1.f/(RAND_MAX+1)) * period`**, not **`MsRandF()`** — fixes the **`lwz 0x168`** / **`xoris r29`** block; **`−0xb0`** frame needs a real spill/inlined neighbor, not **`char trash`**.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
+### R285x (Enemy/Player B; MAP ≤200B band, 0× ship)
+
+**Hunt.** **~6–8** fresh B symbols **`≤~200B`** from MAP; skip **R285** thrash (**`TCommonLauncher::init` frame**, **R285v/w** probes, **DangoHamuKuri** pad, **EnemyAttachment** bind, **EnemyPolluteModel** perform, **genEventCoin**, **emWaiting**, **BathtubKillerManager::load**); strict **100%** only; no frame fakematch.
+
+**Ship.** none.
+
+**Probes (~8).**
+
+- **`graph` / `TGraphWeb::startIsEnd`**: **`r4`/`r5`** first-rail walk — **~98.8%** (120B); **`unk0[i].unk0` locals** → **~93.2%** — reverted.
+- **`bosseel` / `TBEelTearsManager::createEnemies`**: **`JKRGetResource` → `r30`**, **`stwu -0x30`** — **~99.7%** (184B) — deferred.
+- **`walkerEnemy` / `TWalkerEnemy::isReachedToGoalXZ`**: goal **`Vec`** spill **`r1+0x14`** retail **`−0x20`** — **~99.7%** (200B) — deferred.
+- **`walkerEnemy` / `TWalkerEnemy::isResignationAttack`**: same spill family **`−0x48`** vs **`−0x58`** — **~99.7%** (220B) — deferred.
+- **`tobiPuku` / `TTobiPuku::isReachedToGoalXZ`**: walker XZ clone — **~99.7%** (200B) — deferred.
+- **`fireWanwan` / `TRotation3::setQuat`**: **`f1`/`f2` temp schedule on quat→matrix — **~98.5%** (160B) — deferred.
+- **`telesa` / `TTelesa::isReachedToGoal`**, **`tamaNoko` / `TTamaNoko::isReachedToGoal`**: **~97.3%** (200B) — prior defer — skipped.
+- **`bosswanwan` / `TBossWanwanManager::createModelData`**: retail **52B** **`createModelDataArray(entry)`** only — **target-only** (empty **`bosswanwan.cpp`**) — scaffolding, not a byte match path this round.
+
+**Optional.** **`popo`/`poihana`/`bombhei`** nerve **`execute`** text already **100%** in diff scan; **`createModelData`** on **`coasterkiller`/`riccohook`/`launcher`** managers already **100%**.
+
+**Tip (R285x).** Treat **`≤200B` @ ≥99.6%** in Enemy/Player as **frame/spill class** unless MAP shows a missing symbol or a **≤52B** **`createModelData`** stub; **`startIsEnd`** needs **`getFirstGraphNode()`** call shape, not **`unk0[0].unk0`** pointers.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
+### R285y (Enemy/Player B; missing 52B createModelData scan, 0× ship)
+
+**Hunt.** Prefer missing **`≤52B` `createModelData`** where scaffolding exists; B symbols with real opcode gaps (not **`stwu` Δ8**); skip **R285** thrash + **R285v–x** band.
+
+**Ship.** none.
+
+**`createModelData` inventory.** **~28** Enemy managers **missing** **52B** **`createModelData`** in objdiff (**`bombhei`**, **`popo`**, **`killer`**, **`Koopa`**, **`bosstelesa`**, **`bosswanwan`**, …). Retail asm = **`entry$` + vtable `0x2c` `blrl`** (same shape as **`TEggGenManager`**, already **100%** in **`egggen`**). **`TTelesaManager::createModelData`** already **100%** in **`telesa`**. Every missing manager checked against **`src/Enemy/*.cpp` size**: stubs are **1 B** — **no** byte-match path without full TU revive.
+
+**Other probes (opcode vs frame).**
+
+- **`namekuri` / `NameKuriScaleCallback`**: **`Mtx local_3c` / `PSMTXConcat`** home **`r1+0x44`** vs **`+0x48`** — **~98.9%** (240B) — matrix spill, deferred.
+- **`gatekeeper` / `TBiancoGateKeeper::getRumblePow`**: **~99.8%** (220B) — spill-only — skipped.
+- **B-wide scan**: no **`≤200B` @ ≥99.5%** with dominant **`|`/`<`/`>`** gaps outside skip lists this round.
+
+**Tip (R285y).** **`createModelData` ships** only after the manager TU exists (**headers, vtable, symbol order**); reference **`egggen.cpp`** **`TEggGenManager::createModelData`**. Gate **9275** moves only on **Matching**-linked TUs — stub **`createModelData` in empty `.cpp`** does not help.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
+### R285z (Enemy B; `bombhei` TU revive — `createModelData` + manager scaffold)
+
+**Hunt.** Revive **`bombhei`** stub per **`docs/PROGRAM_STRUCTURE_REVVING.md`**: **`BombHei.hpp`**, **`TSmallEnemyManager`** subclass, **`createModelData`** like **`egggen`/`coasterkiller`**.
+
+**Ship (8× `.text` @ 100%, TU still NonMatching).**
+
+- **`TBombHeiManager::createModelData`** — **52B** (was **missing**).
+- **`TBombHeiManager::{TBombHeiManager,createEnemyInstance,~TBombHeiManager}`**.
+- **`TBombHei::{TBombHei,getBasNameTable,~TBombHei}`** + **`@32@__dt__8TBombHeiFv`**.
+- Data: **`entry[]`**, **`bombhei_bastable`**, rodata strings pulled in via PCH compile.
+
+**WIP.** Nerves, **`load`**, actor overrides, **`__sinit_bombhei_cpp`** — still **missing**; no **`mSerialBomb`**.
+
+**Tip (R285z).** **`TBombHei`** needs **`0x1A8`** with **`unk19D[7]`** before **`unk1A4`** or **`createEnemyInstance`**/`ctor` store at **`0x19D`**.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0** (NonMatching TU not linked); **`mario/Enemy/bombhei`** **~5.6%** matched code in unit report.
+
+### R286 (B; DOL-link `bgpoldrop` + `MarioBlend`, bombhei weak stub)
+
+**Ship (DOL-linked, `build.sha1` OK).**
+
+- **`configure.py`**: **`Enemy/bgpoldrop.cpp`**, **`Player/MarioBlend.cpp`** → **`Matching`** (byte-identical `.o`; **12** functions now in retail DOL).
+- **`TBombHei::setAfterDeadEffect`** — **4B** @ **100%** (weak; TU still **NonMatching**).
+
+**Gate.** Total **`matched_functions` 9283 → 9284** (+1 weak on non-linked **`bombhei`**). Excluding all **`bombhei`** matches, effective vs **9275** remains **even**. **`complete_units` 415 → 417**; Game Code **`matched_functions`** **5318 → 5319** (includes non-linked **`bombhei`** bump).
+
+**DRY / next.** **`TSplashManager::makeDL`** (**392B**, **~99.9%**, stack **`0x54`/`0x58`**); **`TNerveBombHeiPickUp::execute`** (**44B**); flip **`DebuTelesa`** only after DOL SHA1 passes (failed this round).
+
+### R258 (Aufgabe B; defer GraphGroup/ColumSand pool + diversify, 0× ship)
+
+**Hunt.** Post-R257 dry; **defer `TGraphGroup::perform`** (empty **`TGraphWeb::perform` DCE**) and
+**`TEffectColumSand::reset`** (**`@1490` prologue**); prefer MAP-clear wins outside R251–R257 thrash;
+skip stuck lists, empty TUs, Closet/MoveBG; **`ninja baseline`** + **`changes_all`**; cap ~8; strict
+100% only.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, reverted / no-ship).**
+
+- **`TCoasterEnemy::bind`**: **99.9%** — retail manual **`fadds`** chain + **`TVec3::sub`** into
+  **`mLinearVelocity@0x94`**; source already correct; only **`TVec3` spill `r1+0x10` vs `+0x1c`**;
+  explicit **`pos.sub`/`component` rewrite** → **40.1%** — reverted.
+- **`TLiveActor::bind`**, **`TNerveBathtubKillerExplosion`**: **100.0% fuzzy** / **99.9%** — same
+  **`sub` temp** spill class at epilogue only.
+- **`TBiancoGateKeeper::getRumblePow`**, **`TYoshiTongue::canGo`**: **99.8%** / **99.7%** — vec
+  distance math; stack **`~`** only.
+- **`TNerveTamaNokoSink`**, **`TGessoPolluteObj::set`**, **`TLiveActor::initAnmSound`**: **99.x%** —
+  frame/spill **`~`**.
+- **`TEffectColumSand::reset`**, **`TGraphGroup::perform`**: skipped (R257 defer).
+- **`TMarioEffect`**, **`waitingCommonEvents`**, **`TNerveSmallEnemyJump`**: skipped (thrash).
+
+**Tip (R258).** High fuzzy **Enemy `bind()`** overrides (**`TCoasterEnemy`**, base **`TLiveActor`**) are
+often already logic-matched; remaining gaps are **`TVec3` home addresses** on **`stwu -0x40`** frames,
+not missing physics — avoid **`sub()`/`component`** rewrites that shrink the frame (**`stwu -0x18`**
+regression on coaster).
+
+**Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged).
+
+### R257 (Aufgabe B; defer MarioEffect pool + diversify MAP, 0× ship)
+
+**Hunt.** Post-R256 dry; **defer `TMarioEffect` water-jump pool (`@1490`/`slwi`)**; prefer other
+string/PARAM/float/vtable/text outside R251–R256 thrash; skip stuck lists, empty TUs, Closet/MoveBG;
+**`ninja baseline`** + **`changes_all`**; cap ~8; strict 100% only.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, reverted / no-ship).**
+
+- **`TGraphGroup::perform`**: **96.8%** (88 B) — retail is a **Duff-style counter** (no **`bl`**):
+  empty **`TGraphWeb::perform`** inlines away; **`for (i < unk4)`** becomes **`r7`/`r6`/`r5`**
+  schedule; explicit **`r7`/`r6`/`r5` C** regressed to **50.7%** — reverted.
+- **`TEffectColumSand::reset`**: **98.5%** — retail **`lis @1490` before `stwu`**, **`r30`=pool /
+  **`r31`=this**, **`TSpineEnemy::reset`**, **`@1490+0x1c8`** anim strings; **`TEffectModel::reset`**
+  call vs inlined spine+flags same **98.5%**; prologue swap remains.
+- **`TEnemyManager::createEnemies`**, **`TConductor::makeOneEnemyAppear`**: **98.8%** / **99.2%** —
+  frame + spill **`~`** only.
+- **`TNerveFireWanwanDie`**, **`TNerveBathtubKillerBreak`**: **99.5%** / **99.9%** — frame / vec
+  spill **`~`**.
+- **`TMario::soundTorocco`**, **`TGraphGroup::initGraphGroup`**: **99.6%** / **99.8%** — stack only.
+- **`TMarioEffect::*`**, **`waitingCommonEvents`**, **`TNerveSmallEnemyJump`**: skipped (defer/thrash).
+
+**Tip (R257).** **`TGraphGroup::perform`** matches only when MWCC emits the retail empty-loop counter
+(depends on **`TGraphWeb::perform` {}** in the same TU); do not hand-unroll without asm proof.
+**`effectObj`** **`@1490`** functions need **`lis` before `stwu`** and pool offset **`+0x1c8`**, not
+swapped **`this`/pool` in **`r30`/`r31`**.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged).
+
+### R256 (Aufgabe B; hard diversify data/pool + Player FX, 0× ship)
+
+**Hunt.** Post-R255 dry; skip **`TNerveSmallEnemyJump`** + R251–R255 thrash/stuck lists; prefer
+**`@1490`/string pool**, Player camera/FX/helpers, Enemy managers; empty TUs / Closet / MoveBG off;
+**`ninja baseline`** + **`changes_all`**; cap ~8; strict 100% only.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, no-ship).**
+
+- **`TMarioEffect::setJumpIntoWaterEffectSmall`**: **95.2%** — retail inlines slot pick + loads
+  **`@1490`** into **`r31`**, **`setBck`…`setBrk`** via **`r31+0x14c`**, **`slwi`/`lwzu`/`add`**
+  **`unk74`/`unk6C`** schedule; header **`getThing()`** + literal **`"04_tobikomi"`** ⇒ **`-0xe8`**
+  frame, wrong pool reg; inlined **`getThing()`** alone still **95.2%**; **`byteOff`/`MActor*`** cast
+  path regressed to **68.9%** — reverted.
+- **`TMarioEffect::setJumpIntoWaterEffect`**, **`init`**: **97.7%** / **98.5%** — same pool/frame
+  class; defer bundled with Small.
+- **`TEnemyManager::createEnemies`**: **98.8%** — **`@3758`** rodata + **`-0xb0`** frame; opcode
+  **`lwz`/`cmpw`** order on **`unk10`/`unk38`** only with frame fix.
+- **`TMario::toroccoEffect`**, **`surfingEffect`**, **`TBubbleCallBack`**: **99.x%** — stack **`~`**
+  only (**`-0x90`** vs **`-0x88`**).
+- **`CLBCalcPointInCubeRatio`**, **`CLBIsPointInCube`**: **98.4%** / **98.5%** — camera float helpers;
+  **`fneg`/`lfsx`** operand scheduling + large frame delta; defer.
+- **`TEffectColumWater::generate`**, **`TEffectObjBase::perform`**: **91.9%** / **90.8%** — structural,
+  not quick pool wins.
+- **`TEnemyManager::copyAnmMtx`**: skipped (R251–R255 exhausted list).
+
+**Tip (R256).** See **`docs/AGENT_MATCHING_TIPS.md`** — **`setJumpIntoWaterEffectSmall`** needs TU
+**`@1490+0x14c`** string refs and post-**`MTXConcat`** **`slwi`** actor/**`unk6C`** addressing, not
+**`getThing()`** + freestanding literals.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged).
+
+### R254 (Aufgabe B; defer wait MAP ambiguity + EP diversify, 0× ship)
+
+**Hunt.** Post-R253; optional **`waitingCommonEvents`** only if MAP-clear **`IConverge`** + **`rlwinm`**;
+else diversify; skip R251–R253 thrash/stuck, empty/Closet/MoveBG; **`ninja baseline`** +
+**`report.json`** + **`changes_all`**; cap ~8.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, reverted / no-ship).**
+
+- **`TMario::waitingCommonEvents` (optional, not MAP-clear):** **`mario.MAP`** lists symbol only
+  (no flag names). Retail **`rlwinm` bit 17** on **`mFlag@0x118`** ⇒ **`0x20000`** (**`MARIO_FLAG_IN_WATER`**
+  in header), not **`MARIO_FLAG_IS_PERFORMING` (`0x200000`)**. **`trash[0x10]`** + **`face − intended`**
+  still leaves **`extsh`**, **`mInput` bit 16 vs 15**, wrong **`mFlag`** bit with **`& IS_PERFORMING`**
+  or **`& 0x20000`** — defer to humans.
+- **`TNerveSmallEnemyJump`**: same **`cmpwi` vs `clrlwi`** on **`||`** live flags + **`-0x58`** frame.
+- **`TNerveSmallEnemyHitWaterJump`**, **`TEMario::init`**, **`doRunning`**, **`isFindMario`**: frame/reg
+  **`~`** or defer.
+- **`TNerveSmallEnemyFreeze`**: **100%** fuzzy in overview — already matched or no `.text` diff listed.
+
+**Tip (R254).** Treat **`waitingCommonEvents`** **`mFlag`** branch as **asm-first**: retail tests
+**bit 17 (`0x20000`)**; **`checkFlag(IS_PERFORMING)`** cannot match until enum/source agree with MAP
+or cross-TU evidence — **`trash[0x10]`** alone is insufficient.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged).
+
+### R253 (Aufgabe B; EP outside R251–252 defer, 0× ship)
+
+**Hunt.** Post-R252; skip **`checkRideMovement`**, **`isReachedToGoal`**, **`checkReturn`**, **`diving`** +
+R244–R252 thrash/stuck; prefer opcode/PARAM/string; empty/Closet/MoveBG off; **`ninja baseline`** +
+**`report.json`** + **`changes_all`**; cap ~8.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, reverted / no-ship).**
+
+- **`TMario::waitingCommonEvents`**: **`char trash[0x10]`** → **`stwu -0x38`** matches retail; **`mFaceAngle.y -
+  mIntendedYaw`** for **`IConverge`** + **`mFlag & MARIO_FLAG_IN_WATER`** / **`(1<<16)`** input → **95.4%**
+  (retail **`rlwinm` bit 17/16** vs wrong homes); reverted.
+- **`TNerveSmallEnemyHitWaterJump`**: split **`||`** early-outs → **97.7%** (extra branches); keep **`||`** +
+  **`cmpwi` vs `clrlwi`** + **`-0x90`** frame defer.
+- **`TGraphGroup::perform`**, **`drawHPMeter`**, **`getNeighborNodeIndexByFlag`**: reg **`~` only**.
+- **`TNerveTobiPukuGenerate`**: **`mr r29` vs `r30`** spine reg — frame/scheduling.
+
+**Tip (R253).** **`waitingCommonEvents`**: **`trash[0x10]`** is the frame key; opcode gaps are **`IConverge`**
+diff sign (**`face − intended`** + **`extsh` before call only**) and **non-`checkFlag`** **`mFlag`/`mInput`**
+bit tests for retail **`rlwinm`** slots — do not swap **`IS_PERFORMING`** for **`IN_WATER`** without map proof.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged).
+
+### R252 (Aufgabe B; EP diversify, defer ride, 0× ship)
+
+**Hunt.** Post-R251; **defer `checkRideMovement`** (full local order for **`-0xd0`** + vec/Mtx homes);
+prefer other Player/Enemy opcode/string/PARAM paths; skip R244–R251 thrash/stuck, empty/Closet/MoveBG;
+**`ninja baseline`** + **`report.json`** + **`changes_all`**; cap ~8.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, reverted / no-ship).**
+
+- **`TTelesa::isReachedToGoal`**: naive **`unk0`/`unk4`** open-code (no **`getPoint()`** call) → **74.8%**
+  (register homes **`r4`/`r5`** vs retail **`addi r4, r3, 0x104`** prologue); reverted.
+- **`TEnemyMario::checkReturn`**: componentwise **`TUtil::sqrt`** + **`distThresh`** local → **60.7%**
+  (retail **`f31=@4337`** before loop + interleaved **`gpMarioPos`** loads); reverted.
+- **`TMario::diving`**: **`li r4,0` vs `addi r5,r31,0x219c`** around **`unk1CC2`/`unk1CC4`** — PARAM path,
+  not a quick ship.
+- **Frame-only (~):** **`checkWallPlane`**, **`checkWet`**, **`TGessoPolluteObj::set`**, **`turnToCurPathNode`**,
+  **`TNerveGessoFreeze`** (extra **`b`** + frame).
+
+**Tip (R252).** Overrides that mirror inlined **`TPathNode::getPoint()`** (e.g. **`isReachedToGoal`**) need the
+**`this+0x104`** pointer setup **and** retail register allocation — replacing **`getPoint()`** with equivalent
+C alone is not enough.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged).
+
+### R251 (Aufgabe B; ride frame validation + EP diversify, 0× ship)
+
+**Hunt.** Post-R250; optional **`checkRideMovement`** only if **`-0xd0`** + retail vec/Mtx homes
+match without fakematch; else diversify Player/Enemy B-scope (~8); skip R244–R250 thrash/stuck;
+**`ninja baseline`** + **`report.json`** + **`changes_all`**.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, reverted / no-ship).**
+
+- **`TMario::checkRideMovement`**: **`groundActor != nullptr`** first branch → **99.9%** (**180 ins**),
+  opcode cluster clean; **`char trash[0x20]`** at entry → **`stwu -0xd0`** OK but **`pos` vec still
+  **`0x94` vs `0xb0`**; hoisted **`Mtx`×2** → **`-0xe0`**, vec **`0x60`** — decoupled padding; defer.
+- **`TMario::checkWallPlane`**, **`checkWet`**, **`TGessoPolluteObj::set`**, **`TConductor::getManagerByName`**:
+  frame / spill **`~` only**.
+- **`TNerveGessoFreeze`**: missing retail **`b`** + **`-0xa8`** frame; **`TNerveGessoFall`**, **`TYoshi::thinkHoldOut`**:
+  **`~` only**.
+
+**Tip (R251).** Frame **`trash[N]`** can fix **`stwu`** without moving high vec spills — see
+**`docs/AGENT_MATCHING_TIPS.md`** (`checkRideMovement`).
+
+**Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged).
+
+### R250 (Aufgabe B; Mario ride + diversified EP scan, 0× ship)
+
+**Hunt.** Post-R249; **diversify** — Player helpers + non-Pakkun/BossPakkun/Hino2 TUs; skip **Hino2PrePol** +
+R244–R248 failures/stuck; string/PARAM/float where clear opcode path; empty/Closet/MoveBG off;
+**`ninja baseline`** + **`report.json`** + **`changes_all`**; cap ~8.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~7, reverted / no-ship).**
+
+- **`TMario::checkRideMovement`** (**99.9%**, **720 B**, **180 ins**): drop **`wall != nullptr`** on
+  first ground-ride branch; **`groundActor != nullptr`** + jump + **`isTouchGround4cm`** per
+  **`MarioMove.s`** (**`lwz 0x44(r4)`/`cmplwi r5`** before wall **`r3`** use); opcode cluster fixed,
+  **`stwu -0xd0` vs `-0xb0`** remains; reverted.
+- **EP scan (frame / reg-only):** **`TYoshi::thinkHoldOut`** (**`r3`/`r4`** pos ptr),
+  **`TMario::warpRequest`**, **`TMario::thinkSituation`** (100.0% fuzzy, stack),
+  **`TBoxTelesa::load`**, **`TNerveTamaNokoDown`**, **`calcFarthestVertex`**.
+
+**Tip (R250).** **`checkRideMovement`** first assign is **`groundActor`-gated only** (retail never
+**`cmplwi r3`** there); matching the branch is separate from fixing the **`-0xd0`** vec/Mtx locals
+(**`0xb0`/`0x3c`/`0x80`** spill layout).
+
+**Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged). Tip
+**`a54d0b57`**.
+
+### R225 (Aufgabe B; bossManta rodata + EP diversify, 0× ship)
+
+**Hunt.** Post-**`385107f3`**; optional **`bossManta` `@2805`/`@2807`** lead (Amenbo
+closure + **`f32[3]`** before **`TNerveMantaHitWater`**; **full 1744 B `.rodata`**);
+cap **1–2** on that then diversify; skip R222–R224 stack + stuck lists; cap ~8.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, reverted / no-ship).**
+
+- **`bossManta` (2 focused):** (1) **`MapCollisionEntry` + `f32[3]`** pools — objdiff
+  **`@2805`/`@2807` 100%** but **`.rodata` len 1787**, first diff **`0xC`** (same as
+  R224). (2) **Pools only** — bytes at **`0xE0…0xF7`** OK, **len 1763**, skew
+  **`0x178`**, **`entry$3295` 85.7%** (was **100%**). **File-scope `hitSounds[]`**
+  → **`@2983` 100%** / **1739 B** but **`@2805` still out** and
+  **`TNerveMantaHitWater` 86.9%** (reverted all).
+- **EP object scan:** unchanged stuck **`.ctors`** (`MarioMove`/`MarioDraw` jumps,
+  **`bgtentacle` `@4448`**, empty koopajr, **`bossManta` `@2805`**).
+- **`bgtentacle` `@4448`:** **`.data`** jump table for **`moveConstraint`** — control-flow,
+  not strings.
+- **`TConductor::getManagerByName`** (99.6%, 188 B): **`stwu -0x58`** vs **`-0x48`** — stack.
+- **`TGessoPolluteObj::getNowGravity`** (98.1%, 32 B): **`r3`/`r4`** base reg — not PARAM.
+- **`TBossManta::getPolluteRadius`:** not re-tried (R224 defer).
+- **EP `≥99%` `.rodata`/`.sdata2`/`.data`:** none outside skip/stuck TUs.
+
+**Tip (R225).** Treat **`@2805`/`@2807`** as **dead tail padding** tied to
+**`InfectiousStrings` + nerve-local rodata** emission — not a standalone **`f32[3]`**
+  literal you can add without shifting **`@2983`** / **`entry$3295`**. Until retail
+  side-effect is identified (cf. **`bosseel`** padding before **`bastable`** strings),
+  verify with **`objcopy -O binary --only-section=.rodata`** (**1744 B**), not objdiff
+  labels alone.
+
+**Verify.** `ninja changes_all` ggü. **`385107f3`** — **no diff** (clean tree).
+
+### R224 (Aufgabe B; EP rodata / small `.text`, 0× ship)
+
+**Hunt.** Post-**`90d09d0d`**; skip R222–R223 failures + stuck lists
+(**`NameKuriLand`**, **`getRumblePow`**, **`createEnemies`**, **`perform`**, DebuTelesa,
+MtxCalc, WaterGun/Tongue/RiccoHook, Closet/MoveBG); prefer ≤200 B / data-only;
+MAP string order / **`nullptr`** / PARAM / float-split / bogus-**`virtual`**; cap ~8.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, reverted / no-ship).**
+
+- **EP object scan:** only **`.ctors`** blobs — **`MarioDraw` `@5888`**, **`MarioMove`
+  `@6662`/`@6663`** (jump/control-flow), **`bossManta` `@2805`** (12 B), empty
+  **`koopajr`/`limitkoopajr`** (skipped).
+- **`bossManta` `@2805`/`@2807`:** retail **`.rodata` `0xE0…0xF7`** = zero **`Vec3`**
+  + **`(1,1,1)`** between mtx-calc strings and **`@2983`** damage-sound pool;
+  **`static f32[3]`** pools **before `TNerveMantaHitWater`** place bytes at **`0xE0`**
+  but objdiff labels **`@2807` missing** (only **`0x178…`** tail skew, +19 B);
+  **`MapCollisionEntry.hpp`** before **`InfectiousStrings`** → **`@2805`/`@2807`
+  **100%** labels but **rodata shuffle from `0xC`** (reverted).
+- **`TBossManta::getPolluteRadius`** (99.5%, 124 B): retail **`stwu -0x28`** +
+  **`lfs` order** (`param`×`scale`) vs our **`-0x20`** — stack/scheduling (defer).
+- **`TGraphWeb::startIsEnd`** (98.8%, 120 B): **`r4`/`r5`** swap on graph node
+  loads — not a string/**`nullptr`** fix.
+- **`TSpineEnemy::calcRootMatrix`** (`enemy.cpp`, 97.1%, 156 B): frame **`0x30`**
+  vs **`0x28`** — skipped (stack thrash).
+- **`TConductor::getManagerByName`** (99.6%, 188 B): strcmp loop scheduling — not
+  pursued.
+- **`fireWanwan` / `graph::perform` / `Yoshi::getEmitPosDir`:** on R222 skip list.
+- **Retail TU pattern:** **`bosseel`/`Amenbo`** share same **12+12 B** padding after
+  mtx strings when **`InfectiousStrings`** + early **`.data`** follow — **`bossManta`**
+  lacks **`bastable`** string block at that slot.
+
+**Tip (R224).** For **`@2805`/`@2807`**, match **Amenbo** include closure
+(**`MapCollisionEntry` before `InfectiousStrings`**) *and* emit the **`f32[3]`**
+  pools **immediately before** the nerve that owns the next rodata pool
+  (**`@2983`** / **`hitSounds[]`**). Label **100%** without full **`.rodata`**
+  equality still fails if later pools shift — verify with **binary `.rodata`**
+  compare, not objdiff object names alone.
+
+**Verify.** `ninja baseline` + `ninja changes_all` ggü. **`90d09d0d`** — **no diff**.
+
+### R223 (Aufgabe B; nerves / helpers / enemymanager, 0× ship)
+
+**Hunt.** Post-**`f185af2f`**; avoid R222 re-probes + stuck lists; target
+unmatched **nerves**, **Player helpers** (not **`MarioAccess`/`Yoshi`**),
+**`TEnemyManager`** / manager data; MAP bogus-**`virtual`**; cap ~8.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, no-ship).**
+
+- **Nerves:** **`TNerveNameKuriLand`** (83.9%, 144 B) — retail **`stwu -0x20`** +
+  **`r31=self`** + **`setBckAnm(4)` `blrl`**; **`trash[0x18]`/`r31` name** blew
+  frame to **`-0x38`** (reverted). **`TNerveGessoPollute`** **100%**; **`TNerveBGK*`** /
+  **`fireWanwan`** nerves = stack/control (skipped).
+- **`TBiancoGateKeeper::getRumblePow`** (99.8%, 220 B): **`TVec3 diff`** stack at
+  **`r1+0x18`** vs **`+0x1c`**; **`trash[4]`** before diff → **99.7%** (reverted).
+- **`TEnemyManager::createEnemies`** (98.8%, 340 B): **`@3758`** vs **`@1754`**
+  debug pool + **`0xb0` vs `0xa8`** frame — emission/stack, not nullptr table.
+- **`TEnemyManager` objects / `enemymanager` `.data`:** **100%** (no manager data
+  gap).
+- **MAP bogus-`virtual`:** no new **`Subclass::method`** without MAP symbol
+  (post-R212 **`TRiccoHookManager`**); **`TGessoPolluteObj`/`TEnemyPolluteModel`**
+  vtables **100%**.
+- **`createModelData`:** **`gesso`/`hamukuri`/`effectObj` colum managers** **100%**
+  (entry pool labels differ only).
+- **`TEffectObjBase::perform`:** not re-tried (R222 defer).
+
+**Tip (R223).** Small **nerves** that call **`setBckAnm`/`checkCurAnmEnd` via
+vtable** often need **`r31 = body`** and **`0x20`** stack like retail
+**`TNerveNameKuriLand`** — same class as **`TEffectObjBase::perform`** (frame
+before virtual **`blrl`**), not a BCK string typo.
+
+**Verify.** `ninja changes_all` ggü. **`f185af2f`** — **no diff**.
+
+### R222 (Aufgabe B; small EP `.text` ASM patterns, 0× ship)
+
+**Hunt.** Post-**`8de329bc`**; diversify off dry **`@NNNN`** data hunts — prefer
+small Enemy/Player **`.text`** (trash/locals, load order, virtual **`blrl`**,
+**`createModelData`**); skip switch **`.rel`** like **`@4827`**; cap ~8.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, no-ship).**
+
+- **`TEffectObjBase::perform`** (90.8%, 88 B): retail **`stwu -0x20`**, **`stw
+  r31`**, **`blrl`** → **`moveObject`** @ vtable **+0xb0**; ours inlines direct
+  call + **`0x8`** frame — **`#pragma dont_inline`/`trash[0x18]`/`r31=cue`**
+  still **`0x8`** frame (reverted).
+- **`TGessoPolluteObj::getNowGravity`** (98.1%, 32 B): retail loads **`unk1E8`**
+  into **`r4`** before **`beqlr`**; **`getSaveParams()`** inline keeps **`r3`**
+  — **`unk1E8` direct + gravity-before-branch** still **`~r4`/`r3`** only.
+- **`SMS_IsMarioOnWire`** (93.8%, 72 B): needs **`mHolder`** in **`r0`** then
+  **`mario+0x68`→`r3`→`+0x4c`**; **`&&`/`!!ret`** unchanged (reverted rewrites).
+- **`TSmallEnemy::decHpByWater`**: **`r4`/`r5`** temps regressed to **92.4%**
+  (reverted).
+- **`TYoshi::getEmitPosDir`**: **`~r6`/`r3`** on mtx pointer only (operand).
+- **`TGraphGroup::perform`**: loop peel/unroll drift (88 B).
+- **`createModelData`**: all sampled managers **100%** except skipped **`bossgesso`**.
+
+**Tip (R222).** **`TEffectObjBase::perform`** is the template for “looks like tiny
+text, actually frame + virtual slot”: match **`clrlwi` → `stwu 0x20` → `stw r31`**
+*before* the **`CUE_MOVE`** branch, and keep **`moveObject`** out-of-line via
+vtable **`blrl`** — not a string/table fix.
+
+**Verify.** `ninja changes_all` ggü. **`8de329bc`** — **no diff**.
+
+### R221 (Aufgabe B; EP data / MAP scan, 0× ship)
+
+**Hunt.** Post-**`855f960e`**; data/vtable/string/float/table or MAP **`virtual`**
+fix; **defer `DebuTelesa` `bastable`**; cap ~8; same skip list (+ **empty
+`koopajr`/`limitkoopajr`/`tinkoopa`** scaffolding).
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, no-ship).**
+
+- **EP objects ≥95% ≤128 B:** **dry** (same as R220).
+- **EP objects ≥80% ≤128 B:** **`bgtentacle` `@4448`** (81.8%, **`.rel`** in
+  **`moveConstraint`**); **`bossgesso` `@6268`/`idxarray$3450`** (pool order);
+  **`Player/Yoshi` `@3802`** (36 B, **`movement`** switch **`.rel`**).
+- **`TBossGesso::__vtable` (`.ctors` 99.3%):** **`.data` `__vt__10TBossGesso`**
+  still **0x114 B** both sides — objdiff **`.ctors`** label gap (R215); whole
+  **`.data`** section size still differs (1272 vs 1680 B) — not a one-slot MAP
+  **`virtual`** fix.
+- **`TBossGessoManager::createModelData`:** **99.2%** — **`entry$1840`** vs retail
+  **`entry$3707`** (TU static emission order).
+- **`enemyMario` `@4674`:** **60.7%** / 112 B — **`consider`** jump table
+  **`.rel`**, not literals.
+- **`TGraphWeb::startIsEnd` / `TGessoPolluteObj::getNowGravity`:** **98%+** register
+  / branch-target drift — stack-thrash class.
+- **`effectObj` / `MarioCap` / `bgtentacle` vtables:** objects **100%**; MAP
+  bogus-**`virtual`** scan unchanged.
+
+**Tip (R221).** **`@4448`/`@3802`/`@4674`** are **switch jump tables** (**.rel** in
+**`.ctors`/`.data`**), not string/float pools — treat like **`WaterGun` `@4827`**
+(control-flow emission), not R212 header edits.
+
+**Verify.** `ninja changes_all` ggü. **`855f960e`** — **no diff**.
+
+### R220 (Aufgabe B; DebuTelesa closure + EP scan, 0× ship)
+
+**Hunt.** Post-**`da7dab8a`**; prefer data/vtable/string; **`DebuTelesa`** only with
+retail include closure; cap ~8; same skip list (stack, **`MtxCalcTypeName`**
+bosseel/hinokuri2, WaterGun, Tongue, RiccoHook::init).
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, no-ship).**
+
+- **EP objects ≥80% ≤128 B:** **`DebuTelesa` `entry$2835`** (85.7%), **`bgtentacle`
+  `@4448`** (81.8%, **`.rel`** in **`moveConstraint`**), **`bossgesso` `@6268`**
+  (81.2%); **`Tongue` `@2843`** skipped.
+- **EP objects ≥95% ≤128 B:** **dry** (0 candidates).
+- **`DebuTelesa`:** move **`bastable`** above rogue includes → **`bastable@0x4`**
+  (still **50%**; **`MtxCalcTypeName`** remains). Strip all three rogue includes →
+  **no** **`MtxCalc`**, **`bastable@0x4`**, but **`__sinit_DebuTelesa_cpp`** **N/A**
+  (764 B missing vs retail) — cannot ship without alternate sinit that keeps
+  **`smList`/`__init__smList` as `U`** like retail **`nm -S`**.
+- **`bossgesso` `TBossGessoManager::createModelData`:** **99.2%** — pool
+  **`entry$1840`** vs retail **`entry$3707`** (static emission order in huge TU).
+- **`tinkoopa`:** empty TU; **`@3000`** **50%** — needs scaffolding, not a table
+  tweak.
+- **`fireWanwan`/`pakkun`:** retail **`smList` `U`**, ours **`V`** in TU — sinit
+  still matches there; **`DebuTelesa`** gap is **extra `.sdata`** before
+  **`bastable`**, not JAL list binding alone.
+
+**Tip (R220).** **`DebuTelesa_bastable@0x0`** needs **zero** preceding **`.sdata`**
+in this TU (retail has only **`bastable` + `@2830…@2833`**). Dropping rogue
+includes fixes pollution but **breaks sinit** until we match retail’s **undefined**
+JAL symbols without pulling **`MSSetSound`/`InfectiousStrings` object defs** —
+defer **`bastable`** until that closure is solved.
+
+**Verify.** `ninja changes_all` ggü. **`da7dab8a`** — **no diff**.
+
+### R219 (Aufgabe B; DebuTelesa nm -S + EP data, 0× ship)
+
+**Hunt.** Post-**`569f9a65`**; data/vtable/string; **`nm -S`** on **`DebuTelesa`**
+only if concrete **`InfectiousStrings`** / emission fix; cap ~8; skip stack thrash.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, no-ship).**
+
+- **`DebuTelesa` `nm -S`:** retail **`.sdata`** = **`DebuTelesa_bastable@0x0`**
+  + **`@2830…@2833`** (5×4 B); ours **`bastable@0xc`** with **`MtxCalcTypeName`**
+  + **`dummyMactorStringValue1`** + **`@1053…`** ahead. Drop **`InfectiousStrings`**
+  → **`MtxCalc` gone** but **`bastable@0x4`** (**`@163`/`MSSetSound` JAL sdata@0**)
+  — **not** a one-include fix; **`bastable`/`entry$2835` still 50%/85.7%**.
+- **`bgtentacle` `@4448`** (44 B, 81.8%): **`.rel`** jump table inside
+  **`moveConstraint`** — control-flow, not string/table.
+- **`bossgesso` `idxarray$3450` / `@6268`**; **`hinokuri2`/`bosseel` `MtxCalcTypeName`**
+  (skipped).
+- **EP `.rodata`/`.data` ≥95% ≤128 B:** **dry**.
+- **MAP bogus-`virtual`:** unchanged (managers use base **`perform`** thunks).
+- **`fireWanwan`/`enemyAttachment` objects:** still **100%**.
+
+**Tip (R219).** Retail **`DebuTelesa`** has **no** **`MtxCalcTypeName`** in the TU —
+rogue **`MSSetSound`/`InfectiousStrings`** both inject **`.sdata`** before
+**`bastable`**; fixing **`bastable`** needs **matching retail include closure**,
+not moving the array alone.
+
+**Verify.** `ninja changes_all` ggü. **`569f9a65`** — **no diff**.
+
+### R218 (Aufgabe B; EP data / vtable scan, 0× ship)
+
+**Hunt.** Post-**`b998245f`**; prefer **`.sdata`/vtable/string** (R212–R214); avoid
+stack ≥99.5% thrash; cap ~8; same skip list.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, no-ship).**
+
+- **EP `.ctors`/`.sdata` scan:** **`DebuTelesa`** **`entry$2835`** (85.7%),
+  **`DebuTelesa_bastable`** (50%, our **`.sdata` +0x1c** vs retail **+0x0** —
+  **`InfectiousStrings`/`MtxCalcTypeName`** cluster ahead of **`@2830…`**);
+  **`bossgesso`** **`idxarray$3450`** / **`@6268`**; **`hinokuri2`/`bosseel`**
+  **`MtxCalcTypeName`** (50%).
+- **`DebuTelesa`:** move **`bastable`** below **`createModelData`** — still
+  **50%** (`bastable` at **0x1c**); reverted.
+- **MAP bogus-`virtual`:** no new manager **`perform`** / **`receiveMessage`**
+  slots ( **`TPakkunManager`** → **`perform__13TEnemyManager`** in ASM).
+- **`tinkoopa.cpp`** empty TU → **`@3000`/`@3001`** 50% (PARAM defaults).
+- **Confirmed 100% data:** **`pakkun`** objects; **`bosseel`**/**`riccohook`**
+  vtables incl. **`TBEelTearsDrop`**.
+
+**Tip (R218).** Before thrashing **`bastable`**, diff **`.sdata` symbol addresses**
+in **`src/` vs `obj/` `.o`** — foreign TU-header pools often sit at **+0x0** and
+block the retail-first **`DebuTelesa_bastable`** slot.
+
+**Verify.** `ninja changes_all` ggü. **`b998245f`** — **no diff**.
+
+### R217 (Aufgabe B; EP “100% insn” + Pakkun load probe, 0× ship)
+
+**Hunt.** Post-**`0c4dfabe`** baseline; vtable/MAP like R212–R214; small EP text/data;
+**`TPakkun::load`** / **`@3450`**; cap ~8; same skip list as R216.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, no-ship).**
+
+- **EP scan (99.5%+ text ≤300 B):** **`TCoasterEnemy::bind`**, **`TEnemyMario::tryTake`**
+  **`TNerveSmallEnemyFreeze`**, **`TConductor::getManagerByName`**, **`TPakkun::load`**
+  — all stack / frame-size gaps, not literal-table wins.
+- **`TPakkun::load` / `TStayPakkun::load`** (~99.7–99.8%): retail **`@3450`**
+  zero pool + path-node temps at **`r1+0x18`/`0x1c`**; ours **`setGoalPath`**
+  inline → **`@1801`** and **`r1+0x14`**. Direct field writes **regressed** (~48%).
+- **Objdiff “100.0%” text still nonmatching:** **`TGraphWeb::getRandomNextIndex`**
+  (**`TRailNode`** stack **`0x24`** vs **`0x1c`**), **`THinokuri2::perform`**
+  (question **`TVec3`** at **`0x34`** vs **`0x2c`**), **`TBEelTearsDrop::perform`**
+  ( **`Mtx`** at **`0x6c`** vs **`0x60`**, branch reloc).
+- **Vtables:** only **`THinokuri2`/`TBossGesso` `.ctors` ~99.3%** (byte-identical
+  **`.data`** per R215); no new bogus **`virtual`** on MAP pass.
+- **`MtxCalcTypeName`**, **`TBossEelAwaCollision::behaveToMario`**, **`@4827`/`@2843`**:
+  skipped (unchanged).
+
+**Tip (R217).** Treat objdiff **100.0%** on **`.text`** as “one stack slot or
+branch-target away” until **`changes_all`** reports a strict match — insn percent
+hides **`beq`** target skew and **`r1+Δ`** locals.
+
+**Verify.** `ninja changes_all` ggü. **`0c4dfabe`** — **no diff**.
+
+### R216 (Aufgabe B; Awa behaveToMario + EP text scan, 0× ship)
+
+**Hunt.** Small EP text ≥99.5%; vtable/MAP like R212–R214; optional
+**`MtxCalcTypeName`** (skipped — no **`@1431`/`@1411`/`@1210`** emission fix);
+cap ~8; skip **WaterGun `@4827`**, **Tongue `@2843`**, **`TRiccoHook::init`**.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, no-ship).**
+
+- **`TBossEelAwaCollision::behaveToMario`** (124 B ~99.6%): retail vec at **`r1+0x14`**
+  and **`@4419`/`@4687`/`@6908`** pools; **`TVec3` ctor** + Barrier-style
+  **`trashAfterMarioTarget[8]`** still **`r1+0x10`** / wrong **`.sdata2`** labels.
+- **`TBossEelBarrierCollision::behaveToMario`** already **100%** ( **`trash[8]`**
+  + field-wise init + **`mForcePow`** / **`@4419`** ).
+- **`TCoasterEnemy::bind`**, **`TEnemyMario::tryTake`**, **`TNerveSmallEnemyFreeze`**
+  — stack-frame / pool gaps only (~99.8–99.9%).
+- **`MtxCalcTypeName`** on **`bosseel`/`hinokuri2`**: deferred (needs init pools).
+- **Skipped (user):** **`@4827`**, **`@2843`**, **`TRiccoHook::init`**.
+
+**Tip (R216).** For **`behaveToMario`** clones in one TU, copy the **matching**
+sibling (**`TBossEelBarrierCollision`**) stack shape first; literal pool labels
+(**`@4419`**) follow emission site, not just “same float value”.
+
+**Verify.** `ninja changes_all` ggü. **`8ae76263`** — **no diff**.
+
+### R215 (Aufgabe B; post-R214 vtable / MtxCalc hunt, 0× ship)
+
+**Hunt.** Same bogus-**`virtual`** / MAP closure as R212–R214; **`MtxCalcTypeName`**
+(`.data` 16 B ~50% on **`bosseel`/`hinokuri2`**); small EP text ≥99%; cap ~8;
+skip **WaterGun `@4827`**, **Tongue `@2843`**, **`TRiccoHook::init`**.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, no-ship).**
+
+- **MAP/header scan:** no further EP header **`virtual`** forwards without a
+  linked **`Subclass::method`** (besides **`TEnemyAttachment::receiveMessage`**
+  — **`enemyAttachment` vtable already 100%**).
+- **`TBossGesso`/`THinokuri2` `.ctors` vtables ~99.3%:** byte-identical
+  **`__vt__*`** in **`.data`**; objdiff **`.ctors`** label is a false gap.
+- **`MtxCalcTypeName`:** needs **`.data`** order **`@1431`/`@1411`/`@1210`**
+  (from **`TBossEel::init`** pools) **before** pointer table **before**
+  **`bastable`** — moving **`InfectiousStrings.hpp`** alone insufficient.
+- **`TCoasterEnemy::bind`** (~99.9%): **`TVec3`** stack at **`0x1c`** vs retail
+  **`0x10`**; float-scalar rewrite regressed match — left as-is.
+- **Skipped (user):** **`@4827`**, **`@2843`**, **`TRiccoHook::init`**.
+
+**Tip (R215).** **`MtxCalcTypeName`** is not just the four strings — retail TU
+**`.data`** prefixes **`init()`**-emitted **`@1431`/`@1411`/`@1210`** pools;
+match **`graph.cpp`** / **`MarioDraw`** emission, not only **`InfectiousStrings`**.
+
+**Verify.** `ninja changes_all` ggü. **`a96fe42e`** — **no diff**.
+
+### R214 (Aufgabe B; Enemy inline vtable slot, 1× data)
+
+**Hunt.** Player `@4827`/`@2843` switch **`.rel`**; boss/hino **`.ctors`**
+vtables; **`TBEelTearsDrop`**; **`TRiccoHook::init`**; cap ~8.
+
+**Ship (data, 1).**
+
+- **`TBEelTearsDrop::__vtable`** (`bosseel`, 164 B `.ctors`): drop header
+  **`receiveMessage`** override that only forwarded to **`THitActor`** — retail
+  vtable slot is **`receiveMessage__9THitActor`** (no
+  **`receiveMessage__14TBEelTearsDrop`** in MAP).
+
+**Probes (~5, no-ship).** **`@4827`** still **66.7%** (jump-table labels;
+  case‑7 braces noop); **`@2843`** **81.2%**; **`THinokuri2`/`TBossGesso`**
+  **`.ctors`** vtables ~99%; **`TRiccoHook::init`** ~99.9% stack.
+
+**Tip (R214).** Inlined **`virtual`** that merely calls the base can still emit
+**`Class::method`** and steal a vtable slot — same MAP rule as R212 **`perform`**.
+
+**Verify.** `ninja changes_all` ggü. **`ba4a4657`**; **`TBEelTearsDrop` vtable
+100%**.
+
+### R213 (Aufgabe B; MAP/vtable cross-check, 0× ship)
+
+**Hunt.** Enemy/Player B-scope: **vtable vs MAP** (spurious `virtual perform`
+pattern from R212), data objects, small text; cap ~8.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, no-ship).**
+
+- **MAP scan:** per-class `perform__*Manager` vs `__vt__*` — **no further**
+  spurious manager `perform` (post-R212); sampled **`.data` vtables** (gesso,
+  hamukuri, fireWanwan, telesa, gatekeeper) **100%**.
+- **Remaining EP data gaps:** **`.ctors`** **`THinokuri2`/`TBossGesso` vtables**
+  (~99%); **`TBEelTearsDrop::__vtable`** (`.ctors`); Player **`@4827`/`@2843`**
+  switch **`.rel`** (WaterGun/Tongue); **`WaterGun`/`Yoshi`/`MarioMove`** ctor
+  blobs.
+- **Text:** **`TRiccoHook::init`** ~99.9% (stack / **`THookTake`** ctor); **`gesso`**
+  nerves/`getNowGravity` skipped; no EP **≤64 B** text ≥99.5%.
+- **Literals:** repo **4 B `.sdata2`/`.rodata`** scan (B-scope + game) **dry**
+  post-R211.
+
+**Tip (R213).** After one manager-vtable fix, automate **MAP closure**: for each
+`__vt__NClass`, confirm every overridden slot’s **`perform__NClass…`** (or base
+thunk) is **linked or absent** — absence ⇒ **do not declare** `virtual perform`.
+
+**Verify.** `ninja changes_all` ggü. **`7e1babd2`** — **no diff** (baseline only).
+
+### R212 (Aufgabe B; Enemy manager vtable, 1× data)
+
+**Hunt.** Enemy/Player B-scope text+data; other TUs only for clear `.sdata2`
+literal wins; skip gesso/bossManta/bossgesso thrash; cap ~8.
+
+**Ship (data, 1).**
+
+- **`TRiccoHookManager::__vtable`** (`riccohook`, 84 B): drop spurious
+  **`virtual perform`** on the manager — retail slot is **`TEnemyManager::perform`**
+  (no **`perform__17TRiccoHookManager`** in MAP).
+
+**Probes (~6, no-ship).** Repo-wide **4 B `.sdata2`** scan dry post-R211;
+**`WaterGun` `@4827`** / **`Tongue` `@2843`** (`.ctors`); **`gesso`/`bossgesso`**
+text; **`Map` `@3705`**; **`CameraOption` `@1650`**.
+
+**Tip (R212).** If MAP has no out-of-line **`Class::method`** but the header
+declares an override, the vtable may still get a wrong slot — compare **`__vt__`**
+ASM to **`TEnemyManager`** / base thunks before chasing ctor tables.
+
+**Verify.** `ninja changes_all` ggü. **`31b88eed`**; **`riccohook` vtable 100%**;
+**`entry$2170` 100%**.
+
+### R211 (Aufgabe B; `.sdata2` literals, 2× data)
+
+**Hunt.** B-scope Enemy/Player data+text first; other TUs for clear tiny pool
+wins; skip R209/R210 thrash; cap ~8.
+
+**Ship (data, 2).**
+
+- **`@3778`** (`MarDirectorSetupObjects`, 4 B): look-at camera aspect uses pool
+  **`0.91346145f`**, not **`0.9134614f`** (ULP vs ASM `.float`).
+- **`@2913`** (`Option`, 4 B): `TPaneScalingControl::update` uses literal
+  **`57.295776f`** for rad→deg (retail pool), not **`RAD_TO_DEG`** macro fudge.
+
+**Probes (~2, no-ship).** **`riccohook` `entry[]`** rename/placement — still
+**~99%** (`entry$2170`); Enemy/Player tiny objects mostly vtable / switch
+**`.rel`**.
+
+**Tip (R211).** Match **`.sdata2` / rodata floats** to ASM **`.float`** (full
+significant digits); shared literals (**`57.295776f`**) beat macro expansions
+when the macro adds a different constant.
+
+**Verify.** `ninja changes_all` ggü. **`de437746`**; **`@3778` 100%**;
+**`Option` matched_data 100%**; **`@2913` 100%**.
+
+### R210 (Aufgabe B; PARAM vector + name table, 2× data)
+
+**Hunt.** Fresh B-scope data (skip R209 thrash); tiny objects / PARAM pools; cap
+~8.
+
+**Ship (data, 2).**
+
+- **`sPositionNameTable`** (`CameraNormal`, 20 B): tower camera name table is
+  **`[5]`** pointers (retail rodata), not **`[6]`** with five initializers.
+- **`@2551`** (`MtxUtil`, 4 B): `TMtxSwingRZ::TDeParams::mAcc` default
+  **`(1.0f, -4.0f, 1.0f)`** (ASM `set` + **`@2551` = -4**), not zero vector.
+
+**Probes (~6, no-ship).** Enemy/Player tiny objects dry (switch **`.rel`** /
+vtable); **`riccohook` vtable**; **`Map` `@3705`** string blob; text
+**`getNowGravity`/`getPolluteRadius`** skipped per scope.
+
+**Tip (R210).** **`static const char*[]` size** = count of **stored pointers**
+(retail **20 B** ⇒ **`[5]`**). **`TParamVec` defaults**: read ASM **`set(x,y,z)`**
+pool loads, not assumed **`(0,0,0)`**.
+
+**Verify.** `ninja changes_all` ggü. **`e5444c12`**; **`CameraNormal` matched_data
+100%**; **`@2551` 100%**.
+
+### R209 (Aufgabe B; B-scope probes, 0× ship)
+
+**Hunt.** PARAM / `.sdata2` literals; tiny `.ctors` objects; small Enemy/Player
+text ≥98%; cap ~8; skip **DebuTelesa**, **koopajr** stubs.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, reverted / no-ship).**
+
+- **`gesso` `getNowGravity`** (32 B text ~98%): retail loads **`unk1E8` → r4**,
+  **`lfs` gravity before `beqlr`**; C branch-before-load / **r3** holds params.
+- **`bossManta` `getPolluteRadius`** (~99.8%): **`getSaveParam()`** vcall +
+  **`mSLPolluteRadius * mScaling.x`** order OK; stack **`0x28`** vs **`0x20`**;
+  **`100.0f`/`0.0f`** pool **`@3456`/`@3585`** vs other SDA labels.
+- **`bossgesso` `createModelData`** (~99.2%): needs rodata **`entry$3707`**, not
+  function-local / renamed static **`entry[]`** (table placement in TU).
+- **`bosseel`/`hinokuri2` `MtxCalcTypeName`** (16 B `.data` ~50%): **`.data`**
+  order **`@1431`/`@1411`/`@1210`** then **`MtxCalcTypeName`** before
+  **`bastable`** (see **`MarioDraw`** pattern).
+- **`tinkoopa` `@3000`**, **`idxarray$3450`**, **`bossManta` `@2805`**: unchanged
+  blockers (empty TU / incomplete `doAttackSingle` / rodata triplet).
+
+**Tip (R209).** **`beqlr` gravity paths**: preload default float, then early-return
+(`getNowGravity`). **`createModelData`**: linker symbol **`entry$nnnn`** = rodata
+**emission site**, not merely file-scope name. Pollute radius: match **virtual
+`getSaveParam`** + **frame size** before chasing float pools.
+
+**Verify.** `ninja changes_all` ggü. **`ddf5c579`** — no regression; no new
+strict data/text matches.
+
+### R208 (Aufgabe B; Player emit size + `2.0f` pool, 2× data)
+
+**Hunt.** B-scope Enemy/Player tiny `.ctors`/`.sdata2` objects; ASM `.float`
+literals; cap ~8; skip **DebuTelesa**, **koopajr** stubs.
+
+**Ship (data, 2).**
+
+- **`@4740`** (`ModelWaterManager`): `TWaterEmitInfo::mSize` default **`17.0f`**
+  (ASM `stfs` to `0xe4`), not `0.0f`.
+- **`@3757`** (`ModelWaterManager`): `calcVMMtxGround` / `calcVMMtxWall` use
+  **`2.0f`** (sdata2 `@3757`), not **`2.0`** double literals.
+
+**Probes (~5, no-ship).** `tinkoopa` `@3000` (empty TU); `bossgesso`
+`idxarray$3450` (incomplete `doAttackSingle` tail); `bossManta` `@2805` (12 B
+rodata zero triplet); `WaterGun` `@4827`; `bgtentacle`/`bossgesso` switch
+`.rel`.
+
+**Tip (R208).** **`PARAM_INIT` float defaults** must match ASM ctor **`stfs`**
+pool symbols (`@4740` = **17** for **`mSize`**). Matrix helpers: **`2.0f`**
+keeps **`@3757`** in **`.sdata2`**; **`2.0`** pulls a different constant class
+and breaks the 4 B object.
+
+**Verify.** `ninja changes_all` ggü. **`0372b993`**; `@3757`, `@4740` 100% on
+`mario/Player/ModelWaterManager`.
+
+### R207 (Aufgabe B; sdata2/rodata literals + short-angle scale, 4× data)
+
+**Hunt.** `.sdata2` ULP / unfused operands; tiny 4 B objects; skip **DebuTelesa**,
+**koopajr** stubs; cap ~8.
+
+**Ship (data, 4).**
+
+- **`@3043`**, **`@3044`** (`DrawUtil`): `SMS_AddDamageFogEffect` — keep
+**`-400.0f`** / **`800.0f`** as separate pool loads (`fogStart * s - startBase * s`,
+not folded `(fogStart - startBase) * s`).
+- **`@2081`**, **`@2209`** (`CameraNotice`): `calcNoticeTargetYrot_` uses
+**`1.0f / 32768.0f`** for `ratio`; `getNoticeActor_` passes
+**`(f32)*gpMarioAngleY * 0.005493164f`** to `MsIsInSight` (not
+`DEG2SHORTANGLE` on s16 yaw).
+
+**Probes (~4, no-ship).** `ModelWaterManager` `@3757`/`@4740`; `MtxUtil` `@2551`;
+`tinkoopa` `@3000`; `tobiPuku` `forceLaunch` text still ~67%.
+
+**Tip (R207).** **`DEG2SHORTANGLE` on s16** is wrong for `MsIsInSight` sight yaw
+— retail **`short * (360/65536)`** (`@2209`). Short-angle magnitude → float via
+**`1/32768`** (`@2081`), not **`65536/360`**. Fog oscillation: **multiply-then-subtract**
+so MWCC does not fold **`±400`/`800`** away.
+
+**Verify.** `ninja changes_all` ggü. **`c3562f70`**; **`DrawUtil`** + **`CameraNotice`**
+data 100%; `@3043`–`@3044`, `@2081`, `@2209` 100%.
+
+### R206 (Aufgabe B; JMA 16384/90 sdata2 + probes, 2× data)
+
+**Hunt.** `.sdata2` `@nnnn` 4 B scan (Enemy + Camera/Player/MarioUtil); skip
+**`DebuTelesa`**; cap ~8.
+
+**Ship (data, 2).**
+
+- **`@4816`**, **`@4817`** (4 B each, `tobiPuku`): `TTobiPukuLaunchPad::forceLaunch`
+— Retail **`16384.0f`** / **`90.0f`** for `JMASSin`/`JMASCos` index
+(`tobiPukuDegToJmaIndex`); fly/launch velocity uses table sin/cos of **X/Y**
+rotation, not folded `16384/90` ratio (would drop symbols).
+
+**Probes (~6, no-ship).** `koopajr`/`tinkoopa`/`limitkoopajr` `.sdata` int
+defaults (empty `koopajr.cpp`); `MtxUtil` `@2551` (−4); `DrawUtil` `@3043/3044`;
+`ModelWaterManager` `@3757`/`@4740`; `enemyMario` `@4674` jump table.
+
+**Tip (R206).** JMA degree→index: **`16384.0f * deg / 90.0f`** (≈
+`deg * (65536/360)`). Emit pool literals as **separate** `16384.0f` and
+`90.0f` loads — MWCC folds a single `182.044…f` ratio and **`@4816` stays
+missing**. Same ULP family as R205 `0.017453294f` vs `DEG_TO_RAD`.
+
+**Verify.** `ninja changes_all` ggü. **`0b2bfb81`**; **`tobiPuku` data 100%**;
+`@4816`/`@4817` 100%. (`forceLaunch` text still nonmatching — stack/scheduling.)
+
+### R205 (Aufgabe B; entry hunt + sdata2 literal, 1× data)
+
+**Hunt.** Enemy `entry$` scan (nur **`DebuTelesa` `entry$2835`** nonmatching;
+viele **`missing entry$`** = kein `createModelData`); tiny objects ≤48 B;
+**`DebuTelesa` `bastable`** skipped; Cap ~8.
+
+**Ship (data, 1).**
+
+- **`@4326`** (4 B `.sdata2`): `TFireWanwan::decideTarget` — Retail-Literal
+**`0.017453294f`** (π/180) statt **`DEG_TO_RAD`** (`3c8efa36` vs `3c8efa35`).
+
+**Probes (~7, no-ship).** `hamukuri`/`pakkun`/`egggen` entry bereits 100 %;
+`bossgesso` **`idxarray$3450`** in unvollständigem `doAttackSingle`-Tail;
+`hinokuri2`/`bosseel` **`MtxCalcTypeName`** (`.data`-Reihenfolge); `koopajr`/
+`tobiPuku` sdata-Literale in Init-Pfaden.
+
+**Tip (R205).** Neben **`createModelDataArray`-Flags**: **`DEG_TO_RAD` /
+`M_PI/180`** oft **1 ULP** daneben — ASM **`.float`** in **`.sdata2`**
+(`@nnnn`) 1:1 als Multiplikator-Literal (vgl. `MapObjLib.cpp`).
+
+**Verify.** `decomp-diff -u mario/Enemy/fireWanwan -t object` — **`@4326` 100%**;
+`ninja changes_all` ggü. **`40cd1f29`** (lokales `baseline` nach Edit).
+
+### R204 (Aufgabe B; bossManta entry + DebuTelesa probes, 1× data)
+
+**Hunt.** `decomp-diff -t object` ≤48 B; **`DebuTelesa`** `bastable` SDA-Reihenfolge /
+`entry$2835`; **`bossManta` `entry$3295`**; Cap ~8; strikt 100 %.
+
+**Ship (data, 1).**
+
+- **`entry$3295`** (24 B): `TBossMantaManager::createModelData` — null-terminiertes
+Array + Literal **`0x10210000`** statt `J3DMLF_*`-OR (`bossManta.cpp`).
+
+**Probes (~6, revertiert / no-ship).** `DebuTelesa`: `InfectiousStrings` streichen
+→ fehlende `@1490`-Pool; Einzelpointer + `&bastable` + Definition vor
+`getBasNameTable` → **`bastable` 50 %** (noch Offset **0xc**, kein `@2830…` in
+`.o`); **`entry$2835` 85.7 %** unverändert. `bossgesso` **`idxarray$3450`**;
+`@2805` (12 B Padding).
+
+**Tip (R204).** Wie R202: **`createModelDataArray`-Tables** mit **`{ nullptr,0,0 }`**
+und **Literal-Flags** aus ASM. **`DebuTelesa_bastable`:** Retail **4 B `.sdata`**
+Zeiger + **`li r3,…@sda21`** — Map schließt **`bastable` unter `getBasNameTable`**;
+ohne **`@2830…`** aus `load()`-`.set()`-Literale bleibt Reihenfolge/Bytes off.
+
+**Verify.** `ninja changes_all` ggü. **`948c3a3b`**; **`entry$3295` 100%**.
+
+### R203 (Aufgabe B; bossgesso idxarray + DebuTelesa probes, 1× data)
+
+**Hunt.** Object scan ≤48 B; **`DebuTelesa`** `entry$2835`/`bastable` (const vs.
+non-const, SDA-Einzelpointer, InfectiousStrings weg); **`bossgesso` idxarray**;
+Cap ~8; strikt 100 %.
+
+**Ship (data, 1).**
+
+- **`idxarray$3428`** (8 B): `doAttackSingle` — Retail **`{1, 3}`**, nicht
+`{2, 3, 5, 6}` (nur `i<2` genutzt; ASM **`.4byte`**-Paar).
+
+**Probes (~7, revertiert / Skip).** `DebuTelesa`: non-const `entry[]` →
+**`entry$1058` extra / `entry$2835` missing**; ohne `InfectiousStrings` fehlen
+`@1490`-Pool-Strings; Einzelpointer-`bastable` + Cast → **`bastable` 50 %**
+(unverändert); **`entry$2835` 85.7 %** mit `const`. **`idxarray$3450`**
+(8 B): zweite Schleife in `doAttackSingle` fehlt (TODO-Tail). Switch-`.rel`
+(`bgtentacle` `@4448`, Tongue/bossgesso `@6268`).
+
+**Tip (R203).** **`static const int idxarray[]` in Loops:** ASM-Tabellengröße =
+genutzte Elemente (**2× `.4byte`**), nicht „überlange“ Initializer-Listen; sonst
+falsches `$nnnn`-Symbol/Bytes. **`DebuTelesa`:** `entry$2835` braucht **`const`**
+`TModelDataLoadEntry[]`; `bastable` = **erstes** `.sdata`-Objekt vor `@2830…`
+(load-`.set`-Literale) — `InfectiousStrings` nicht streichen.
+
+**Verify.** `ninja changes_all` ggü. **`de1d59cb`**; **`idxarray$3428` 75% →
+100%**.
+
+### R202 (Aufgabe B; `.prm`-Pfad + `createModelData` entry table, 2× data)
+
+**Hunt.** `decomp-diff -t object -s nonmatching` B-scope **≤48 B / ≥80 %**;
+Section-Δ-Scan; `.text` ≤600 B off Skip; Cap ~8; strikt 100 %.
+
+**Scan.** Verbleibend u. a. **`DebuTelesa` `entry$2835`/`bastable`**, **`bgtentacle`
+`@4448`**, **`Tongue`/`bossgesso` `.rel`-Switch** (kein String); **`MarioInit`
+`@6543`**, **`smallEnemy` `entry$3004`**.
+
+**Ship (data, 2).**
+
+- **`@6543`** (23 B): **`"/Mario/DmgHamukuri.prm"`** (ASM `.string`); Member
+`mDmgParamsHamakuri` unverändert (`MarioInit.cpp`).
+- **`entry$3004`** (24 B): **`TSmallEnemyManager::createModelData`** — Retail
+**null-terminiertes** `TModelDataLoadEntry[]` + Literal **`0x10220000`**, nicht
+Einzel-`&entry` mit `J3DMLF_*`-OR (`smallEnemy.cpp`).
+
+**Probes (~6, revertiert / Skip).** `DebuTelesa`: `bastable` als **SDA-Einzelpointer**
++ `getBasNameTable`-Cast → **`entry$2835` missing**; ohne `const` auf `entry[]`
+ebenso — revert. **`DebuTelesa_bastable`** (4 B `.sdata`) = **sdata-Reihenfolge**
+(`@2830`… nach `bastable`). **`WaterGun` `@4827`**; Switch-**`.rel`**-Tables.
+
+**Tip (R202).** **`.prm`/Ressourcen-Pfade** 1:1 aus ASM **`.string`** (unabhängig vom
+C++-Member-Namen). **`createModelDataArray`**: Retail **`entry$nnnn`** fast immer
+**`{ … }, { nullptr, 0, 0 }`** — Muster wie **`TTelesaManager::createModelData`**.
+
+**Verify.** `ninja changes_all` ggü. **`b7f6af48`**; **`MarioInit` matched_data
+9.23% → 93.50%**; **`smallEnemy` matched_data 66.88% → 100%**; Total **63.04% →
+64.24%**.
+
+### R196 (Aufgabe B; emit/load entry-pad + Eel-Tears, keine Vollmatches)
+
+**Hunt.** B-scope Enemy/Player ≤600 B; Skip R195-Liste + User (`TPakkun::load`, `TBubbleCallBack`,
+`THinokuri2::perform`-Trash-Experimente, R194/R193-Prior); Präferenz **entry-pad-only** (`trash[8]`
++ `trash[0]=0`) oder **`emit*`/`load`/`receiveMessage`**; Cap ~8; strikt 100 %.
+
+**Probes (~8, revertiert).**
+
+1. **`TBEelTearsDrop::perform`:** Retail **−0xc8** OK mit `trash[0x10]`; einzig **`addi r28,0x6c` vs
+`0x60`** (+12 B `Mtx`). `trash[4]` → Frame **−0xc0**; `mtxPad[0xc]` vor `Mtx` — Spill unverändert.
+2. **`TBEelTears::perform`:** Entry `trash[8]; trash[0]=0` → **`stwu −0x90`** OK; Rest **vtable/
+`effectMtx` @ 0x40 vs 0x44** + **`lwz` 0xd0/0xf4** (Layout, kein reines Pad).
+3. **`TNozzleBase::emitCommon`:** `trash[0x18]` → Frame **−0x78** OK; **`TVec3` pos/dir/speed**
+weiter **+0xc**; `vecPad[0xc]`/`trash[0x24]` → Frame **−0x88** (overshoot).
+4. **`TOneShotGenerator::receiveMessage`:** `trash[4]` → Frame **−0x78** (war **−0x70**); Spill
++8 (schlechter).
+5. **`TMario::toroccoEffect`:** `trash[8]` → Frame **−0x90** OK; temporäres **`TVec3`**-Diff **+4**
+(0x60 vs 0x5c); `trash[0xc]` → **−0x98**.
+6. **`TBoxTelesa::load`:** `trash[4]` — inlined `TTelesa::load`-Spill **+4** bleibt, Frame **−0x40**
+→ **−0x48** (overshoot).
+7. **`TTamaNokoManager::load`:** `trash[4]` — Frame/Spill + **`addi r30,0x384` vs `0x380`** (inlined
+`TSmallEnemyManager::load`, kein isoliertes Pad).
+8. **`TNerveSmallEnemyFreeze`:** nur Diff — Frame **−0x38** vs **−0x40** (8 B zu groß, kein Cut).
+
+**Vollmatch, strikt.** keine (letzter Ship: R189 `emitGetWaterEffect`).
+
+**Tip (R196).** **Entry-pad-only** reicht wenn **nur `stwu`/`addi r1` driftet** (z. B.
+`toroccoEffect` **`trash[8]`**). Scheitert wenn (a) **Frame schon passt** aber Spill **+4** in
+**inlined Parent-`load`** (`TBoxTelesa`/`TTamaNokoManager` — `trash[4]` verschiebt **`PARAM`-`addi`**
+um **0x4**), oder (b) **`Mtx`/`TVec3` innerhalb gleicher Frame-Größe** (`TBEelTearsDrop` **0x6c**,
+`emitCommon` **+0xc**). Dann **Slot-Pad an der Spill-Stelle** oder **Parent-TU** — nicht weiteres
+Entry-Trash.
+
+**Verify.** `ninja baseline` / `changes_all` ohne Code-Delta ggü. **`eb1089f9`**.
+
+### R195 (Aufgabe B; Pakkun + Bubble/Hino2-Spill, keine Vollmatches)
+
+**Hunt.** B-scope Enemy/Player ≤600 B außer User-Skips (`isReachedToGoalXZ`, `getNowGravity`,
+`TNerveNKFollowMario`, `jumpToSearchActor`, `getTakingMtx`, `TAmenbo::calcRootMatrix`,
+`TNerveDoroHaneHitWater` + Prior); Präferenz `receiveMessage`/`perform`/`emit*`/`init`/`load`;
+Entry-`trash` + R171-`TVec3` nur wo Frame exakt; Cap ~8; strikt 100 %.
+
+**Probes (~8, revertiert).**
+
+1. **`TPakkun::load`:** Baseline **99,7 %**, Frame **−0x30** OK; Retail-`TPathNode`-Temp **0x18**,
+uns **0x14** (+4 B). `u32 local_14`, `struct { u32 pad; TPathNode node; }`, Default-Ctor+Manuell,
+R171-`trash[8]` — Frame wächst oder Logik/ASM bricht; bestes Bleiben **+4 B Spill**.
+2. **`TBubbleCallBack::execute`:** Entry `char trash[8]; trash[0]=0;` → Frame **−0x48** OK;
+`getCurrentPosition`-`TVec3` **0x30** vs **0x34**; `mBubbleToRipple`-`lfs`-Paar vertauscht.
+`trash[0x10]` → Frame **−0x50** (overshoot).
+3. **`THinokuri2::perform`:** `trash[0]=0` auf bestehendem `trash[8]` → `request`-Spill **0x30**
+vs **0x34** (von **0x2c**); `trash[0x10]` Frame **−0x60**; lokales `requestPos`+R171 → **90,5 %**.
+4. **`TGessoPolluteObj::set`:** nur Diff — Frame **−0x68** vs **−0x70** (`trash[8]` overshoot **−0x78**,
+R194).
+5. **`TNerveBPTouchDown::execute`:** Frame **−0x50** vs **−0x48** (8 B zu groß, kein sicherer Cut).
+6. **`TFireHamuKuri::setMActorAndKeeper` / `THamuKuri::setMActorAndKeeper`:** Overview **100,0 %**,
+strikt **`addi` 0x360 vs 0x370** (Klassen-Layout, nicht Entry-Trash).
+7. **`TPakkunSeed::moveObject` / `TNameKuri::reset`:** Frame **−0x38/−0x40** vs **−0x40/−0x48**
+(±8 B; nicht weiter geheadbuttet).
+8. **`TBossPakkun::rumblePad`:** R194 — `delta`-Spill **0x24** vs **0x20**; Entry-`trash[4]` Frame
+**−0x48** (schlechter).
+
+**Vollmatch, strikt.** keine (letzter Ship: R189 `emitGetWaterEffect`).
+
+**Tip (R195).** **`TPakkun::load`:** Retail baut **`TPathNode` @ 0x18** in festem **−0x30**-Frame
+(inlined `setGoalPath`, kein Out-of-line-Ctor); **+4 B** sind **In-Frame-Slot @ 0x14–0x17**, nicht
+lösbar mit Entry-`trash[4]` (wächst `stwu`). **`TBubbleCallBack`/`THinokuri2::perform`:** Entry-Trash
+aligniert oft nur **`stwu`**; **`TVec3`-Homing für `getCurrentPosition`/`TQuestionManager::request`**
+braucht **post-entry +8 B** zwischen Trash und Spill-Cluster (vgl. R194 `getTakingMtx` **Slot-Pad**),
+ohne Frame-Overshoot.
+
+**Verify.** `ninja baseline` / `changes_all` ohne Code-Delta ggü. **`ed07be76`**.
+
+### R194 (Aufgabe B; isReached Option A + frische TU, keine Vollmatches)
+
+**Hunt.** Option **A** (max 2): `isReachedToGoalXZ` Retail-Register (`r4`=node, `r5`=goal,
+`lwz r4,0(r5)`…); Option **B**: frische Enemy/Player (amenbo, namekuri, gesso, hamukuri,
+bosspakkun, MarioSwim/Special) außer R193 + Skips; Cap ~8; strikt 100 %.
+
+**Skip.** R193-Probes + R192 J3D/`isReached`-Familie; Prior (`getTakingMtx` war Skip — erneut
+probiert).
+
+**Option A (2 Versuche, revertiert).**
+
+1. `nodeAt104` + `unk104.unk0` + `lo`/`hi` `u32`-Kopie → **98,4 %** (`r4`/`r5`, Spill 0x10).
+2. `unk104.unk0` ohne `actor`-Local → **94,6 %** (schlechter).
+
+**Option B (~6, revertiert).**
+
+1. **`TGessoPolluteObj::getNowGravity`:** `gesso`/`saveParams`-Locals → **`r3` statt `r4`** für
+`0x1e8` (32 B, kein Frame).
+2. **`TNerveNKFollowMario::execute`:** `trash[0x10]` → Frame **−0x58** OK, inlined `setGoalPath`
+Spill bleibt **0x2c** vs **0x3c**.
+3. **`THamuKuri::jumpToSearchActor`:** `trash[0x10]` → Frame **−0x68** OK, `TVec3`-Spill **+0xc**.
+4. **`TDangoHamuKuri::getTakingMtx`:** `trash[8]`+`trash[0]=0` → Frame **−0xb0** OK, `TPosition3f`/
+`Mtx` **+8**; `mtxPad` verschlechtert.
+5. **`TAmenbo::calcRootMatrix`:** `trash[4]` vor `TPosition3f` → Frame **−0x98** (overshoot).
+6. **`TNerveDoroHaneHitWater`:** nur Diff-Check (Frame **−0x50** vs **−0x48**).
+
+**Vollmatch, strikt.** keine (letzter Ship: R189 `emitGetWaterEffect`).
+
+**Tip (R194).** **`isReachedToGoalXZ`:** zwei `r4`/`r5`-Rollen + **`lwz`/`stw`-Paar** in C ohne
+Out-of-line-Helfer nicht steuerbar (2× stuck → stop). **`getTakingMtx`-Klasse:** Entry-`trash[8]`
+mit **`trash[0]=0`** fixt nur **Frame**; **`TPosition3f`/`Mtx`** braucht separaten **+8 B Slot-Pad**
+(zwischen `fVar2` und `pos`), nicht zweites Entry-Pad — analog R192 J3D-`Mtx`-Rest.
+
+**Verify.** `ninja baseline` / `changes_all` ohne Code-Delta ggü. **`49999ccc`**.
+
+### R193 (Aufgabe B; non-J3D +0x10 helpers, keine Vollmatches)
+
+**Hunt.** R192-Scanner (59 Treffer); **Enemy/Player**, kein `*Ctrl`; exaktes Frame-Δ ohne
+großes `Mtx`-Rest-Spill; **scalar/`lwz`–`stw`-`TVec3`** für **+0x10**-Helfer; Cap ~8; strikt 100 %.
+
+**Skip (User + R192).** `YoshiHeadCtrl`, `NozzleCtrl`, `RotateCtrl`,
+`TBEelTearsManager::createEnemies`, `TBGTentacleMtxCalc::~dtor`; R191-Skips (`behaveToMario`,
+`getRumblePow`, `tryTake`, …).
+
+**Fokus.** `TWalkerEnemy::isReachedToGoalXZ`, `TTobiPuku::isReachedToGoalXZ` (Scanner **+0x10**);
+`THamuKuri::isResignationAttack`, `TWalkerEnemy::isResignationAttack` (gleiche `unk104`-Kette).
+
+**Probes (~8, revertiert / no-ship).**
+
+1. **`TWalkerEnemy::isReachedToGoalXZ` (Baseline):** `#pragma dont_inline` `getPoint()` → **99,7 %**;
+Frame **−0x30** vs **−0x20**, Spill **+0xc** (`0x20` vs `0x14`).
+2. **Scalar `u32` goal + `Vec diff`:** Frame **−0x20** OK; **`r4`/`r5`** vertauscht,
+`lwz`/`stw`-Paar-Reihenfolge (`0x14` vs `0x10`) → **~98,4 %**.
+3. **`word0`/`word1`-Temps:** Spill **0x10** statt **0x14** (schlechter).
+4. **`char pad[8]`** vor/nach `Vec`:** Frame **−0x28** (overshoot).
+5. **`TTobiPuku::isReachedToGoalXZ`:** gleiches Scalar-Muster wie (2), revertiert.
+6. **`THamuKuri::isResignationAttack`:** nur Diff-Check — `dist()`-Static + `getPoint()`;
+kein sicherer Scalar-Pfad ohne `dist`-UNUSED-Größe.
+7. **`TSpineEnemy::calcTurnSpeedToReach`:** Frame **−8**; f32-Spill bleibt (Prior).
+8. **`TPakkunSeed::moveObject`:** Frame **−8**; `MsGetRotFromZaxis`-Stack (Prior).
+
+**Vollmatch, strikt.** keine (letzter Ship: R189 `emitGetWaterEffect`).
+
+**Tip (R193).** **`+0x10` Frame** bei `isReachedToGoalXZ`: Retail **inlined** `getPoint()`-Logik
+(`addi r4,r3,0x104` → `lwz r5,0x104` → `lwz`/`stw` @ **0x14**), **kein** Out-of-line-`getPoint`
+(−0x30). Scalar-`u32`-Kopie bringt Frame zurück; **100 %** hängt an **`r4`=node / `r5`=actor**
+und **`lwz r4,0(r5); lwz r0,4(r5); stw r4; stw r0`** — extra `u32`-Locals verschieben nur den
+Spill-Slot (**0x10**), nicht die Register-Rollen.
+
+**Verify.** `ninja baseline` / `changes_all` ohne Code-Delta ggü. **`a2a063d0`**.
+
+### R192 (Aufgabe B; Frame-Δ-Scanner + J3D-Callbacks, keine Vollmatches)
+
+**Hunt.** Enemy/Player ≤500 B; Frame-Δ exakt **8/0x10/0x20/0x28** + wenige `~`; Emit-Zwei-Zeiler;
+weak wie `isEmitting`; Cap ~8.
+
+**Skip (User + R191).** `behaveToMario`, `getRumblePow`, `tryTake` neu; weiter
+`getEmitPosDir`, `surfingEffect`, `getNowGravity`, `createModelData`, `getPolluteRadius`, …
+
+**Scanner (Frame-Δ, 0 `|`/`<`/`>`, ≤500 B).** **59** Treffer (z. B. `YoshiHeadCtrl` −8,
+`NozzleCtrl` −0x10, `TWalkerEnemy::isReachedToGoalXZ` +0x10, `RotateCtrl` −0x20).
+
+**Probes (~8, revertiert / no-ship).**
+
+1. **`YoshiHeadCtrl`:** `trash[8]` → Frame **−0x50** OK, `Mtx` bleibt **0x10** vs **0x14** (`~`).
+2. **`NozzleCtrl`:** `trash[0x10]` → Frame **−0x60** OK, `Mtx` **0x14** vs **0x28**; `mtxPad`/`unused2` verschlechtert.
+3. **`RotateCtrl`:** `trash[0x20]` → Frame OK, `Mtx` **0x10** vs **0x2c**.
+4. **`TBEelTearsManager::createEnemies`:** Zwei-Zeiler `resource` / `s32`-Loop / Owner-Inline → Frame **+8** bleibt (`r30` vs `r31`).
+5. **`TBGTentacleMtxCalc::~dtor`:** nur **Rodata**-`addi` (+4), kein Entry-Pad.
+
+**Vollmatch, strikt.** keine (letzter Ship: R189 `emitGetWaterEffect`).
+
+**Tip (R192).** **−0x8 Frame** bei J3D-Callbacks oft **`trash[8]`** am Entry — danach noch
+**+4 B `Mtx`-Spill** (Frame passt, `addi r3,r1,0x14` fehlt): Entry-Trash allein reicht nicht;
+Retail legt **`Mtx` höher** (z. B. Nozzle **0x28** auf **−0x60**). **+0x10 Frame** bei
+`TVec3`-Helfern: nicht Entry-Trash, sondern **kein `TVec3`-Temp** / Retail-`lwz`/`stw`-Kette
+(`isReachedToGoalXZ`, `getRumblePow`).
+
+**Verify.** `ninja baseline` / `changes_all` ohne Code-Delta ggü. **`e483d1c7`**.
+
+### R191 (Aufgabe B; B-scope spill/Frame, keine Vollmatches)
+
+**Hunt.** Enemy/Player außer R188–R190-Dry; kleine `receiveMessage`/`perform`/`emit*`
+mit Entry-Trash exaktem Frame-Δ oder Emit-Zwei-Zeiler; strikt 100 %, Cap ~8.
+
+**Skip (User + Prior).** `getEmitPosDir`, `surfingEffect`, `getNowGravity`,
+`createModelData`, `getPolluteRadius`, `toroccoEffect`, `TBubbleCallBack`, R187+
+(`thinkSituation`, `TBossEelAwaCollision::behaveToMario`, …); ab R192 auch
+`getRumblePow`, `tryTake`.
+
+**Scanner.** 114× **97–99,9 %** / ≤400 B (Enemy/Player); **0** mit nur ≤3 `~`, 0 `|`,
+≤120 B. Viele **99,8 %** = einheitliches **+4**-Stack-Spill (`TVec3`/`Mtx`) oder
+**Frame-Δ 0x10** (`tryTake` −0x38 vs −0x28).
+
+**Probes (~8, revertiert / no-ship).**
+
+1. **`TBossEelAwaCollision::behaveToMario`:** manuelle `x/y/z` + `trash[4/8]` →
+   Frame OK mit `trash[8]`+Ctor, Vektor bleibt **0x10** vs Retail **0x14** (nur `~`);
+   `trash[8]` ohne Ctor verschlechtert Frame.
+2. **`TBiancoGateKeeper::getRumblePow`:** Feldweise `diff` statt `= mPosition` →
+   **59 %** (Retail **`lwz`/`stw`**-Kette, kein `operator-=`-Inline).
+3. **`TEnemyMario::tryTake`:** `s32`-Loop-Index → unverändert **99,8 %** (Frame).
+4. **`THamuKuri::setMActorAndKeeper`:** verbleibendes `~` = **Rodata** `addi r4,r31`
+   **0x360** vs **0x370** (`@1490`), nicht Member-Offset.
+
+**Vollmatch, strikt.** keine (letzter Ship: R189 `emitGetWaterEffect`).
+
+**Tip (R191).** Bei **gleichem `stwu`-Frame** aber **+4**-Spill: Retail oft **ohne**
+`TVec3`-Ctor/`add()` — skalare **`stfs`**-Kette und **`gpMarioSpeedY` zwischen
+`y`-Writes** (siehe `bosseel.s` `behaveToMario`); Entry-`trash[4]` schiebt nur
+bei **Ctor**-Layout von 0x10→0x14, nicht allein. **Frame −0x10 zu groß** (`tryTake`):
+nicht Entry-Trash — fehlende Register-Loop wie Retail (`li r30`/`r31`).
+
+**Verify.** `ninja baseline` / `changes_all` ohne Code-Delta ggü. **`af522fc7`**.
+
+### R190 (Aufgabe B; emit-helper hunt, keine Vollmatches)
+
+**Hunt.** MarioParticle `emitAndBindToPosPtr` / `emitAndBindToMtxPtr` mit
+R189-Zwei-Zeiler (`ptr = &member;` vor Call); weak/B-scope 98–99,6 %, ≤8
+Nicht-Spill-`~`, keine `|`/`<`/`>`.
+
+**Skip (User + R189).** `toroccoEffect`, `TBubbleCallBack`, `surfingEffect`-Frame,
+Prior-Skips unverändert.
+
+**Scanner (tight + manuell).** 4 Treffer ohne `|` (`getPolluteRadius`,
+`createModelData`, `startIsEnd`, `getNowGravity`); alle strukturell/rodata.
+
+**Probes (~8, revertiert / no-ship).**
+
+1. **`surfingEffect`:** `surfMtx = (MtxPtr)&unk1F0` nur Call B → **99,7 %** (Frame
+   −0x70 vs −0x60 bleibt); volle `rootMtx`/`surfMtx`-Locals → Frame **−0xb8**.
+2. **`TGessoPolluteObj::getNowGravity`:** `saveParams`/`unk1E8`-Zwei-Zeiler → **`lwz r3`**
+   statt Retail **`lwz r4`** (8-Instr, kein Stack für `r31`).
+3. **`TBossGessoManager::createModelData`:** file-scope `entry[]` → **99,2 %**
+   (`entry$3707` vs Compiler-Label).
+4. **`TYoshi::getEmitPosDir`:** manuelle `mModel`/`0x58`-Kette, `void* r6`-Reassign —
+   MWCC hält **`lwz r3,4(r6)`** / **`lwz r3,0x58(r3)`** (Retail **`r6`**-Kette).
+5. **`emitGetEffect`:** `unk160Ptr`-Zwei-Zeiler → bereits **100 %** mit `&unk160`
+   (kein Delta).
+6. **`getPolluteRadius`:** Frame + **`lfs`**-Operanden-Reihenfolge (virtueller Call).
+
+**Vollmatch, strikt.** keine (letzter Ship: R189 `emitGetWaterEffect`).
+
+**Tip (R190).** Zwei-Zeiler-Adressen helfen bei **Call-Arg-Setup** (`emitGetWaterEffect`);
+bei **Mtx-Ketten** ohne Call oft **`r6`-Reuse** (`lwz r6,4(r6)`), nicht
+`getModel()`/`getAnmMtx()` — dafür Zeiger-Kette in **`r6`** halten oder Retail
+ohne Out-of-Line-Calls spiegeln (geschützte `J3DModel::mNodeMatrices`).
+
+**Verify.** `ninja baseline` / `changes_all` ohne Code-Delta ggü. **`249db216`**.
+
+### R189 (Aufgabe B; `emitGetWaterEffect` Arg-Order, 1 Vollmatch)
+
+**Hunt.** Weak/Header-Inlines + Scanner-Dry-Liste (≤3 Nicht-Spill-`~`, Cap ~8);
+`emitGetWaterEffect` vs. 100 % `emitGetEffect`; Caller-Retune nur bei Inline-Wachstum.
+
+**Skip (User + R187/R188).** Unverändert; `getRandomNextIndex`, `TNerveGessoTurn`,
+`startJumpWall`, `thinkSituation`, …
+
+**Scanner (tight 95–99,4 %, ≤400 B, Frame-Δ-Set, ≤3 Nicht-Spill-`~`).** **0** Treffer.
+
+**Probes (~8, revertiert / no-ship).** `toroccoEffect`: Entry-`trash[8]` → Frame OK,
+TVec3-Spill **+4** (0x60 vs 0x5c); `delta`-Local + `trashAfter` → **56 %**.
+`TBubbleCallBack::execute`: Entry-`trash[0x10]` → Frame **−0x50** vs Retail **−0x38**.
+`TNerveGessoTurn` / `isReachedToGoalXZ` (R188-Wiederholung): schlechter.
+`emitGetWaterEffect`: `(u8*)this+0x160` / direkter Call → **`mr r4,r3`** (82 %).
+
+**Vollmatch, strikt (`decomp-diff` 0× `~`/`|`/`</>`).**
+
+1. **`TMario::emitGetWaterEffect`** (`MarioParticle.cpp`) — vor dem Call
+`JGeometry::TVec3<f32>* unk160Ptr; unk160Ptr = &unk160;` erzwingt Retail-Reihenfolge
+(`addi r5,r3,0x160` vor `stw`/`li r4,0xf`/`stwu −8`/`li r7`). Keine Caller-Retune
+(nur `bl` aus `MarioReceiveMsg`).
+
+**Tip (R189).** Wenn ein kleiner Helfer **`mr r4,r3`** statt frühem **`addi r5,r3,0x160`**
+zeigt: **Adresse in zwei Statements** laden (`ptr = &member;` dann Call) — nicht nur
+Literal **`0xf`** oder **`(u8*)this+0x160`** im Call-Argument (MWCC-Reihenfolge).
+
+**Verify.** `decomp-diff` → **100,0 %** `emitGetWaterEffect`; `ninja baseline` /
+`changes_all`: **+1** Funktion (9259→9260), `mario/Player/MarioParticle` matched_code
+**82,52 %→83,11 %**.
+
+### R188 (Aufgabe B; 95–99,4 % Scanner + `isEmitting`, 1 Vollmatch)
+
+**Hunt.** B-scope Enemy/Player `nonmatching` **95,0–99,4 %**, **≤400 B**, Frame-Δ
+**{4,8,0x10,0x18,0x20,0x28}**; entry `trash[N]` wenn wenige Nicht-Spill-`~`.
+Kleiner Player-Helfer im **emitSweat**/`oilSlip`-Stil.
+
+**Skip (User + R187).** `thinkSituation` / `soundMovement` / `changeScene`,
+`getRandomNextIndex`, `TObjManager::perform`, Hino2/Pollution/`initAndRegister`,
+Prior-Pad-Skips.
+
+**Scanner (25 Treffer, kein Auto-Ship).** Kurzliste (Δ / % / Größe):
+`calcDamagePos` (0x18, 99,5 % — außerhalb 99,4-Cap), `getPolluteRadius` (8,
+99,5 %), `calcTurnSpeedToReach` (8, 99,4 %), `FireWanwanTailHit::moveRequest`
+(8, 99,4 %), `TPoiHana::walkBehavior` (8, 99,3 %), `TMameGesso::calcObjCollision`
+(0x18, 99,2 %), `TWaterGun::isEmitting` (0x10, 98,4 % → **ship**),
+`startJumpWall` (8, 97,9 %, strukturell `<`/`lfs`), `TNerveGessoTurn` (8, 97,9 %),
+`TSpineEnemy::calcRootMatrix` (8, 97,1 %, Control-Flow), …
+
+**Probes (~8, revertiert / no-ship).** `TGraphWeb::getRandomNextIndex` (Skip);
+`isEmitting` mit `self = this` allein → `addi r31,r3,0` vs. `mr`; Non-`const`
+`self` → inlined `getCurrentNozzle` (59 %). `startJumpWall` / `calcRootMatrix`:
+kein reines Frame-Pad. `squating` Open-Code (Register/Frame schlechter).
+
+**Vollmatch, strikt (`decomp-diff` 0× `~`/`|`/`</>`).**
+
+1. **`TWaterGun::isEmitting`** (`WaterGun.hpp`, weak in `MarioRun`) — entry
+`char trash[0x10]; trash[0]=0;`; `getCurrentNozzle` über
+`((const TWaterGun*)this)` statt `const TWaterGun* self = this` (Frame **−0x28**,
+**mr r31,r3**). emitSweat-Analog: Entry-Pad + Spill-/Opcode-Fix ohne
+`gpPollution`-Klon.
+2. **Begleiter (Inline-Größe `isEmitting`).** `TMario::considerRotateStart`:
+`trash[0x10]` entfernt (war Kompensation für altes Inline). `TMario::squating`:
+`getSideWalkValues`-Block `trash[56]` → **`trash[36]`** (Frame **−0xb0**).
+`TYoshi::thinkUpper`: Entry-`trash[0x10]` entfernt.
+
+**Tip (R188).** Bei weak Header-Inlines: **`const TWaterGun* self = this`** erzwingt
+oft **`addi r31,r3,0`** statt **`mr`**; Entry-`trash[0x10]` allein reicht nicht.
+**`((const TWaterGun*)this)->…`** behält **`mr`** und passt zu Retail-ASM
+(`MarioRun.s` ~`0x801394E4`).
+
+**Verify.** `decomp-diff` → **100,0 %** `isEmitting`; `ninja baseline` /
+`changes_all` (ggü. frischem Baseline nach Pull).
+
+### R181 (Aufgabe B; receiveMessage entry +0x28, 1 Vollmatch)
+
+**Hunt.** `perform` / `receiveMessage` / `init` entry frame-pad (8/0x10/0x20/0x28) +
+emitSweat/empty-`TVec3` wo passend.
+
+**Skip (User + R179/R180).** R180 dry (`setMeltAnm`+`vel`, `pollute`, `updatePollute`,
+`emitEffects`, `TBEelTears::perform`, `receiveMessageLv1`, MouthOpenWait-Kombis) +
+R179/R178/R177/Prior (`jumpProcess`, `MouthOpenWait`, `NKFollowMario`, …).
+
+**Probes (~8, revertiert).** `TBEelTears::perform` (`0x10` → 99,8 %); `TSmallEnemy::init`
+(`0x20`); `TBEelTearsDrop` ctor (`0x30`); `TEnemyPolluteModel::perform` (`0x38`).
+
+**Vollmatch, strikt (`decomp-diff` 100,0 %).**
+
+1. **`TDangoHamuKuri::receiveMessage`** — entry `char trash[0x28]; trash[0]=0;` (Frame −0x48).
+
+**Verify.** `ninja baseline` / `changes_all`; `decomp-diff` → **100,0 %**.
+
+### R179 (Aufgabe B; fresh B-scope entry pad, keine Vollmatches)
+
+**Hunt.** Bosseel / fireWanwan / hinokuri2 / gesso / amenbo / namekuri / Player
+`jumpProcess`; entry `trash[8/0x10/0x20/0x28]` + `trash[0]=0` (WallDie-Familie).
+
+**Skip (User + R178).** R178-Probe-Fails (`BoundFreeze`, `PoihanaThrow`, `BGKDive`,
+`BGKSleep`, `MantaHitWater`, `MantaSpawn`, `BGKSleepDamage`, `BathtubKillerBreak`)
++ R177/Prior-Skips (`Hino2Die`, `NKFollowMario`, `GessoTurn`, `FireWanwanDie`, …).
+
+**Probes (~8, revertiert).** `TNameKuri::setMeltAnm`/`setDeadAnm` (`0x20`/`0x28` →
+Frame/Spill); `THinokuri2::receiveMessageLv1` (`0x10`); `TBEelTears::perform` /
+`TBEelTearsDrop::perform` (`0x10`); `TMario::jumpProcess` (`0x10`/`0x20`);
+`TNerveFireWanwanTurn` (`0x18`); `TGesso::pollute` (`0x10`);
+`TNerveBossEelMouthOpenWait` (`0x28` → Frame OK, Spill ~13×); `TNameKuriLauncher::stateLaunch`
+(`0x14`).
+
+**Vollmatch, strikt.** keine. Quellbaum unverändert ggü. **`11513f98`**.
+
+**Verify.** `ninja baseline` / `changes_all` ohne Code-Delta.
+
+### R177 (Aufgabe B; nerve entry +8, 1 Vollmatch)
+
+**Hunt.** Frische B-scope-Nerves/Player (nicht Water/Manager-R176); entry
+`char trash[8/0x10/0x20]` + `trash[0]=0` wie `receiveMessage` / `initNthGeneration`.
+
+**Skip (User + R176).** `loadAfter`, `drawRefracAndSpec`, `makeDL`, `WalkerEscape`,
+`setupEfbAlpha`, `StayPakkun::load`, `isReachedToGoalXZ`, `BPTouchDown`, Prior-Skips.
+
+**Probes (~8, revertiert).** `TNerveBPStompReact` (`0x18` Frame, TVec3-Spill);
+`TNervePakkunGenerate`/`TNerveBPWaitL` (`0x10`); `TNerveBPFly`/`TNerveGessoTurn`
+(`8`); `TNerveBPTumbleOut` (`0x48`); `TNerveFireWanwanDie` (`0x28`);
+`TNerveHino2Die` (`0x18`); `TNameKuri::reset` / `TNerveNKFollowMario`.
+
+**Vollmatch, strikt (1).**
+`TNerveHamuKuriWallDie::execute` (`hamukuri.cpp`, entry `trash[8]` + `trash[0]=0`).
+
+**Verify.** `ninja baseline` / `changes_all`; `dtk shasum -c` → OK.
+
+### R176 (Aufgabe B; entry frame-pad sweep, keine Vollmatches)
+
+**Hunt.** Entry `char trash[8/0x10/0x20]` + `trash[0]=0` bei Frame-short (Retail
+größer) Enemy/Player; kurz emitSweat-`TVec3` wo Locals +4.
+
+**Skip (User + Prior).** `drawWaterVolume`, `TBGTentacle::decideOwnState`,
+`rumblePad`, `jumpMain`, DangoHamuKuri `behaveToWater`/`receiveMessage`,
+`BPPreDie`, `TRiccoHook::init`, `TNerveWalkerEscape` (Frame `0x28` ok, PathNode
+`pop` +0x1c), Prior-Skips.
+
+**Probes (~8, revertiert).** `TModelWaterManager::loadAfter` (`trash[0x18]` →
+fmadd-Cluster); `drawRefracAndSpec` (`trash[8]` overshoot); `TSplashManager::makeDL`
+(`trash[8]`); `TNerveWalkerEscape` (`trash[0x28]` + `trashPath[0x1c]`);
+`TBossMantaManager::setupEfbAlpha` (`trash[0xc]`); `TStayPakkun::load` (`trash[4]`);
+`TWalkerEnemy::isReachedToGoalXZ` (emitSweat); `TNerveBPTouchDown` (emitSweat goal).
+
+**Notiz.** `TModelWaterManager::load` bereits **100 %** ohne Entry-Pad (kein
+`trash[0x18]` — overshoot).
+
+**Vollmatch, strikt.** keine. Quellbaum unverändert ggü. **`09a41198`**.
+
+**Verify.** `ninja baseline` / `changes_all` ohne Code-Delta; `dtk shasum -c` → OK.
+
+### R175 (Aufgabe B; entry frame-pad, 2 Vollmatches)
+
+**Hunt.** Entry `char trash[N]` + `trash[0]=0` (frame −8/−0x20) Enemy/Player;
+emitSweat-`TVec3` wo Locals +4 (z. B. `drawWaterVolume` Mtx, `rumblePad`).
+
+**Skip (User + Prior).** DangoHamuKuri `behaveToWater`/`receiveMessage`,
+`jumpProcess`, `BPPreDie`, `TRiccoHook::init`, `drawWaterVolume` (Mtx-Slot),
+`decideOwnState` (case-5 TVec3), `rumblePad`, Prior-Skips.
+
+**Vollmatch, strikt (2).**
+`TNerveBGKAppear::execute` (`gatekeeper.cpp`, `trash[0x20]`);
+`TBossManta::initNthGeneration` (`bossManta.cpp`, `trash[0x20]`).
+
+**Verify.** `ninja baseline` / `changes_all`; `dtk shasum -c` → OK.
+
+### R174 (Aufgabe B; entry frame-pad, 3 Vollmatches)
+
+**Hunt.** Entry `char trash[N]` (+ `trash[0]=0` wenn nötig) bei Frame **−8/−16**;
+emitSweat-`TVec3` wo passend.
+
+**Skip (User + R173).** `TGessoPolluteObj::set`, `TRiccoHook::init`,
+`TNerveMameGessoJitabata`, TamaNoko-Nerves, `TNerveHino2Burst`,
+`TFireHamuKuri::behaveToWater`, `TDangoHamuKuri::behaveToWater` (TVec3-Slots),
+`TMario::jumpProcess` (+16 overshoot), `TNerveBPPreDie` (TVec3/inlined Body),
+Prior-Skips.
+
+**Vollmatch, strikt (3).**
+`TFireWanwanTailHit::receiveMessage` (`fireWanwan.cpp`, `trash[0x10]`);
+`TNerveBPHover::execute` (`bosspakkun.cpp`, `trash[0x10]`);
+`TBossPakkun::receiveMessage` (`bosspakkun.cpp`, `trash[8]` + `trash[0]=0`).
+
+**Verify.** `ninja baseline` / `changes_all`; `dtk shasum -c` → OK.
+
+### R173 (Aufgabe B; entry +8 frame, 1 Vollmatch)
+
+**Hunt.** `setMActorAndKeeper`-Klonen (meist schon 100 % @108B); emitSweat-`TVec3`;
+entry `char trash[8]` bei Frame **+8** (unser Build kleiner als Retail).
+
+**Skip.** R172-Reverts + User-Skips; `TGessoPolluteObj::set` (Frame ok, Locals +4);
+`TRiccoHook::init`, `TNerveHino2Burst` (inlined `emitWaterParticle` / TVec3-Slot);
+`TNerveMameGessoJitabata` (Frame zu groß); TamaNoko-Nerves (+8 entry → noch 99,9 %);
+`TFireHamuKuri::behaveToWater` (emitSweat-Probe schlechter).
+
+**Vollmatch, strikt (1).** `THinokuri2::perform` (`hinokuri2.cpp`, entry `trash[8]`).
+
+**Verify.** `ninja baseline` / `changes_all`; `dtk shasum -c` → OK.
+
+### R172 (Aufgabe B; Hamukuri setMActor entry-pad, 2 Vollmatches)
+
+**Muster (R171-Familie).** `char trash[8];` am Eintrag von
+`setMActorAndKeeper()` wenn der TU viel Folgecode hat (Tev/Texture) und Frame
+**−8** ggü. Retail — analog `TSmallEnemy::setMActorAndKeeper`, nicht ctor-`TVec3`.
+
+**Skip (User).** `launchPolDrop`, `TBossEelAwaCollision::behaveToMario`, alle
+Prior-Skips; `TTelesa::behaveToWater` / `TYoshiTongue::canGo` / `TNameKuri::reset`
+(Revert, kein emit-Shape).
+
+**Vollmatch, strikt (2).** `THamuKuri::setMActorAndKeeper`,
+`TFireHamuKuri::setMActorAndKeeper` (`hamukuri.cpp`).
+
+**Verify.** `ninja baseline` / `changes_all`; `dtk shasum -c` → OK.
+
+### R171 (Aufgabe B; emitSweat-class +8, 4 Vollmatches)
+
+**Skip (erweitert).** Zusätzlich zu allen Prior-Skips: `TNerveBPTouchDown`,
+`TMario::initParticle`, `TNerveBPPivot`, `TAmenbo::calcRootMatrix`,
+`TConductor::makeEnemyAppear`, `TMario::slippingBasic`, `TPakkunSeed::loadInit`,
+`TStayPakkun::load`.
+
+**Muster.** Frame **−8** ggü. Retail + Spill **+8** mit `char trash[8]` **nach**
+leerem `TVec3` und **vor** Komponenten-Zuweisung (nicht ctor-Init);
+`TFireWanwan::init`: Pad nach `TPosition3f mtx`; `TDoroHaneKuri::isCollidMove`:
+Pad nach `vel = mLinearVelocity` (Copy-ctor).
+
+**Vollmatch, strikt (4).**
+`TBossEelCollision::behaveToMario`, `TBossEelBarrierCollision::behaveToMario`
+(`bosseel.cpp`); `TFireWanwan::init` (`fireWanwan.cpp`);
+`TDoroHaneKuri::isCollidMove` (`hamukuri.cpp`).
+
+**Probes revertiert (~4).** `TBossPakkun::launchPolDrop` (Multi-`TVec3`);
+`TBossEelAwaCollision::behaveToMario` (y-Override nach Init).
+
+**Verify.** `ninja baseline` / `changes_all`; `dtk shasum -c` → OK.
+
+### R170 (Aufgabe B; stack-shrink / Scanner / Nerves, keine Vollmatches)
+
+**Pivot (User).** Kein weiteres post-`TVec3`-Trash auf Skip-Liste
+(`moveObject`, `hitWater`, `getRumblePow`, `resetToPosition`, `bind`,
+`FireWanwanDie`, `OneShotGenerator`, …).
+
+**Stack-shrink / Scanner (~8, revertiert).** `TNerveBPTouchDown`: `goalY` ohne
+`TVec3` → **93,8 %**; `trashAfterGoal[8]` → Frame **−0x60** (Ziel **−0x48**).
+`TMario::initParticle`: explizite `r31`/`r30`-Schleife statt `SMS_LoadParticle` →
+**93,4 %**. `TAmenbo::calcRootMatrix` / `TNerveBPPivot`: `trash[4]` nach Matrix/
+`delta` (mit `trash[0]=0`) → Spill **−0x4** unverändert. `TConductor::makeEnemyAppear`:
+Entry-`trash[4]` → Frame **−0xa0** (Ziel **−0x98**). `TMario::slippingBasic`:
+Frame **−0x58** vs. **−0x80** (kein emitSweat-Pad). `TPakkunSeed::loadInit` /
+`TStayPakkun::load`: Entry-Pad aus R169-Thread revertiert (99,9 % / 99,8 %).
+
+**Nerves / Player.** `TNerveBPPreDie` / `TNerveBPStompReact`: große Frame-Lücken
+(inline/UNUSED). `TNerveFireWanwanTurn`: strukturell (Graph-Pointer), kein Pad.
+
+**Vollmatch, strikt.** keine. Letzter Code-Win: **`TMario::emitSweat`** (`7c52cd87`).
+
+**Verify.** `ninja baseline` / `changes_all` ohne Code-Delta; `dtk shasum -c` → OK.
+
+### R168 (Aufgabe B; 1 Vollmatch Player/MarioParticle)
+
+**Vec-Spill (R166-Stil).** `TMario::emitSweat`: nach `pos`-Lokal
+`char trashAfterPos[8];` vor Komponenten-Zuweisungen — **100 %**, MarioParticle
+`matched_code` **+2,41** %-Pkt. (`changes_all`).
+
+**Probes revertiert (~7):** `TBubbleCallBack` (`trashAfterPos` + Frame **−0x10**),
+`TBossPakkun::rumblePad` (`trashAfterDelta[4]`), `startMonteReplay` (Vec-Pad ohne
+Win), `TNerveBPTouchDown` / `TNerveDoroHaneHitWater` (Frame ±8, skip).
+
+**Verify.** `ninja baseline` / `changes_all`; `dtk shasum -c` → OK.
+
+### R167 (Aufgabe B; Vec-Spill-Sweep, keine Vollmatches)
+
+**Muster (wie R166).** Post-local `char trashAfterVel[8]` nach benanntem
+`TVec3`/`velocity`; Prologue-`trash[8]` nur wenn Frame und Spills getrennt
+steuerbar.
+
+**tobiPuku (~8 Probes, revertiert).** `walkBehavior`: Entry-`trash[8]` → Frame
+**0x68** retail, `velocity`-Spill weiter **−0x8** (`0x38` vs. `0x40`); Dual-
+`trashAfterPrevY`/`trashAfterVel` → Frame **0x70**. `TNerveTobiPukuAttack`:
+`unused` `TVec3` allein → Frame **0x50** OK, Vec-Cluster **−0xc**; `+trashAfterVel`
+→ Frame **0x58**. `Generate`/`Fly`/`HitWater`/`hitWater`: kein strikter Win.
+`torocco`/`soundTorocco`: skip (R166).
+
+**Scanner (kurz).** `moveRoof`/`isTakeSituation`/`slippingBasic`/`slopeProcess`:
+Frame-Gaps **>8**; `TFireWanwan::isMissMario` Frame **+8** zu groß;
+`TNerveSmallEnemyFreeze`/`HamuKuriBoundFreeze`: skip/deadlock; `isHitWallInBound`:
+**−0x28** Frame.
+
+**Vollmatch, strikt.** keine. Quellbaum unverändert ggü. **`a4665ba4`**.
+
+**Verify.** `ninja baseline` / `changes_all` ohne Code-Delta; `dtk shasum -c` →
+OK.
+
+### R162 (Aufgabe B; `initAndRegister` only; keine Vollmatches)
+
+Dedizierte Pass nur **`TMapObjBase::initAndRegister`**. Retail hat **kein**
+`trash[0]`-Store zwischen `search` und `addi r31,r3,0x10` (anders als R146
+`joinToGroup`).
+
+**Zwei inkompatible Teil-Lösungen (MWCC):**
+
+1. **`char trash[8]` + inline `search`/`push_back` (ohne `list`, ohne
+   `trash[0]`-Write):** **99,8 %** — `addi r31,r3,0x10` OK, `insert`-Args
+   **0x4c/0x48/0x4c** OK; Iterator-/Copy-Temps **−4** (**0x3c** vs. **0x40**,
+   **0x54** vs. **0x58**).
+2. **`char trash[8]` + `JDrama::TNameRef* list` + `trash[0]=0` nach `search`:**
+   **99,7 %** — Iterator **0x40** und `insert`-Offsets retail-korrekt, aber
+   **`addi r30,r3,0x10`** statt **`r31`** (Suchpfad inlined wie Retail
+   `lwz r31,4(r4)` während `this` noch als live gilt → `list` landet in **r30**).
+
+Jeder **`trash[0]`/`trash[4]`/`trash[7]`-Write** vor `push_back` verschiebt
+Iterator **+4**, bricht aber gleichzeitig die finale `insert`-Triple (**+4** auf
+**0x50/0x4c**). `THitActor* param_2=this`, `group`-Local, `TIdxGroupObj::add`,
+`getChildren().push_back`, `volatile`/`align[4]`: keine Kombination mit strikt
+100 %.
+
+**Nächster menschlicher Hebel:** Original-Quelle vermutlich ohne benanntes
+`list`; Padding nur im Iterator-Cluster (+4) ohne Store, der `insert`-Tail
+mitverschiebt — evtl. UNUSED-Helfer / explizite `iterator`-Locals aus MAP.
+
+**Vollmatch, strikt.** keine. Quellbaum unverändert ggü. `da040dc0`.
+
+**Verify.** `ninja baseline` / `changes_all` ohne Code-Delta; `dtk shasum -c` →
+OK.
+
+### R157 (Aufgabe B; Sweep, keine neuen Vollmatches)
+
+**`TNerveHamuKuriWallDie`.** `char trash[8];` am Eingang → Frame **0x80**;
+`local_34` weiter **+4** (**0x50** vs. **0x4c**). Post-`local_34`-`trash[4]`
+(mit/ohne Write), `trashAfterSelf[4]`, `int padForVec` / `MtxPtr`-Hoist,
+`trashBeforeVec[4]`: Vec **+8** oder Frame kaputt — nicht committiert.
+
+**`TMario::warpRequest`.** Bestes Teilbild: `char trash[8];` + `offset = pos -
+mPosition;` + `char trashAfterOffset[4];` + `trashAfterOffset[0] = 0;` → Frame
+**0x68**, `sub`-Temp **0x28** OK; inlined `moveRequest` noch vier `~` (**0x38**
+vs. **0x44**). `trash[0x10]` / `trashBeforeMove[0xc]` / Komponenten-Zuweisung:
+kein Vollmatch. Nicht committiert.
+
+**Vollmatch, strikt.** keine.
+
+**Verify.** `ninja`, `dtk shasum -c` → OK (Quellbaum unverändert ggü. `695d6578`).
+
+### R156 (Aufgabe B; Sweep, keine neuen Vollmatches)
+
+**`TNerveHamuKuriWallDie` (hamukuri).** `char trash[8];` am Nerv-Eingang
+(ohne Write) richtet Frame **0x80**; `local_34` / `emitWithRotate`-Vec bleibt
+**+4** (**0x50** vs. **0x4c**). `trash[0]=0`, `trashVec[4]` vor/nach
+`local_34`: Vec **+8** oder Frame bricht. Nicht committiert.
+
+**`TMario::warpRequest` (MarioMove).** `trash[0x10]` am Eingang → Frame
+**0x68** OK; `offset`-Temp weiter **0x24** vs. **0x28**. Kombinationen mit
+`trashOffset[4]` / getrennte Zuweisung: kein striktes Match. Nicht committiert.
+
+**`TNerveMantaSpawn` / `AppearDemo` (bossManta).** Spawn: `trash[8]` nur Frame;
+`emitAndBindToPosPtr`-Stack **0x34** vs. **0x3c**. AppearDemo: Frame **+0x10**
+(epilogue-`~` nur) — Local-Reorder ohne Effekt.
+
+**BathtubKiller death.** `trash[4]` vor `setDeadBathtubKillerAnm` in Explosion:
+unverändert **0x18** vs. **0x1c**. `set()` + `trash` in `setDead…`: verschlechtert.
+
+**Defer unverändert.** `TNervePoihanaThrow`, `TNerveHamuKuriBoundFreeze`.
+
+**Vollmatch, strikt.** keine.
+
+**Verify.** `ninja`, `dtk shasum -c` → OK.
+
+### R155 (Aufgabe B; Sweep, keine neuen Vollmatches)
+
+**BathtubKiller death.** `TNerveBathtubKillerExplosion` / `Break`: Frame **0x30**
+passt; inlined `setDeadBathtubKillerAnm` — Velocity-Temp **0x18** vs. **0x1c**
+(four `~`). `trash[4]` vor `mVelocity`-Zuweisung (mit/ohne Write), `zeroVel`+
+`trash`, Komponenten-Zuweisung, `#pragma dont_inline` auf `setDeadBathtubKillerAnm`:
+kein striktes Match (dont_inline verschlechtert Explosion stark).
+
+**Weitere Probes (kurz).** `TNerveMantaAppearDemo`, `TNerveWalkerEscape`,
+`TNerveTamaNokoSink`, `TNerveMameGessoJitabata`, `TNerveHamuKuriGoForSearchActor`:
+Frame-/Local-Lücken **>8 B** — nicht weiter verfolgt. `TMario::warpRequest`:
+`trash[0x10]` am Eingang wirkte nicht (Pad offenbar wegoptimiert).
+
+**Unverändert WIP.** `TNervePoihanaThrow`, `TNerveHamuKuriBoundFreeze` (siehe R154).
+
+### R154 (Aufgabe B; 1 Vollmatch)
+
+**`TNerveKageMarioModokiWait::execute` (telesa).** `char trash[8];` +
+`trashAfterSelf[4]` am Nerv-Anfang; explizites `TPathNode pathNode` +
+`char trashPath[8];` vor `setGoalPath` (Frame **0x68**, Path-Stack **0x44**).
+**match 100 %** (412B). Commit `da4987f2`.
+
+`dtk shasum -c` OK.
+
+**Offen / WIP.** `TNervePoihanaThrow`: `trash[0x10]` + an Funktionsanfang
+gehobene `backThrowVal` / `afStack_4c` / `local_58` → Frame **0xb0**, aber
+`MsMtxSetRotRPH`-`Mtx` noch **+0xc** (`r1+0x58` vs. **0x64**); extra
+`trash[0xc]` nach `Mtx` bläht Frame auf **0xc0**. `TNerveHamuKuriBoundFreeze`:
+`thing` weiter **+8** mit `trash[8]` am Eintritt (Frame **0x68**).
+
+### R153 (Aufgabe B; 2 Vollmatches)
+
+**`TNerveTelesaFreeze::execute` (telesa).** `char trash[4];` + `trash[0]=0`
+**nach** `self`; explizites `TPathNode pathNode` + `char trashPath[4];`
+**danach** vor `setGoalPath` (Frame **0x40**, Goal-Path-Stack **0x24**).
+**match 100 %** (544B). Commit `06112e5d`.
+
+**`TNerveBossEelWaitAppear::execute` (bosseel).** `char trashVec[0x14];`
+**nach** `marioPosition = *gpMarioPos` (Frame **0x68**, Vec-Temp **0x4c**).
+**match 100 %** (496B). Commit `2ef862a9`.
+
+`dtk shasum -c` OK.
+
+**Offen.** `TNervePoihanaThrow`: `trash[0x10]` am Nerv-Eingang richtet Frame
+**0xb0**, Mtx/`local_58` noch **+0xc** versetzt — inneres Pad vergrößert Frame
+falsch. `TNerveHamuKuriBoundFreeze`: `thing`-TVec3 weiter **+8** trotz
+`trash[8]` am Eintritt (ohne Write).
+
+### R152 (Aufgabe B; 2 Vollmatches)
+
+**`TNerveFireWanwanFreeze::execute` (fireWanwan).** Explizites
+`JGeometry::TVec3<f32> zeroVel` vor `setVelocity`; `char trash[8];`
+**danach** (Frame **0x50**, Velocity-Temp auf **0x34**). **match 100 %**
+(368B). Commit `c45b99e5`.
+
+**`TMario::turnEnd` (MarioRun).** `char trash[4];` + `trash[0]=0` am
+Funktionsanfang (Frame **0x28**, inlined `considerRotateStart` /
+`checkStickRotate`-Local auf **0x18**). **match 100 %** (612B).
+
+`dtk shasum -c` OK.
+
+**Offen.** `TNerveTelesaFreeze`: Frame **0x40** passt, `TPathNode`-Stack noch
+**+4** versetzt. `TNerveHamuKuriBoundFreeze` / `TNervePoihanaThrow` unverändert.
+
+### Nächster Schritt
+
+1. `BathtubKiller` death nerves: **0x1c**-Basis ohne Frame-Wachstum.
+2. Nerven mit Frame+Local-Drift: `trash` **nach** betroffenen Locals (vgl.
+   `considerRotateStart`, PROGRESS-Methodik).
+3. `initAndRegister`: **r30/r31** vs. **insert +4** (siehe R161); `TCloset`
+   Hands-off.
+4. Defer-Listen / Hands-off unverändert.

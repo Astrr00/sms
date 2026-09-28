@@ -493,7 +493,9 @@ void TRollBlock::setGroundCollision()
 		return;
 
 	MtxPtr mtx = getModel()->getAnmMtx(0);
-	if (TMapCollisionBase* col = mMapCollisionManager->getUnk8())
+	// getUnk8() is fabricated. That inline leaves a dead slot
+	// and grows this frame from 0x20 to 0x28.
+	if (TMapCollisionBase* col = mMapCollisionManager->unk8)
 		col->moveMtx(mtx);
 }
 

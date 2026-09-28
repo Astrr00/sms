@@ -134,8 +134,7 @@ static BOOL NozzleCtrl(J3DNode* node, BOOL param_2)
 			                   ->getGunAngle();
 			if (gunAngle < 0) {
 				Mtx mtx;
-				// Unused stack space
-				// volatile u32 unused2[6];
+				volatile u32 unused2[5];
 				MsMtxSetRotRPH(mtx, 0.0f, 0.0f, SHORTANGLE2DEG(gunAngle));
 				MTXConcat(J3DSys::mCurrentMtx, mtx, J3DSys::mCurrentMtx);
 			}
@@ -150,7 +149,7 @@ static BOOL RotateCtrl(J3DNode* node, BOOL param_2)
 		s16 local1cd0 = gpMarioForCallBack->mWaterGun->unk1CD0;
 		Mtx mtx;
 		// Unused stack space
-		// volatile u32 unused2[7];
+		volatile u32 unused2[7];
 		MsMtxSetRotRPH(mtx, 0.005493164f * local1cd0, 0.0f, 0.0f);
 		MTXConcat(J3DSys::mCurrentMtx, mtx, J3DSys::mCurrentMtx);
 	}
@@ -167,7 +166,7 @@ static BOOL WaterGunDivingCtrlL(J3DNode* node, BOOL param_2)
 		s16 neg          = -nozzleSpeedY;
 		Mtx mtx;
 		// Unused stack space
-		// volatile u32 unused2[7];
+		volatile u32 unused2[7];
 		MsMtxSetRotRPH(mtx, 0.0f, 0.0f, 0.005493164f * neg);
 		MTXConcat(J3DSys::mCurrentMtx, mtx, J3DSys::mCurrentMtx);
 	}
@@ -184,7 +183,7 @@ static BOOL WaterGunDivingCtrlR(J3DNode* node, BOOL param_2)
 		s16 neg          = -nozzleSpeedY;
 		Mtx mtx;
 		// Unused stack space
-		// volatile u32 unused2[7];
+		volatile u32 unused2[7];
 		MsMtxSetRotRPH(mtx, 0.0f, 0.0f, 0.005493164f * neg);
 		MTXConcat(J3DSys::mCurrentMtx, mtx, J3DSys::mCurrentMtx);
 	}
@@ -252,7 +251,8 @@ void TNozzleBase::movement(const TMarioControllerWork& controllerWork)
 	if (mFludd->mCurrentWater <= 0) {
 		return;
 	}
-	s32 var1 = 256.0f * controllerWork.mAnalogR * 150.0f;
+	// Retail multiplies the analog by 150, then by 256.
+	s32 var1 = 150.0f * controllerWork.mAnalogR * 256.0f;
 
 	if (var1 > unk372) {
 		unk378 = (var1 - unk372) * 0.000015258789f;
@@ -1358,7 +1358,7 @@ void TWaterGun::init()
 	                              ->unk380->getModel()
 	                              ->getModelData()
 	                              ->getJointName()
-	                              ->getIndex("chn_muzzle_l"))
+	                              ->getIndex("chn_muzzle_1"))
 	    ->setCallBack(&NozzleCtrl);
 
 	mNozzleList[Spray]

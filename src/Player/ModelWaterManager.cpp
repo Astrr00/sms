@@ -49,7 +49,7 @@ TWaterEmitInfo::TWaterEmitInfo(const char* name)
     , PARAM_INIT(mDirTremble, 0.0f)
     , PARAM_INIT(mPow, 0.0f)
     , PARAM_INIT(mPowTremble, 0.0f)
-    , PARAM_INIT(mSize, 0.0f)
+    , PARAM_INIT(mSize, 17.0f)
     , PARAM_INIT(mSizeTremble, 0.0f)
     , PARAM_INIT(mHitRadius, 0.0f)
     , PARAM_INIT(mHitHeight, 0.0f)
@@ -784,12 +784,12 @@ void TModelWaterManager::calcVMMtxGround(MtxPtr param_1, f32 param_2,
 
 	f32 fVar6  = param_2 * param_4.x;
 	f32 fVar7  = param_2 * param_4.y;
-	f32 fVar11 = param_4.y * 2.0 + param_3.y;
+	f32 fVar11 = param_4.y * 2.0f + param_3.y;
 	f32 fVar12 = -fVar6;
 
-	f32 fVar10 = param_4.x * 2.0 + param_3.x;
+	f32 fVar10 = param_4.x * 2.0f + param_3.x;
 	f32 fVar8  = param_2 * param_4.z;
-	f32 fVar9  = param_4.z * 2.0 + param_3.z;
+	f32 fVar9  = param_4.z * 2.0f + param_3.z;
 	f32 fVar13 = -fVar8;
 
 	{
@@ -837,8 +837,8 @@ void TModelWaterManager::calcVMMtxWall(MtxPtr param_1, f32 scale,
 	f32 fVar4  = param_3.y;
 	f32 fVar8  = scale * param_4.z;
 	f32 fVar11 = -fVar7;
-	f32 fVar10 = param_4.x * 2.0 + param_3.x;
-	f32 fVar9  = param_4.z * 2.0 + param_3.z;
+	f32 fVar10 = param_4.x * 2.0f + param_3.x;
+	f32 fVar9  = param_4.z * 2.0f + param_3.z;
 
 	{
 		f32 fVar3     = param_1[0][1];

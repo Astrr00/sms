@@ -432,6 +432,7 @@ TFireWanwanTailHit::TFireWanwanTailHit(TFireWanwan& param_1)
 
 BOOL TFireWanwanTailHit::receiveMessage(THitActor* sender, u32 message)
 {
+	char trash[0x10];
 	if (sender->getActorType() == 0x80000001) {
 		if (message == HIT_MESSAGE_TAKE) {
 			if (!mOwner->canTakenByMario())
@@ -460,7 +461,9 @@ void TFireWanwanTailHit::behaveTaken(THitActor* param_1)
 
 	mCurTailLength  = unkA4->getLength();
 	mPrevTailLength = mCurTailLength;
-	moveRequest(mPosition);
+	// Retail passes the holder's position. r31 is the sender.
+	// TODO: receiveMessage's frame is still 0xa0 against retail 0xb0.
+	moveRequest(param_1->mPosition);
 }
 
 void TFireWanwanTailHit::behaveApart()
@@ -731,6 +734,7 @@ void TFireWanwan::init(TLiveManager* manager)
 	unk150     = 1;
 	mSpine->initWith(&TNerveFireWanwanGraphWander::theNerve());
 	TPosition3f mtx;
+	char trashAfterMtx[8];
 	mtx.translation(mPosition);
 	getModel()->setBaseTRMtx(mtx);
 	getModel()->setBaseScale(mScaling);
@@ -873,7 +877,7 @@ void TFireWanwan::decideTarget(const JGeometry::TVec3<f32>& param_1)
 		                 1.0f);
 	}
 
-	unk1BC.setEulerY(DEG_TO_RAD(mRotation.y));
+	unk1BC.setEulerY(mRotation.y * 0.017453294f);
 }
 
 void TFireWanwan::doAdjustTarget()
@@ -1868,6 +1872,9 @@ DEFINE_NERVE(TNerveFireWanwanFindMario, TLiveActor)
 
 DEFINE_NERVE(TNerveFireWanwanAttack, TLiveActor)
 {
+	char trash[4];
+	trash[0] = 0;
+
 	TFireWanwan* self = (TFireWanwan*)spine->getBody();
 
 	if (spine->getTime() == 0) {
@@ -1946,6 +1953,9 @@ DEFINE_NERVE(TNerveFireWanwanRecoverGraph, TLiveActor)
 
 DEFINE_NERVE(TNerveFireWanwanRecover, TLiveActor)
 {
+	char trash[0x40];
+	trash[0] = 0;
+
 	TFireWanwan* self = (TFireWanwan*)spine->getBody();
 
 	if (spine->getTime() == 0) {
@@ -2027,6 +2037,7 @@ DEFINE_NERVE(TNerveFireWanwanHungTail, TLiveActor)
 	}
 
 	JGeometry::TVec3<f32> vec = self->mPosition;
+	char trash[8];
 	vec -= SMS_GetMarioPos();
 
 	self->mRotation.y = MsGetRotFromZaxisY(vec);
@@ -2095,7 +2106,9 @@ DEFINE_NERVE(TNerveFireWanwanFreeze, TLiveActor)
 		                                &self->mPosition, 0, nullptr, 0, 4);
 	}
 
-	self->setVelocity(JGeometry::TVec3<f32>(0.0f, 0.0f, 0.0f));
+	JGeometry::TVec3<f32> zeroVel(0.0f, 0.0f, 0.0f);
+	char trash[8];
+	self->setVelocity(zeroVel);
 
 	if (self->getFreezeTime() < spine->getTime()) {
 		spine->pushAfterCurrent(&TNerveFireWanwanRecover::theNerve());

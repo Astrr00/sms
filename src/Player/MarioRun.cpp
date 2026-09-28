@@ -701,7 +701,7 @@ BOOL TMario::running()
 
 	if (rocketCheck()) {
 		unk314
-		    = mFloorPosition.y + mWaterGun->mWatergunParams.mHoverHeight.get();
+		    = mFloorPosition.y + mWaterGun->mWatergunParams.mHHoverHeight.get();
 		return changePlayerStatus(MARIO_STATUS_ROCKET, 0, false);
 	}
 
@@ -798,13 +798,16 @@ BOOL TMario::rotating()
 	if (mStatus == MARIO_STATUS_ROTATE_L)
 		mModelFaceAngle = mStatusTimer * 4096;
 	else
-		mModelFaceAngle = -(mStatusTimer * 4096);
+		// Unsigned store. A signed negation inserts extsh before sth.
+		mModelFaceAngle = (u16)-(mStatusTimer * 4096);
 
 	return 0;
 }
 
 BOOL TMario::turnning()
 {
+	char trash[4];
+	trash[0] = 0;
 	if (isThrowStart())
 		return 1;
 
@@ -864,6 +867,9 @@ BOOL TMario::turnning()
 
 BOOL TMario::turnEnd()
 {
+	char trash[4];
+	trash[0] = 0;
+
 	if (isThrowStart())
 		return 1;
 
@@ -975,7 +981,7 @@ BOOL TMario::surfing()
 
 		if ((wallToFace < -maxAngle || maxAngle < wallToFace)
 		    && mForwardVel > minSpeed) {
-			decHP(mDeParams.mHpMax.get());
+			decHP(mDeParams.mHPMax.get());
 			BOOL ret = changePlayerStatus(MARIO_STATUS_JUMP_BACK_DOWN, 0, true);
 			mForwardVel = 0.8f * -mForwardVel;
 			mVel.y      = 50.0f;
@@ -1036,7 +1042,9 @@ BOOL TMario::walkEnd()
 		break;
 	}
 
-	f32 rate = 0.25f * mForwardVel;
+	f32 quarter = 0.25f;
+	f32 vel     = mForwardVel;
+	f32 rate    = vel * quarter;
 	if (rate < 0.1f)
 		rate = 0.1f;
 	setAnimation(ANIM_RUN1, rate);
@@ -1196,11 +1204,11 @@ BOOL TMario::slipBack()
 
 BOOL TMario::catching()
 {
-	// TODO: removeme
-	(void)0;
+	char trash[8];
+	trash[0] = 0;
 
 	if (!(mInput & 0x8) && (mInput & 0x2)) {
-		if (mForwardVel > mDeParams.mClashSpeed.get())
+		if (mForwardVel > mJumpParams.mRotBroadEnableV.get())
 			return changePlayerStatus(MARIO_STATUS_ROTATE_BROAD_JUMP, 0, false);
 
 		return changePlayerStatus(MARIO_STATUS_CATCH_STOP, 0, false);
@@ -1244,6 +1252,8 @@ BOOL TMario::squatSlipping()
 
 BOOL TMario::oilRun()
 {
+	char trash[8];
+
 	if (mInput & 0x2) {
 		setPlayerVelocity(0.0f);
 		return changePlayerJumping(MARIO_STATUS_JUMP, 0);
@@ -1261,8 +1271,12 @@ BOOL TMario::oilRun()
 		}
 	}
 
-	f32 tmp = mDirtyParams.mPolSizeRun.get();
-	gpPollution->stamp(1, mPosition.x, mPosition.y, mPosition.z, tmp);
+	TPollutionManager* pollution = gpPollution;
+	f32 tmp                = mDirtyParams.mPolSizeRun.get();
+	f32 posZ               = mPosition.z;
+	f32 posY               = mPosition.y;
+	f32 posX               = mPosition.x;
+	pollution->stamp(1, posX, posY, posZ, tmp);
 
 	{
 		f32 rotSp = mDirtyParams.mSlipRotate.get();
@@ -1331,8 +1345,12 @@ BOOL TMario::oilSlip()
 		changePlayerStatus(MARIO_STATUS_CATCH, 0, false);
 	}
 
-	f32 tmp = mDirtyParams.mPolSizeSlip.get();
-	gpPollution->stamp(1, mPosition.x, mPosition.y, mPosition.z, tmp);
+	TPollutionManager* pollution = gpPollution;
+	f32 tmp                = mDirtyParams.mPolSizeSlip.get();
+	f32 posZ               = mPosition.z;
+	f32 posY               = mPosition.y;
+	f32 posX               = mPosition.x;
+	pollution->stamp(1, posX, posY, posZ, tmp);
 	SMSGetMSound()->startSoundActor(MSD_SE_MA_SLIP_POLLUT_CP, &mPosition, 0,
 	                                nullptr, 0, 4);
 

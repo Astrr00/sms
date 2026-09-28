@@ -16,7 +16,7 @@ public:
 	TWaterGunParams(const char* prm)
 	    : TParams(prm)
 	    , PARAM_INIT(mRocketHeight, 1500.0f)
-	    , PARAM_INIT(mHoverHeight, 160.0f)
+	    , PARAM_INIT(mHHoverHeight, 160.0f)
 	    , PARAM_INIT(mLAngleNormal, 60.0f)
 	    , PARAM_INIT(mNozzleAngleYSpeed, 1.0f)
 	    , PARAM_INIT(mNozzleAngleYBrake, 0.995f)
@@ -27,7 +27,7 @@ public:
 	{
 	}
 	TParamRT<f32> mRocketHeight;
-	TParamRT<f32> mHoverHeight;
+	TParamRT<f32> mHHoverHeight;
 	TParamRT<f32> mLAngleNormal;
 	TParamRT<f32> mNozzleAngleYSpeed;
 	TParamRT<f32> mNozzleAngleYBrake;
@@ -117,20 +117,21 @@ public:
 	void initInLoadAfter();
 	bool isEmitting()
 	{
-		// TODO: more inlines!
-		const TWaterGun* self = this;
+		char trash[0x10];
+		trash[0] = 0;
 
 		if (mCurrentWater == 0)
 			return false;
 
-		if (self->getCurrentNozzle()->getNozzleKind() == 1) {
-			TNozzleTrigger* trig = (TNozzleTrigger*)self->getCurrentNozzle();
+		if (((const TWaterGun*)this)->getCurrentNozzle()->getNozzleKind() == 1) {
+			TNozzleTrigger* trig
+			    = (TNozzleTrigger*)((const TWaterGun*)this)->getCurrentNozzle();
 			if (trig->unk385 == TNozzleTrigger::ACTIVE)
 				return true;
 			return false;
 		}
 
-		if (self->getCurrentNozzle()->unk378 > 0.0f)
+		if (((const TWaterGun*)this)->getCurrentNozzle()->unk378 > 0.0f)
 			return true;
 
 		return false;

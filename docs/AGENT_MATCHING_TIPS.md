@@ -55,6 +55,205 @@ Next, local variables can expand the stack even if they are always stored in a r
 
 When no obviously correct way to make stack frame size match exists, a trick should be used to correctly match the function's context: a temporary char array of required size to inflate the stack. Such hacks however should be removed or commented out after the function is matching to allow for a possible proper solution in the future.
 
+Padding at the top of a function is **not** guaranteed to shift every high-address spill by the same
+delta.
+Concrete case (`TMario::checkRideMovement`): `char trash[0x20]` at entry can fix `stwu -0xd0` while
+the `pos` `TVec3` spill stays at `r1+0x94` instead of retail `r1+0xb0`.
+Hoisting two `Mtx` locals at entry overshoots the frame (`-0xe0`) and pushes vec even lower.
+Retail layout needs the full local home ordering (vec at `0xb0`, `Mtx` at `0x3c`/`0x80`, `stfd` at
+`0xc0`), often tied to inlined `checkRideReCalc` — not frame padding alone.
+
+`TMarioEffect::setJumpIntoWaterEffectSmall` inlines the `getThing()` slot pick at the top ( **`li r29,
+-1`**, then **`unk6C[0/1]`** tests) while loading the TU string pool **`@1490`** into **`r31`** before
+the first **`cmpwi`**.
+Animation names are passed as **`addi r4, r31, 0x14c`** (`"04_tobikomi"` in `MarioEffect` rodata), not
+as freestanding `"04_tobikomi"` literals.
+After **`MTXConcat`**, retail does **`slwi r29, r29, 2`**, **`add r30, r28, r29`**, and uses **`lwzu
+r3, 0x74(r30)`** for the **`MActor*`**, then **`add r3, r28, r29`** + **`stw r0, 0x6c(r3)`** for
+**`unk6C[idx] = 1`** — the shifted index is reused for both **`unk74[]`** and **`unk6C[]`** addressing.
+Calling header-inline **`getThing()`** or casting **`this+0x74`** in C without matching that schedule
+leaves **`stwu -0xf0`** and pool-offset mismatches (~95% stuck).
+
+`TEffectColumSand::reset` (and similar **`effectObj`** TU users) load **`@1490`** with **`lis`/`addi`
+into **`r30` before `stwu`**, with **`this` in `r31`**, then **`bl TSpineEnemy::reset`** and
+**`addi r4, r30, 0x1c8`** for **`08_sunabashira`** — not **`TEffectModel::reset()`** as the first
+call if that prevents the early pool setup.
+
+`TGraphGroup::perform` is a **`for (i < unk4)`** over **`unk8[i]->perform`**, but **`TGraphWeb::perform`
+is empty in `graph.cpp`**, so MWCC deletes the virtual calls and emits only a **Duff-style iteration
+counter** ( **`lwz` at `0x4(r3)`**, **`li r7,0`**, **`cmpwi`/`bdnz` clusters**, no **`bl`** ).
+Matching requires keeping the empty **`perform`** and the simple **`for`** — hand-unrolling the counter
+in C usually diverges opcode selection.
+
+Inside **`TEffectObjBase::perform`**, a direct **`moveObject()`** call on implicit **`this`** is often
+devirtualized to a direct **`bl`** (or inlined) in the same TU. Retail loads **`vtable+0xb0`** and uses
+**`blrl`**. Assign **`TEffectObjBase* self = this`** and call **`self->moveObject()`** to force the
+virtual dispatch pattern; fixing **`stwu -0x20`** / **`stw r31`** is a separate stack-layout issue.
+Retail allocates **`-0x20`** and **`stw r31, 0x1c(r1)`** before the **`CUE_MOVE`** **`beq`** even though
+the function body never assigns **`r31`** (it only preserves the incoming callee-saved value). Keeping
+**`graphics`** in a local, **`goto`** epilogues, or similar did not coerce **`-0x8`** → **`-0x20`** in
+tests — do not assume spill-padding fixes this one.
+
+In **`TEffectObjBase::moveObject`**, retail inlines **`JPABaseEmitter::setGlobalScale`** as three
+**`lfs`** from the **`VECScale`** temp (**`f0`/`f1`/`f2`** at **`0x3c`/`0x40`/`0x44`**) followed by six
+**`stfs`** to **`0x154`/`0x174`**. Calling the header **`setGlobalScale(const TVec3&)`** can permute the
+**`lfs`** order (**`f2,f0,f1`**) even when the math is equivalent.
+
+**`TTamaNoko::isReachedToGoal`** / **`TTelesa::isReachedToGoal`** inline **`TPathNode::getPoint`**
+at **`this+0x104`**: **`addi r4, r3, 0x104`** right after **`mflr`**, **`lwz r5, 0x104(r3)`**, then either
+**`addi r5, r5, 0x10`** (actor position) or **`addi r5, r4, 4`** (embedded **`unk4`**), copy three words
+to **`r1+0x14`**, subtract **`mPosition`**, force **`y=0`**, **`fcmpu`** X/Z vs zero, then **`MsVECMag2`**
+against a rodata threshold — not a single **`getPoint()`** call plus **`TVec3`** math.
+
+**`TDebuTelesaManager::createModelData`** uses a function-local **`static TModelDataLoadEntry entry[]`**
+(without **`const`**) for retail **`entry$2835`** in **`.rodata`**. Marking the array **`const`** keeps
+**`createModelData`** text clean but leaves **`entry$2835`** at ~**85%**; dropping **`const`** can match
+the pool while **`createModelData`** drifts to ~**99%** — treat as one emission-order problem.
+
+**`TGraphWeb::startIsEnd`** keeps **`unk0`** in **`r4`** and the first rail in **`r5`** through the
+first **`||`** block; the last node must load via **`slwi` + `lwzx r3, r4, r0`** (index still in **`r3`**
+after **`unk8 - 1`**). **`r4[idx].unk0`** or splitting **`||`** into separate **`if`/`return`** changes
+branch targets and **`lwzx`** shape.
+
+When **`TSpineEnemy::calcRootMatrix`** finds **`mHolder->getHeldObject() == this`**, retail calls
+**`getTakingMtx`** on the **holder** (`lwz r12, 0(r3)` with **`r3 == mHolder`**), not on the held
+enemy. Use **`mHolder->getTakingMtx()`**. A **`char trash[8]`** prologue (same pattern as
+**`TSpineEnemy::perform`** in this TU) may be required for the **`-0x30`** frame / **`stw r31`/`r30`**
+homes after the virtual **`blrl`**.
+
+**`TDangoHamuKuri::calcRootMatrix`** follows the same holder **`getTakingMtx`** rule after
+**`setBaseScale(mScaling)`** (three **`lwz`** from **`this+0x24`** into the model, not **`mPosition`**).
+When **`unk230`** is zero, retail still runs the held-matrix offset / **`MTXConcat`** path — only the
+**`unk210`** spin / **`rand`** block is skipped (do not nest that under **`if (unk230)`** for the whole
+held path). Held translation tweaks use **`takingMtx[0/1/2][3]`** (offsets **`0xc`/`0x1c`/`0x2c`**), not
+**`[3][0..2]`**. After **`PSMTXConcat`**, retail **`PSMTXCopy`**s into **`getModel()+0x20`**, then reloads
+position from the holder matrix. For the **`unk210 > 360`** reset, **`TMsRange<f32>(10.f, 20.f).rand()`**
+with unary **`-`** matches retail **`rand`** + **`fneg`** better than **`MsRandF`**; residual diffs are
+**`-0xa8`** frame / **`stfd f31`** / spill homes (~**99.8%**).
+**`char pad[0x30]`** at function entry (not **`0x48`**) hits retail **`stwu -0xa8`**; remaining gaps are
+**`TMsRange`** spill slots (**`0x54`** vs **`0x84`**) and **`Mtx local_40`** home (**`0x24`** vs **`0x40`**).
+Hoisting **`Mtx`** to the prologue shifts both clusters wrong; a hand-written **`rand`** without the retail
+**`stfs`/`lfs`** reload chain regresses hard — reconstruct the **`0x84`/`0x88`** spill sequence, not
+**`MsRandF`** or a standalone helper call.
+
+**`TSpineEnemy::setGoalPathFromGraph`**: **`char pad[0x18]`** at entry can match retail **`stwu -0x60`** while
+**`getPoint(&vec)`** still uses **`addi r4, r1, 0x34`** — the **`0x48`** vec home tracks **`TPathNode`**
+copy / ctor spill order, not prologue padding alone.
+Declaring **`TPathNode`** before **`TVec3`** and assigning fields still runs the default ctor (**`li`/zero vec**)
+before **`getPoint`** and regresses (~**75%**).
+
+**`TEnemyAttachment::bind`**: after integrating **`mPosition`/`mLinearVelocity`/`mVelocity`**, retail calls
+**`recoverScale`** (**vtable `+0x13c`**) then **`getNowGravity`** (**`+0x140`**), then **`mVelocity.y`** clamp —
+not **`setBehavior`** at the top.
+Late path still does **`setBehavior`** (**`+0x138`**) and **`forceKill`** (**`+0x134`**) after wall handling.
+**`checkGround`** takes **`&mGroundPlane`** (**`addi r4, r31, 0xc4`**), not a stack **`TBGCheckData*`** temp.
+Wall pass: **`TBGWallCheckRecord(x, y + mHeadHeight, z, mBodyRadius * 2.f, 1, 0)`** matches retail manual
+spills better than **`TVec3 p` + record ctor**; epilogue still wants **`addi r3, r1, 0x10`** +
+**`TVec3::sub`** before **`mLinearVelocity@0x94`** (MWCC may fold when **`mPosition == nextPos`**).
+**`stfd f31`** / **`lfs f31, 0x60(r1)`** ground compare needs **`local_1C.y`** home at **`0x60`** on **`-0x78`**
+frame — not fixed by **`char pad[0x10]`** alone.
+After **`checkGround`**, assign **`f32 f31 = local_1C.y`** and use **`f31`** for ground/airborne and wall
+**`y + mHeadHeight`** — retail reloads **`f31`** from **`0x60(r1)`** and keeps it through **`TBGWallCheckRecord`**
+manual spills at **`r1+0x30`**.
+Declare **`JGeometry::TVec3<f32> local_10`** first ( **`addi r3, r1, 0x10`** epilogue) and
+**`TBGWallCheckRecord local_48`** before **`local_1C`**; **`local_48.set(...)`** matches **`0x30`** wall buffer better
+than a mid-function ctor.
+**`char trash[0x10]`** immediately after integrating **`local_1C`** (not before) helps **`-0x78`** with **`f31`** live;
+Declare locals **`local_1C`**, then **`TBGWallCheckRecord local_48`**, then **`local_10`**, then integrate
+**`local_1C`** and **`char trash[0x10]`** — retail **`0x5c/0x60/0x64`** homes and wall **`r1+0x30`** (~**94.5%**).
+Open: **`local_10@0x10`** — decl-top **`trash[0x10]`** (before **`local_48`**) lands **`@0x14`**; post-**`+=`**
+**`trash`** lands **`@0x24`**; both keep **`local_1C@0x5c`**. Retail **`TVec3::sub`** **`bl`** still blocked
+(**`local_10.sub`** folds **`~85.6%`** even at **`@0x14`**); use **`enemyAttachmentBindSub`** until **`@0x10`**.
+**`behaveToHitWall`**: retail **`lwz r12`** before **`mr r3`/`lwz r4, 0x4c(r1)`** — **`wallHit`** temp did not fix.
+
+**`TEnemyPolluteModel::perform`**: retail **`stwu -0x80`**, **`mr r30,r3`**, **`addi r31,r4,0`** (cue in **r31**).
+**`char trash[0x38]`** at prologue matches **`-0x80`**; **`r30`/`r31`** swap remains even when retail’s first **`lbz`**
+uses **`r3`**. **`trash[8]`** shrinks the frame to **`-0x48`** / **`-0x50`** and does not fix the swap. Split
+**`!unk5D`** then **`unk5C`** returns regresses to **~89.8%** (branch shape). Do not use dead **`cue`**
+comparisons to steer regs — breaks **`addi r31,r4`**. **`#pragma dont_inline`** prologue **`bl`** on **`cue`/`graphics`**
+raises fuzzy **%** but emits **`addi r31,r3`** / extra **`bl`** — not a ship path. **`TEnemyAttachment::perform`**
+(**100%**, **`trash[8]`**, **`-0x30`**) uses **`graphics`** on real paths; PolluteModel ignores **`graphics`** today.
+
+**`TSmallEnemy::genEventCoin`**: when **`mCoin`** is set, retail tests the **coin’s** **`mActorType`**
+(**`lwz r3, 0x4c(r4)`** with **`r4 = mCoin`**) for **`0x2000000E`**, not **`isActorType`** on **`this`**
+(**`0x4c(r30)`**). **`mCoin->isActorType`** restores type-test **`li`/`b`/`clrlwi`** but inflates frame
+(**`−0x110`** vs retail **`−0x100`**). Manual **`(mCoin->mActorType - 0x20000000u) == 0xEu`** into a **`BOOL`**
+then **`if ((u8)isEventCoin)`** (not plain **`if (isEventCoin)`**) keeps **`−0x108`**, **`r4`**, and retail
+**`clrlwi. r0, r0, 24`** before spawn vs **`appear`**. Open: frame **`−0x8`** vs retail **`−0x100`** (likely
+**`BOOL`/`TCoin*`** stack homes), loop spill slots, **`@4358`/`@4359`** (**`8`/`16`** **`TMsRange`**
+literals) pool order. Replacing **`TMsRange::rand`** with **`MsRandF`** changes the frame (**`−0xf0`**) but
+does not reproduce retail’s pre-loop **`lfs f29/f30`** + **`stfs`** / **`bl rand`** sequence.
+
+**`SMS_IsMarioOnWire`**: **`gpMarioOriginal->mHolder && …->mActorType`** is ~**93.8%** but CSEs the **`0x68`** load (**`lwz r3,0x68`** vs retail **`lwz r0,0x68` / `lwz r3,0x68`**). Nested **`if (mHolder != nullptr)`** uses **`r4`** for **`!!`** and regresses.
+
+**`TNervePakkunAppear::execute`**: retail calls **`checkPass(100.f)`**, emits **`cmpwi r3,0`**, then
+**`checkCurAnmEnd`** — the compare is dead but required. **`if (checkPass(100.f)) {}`** and a **`BOOL`
+temp** both get DCE’d; assigning **`BOOL bckPass`** adds stack (**`−0x30`**) without restoring the
+**`cmpwi`**.
+
+**`TEnemyMario::checkReturn`**: loop uses **`int` continue flag** (**`li r31,1`**), **`getPoint` into `r1+0x78`**, **`f31=1000.f`**, and **`sqrtf`** on manual **`fsubs`** from **`gpMarioPos`** with Mario **Y/Z loaded after the first `fsubs`**. **`checkFlag`** / **`TVec3::distance`** changes frame and load order.
+
+**`TEnemyMario::emJumping`**: **`setStickToAngle` is inlined** in the jumping branch (**`JMASSin`/`JMASCos`**, **`@4108`/`@4291`**, **`fctiwz`** into **`unk108->mStick*`**). The **`0x600`** status path calls **`stamp`** then **`mEMDoingTimer=0`/`mEMDoing=0`** — not **`changeEMDoing`**.
+
+**`TMario::startJumpWall`**: wall kick angle is **`matan(mNormal.x, mNormal.z) + 0x8000`** via **`mWallPlane+0x34`** (**`lfs`/`lfsu` on `mNormal`**), not **`matan(mMinY, normal.x)`** or **`getNormal()`**.
+
+**`TEnemyMario::emWalkAround`**: branches set **`mEMDoingTimer`/`mEMDoing`** directly (**`sth` doing**, **`stw` timer**); jump paths **`ori 0x100`** on **`unk108->mInput`**, not **`changeEMJumping`**. Graph branch **`stw -1` at `getTracer()+0x8`** then **`goToShortestNextGraphNode`** (not **`changeEMWalkGraph`/`reset`**). After hide **`stamp`**, control falls through to wall-plane jump or inlined **0.5f** stick — no early **`return`**.
+
+**`TSmallEnemy::isFindMario`**: **`isMarioInWater()` is fully inlined** in retail (**`gpMarioFlag` bit tests**, **`gpMarioGroundPlane->isWaterSurface`**, **`r29`/`r30` result**); a call to **`isMarioInWater()`** breaks **`mr r0,r29` vs `li r0,0`** at the visible-flag branch.
+
+**`TNerveSmallEnemyJump::execute`**: at **`spine->getTime()==0`**, retail **`lwz` `mLiveFlag`**, **`rlwinm` bit 16 (`UNK8000`)**, **`cmpwi`/`beq`**, then bit **13 (`UNK40000`)** — not **`checkLiveFlag2||checkLiveFlag`**. Velocity uses vtable **`0x108`** into stack **`0x40–0x48`**; exit uses **`rlwinm` airborne (bit 24)** + **`cmpwi`**, not **`isAirborne()`**. Flag/`cmpwi` alone is not enough — keep **`getVelocity`/`setVelocity` out** (manual **`lwz`/`stw` `mVelocity@0xAC`** + **`blrl` `0x108`** for jump force).
+
+**`TSmallEnemy::changeMove`**: block-wait compare builds **`lfd` pairs** from **`lis 0x4330` + `xoris` on `mBlockWaitTime`**; **`fcmpo`** uses **`f0` vs `f6`** in that order. The **`mSLJumpForce`/`mSL*` `.sdata2` path** follows a **`lwz` from `this+0x178`**, not early param **`get()`** calls.
+
+**`TEnemyMario::consider`**: retail is a **`0x854`** **`mEMDoing` jump table** with **inlined case bodies** in one frame (**`−0x220`**), not **`switch` → `emWaiting()`/`emRunAway()`** calls. Stick paths inline **`JMASSin`/`JMASCos`×`@4108`×`@4291`**, **`fctiwz`**, and often **`neg`/`lhau`** on **`unk108` stick shorts** — same math as **`setStickToAngle`**, but no **`bl`** to it.
+
+**`TEnemyMario::emWaiting`**: inlined **`0.2f`** stick uses **`fmuls f0,f0,f1`** (**sin×`@4108`**) then **`fmuls f0,f2,f0`**; graph branch stores **`mPrevIdx=-1`** via **`r4=unk124`** while **`r3` stays `mEMario`** for **`goToShortestNextGraphNode`** — not **`changeEMWalkGraph`/`reset`**. Do **not** replace **`JMASSin`/`JMASCos`** with **`jmaSinTable[]` indexing** (~93%); **`f0=f0*f1` locals** regress (~99.4%). **`static const f32` at TU top + `setStickToAngle` share** still emits **`lfs` from `@2630`** — dedupe **all** stick **`64.0f`** uses in **`enemyMario.cpp`** to one symbol (or match MAP **`.sdata2` order**) before chasing **`fmuls`** operand swap.
+
+**`TEnemyMario::checkController`**: horizontal dist uses **`fmadds`+`fcmpo`+`frsqrte` Newton** with a **`stfs`/`lfs` spill** before **`stfs`→`0x429c`**; stick tail matches **`emWaiting`** **`lis 0x4330`/`xoris`** pattern for analog dead-zone math.
+
+**`PakkunRootCallback2`**: retail **`stwu −0x90`** and **`stfs`**-builds a **`3×4` scale mtx** at **`r1+0x5c`** (**`@3450`/`@4061`**, **`fdivs 1.0f/unk1B8`**) before **`PSMTXConcat`** — not **`TRotation3f::setScale`** (**`−0x70`**). Entry is **`cmpwi`/`stwu`/`bne`** before **`gpCurPakkun`**; a top-level **`Mtx`** + **`if (type&&pakkun)`** breaks branch/`fdivs` schedule (~77%).
+
+**`JGeometry::TRotation3::setQuat` (e.g. fireWanwan TU)**: **`f1`/`f2` register swap** on **`2.0f×quat` muls** and **`.sdata2` literal slots** — header **`// TODO: regswap`**; fix via **MAP-order pool + operand schedule**, not one-line C tweaks.
+
+**`TMario::checkSink`**: sink-death path **`lfs @4214`** then **`stfs`×6** into **`mBaseSpeed`/`mForwardVel` cluster** before **`loserExec`**; **`−0xa0`** needs the **ground-check scratch/inlines** in the mid-body, not a lone **`char[]` pad**.
+
+**`TBossMantaManager::TMantaBattleState::update`**: opens with **`lis`/`addi @1490` string pool** into **`r30`** before state **`switch`** — same **rodata-before-work** pattern as other managers; **`−0xe0` vs `−0xd8`** is spill layout, not missing logic.
+
+**`TYoshi::getEmitPosDir`**: **`getAnmMtx` → `mr`/chain leaves matrix in **`r6`**; all **`lfs` column/row loads** use **`(r6)`** offsets — reloading **`lwz r3`** between **`0`/`0x10`/`0x20`** breaks match (~76B). Manual **`mActor`/`mModel`/`mNodeMatrices`** walk via **`void* r6`** still emits **`lwz r3,4(r6)`** — need codegen that keeps the mtx base in **`r6`** end-to-end (not C type names alone).
+
+**`TEffectObjBase::perform`**: **`clrlwi. r4`** runs **before** **`stwu`** (draw-cue early path); **`stw r31`** only on the **non-trivial** path — not a uniform **`−0x20`** frame.
+
+**`TBathtubKillerManager::load`**: defer **`−0x58`** frame (see R285p); opcode body **`unk38` `cmplwi` + `r30` `new`** is **~99.7%** without pads — do not ship **`local_38[0x38]`**.
+
+**`TCoasterKiller::perform`** (R285r): sound distance uses **`lwz gpMarioPos`** then interleaved **`lfs`** from **`mPosition@0x10`** and **`Vec*`** with **`fsubs`** before the next mario component load — **`mPosition.distance(SMS_GetMarioPos())`** schedules **`distance()`** differently (~95% / worse if hand-unrolled without matching load order).
+
+**`TTelesa::isReachedToGoal`** (R285s): prologue **`addi r4,r3,0x104`**, **`unk0`** ternary to **`r5`**, then **`lwz`/`stw`** copy of goal **`Vec`** to **`r1+0x14`** before **`fsubs`** vs **`mPosition`** — not **`unk104.getPoint()`** returning a ref consumed via **`lfs` from `r4`**.
+
+**`SMS_IsMarioOnWire`** (R285t/R285u): leaf function, no **`stwu`**; first **`lwz`→`r0` @ `0x68(r3)`** then **`cmplwi`/`beq`**; second **`lwz r3,0x68(r3)`** before **`0x4c`**; bool **`clrlwi r0`/`neg`/`subfe`/`clrlwi r3`** — **`bool ret` + `!!ret`** (~93.8%) beats **`return r0`** (~84%); **`mario` local `&&`** does not fix **`r0` vs `r3`** on the first holder load. Defer in dry rounds (R285v+).
+
+**`TCommonLauncher::init`** (R285v/R285w): after **`@1664`** setup, load **`unk168(r31)` into `r29` before `bl rand`**, then **`xoris r0,r29`** for the **`double`/`f64` jitter** — not **`rand` first** then reload **`0x168`** for **`xoris`**. Source shape **`s32 period = mLaunchPeriod; mLaunchCooldown = rand() * (1.f / (RAND_MAX + 1)) * period;`** matches the **`rand`/`xoris`/`fctiwz`** cluster; remaining gap is retail **`stwu -0xb0`** vs **`-0xa8`** (iterator spill homes), not the multiply.
+
+**B-scope `≤200B` MAP band** (R285x): high-match Enemy/Player text in this size class is almost always **`stwu r1` Δ8** vs retail (**`isReachedToGoalXZ`**, **`getManagerByName`**, **`createEnemies`**, **`TBubbleCallBack`**) — not a one-line C fix. **`TGraphWeb::startIsEnd`**: retail keeps **`lwz r4,0(r3)` / `lwz r5,0(r4)`** on the first rail; hoisting **`const TRailNode*`** locals or **`unk0[i].unk0`** indexing regressed match — stay on **`getFirstGraphNode()`** / **`getNodeNum()`** until a sized UNUSED inline exists.
+
+**Missing `createModelData` (52B)** (R285y): retail body is **`lis r4,entry$…` / `stwu -0x8` / `lwz r12,0(r3)` / `lwz r12,0x2c(r12)` / `blrl`** (vtable slot → **`createModelDataArray`**), same as **`TEggGenManager`** / **`TCoasterKillerManager`** — **`createModelDataArray(entry)`** in C still matches when the TU is built. MAP lists **~28** missing **`…Manager::createModelData`** in Enemy; almost all target **`src/Enemy/<tu>.cpp` stubs are 1 B** (no manager class) — do not paste **`createModelData` alone**; revive the TU (**`docs/PROGRAM_STRUCTURE_REVVING.md`**) first.
+
+**`TBombHei` tail layout (R285z):** retail **`sizeof(TBombHei) == 0x1A8`**; **`createEnemyInstance`** allocates **`0x1A8`** and inits **`unk194`/`unk198`/`unk19C`/`unk1A4`**. Without explicit padding after **`unk19C`**, MWCC places **`unk1A4` at `0x19D`** and **`new` size becomes `0x1A0`** — **`__ct__8TBombHei`** / **`createEnemyInstance`** miss on **`stb …,0x1a4`**. Use **`u8 unk19D[7]`** (and **`unk1A5[3]`** if needed) so **`unk1A4` stays at `0x1A4`**. Manager scaffold: non-**`const`** **`static TModelDataLoadEntry entry[]`** with **`nejibomb_model1.bmd` / `0x10230000`** and **`downnejibomb_model1.bmd` / `0x10210000`** (mirror **`coasterkiller.cpp`**); **`bombhei_bastable`** is three **`/scene/bombhei/bas/…`** paths with **`nullptr`** pairs like **`killer_bastable`**.
+
+**`TSpineEnemy::setGoalPathFromGraph`**: retail **`−0x60`**, **`getPoint` into `r1+0x48`**, manual **`stw`** cluster **`0x38–0x44`**, then member **`stw`** to **`unkF4`/`unk104`** — **`TPathNode(local_48)` + assign** shrinks frame and regresses (~**29%** if forced to **`Vec`** writes without stack layout).
+
+**`TTamaNoko::isReachedToGoal`** (and **`TTelesa`**): retail inlines **`TPathNode`** at **`this+0x104`** — **`unk0` ? `unk0+0x10` : `&unk4`** — not an out-of-line **`getPoint()`** call; **`TVec3` assign from `mPosition`** breaks the **`addi r5,r4,4`** branch.
+
+**`TEnemyAttachment::sendMessage`** walks **`mCollisions`** with **`lwz r3, 0x44(r29)`** then
+**`lwzx r4, r3, r31`** (byte offset in **`r31`**, index in **`r30`**). For collisions that are not Mario
+and not **`unk160`**, retail calls **`TEnemyAttachment::kill()`** via **`this`**'s vtable **`+0xe4`**, not
+**`TLiveActor::kill`** on the collision actor.
+
+`TCoasterEnemy::bind` (and similar short **`bind`** overrides) already match retail math when written as
+**`nextPos = mPosition; nextPos += mLinearVelocity; nextPos += mVelocity; mLinearVelocity = nextPos -
+mPosition`**. Remaining diffs are usually **`TVec3` spill slots** (**`r1+0x10`** vs **`+0x1c`**) on a
+**`-0x40`** frame, not wrong velocity composition — rewriting with **`pos.sub(mPosition)`** or
+component temps can collapse the frame to **`-0x18`** and destroy the match.
+
 ## Ifs
 
 Ifs are always compiled to very simple code:

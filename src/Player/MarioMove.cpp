@@ -690,7 +690,8 @@ u32 TMario::setStatusToJumping(u32 status, u32 arg)
 
 u32 TMario::setStatusToRunning(u32 status, u32)
 {
-	f32 mag = mIntendedMag <= 8.0f ? 8.0f : mIntendedMag;
+	// The smaller of the intended magnitude and 8.
+	f32 mag = mIntendedMag <= 8.0f ? mIntendedMag : 8.0f;
 
 	switch (status) {
 	case MARIO_STATUS_RUN:
@@ -1149,7 +1150,8 @@ void TMario::thinkDirty()
 	}
 
 	if (checkFlag(MARIO_FLAG_IN_ANY_WATER)) {
-		if (mPosition.y > mFloorPosition.z - 1.0f)
+		// Pool constant is 200. A literal 1 selects a different float.
+		if (mPosition.y > mFloorPosition.z - 200.0f)
 			meltInWaterEffect();
 		mFootPrintTimer = 0;
 		mDirty -= mDirtyParams.mDecSwimming.get();
@@ -1734,7 +1736,7 @@ void TMario::checkCurrentPlane()
 			               == 0x400002BD)) {
 
 				if (dist1 < 10.0f || dist2 < 10.0f) {
-					int hp = mDeParams.mHpMax.get();
+					int hp = mDeParams.mHPMax.get();
 					floorDamageExec(hp, 3, 0, mMotorParams.mMotorReturn.get());
 				}
 			}
@@ -1946,7 +1948,7 @@ void TMario::thinkSituation()
 	    && (mGroundPlane->isIllegalData() || mGroundPlane->isOob())) {
 		mOobKillTimer += mDeParams.mIllegalPlaneCtInc.get();
 		if (mOobKillTimer > mDeParams.mIllegalPlaneTime.get())
-			decHP(mDeParams.mHpMax.get());
+			decHP(mDeParams.mHPMax.get());
 	} else {
 		mOobKillTimer -= 1;
 		if (mOobKillTimer < 0)

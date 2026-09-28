@@ -78,7 +78,7 @@ TEnemyMario::TSettingParams::TSettingParams(const char* path)
 void TEnemyMario::initValues()
 {
 	char trash[8];
-	mHealth     = mDeParams.mHpMax.get();
+	mHealth     = mDeParams.mHPMax.get();
 	mDirty      = 0.0f;
 	mOilBrake   = 1.0f;
 	mDirtyTimer = 0;
@@ -1456,8 +1456,9 @@ void TEnemyMario::hitWater(THitActor* sender)
 			--mWaterCounter;
 			gpMarioParticleManager->emit(PARTICLE_MS_ENM_WATHIT,
 			                             &sender->mPosition, 0, nullptr);
+			// Pool constant is 30. A literal 0 selects a different float.
 			SMSGetMSound()->startSoundSet(MSD_SE_EN_COMMON_W_HIT_OK,
-			                              &sender->mPosition, 0, 0.0f, 0, 0, 4);
+			                              &sender->mPosition, 0, 30.0f, 0, 0, 4);
 			mWaterEffectTimer = mWaterEffectTimerMax;
 
 			if (mEMDoing == EM_DOING_REPLAY_WAITING) {

@@ -118,7 +118,7 @@ BOOL TMario::waitingCommonEvents()
 
 	if (rocketCheck()) {
 		unk314
-		    = mFloorPosition.y + mWaterGun->mWatergunParams.mHoverHeight.get();
+		    = mFloorPosition.y + mWaterGun->mWatergunParams.mHHoverHeight.get();
 		return changePlayerStatus(MARIO_STATUS_ROCKET, 0, false);
 	}
 
@@ -339,14 +339,14 @@ BOOL TMario::squating()
 	        == 1
 	    && mWaterGun->isEmitting()) {
 		unk314
-		    = mFloorPosition.y + mWaterGun->mWatergunParams.mHoverHeight.get();
+		    = mFloorPosition.y + mWaterGun->mWatergunParams.mHHoverHeight.get();
 		return changePlayerStatus(MARIO_STATUS_ROCKET, 0, false);
 	}
 
 	if (mGamePad->checkMeaning(TMarioGamePad::MEANING_L)) {
 		E_SIDEWALK_TYPE type;
 		f32 v1, v2;
-		char trash[56];
+		char trash[36];
 		getSideWalkValues(&type, &v1, &v2);
 		switch ((int)type) {
 		case 0:

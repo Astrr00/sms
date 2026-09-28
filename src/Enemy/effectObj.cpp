@@ -104,15 +104,18 @@ void TEffectObjBase::reset()
 	unk74 = 0;
 }
 
-void TEffectObjBase::perform(u32 cue, JDrama::TGraphics*)
+void TEffectObjBase::perform(u32 cue, JDrama::TGraphics* graphics)
 {
+	TEffectObjBase* self = this;
+	(void)graphics;
+
 	if (cue & CUE_MOVE) {
-		if (unk68 == 1) {
-			unk74 = 0;
-			unk68 = 2;
+		if (self->unk68 == 1) {
+			self->unk74 = 0;
+			self->unk68 = 2;
 		}
 
-		moveObject();
+		self->moveObject();
 	}
 }
 

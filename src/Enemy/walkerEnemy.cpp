@@ -75,7 +75,9 @@ void TWalkerEnemy::moveObject()
 		mVelocity.z = local.z;
 		mSpine->pushNerve(&TNerveSmallEnemyJump::theNerve());
 		onLiveFlag(LIVE_FLAG_AIRBORNE);
-		mRotation.y += 5.0f;
+		// Retail adds 5 to the Y position. The yaw load above stays mRotation.y.
+		// TODO: frame is still 0x60 against retail 0x88. Do not pad it.
+		mPosition.y += 5.0f;
 	}
 }
 

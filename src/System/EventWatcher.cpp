@@ -312,7 +312,8 @@ static void evIsTalkModeNow(TSpcTypedInterp<TEventWatcher>* interp, u32 arg_num)
 {
 	interp->verifyArgNum(0, &arg_num);
 	int value = SMSGetMarDirector()->isTalkModeNow() ? 1 : 0;
-	interp->push(value);
+	// push(int) builds the slice one inline deeper and leaves it at 0x14.
+	interp->push(TSpcSlice(value));
 }
 
 static void evSetFlagNPCCanTaken(TSpcTypedInterp<TEventWatcher>* interp,
@@ -625,7 +626,9 @@ static void evInsertTimer(TSpcTypedInterp<TEventWatcher>* interp, u32 arg_num)
 	int p1 = interp->pop().getDataInt();
 	int p2 = interp->pop().getDataInt();
 
-	if (p2 == 0)
+	// Retail takes the appear-timer path when the second argument is 1.
+	// TODO: frame is still 0x98 against retail 0xa0. Do not pad it.
+	if (p2 == 1)
 		SMSGetMarDirector()->getConsole()->startAppearTimer(0, p1);
 	else if (p2 == 2)
 		SMSGetMarDirector()->getConsole()->startAppearTimer(1, p1);
@@ -841,7 +844,8 @@ static void evCheckWoodBox(TSpcTypedInterp<TEventWatcher>* interp, u32 arg_num)
 	int p1 = interp->pop().getDataInt();
 	int p2 = interp->pop().getDataInt();
 
-	int count = p2 - p1 + 1;
+	// Inclusive span from the second pop through the first.
+	int count = p1 - p2 + 1;
 
 	char buffer[] = "ゲーム木箱00";
 	for (int i = p2; i <= p1; ++i) {

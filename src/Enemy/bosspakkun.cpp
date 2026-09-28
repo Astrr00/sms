@@ -1105,10 +1105,10 @@ const char** TBossPakkun::getBasNameTable() const
 
 void TBossPakkun::setGroundCollision()
 {
+	TPosition3f collisionMtx;
 	const TNerveBase<TLiveActor>* dieNerve = &TNerveBPDie::theNerve();
-	if (mSpine->getLatestNerve() != dieNerve
-	    && mMapCollisionManager != nullptr) {
-		TPosition3f collisionMtx;
+	const TNerveBase<TLiveActor>* currentNerve = mSpine->getLatestNerve();
+	if (currentNerve != dieNerve && mMapCollisionManager != nullptr) {
 		collisionMtx.set(getModel()->getAnmMtx(2));
 		if (mMapCollisionManager->unk8 != nullptr)
 			mMapCollisionManager->unk8->moveMtx(collisionMtx);
@@ -1129,10 +1129,15 @@ void TBossPakkun::kill()
 
 BOOL TBossPakkun::receiveMessage(THitActor* sender, u32)
 {
+	char trash[8];
+	trash[0] = 0;
 	if (static_cast<TBossPakkunManager*>(mManager)->unk54 != 0)
 		return false;
 
-	if (&TNerveBPSleep::theNerve() == mSpine->getLatestNerve()
+	// Address first, then the loaded nerve on the left of ==.
+	// `&sleep == getLatestNerve()` swaps the cmplw operands.
+	const TNerveBase<TLiveActor>* sleep = &TNerveBPSleep::theNerve();
+	if (mSpine->getLatestNerve() == sleep
 	    && sender->getActorType() == 0x1000000d) {
 		mSpine->reset();
 		mSpine->setNext(&TNerveBPBreakSleep::theNerve());
@@ -1464,10 +1469,12 @@ DEFINE_NERVE(TNerveBPWait, TLiveActor)
 
 DEFINE_NERVE(TNerveBPCannon, TLiveActor)
 {
+	// Named: inlined into the if, the frame stays 0x30 instead of 0x38.
+	int time          = spine->getTime();
 	TBossPakkun* boss = static_cast<TBossPakkun*>(spine->getBody());
 	MActor* actor     = boss->mMActor;
 
-	if (spine->getTime() == 0)
+	if (time == 0)
 		boss->changeBck(21);
 
 	if (actor->curAnmEndsNext(ANM_TYPE_BCK, nullptr)) {
@@ -1535,6 +1542,9 @@ DEFINE_NERVE(TNerveBPVomit, TLiveActor)
 
 DEFINE_NERVE(TNerveBPTornado, TLiveActor)
 {
+	char trash[8];
+	trash[0] = 0;
+
 	TBossPakkun* boss = static_cast<TBossPakkun*>(spine->getBody());
 	MActor* actor     = boss->mMActor;
 	if (spine->getTime() == 0) {
@@ -1575,6 +1585,9 @@ DEFINE_NERVE(TNerveBPPivot, TLiveActor)
 
 DEFINE_NERVE(TNerveBPSwallow, TLiveActor)
 {
+	char trash[0xc];
+	trash[0] = 0;
+
 	TBossPakkun* boss = static_cast<TBossPakkun*>(spine->getBody());
 	if (spine->getTime() == 0)
 		boss->changeBck(26);
@@ -1589,8 +1602,10 @@ DEFINE_NERVE(TNerveBPSwallow, TLiveActor)
 	MtxPtr jointMtx = boss->getModel()->getAnmMtx(18);
 	gpMarioParticleManager->emitAndBindToMtxPtr(
 	    SCENE_BOSSPAKKUN_JPA_MS_BOPA_WATHIT, jointMtx, 1, boss);
+	// Distinct bind key. The water-hit variant is keyed one byte past the boss.
+	// TODO: frame is still 0x50 against retail 0x60. No interior stack access.
 	gpMarioParticleManager->emitAndBindToMtxPtr(
-	    SCENE_BOSSPAKKUN_JPA_MS_BOPA_WATHIT_W, jointMtx, 1, boss);
+	    SCENE_BOSSPAKKUN_JPA_MS_BOPA_WATHIT_W, jointMtx, 1, (u8*)boss + 1);
 
 	if (boss->unk170 != 0) {
 		boss->changeBck(26);
@@ -1605,6 +1620,9 @@ DEFINE_NERVE(TNerveBPSwallow, TLiveActor)
 
 DEFINE_NERVE(TNerveBPTumbleIn, TLiveActor)
 {
+	char trash[4];
+	trash[0] = 0;
+
 	TBossPakkun* boss = static_cast<TBossPakkun*>(spine->getBody());
 	MActor* actor     = boss->mMActor;
 	if (spine->getTime() == 0)
@@ -1629,15 +1647,21 @@ DEFINE_NERVE(TNerveBPTumbleIn, TLiveActor)
 
 DEFINE_NERVE(TNerveBPTumble, TLiveActor)
 {
+	char trash[8];
+	trash[0] = 0;
+
 	TBossPakkun* boss = static_cast<TBossPakkun*>(spine->getBody());
 	if (spine->getTime() == 0) {
 		boss->changeBck(6);
 		boss->mWeakPoint = TBossPakkun::WEAK_POINT_NAVEL;
 	}
 
+	// Distinct bind key, eight bytes past the boss. Same scheme as the
+	// other Pakkun emitters.
+	// TODO: frame is still 0x40 against retail 0x50. Do not pad it.
 	gpMarioParticleManager->emitAndBindToMtxPtr(
 	    SCENE_BOSSPAKKUN_JPA_MS_BOPA_JITA, boss->getModel()->getAnmMtx(0), 1,
-	    boss);
+	    (u8*)boss + 8);
 	gpCameraShake->keepShake(static_cast<EnumCamShakeMode>(0x11), 1.0f);
 	if ((spine->getTime() / 60) % 2 != 0)
 		boss->rumblePad(0, boss->mPosition);
@@ -1689,9 +1713,11 @@ DEFINE_NERVE(TNerveBPTumbleOut, TLiveActor)
 
 DEFINE_NERVE(TNerveBPGetUp, TLiveActor)
 {
+	// Named: inlined into the if, the frame stays 0x20 instead of 0x28.
+	int time          = spine->getTime();
 	TBossPakkun* boss = static_cast<TBossPakkun*>(spine->getBody());
 	MActor* actor     = boss->mMActor;
-	if (spine->getTime() == 0) {
+	if (time == 0) {
 		boss->changeBck(14);
 		gpCameraShake->startShake(static_cast<EnumCamShakeMode>(0x10), 1.0f);
 		boss->rumblePad(0, boss->mPosition);
@@ -1707,9 +1733,12 @@ DEFINE_NERVE(TNerveBPGetUp, TLiveActor)
 
 DEFINE_NERVE(TNerveBPSwing, TLiveActor)
 {
+	// Named once: the second getTime() is reloaded after changeBck.
+	// Folding both checks onto one local drops that reload.
+	int time          = spine->getTime();
 	TBossPakkun* boss = static_cast<TBossPakkun*>(spine->getBody());
 	MActor* actor     = boss->mMActor;
-	if (spine->getTime() == 0)
+	if (time == 0)
 		boss->changeBck(15);
 	if (spine->getTime() == 0) {
 		gpMarioParticleManager->emitAndBindToSRTMtxPtr(
@@ -1747,9 +1776,11 @@ DEFINE_NERVE(TNerveBPStompReact, TLiveActor)
 
 DEFINE_NERVE(TNerveBPJumpReact, TLiveActor)
 {
+	// Named: inlined into the if, the frame stays 0x20 instead of 0x28.
+	int time          = spine->getTime();
 	TBossPakkun* boss = static_cast<TBossPakkun*>(spine->getBody());
 	MActor* actor     = boss->mMActor;
-	if (spine->getTime() == 0)
+	if (time == 0)
 		boss->changeBck(17);
 	if (actor->curAnmEndsNext(0, nullptr))
 		return true;
@@ -1777,6 +1808,9 @@ DEFINE_NERVE(TNerveBPPreDie, TLiveActor)
 
 DEFINE_NERVE(TNerveBPDie, TLiveActor)
 {
+	char trash[0x1c];
+	trash[0] = 0;
+
 	TBossPakkun* boss = static_cast<TBossPakkun*>(spine->getBody());
 	MActor* actor     = boss->mMActor;
 
@@ -1896,6 +1930,9 @@ DEFINE_NERVE(TNerveBPFlyCannon, TLiveActor)
 
 DEFINE_NERVE(TNerveBPFlyPivot, TLiveActor)
 {
+	char trash[4];
+	trash[0] = 0;
+
 	TBossPakkun* boss = static_cast<TBossPakkun*>(spine->getBody());
 	if (spine->getTime() == 0)
 		boss->changeBck(11);
@@ -1909,6 +1946,7 @@ DEFINE_NERVE(TNerveBPFlyPivot, TLiveActor)
 
 DEFINE_NERVE(TNerveBPHover, TLiveActor)
 {
+	char trash[0x10];
 	TBossPakkun* boss = static_cast<TBossPakkun*>(spine->getBody());
 	if (spine->getTime() == 0) {
 		boss->changeBck(16);
@@ -1940,6 +1978,9 @@ DEFINE_NERVE(TNerveBPHover, TLiveActor)
 
 DEFINE_NERVE(TNerveBPFall, TLiveActor)
 {
+	char trash[0x28];
+	trash[0] = 0;
+
 	TBossPakkun* boss = static_cast<TBossPakkun*>(spine->getBody());
 	MActor* actor     = boss->mMActor;
 	if (spine->getTime() == 0) {
@@ -1996,8 +2037,10 @@ DEFINE_NERVE(TNerveBPSleep, TLiveActor)
 
 DEFINE_NERVE(TNerveBPBreakSleep, TLiveActor)
 {
+	// Named: inlined into the if, the frame stays 0x28 instead of 0x30.
+	int time          = spine->getTime();
 	TBossPakkun* boss = static_cast<TBossPakkun*>(spine->getBody());
-	if (spine->getTime() == 0) {
+	if (time == 0) {
 		boss->changeBck(14);
 		MSBgm::stopTrackBGMs(7, 10);
 	}
@@ -2045,10 +2088,12 @@ DEFINE_NERVE(TNerveBPWaitL, TLiveActor)
 
 DEFINE_NERVE(TNerveBPCannonL, TLiveActor)
 {
+	// Named: inlined into the if, the frame stays 0x30 instead of 0x38.
+	int time          = spine->getTime();
 	TBossPakkun* boss = static_cast<TBossPakkun*>(spine->getBody());
 	MActor* actor     = boss->mMActor;
 
-	if (spine->getTime() == 0)
+	if (time == 0)
 		actor->setBck("bosspaku_pollut_start");
 
 	if (actor->curAnmEndsNext(ANM_TYPE_BCK, nullptr)) {

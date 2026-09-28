@@ -65,37 +65,47 @@ void TEnemyAttachment::recoverScale()
 	}
 }
 
+#pragma dont_inline on
+static void enemyAttachmentBindSub(JGeometry::TVec3<f32>& dst,
+                                   const JGeometry::TVec3<f32>& src)
+{
+	dst.sub(src);
+}
+#pragma dont_inline off
+
 void TEnemyAttachment::bind()
 {
 	JGeometry::TVec3<f32> local_1C = mPosition;
+	char trash[0x10]; // matching: decl-top → local_10@0x14 (post-+= → @0x24)
+	TBGWallCheckRecord local_48;
+	JGeometry::TVec3<f32> local_10;
 	local_1C += mLinearVelocity;
 	local_1C += mVelocity;
-	setBehavior();
+	recoverScale();
 	mVelocity.y -= getNowGravity();
 	if (mVelocity.y < mVelocityMinY)
 		mVelocity.y = mVelocityMinY;
 	if (!unk168) {
-		const TBGCheckData* local_18;
 		mGroundHeight = gpMap->checkGround(local_1C.x, local_1C.y + mHeadHeight,
-		                                   local_1C.z, &local_18);
+		                                   local_1C.z, &mGroundPlane);
 		mGroundHeight += 1.0f;
 	}
 
-	if (local_1C.y + mVelocity.y <= mGroundHeight)
+	f32 f31 = local_1C.y;
+	if (f31 + mVelocity.y <= mGroundHeight)
 		behaveToHitGround();
 	else
 		onLiveFlag(LIVE_FLAG_AIRBORNE);
 
-	JGeometry::TVec3<f32> p = local_1C;
-	p.y += mHeadHeight;
-	TBGWallCheckRecord local_48(p, mBodyRadius * 2.0f, 1, 0);
+	local_48.set(local_1C.x, f31 + mHeadHeight, local_1C.z, mBodyRadius * 2.0f,
+	             1, 0);
 	if (gpMap->isTouchedWallsAndMoveXZ(&local_48))
 		behaveToHitWall(local_48.mResultWalls[0]);
 
+	local_10                       = local_1C;
 	mPosition                      = local_1C;
-	JGeometry::TVec3<f32> local_68 = local_1C;
-	local_68 -= mPosition;
-	mLinearVelocity = local_68;
+	enemyAttachmentBindSub(local_10, mPosition);
+	mLinearVelocity                = local_10;
 
 	setBehavior();
 	forceKill();
@@ -138,15 +148,21 @@ void TEnemyAttachment::moveObject()
 
 void TEnemyAttachment::sendMessage()
 {
-	for (int i = 0; i < mColCount; ++i) {
-		if (mCollisions[i]->isActorType(0x80000001)) {
+	int r31 = 0;
+	int r30 = 0;
+
+	while (r30 < mColCount) {
+		THitActor* r4
+		    = *(THitActor**)((char*)mCollisions + r31);
+
+		if (r4->isActorType(0x80000001)) {
 			SMS_SendMessageToMario(this, HIT_MESSAGE_ATTACK);
-			continue;
+		} else if (r4 != unk160) {
+			kill();
 		}
 
-		if (mCollisions[i] != unk160) {
-			((TLiveActor*)mCollisions[i])->kill();
-		}
+		++r30;
+		r31 += 4;
 	}
 }
 
@@ -262,6 +278,8 @@ TEnemyPolluteModel::TEnemyPolluteModel(TLiveActor* param_1, int param_2,
 
 void TEnemyPolluteModel::perform(u32 cue, JDrama::TGraphics* graphics)
 {
+	char trash[0x38]; // matching: -0x80 frame (r30/r31 swap still open)
+	(void)graphics;
 	if (!unk5D || unk5C)
 		return;
 

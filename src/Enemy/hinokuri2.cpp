@@ -85,9 +85,9 @@ THino2Params::THino2Params(const char* path)
     , PARAM_INIT(mSLHeadHitH, 20.0f)
     , PARAM_INIT(mSLBodyHitR, 175.0f)
     , PARAM_INIT(mSLBodyHitH, 180.0f)
-    , PARAM_INIT(mSLBodyHitR0, 200.0f)
-    , PARAM_INIT(mSLBodyHitH0, 0.5f)
-    , PARAM_INIT(mSLBankProp, 10.0f)
+    , PARAM_INIT(mSLBodyHitR0, 100.0f)
+    , PARAM_INIT(mSLBodyHitH0, 200.0f)
+    , PARAM_INIT(mSLBankProp, 0.5f)
     , PARAM_INIT(mSLBankLimit, 10.0f)
     , PARAM_INIT(mSLJumpQuakeLen, 2000.0f)
     , PARAM_INIT(mSLStampProb, 0.5f)
@@ -966,6 +966,7 @@ void THinokuri2::moveObject()
 
 void THinokuri2::perform(u32 cue, JDrama::TGraphics* graphics)
 {
+	char trash[8];
 	gpCurHinokuri = this;
 
 	mHead->perform(cue, graphics);
@@ -1336,6 +1337,9 @@ DEFINE_NERVE(TNerveHino2Damage, TLiveActor)
 
 DEFINE_NERVE(TNerveHino2Squat, TLiveActor)
 {
+	char trash[0x20];
+	trash[0] = 0;
+
 	THinokuri2* self = (THinokuri2*)spine->getBody();
 
 	self->unk188 = 0;
@@ -1408,6 +1412,9 @@ DEFINE_NERVE(TNerveHino2Die, TLiveActor)
 
 DEFINE_NERVE(TNerveHino2Stamp, TLiveActor)
 {
+	char trash[0x3c];
+	trash[0] = 0;
+
 	THinokuri2* self = (THinokuri2*)spine->getBody();
 	if (spine->getTime() == 0) {
 		self->changeBck(0xB);

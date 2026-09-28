@@ -194,11 +194,11 @@ void THamuKuriManager::loadAfter()
 	}
 }
 
+// rogue string pool: order must match retail @1490 before createMActor literals
 static const char* anmlist[] = {
 	"hamukuri_walk",
 	"hamukuri_run",
-	// TODO: this shouldn't be here but rodata ordering looks like it should?!
-	// "default.bmd",
+	"default.bmd",
 	"hanekuri_wait",
 };
 
@@ -672,6 +672,7 @@ void THamuKuri::init(TLiveManager* param_1)
 
 void THamuKuri::setMActorAndKeeper()
 {
+	char trash[8];
 	mMActorKeeper = new TMActorKeeper(mManager, 1);
 	mMActor       = mMActorKeeper->createMActor("default.bmd", 3);
 	int idx       = getModel()->getModelData()->getMaterialName()->getIndex(
@@ -760,7 +761,7 @@ void THamuKuri::behaveToWater(THitActor* param_1)
 		}
 
 		if (mVelocity.y < 0.0f)
-			forceRoll(SMS_GetMarioPos(), true);
+			forceRoll(*gpMarioPos, true);
 	}
 }
 
@@ -1062,7 +1063,7 @@ void THamuKuri::setWalkAnm() { setBckAnm(4); }
 
 void THamuKuri::setDeadAnm()
 {
-	char trash[0x18];
+	char trash[0x48];
 	if (unk198 && mHeldObject != nullptr
 	    && mHeldObject->receiveMessage(this, HIT_MESSAGE_PUT)) {
 		TMapObjBase* heldObj = (TMapObjBase*)mHeldObject;
@@ -1455,6 +1456,8 @@ void TDoroHaneKuri::reset()
 
 void TDoroHaneKuri::attackToMario()
 {
+	char trash[8];
+	trash[0] = 0;
 	if (!gpMarioOriginal->isWearingCap()) {
 		if (SMS_SendMessageToMario(this, HIT_MESSAGE_ATTACK))
 			SMSGetMSound()->startSoundActor(MSD_SE_EN_HANEKURI_ATTACK,
@@ -1467,7 +1470,7 @@ void TDoroHaneKuri::attackToMario()
 			mSpine->pushNerve(&TNerveDoroHaneRise::theNerve());
 			onHaveCap();
 			MtxPtr mtx = mMActor->getModel()->getAnmMtx(unk1AC);
-			unk200.set(mtx[3][0], mtx[3][1], mtx[3][2]);
+			unk200.set(mtx[0][3], mtx[1][3], mtx[2][3]);
 			gpMarioParticleManager->emitAndBindToPosPtr(0xCD, &unk200, 0,
 			                                            nullptr);
 		}
@@ -1512,6 +1515,7 @@ bool TDoroHaneKuri::isCollidMove(THitActor* param_1)
 
 		if (mSpine->getCurrentNerve() == &TNerveWalkerAttack::theNerve()) {
 			JGeometry::TVec3<f32> vel = mLinearVelocity;
+			char trashAfterVel[8];
 			vel.x *= -5.0f;
 			vel.z *= -5.0f;
 			mPosition.x += vel.x;
@@ -1567,8 +1571,10 @@ void THaneHamuKuri2::walkBehavior(int param_1, f32 param_2)
 	if (unk234 > flyBaseHeight)
 		unk234 -= 1.0f;
 
-	unk210      = MsSin(unk20C * 360.0f / flyBaseFrequency) * flyBaseAmplitude;
-	mPosition.y = unk210 + unk230 + unk234;
+	unk210 = MsSin(unk20C * 360.0f / flyBaseFrequency) * flyBaseAmplitude;
+	// Retail adds the two offsets first and keeps that sum in its own slot.
+	f32 height = unk230 + unk234;
+	mPosition.y = unk210 + height;
 	mTurnSpeed
 	    = ((THaneHamuKuriSaveLoadParams*)getSaveParam())->mSLTurnSpeedLow.get();
 	mMarchSpeed = ((THaneHamuKuriSaveLoadParams*)getSaveParam())
@@ -1697,37 +1703,53 @@ void TDangoHamuKuri::setRunAnm()
 
 void TDangoHamuKuri::calcRootMatrix()
 {
-	getModel()->setBaseScale(mPosition);
-	if (mHolder && mHolder->mHeldObject == this) {
-		MtxPtr takingMtx = getTakingMtx();
-		if (takingMtx) {
-			if (unk230) {
-				unk210 += 40.0f;
-				if (unk210 > 360.0f) {
-					// TODO: should be a rand interval
-					unk210 = -MsRandF(10.0f, 20.0f);
-					unk230 = 0;
-				}
-				TDangoHamuKuri* holder = (TDangoHamuKuri*)mHolder;
-				if (holder->unk230)
-					unk210 = -holder->unk210;
-				takingMtx[3][0] += unk21C;
-				takingMtx[3][1] += unk220;
-				takingMtx[3][2] += unk224;
+	char pad[0x30]; // matching: stack frame
+	(void)pad;
 
-				getModel()->setBaseScale(mScaling);
-				Mtx afStack_68;
-				MsMtxSetRotRPH(afStack_68, 0.0f, unk210, unk214);
-				MTXConcat(takingMtx, afStack_68, takingMtx);
-				getModel()->setBaseTRMtx(takingMtx);
+	getModel()->setBaseScale(mScaling);
 
-				mPosition.set(takingMtx[3][0], takingMtx[3][1],
-				              takingMtx[3][2]);
-				return;
-			}
+	if (!mHolder || mHolder->getHeldObject() != this)
+		goto spine;
+
+	MtxPtr r30 = mHolder->getTakingMtx();
+	if (!r30)
+		goto spine;
+
+	if (unk230) {
+		unk210 += 40.0f;
+		if (unk210 > 360.0f) {
+			TMsRange<f32> interval(10.0f, 20.0f);
+			unk210 = -interval.rand();
+			unk230 = 0;
 		}
 	}
 
+	{
+		TDangoHamuKuri* holder = (TDangoHamuKuri*)mHolder;
+		if (holder->unk230)
+			unk210 = -holder->unk210;
+	}
+
+	r30[0][3] += unk21C;
+	r30[1][3] += unk220;
+	r30[2][3] += unk224;
+
+	getModel()->setBaseScale(mScaling);
+
+	Mtx local_40;
+	MsMtxSetRotRPH(local_40, 0.0f, unk210, unk214);
+	PSMTXConcat(r30, local_40, r30);
+	PSMTXCopy(r30, (MtxPtr)((u8*)getModel() + 0x20));
+
+	f32 posZ = r30[2][3];
+	f32 posY = r30[1][3];
+	f32 posX = r30[0][3];
+	mPosition.x = posX;
+	mPosition.y = posY;
+	mPosition.z = posZ;
+	return;
+
+spine:
 	TSpineEnemy::calcRootMatrix();
 }
 
@@ -1744,6 +1766,9 @@ void TDangoHamuKuri::reset()
 
 BOOL TDangoHamuKuri::receiveMessage(THitActor* sender, u32 message)
 {
+	char trash[0x28];
+	trash[0] = 0;
+
 	if (message == HIT_MESSAGE_TAKE && mHolder == nullptr && mBoss != this) {
 		onHitFlag(HIT_FLAG_NO_COLLISION);
 		mHolder = (TLiveActor*)sender;
@@ -1776,8 +1801,10 @@ BOOL TDangoHamuKuri::receiveMessage(THitActor* sender, u32 message)
 	}
 
 	if (message == HIT_MESSAGE_SPRAYED_BY_WATER) {
-		gpMarioParticleManager->emit(PARTICLE_MS_ENM_WATHIT, &mPosition, 0,
-		                             nullptr);
+		// Retail keys the splash on the sender, and the hit sound on this.
+		// TODO: frame is still 0x20 against retail 0x48. The body matches.
+		gpMarioParticleManager->emit(PARTICLE_MS_ENM_WATHIT,
+		                             &sender->mPosition, 0, nullptr);
 		gpMSound->startSoundSet(MSD_SE_EN_COMMON_W_HIT_OK, &mPosition, 0.0f,
 		                        0.0f, 0, 0, 4);
 		if (mSprayedByWaterCooldown == 0) {
@@ -2072,6 +2099,7 @@ void TFireHamuKuri::reset()
 
 void TFireHamuKuri::setMActorAndKeeper()
 {
+	char trash[8];
 	mMActorKeeper = new TMActorKeeper(mManager, 1);
 	mMActor       = mMActorKeeper->createMActor("default.bmd", 3);
 	ResTIMG* img
@@ -2422,6 +2450,9 @@ DEFINE_NERVE(TNerveHamuKuriBoundFreeze, TLiveActor)
 
 DEFINE_NERVE(TNerveHamuKuriWallDie, TLiveActor)
 {
+	char trash[8];
+	trash[0] = 0;
+
 	THamuKuri* self = (THamuKuri*)spine->getBody();
 
 	if (spine->getTime() == 0) {
@@ -2536,6 +2567,9 @@ DEFINE_NERVE(TNerveDangoHamuKuriAttack, TLiveActor) { }
 
 DEFINE_NERVE(TNerveHaneHamuKuriUpWait, TLiveActor)
 {
+	char trash[0x4];
+	trash[0] = 0;
+
 	THaneHamuKuri* self = (THaneHamuKuri*)spine->getBody();
 	if (spine->getTime() < 1) {
 		self->setWaitAnm();
@@ -2642,6 +2676,9 @@ DEFINE_NERVE(TNerveFireHamuKuriRecover, TLiveActor)
 
 DEFINE_NERVE(TNerveDoroHaneRise, TLiveActor)
 {
+	char trash[8];
+	trash[0] = 0;
+
 	TDoroHaneKuri* self = (TDoroHaneKuri*)spine->getBody();
 
 	if (self->mPosition.y < self->mGroundHeight + 800.0f)
