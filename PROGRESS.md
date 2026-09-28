@@ -11743,6 +11743,29 @@ Closet/MoveBG, **`getNowGravity`**, **`DebuTelesa` bastable**, **`bossManta` `@2
 
 **Verify.** `ninja changes_all` ggü. **`a2cc02fe`**: **+1** matched function (**9269 → 9270**), **+172 B** matched code.
 
+### R235 (Aufgabe B; EP stack hunt, 0× ship)
+
+**Hunt.** Post-**`dd2fc0b3`**; J3D/Player callbacks + **`Mtx`/`TVec3` `r1+Δ`**; skip **SmallEnemyFreeze**, stuck lists,
+  Closet/MoveBG; cap ~8.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, no-ship).**
+
+- **`TBubbleCallBack::execute`** (99.6–99.8%): **`trashAfterPos[8…12]`** — **`addi`** nears **`r1+0x30`** but
+  **`stwu -0x48` vs `-0x38`** + **`lfs f0/f1`** swap remain.
+- **`TBiancoGateKeeper::getRumblePow`** (99.8%): uniform **`r1+0x18` vs `+0x1c`** on **`diff`** — pad/trash
+  variants regress.
+- **`TMario::warpRequest`**, **`TNozzleBase::emitCommon`**, **`calcGunAngle`**: frame/multi-local skew (not 4 B
+  **`trashAfter`**).
+- **`MarioFootPosRCtrl`**: **`padding[9]`** worsens (98.4%); control-flow/`check2` inline still open.
+- **EP scan:** no remaining WaterGun J3D callbacks @ ≥99.7% ( **`NozzleCtrl`/`RotateCtrl`/diving** done).
+
+**Tip (R235).** **`TVec3`** helpers with **12 B+ `r1+Δ`** need frame-sized gaps, not **`trashAfter[4]`** alone;
+  **`getRumblePow`**-style **4 B** skew may need operand order / subtract spelling, not only char pads.
+
+**Verify.** `ninja changes_all` ggü. **`dd2fc0b3`**: **+0** matched functions (**9270** unchanged).
+
 ### R225 (Aufgabe B; bossManta rodata + EP diversify, 0× ship)
 
 **Hunt.** Post-**`385107f3`**; optional **`bossManta` `@2805`/`@2807`** lead (Amenbo
