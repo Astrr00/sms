@@ -120,6 +120,17 @@ public:
 	void draw() const;
 	void initMapObj();
 	TMerrygoround(const char* name = "メリーゴーランド");
+
+public:
+	/* 0x138 */ u32 unk138;
+	/* 0x13C */ u32 unk13C;
+	/* 0x140 */ u16 unk140;
+	/* 0x142 */ u16 unk142;
+	/* 0x144 */ u32 unk144[9];
+	/* 0x168 */ u32 unk168[9];
+	/* 0x18C */ u16 unk18C[9];
+	/* 0x1A0 */ u32 unk1A0;
+	/* 0x1A4 */ u16 unk1A4;
 };
 
 class TChangeStageMerrygoround : public TMapObjChangeStage {

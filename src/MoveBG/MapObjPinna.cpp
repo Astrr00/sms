@@ -217,6 +217,19 @@ void TMerrygoround::initMapObj() { }
 TMerrygoround::TMerrygoround(const char* name)
     : TMapObjBase(name)
 {
+	char trash[1];
+	trash[0] = 0;
+	unk1A0 = 0;
+	unk1A4 = 0;
+	unk138 = 0;
+	unk140 = 0;
+	unk13C = 0;
+	unk142 = 0;
+	for (int i = 0; i < 9; ++i) {
+		unk144[i] = 0;
+		unk18C[i] = 0;
+		unk168[i] = 0;
+	}
 }
 
 void TChangeStageMerrygoround::touchPlayer(THitActor* actor)

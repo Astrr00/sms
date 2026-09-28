@@ -10920,6 +10920,37 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R267 (`MapObjPinna`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMerrygoround::TMerrygoround`.
+
+- Nach `TMapObjBase` werden `unk1A0` und `unk1A4` auf 0 gesetzt.
+  Danach `unk138`, `unk140`, `unk13C` und `unk142`.
+  Eine Schleife `i < 9` nullt `unk144[i]`, `unk18C[i]` und `unk168[i]`.
+  MWCC rollt acht Durchläufe aus und lässt den Rest in `bdnz`.
+  `char trash[1]` hält das Frame bei `-0x28`.
+  252 Bytes, 63 Instruktionen.
+  `control`, `draw` und `initMapObj` bleiben leere Stubs.
+
+`validate-symbol-order` `mario/MoveBG/MapObjPinna`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.19442 % -> 79.19963 %, matched code 49.949192 % -> 49.95621 % (1793220 -> 1793472, +252).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9640 -> 9641.
+`MapObjPinna` 5268 -> 5520 (+252).
+Kein R170–R266-Unit hat matched code verloren.
+Nur `MapObjPinna` hat matched code gewonnen.
+`MarNameRefGen_MapObj` und `MapObjManager` wurden wegen der neuen Felder neu gebaut.
+Matched code dort bleibt 2348 bzw. unverändert.
+Fuzzy von `getNameRef_MapObj` tickt 86.49089 % -> 86.49118 % durch die neue Objektgröße.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R266 (`MapObjMonte`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
