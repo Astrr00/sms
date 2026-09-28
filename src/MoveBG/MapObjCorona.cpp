@@ -2,6 +2,39 @@
 #include "MoveBG/MapObjBase.hpp"
 #include <M3DUtil/MActor.hpp>
 
+// Incomplete: only getRootJointMtx is defined here. Not a TLiveActor
+// subclass, so this TU does not emit the grip vtable.
+class TBathtubGrip {
+public:
+	Mtx* getRootJointMtx() const;
+
+	/* 0x0 */ u8 pad[0x200];
+	/* 0x200 */ s32 unk200[1];
+};
+
+// Incomplete. Joint index lives on the grip at unk200[unkF8]. Not a
+// TLiveActor subclass, so this TU does not emit the parts vtable.
+class TBathtubGripParts {
+public:
+	Mtx* getRootJointMtx() const;
+
+	/* 0x0 */ u8 pad[0xF4];
+	/* 0xF4 */ TBathtubGrip* unkF4;
+	/* 0xF8 */ s32 unkF8;
+};
+
+Mtx* TBathtubGripParts::getRootJointMtx() const
+{
+	s32 joint = unkF4->unk200[unkF8];
+	Mtx* mtx  = (Mtx*)reinterpret_cast<const TLiveActor*>(unkF4)
+	                ->getModel()
+	                ->getAnmMtx(joint);
+	// Dead slot so the frame stays at -0x30 (r31 at r1+0x2c).
+	char trash[8];
+	trash[0] = 0;
+	return mtx;
+}
+
 // Incomplete. unkF4 is the owning grip. Not a TLiveActor subclass, so this
 // TU does not emit the parts vtable.
 class TBathtubGripPartsFragile {
@@ -33,13 +66,6 @@ BOOL TBathtubGripPartsHard::receiveMessage(THitActor* sender, u32 message)
 		message = HIT_MESSAGE_HIP_DROP;
 	return unkF4->receiveMessage(sender, message);
 }
-
-// Incomplete: only getRootJointMtx is defined here. Not a TLiveActor
-// subclass, so this TU does not emit the grip vtable.
-class TBathtubGrip {
-public:
-	Mtx* getRootJointMtx() const;
-};
 
 Mtx* TBathtubGrip::getRootJointMtx() const
 {

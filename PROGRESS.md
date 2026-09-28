@@ -10920,6 +10920,34 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R247 (`MapObjCorona`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TBathtubGripParts::getRootJointMtx`.
+
+- Joint-Index ist `unkF4->unk200[unkF8]`.
+  Danach `TLiveActor::getModel()->getAnmMtx(joint)`
+  (`mNodeMatrices` bei `+0x58`).
+  `char trash[8]` hält den Frame bei `-0x30`.
+  Die Klasse steht nur in der cpp und erbt nicht von `TLiveActor`,
+  damit diese TU keine Parts-VTable emittiert.
+  72 Bytes, 18 Instruktionen.
+  Die übrigen 12 Matches in `MapObjCorona` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjCorona`: PASS.
+0 neue Fehler; vorbestehende MISSING/ORDER/BINDING bleiben.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.10104 % -> 79.10304 %, matched code 49.83254 % -> 49.83454 % (1789032 -> 1789104, +72).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9619 -> 9620.
+`MapObjCorona` 616 -> 688 (+72).
+Kein R170–R246-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R246 (`MapObjCorona`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
