@@ -2,6 +2,38 @@
 #include "MoveBG/MapObjBase.hpp"
 #include <M3DUtil/MActor.hpp>
 
+// Incomplete. unkF4 is the owning grip. Not a TLiveActor subclass, so this
+// TU does not emit the parts vtable.
+class TBathtubGripPartsFragile {
+public:
+	BOOL receiveMessage(THitActor* sender, u32 message);
+
+	/* 0x0 */ u8 pad[0xF4];
+	/* 0xF4 */ TLiveActor* unkF4;
+};
+
+BOOL TBathtubGripPartsFragile::receiveMessage(THitActor* sender, u32 message)
+{
+	return unkF4->receiveMessage(sender, message);
+}
+
+// Incomplete. Super hip-drop is rewritten to a normal hip-drop, then
+// forwarded to the owning grip. Not a TLiveActor subclass.
+class TBathtubGripPartsHard {
+public:
+	BOOL receiveMessage(THitActor* sender, u32 message);
+
+	/* 0x0 */ u8 pad[0xF4];
+	/* 0xF4 */ TLiveActor* unkF4;
+};
+
+BOOL TBathtubGripPartsHard::receiveMessage(THitActor* sender, u32 message)
+{
+	if (message == HIT_MESSAGE_SUPER_HIP_DROP)
+		message = HIT_MESSAGE_HIP_DROP;
+	return unkF4->receiveMessage(sender, message);
+}
+
 // Incomplete: only getRootJointMtx is defined here. Not a TLiveActor
 // subclass, so this TU does not emit the grip vtable.
 class TBathtubGrip {

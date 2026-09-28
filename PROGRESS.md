@@ -10920,6 +10920,35 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R246 (`MapObjCorona`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TBathtubGripPartsFragile::receiveMessage` und
+`TBathtubGripPartsHard::receiveMessage`.
+
+- Fragile leitet `receiveMessage` an den Grip bei `unkF4` (`+0xF4`) weiter.
+  Hard macht dasselbe, setzt aber `HIT_MESSAGE_SUPER_HIP_DROP` vorher auf
+  `HIT_MESSAGE_HIP_DROP`.
+  Beide Klassen stehen nur in der cpp und erben nicht von `TLiveActor`,
+  damit diese TU keine Parts-VTable emittiert.
+  Fragile 48 Bytes, 12 Instruktionen.
+  Hard 60 Bytes, 15 Instruktionen.
+  Die übrigen 10 Matches in `MapObjCorona` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjCorona`: PASS.
+0 neue Fehler; vorbestehende MISSING/ORDER/BINDING bleiben.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.09803 % -> 79.10104 %, matched code 49.82953 % -> 49.83254 % (1788924 -> 1789032, +108).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9617 -> 9619.
+`MapObjCorona` 508 -> 616 (+108).
+Kein R170–R245-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R245 (`MapObjCorona`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
