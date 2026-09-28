@@ -10920,6 +10920,40 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R206 (`MapObjFlag`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+Sieben Matches im bisher leeren `MapObjFlag`, ohne `SMatrix34C`-Leer-Konstruktor.
+Zurückgenommen, nur Frame:
+`TMapObjFlagManager::load` (Rumpf passt, inklusive getrennter `case 0`- und `case 2`-Stores von 16.0f, Frame `-0x20` statt `-0x30`).
+
+- `TMapObjFlagManager::TMapObjFlagManager` baut `TViewObj`, legt 15 `TMapObjFlagInfo` der Größe `0x58` ab Offset `0x10` an und speichert `this` in `gpMapObjFlagManager`.
+  140 Bytes, 35 Instruktionen.
+- `TMapObjFlagManager::TMapObjFlagInfo::TMapObjFlagInfo` nullt die Felder bei `0x0` und `0x54`.
+  16 Bytes, 4 Instruktionen.
+- `TMapObjFlag::load` ruft `TActor::load`, liest `0x40` Zeichen und ruft `init` (`#pragma dont_inline` am leeren Stub, damit das `bl` bleibt).
+  84 Bytes, 21 Instruktionen.
+- `TMapObjFlagManager::~TMapObjFlagManager` ist der generierte Destruktor.
+  116 Bytes, 29 Instruktionen.
+- `TMapObjFlag::~TMapObjFlag` ist der generierte Destruktor.
+  132 Bytes, 33 Instruktionen.
+- `__sinit_MapObjFlag_cpp` initialisiert die JAL-Listen.
+  764 Bytes, 191 Instruktionen.
+- `@32@__dt__11TMapObjFlagFv` ist der Sekundär-Thunk.
+  8 Bytes, 2 Instruktionen.
+
+`validate-symbol-order` für MapObjFlag: PASS.
+Vier UNUSED-Größenwarnungen für die leeren Stubs `loadFlag`, `update` und `updateVertex` von Lower und Sail.
+
+`ninja changes_all`: fuzzy 78.86625 % -> 78.90318 %, matched code 49.572937 % -> 49.608032 % (1779712 -> 1780972, +1260).
+Matched data 65.18551 % -> 65.2486 % (417403 -> 417807, +404).
+Funktionen matched 9560 -> 9567.
+Nur `MapObjFlag` hat sich geändert.
+Kein R170-R205-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R205 (`MapObjBianco` / `MapObjBall` / `MapObjPinna` / `MapObjMare` / `MapObjMamma`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
