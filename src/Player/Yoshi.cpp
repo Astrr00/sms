@@ -368,31 +368,18 @@ u16 TYoshi::changeHand()
 }
 
 #pragma dont_inline on
-asm void TYoshi::getEmitPosDir(register JGeometry::TVec3<f32>* dir,
-                               register JGeometry::TVec3<f32>* pos) const
+void TYoshi::getEmitPosDir(JGeometry::TVec3<f32>* dir,
+                           JGeometry::TVec3<f32>* pos) const
 {
-#ifdef __MWERKS__ // clang-format off
-	nofralloc
-	lwz r6, 0x34(r3)
-	lhz r0, 0x3c(r3)
-	lwz r6, 4(r6)
-	mulli r0, r0, 0x30
-	lwz r6, 0x58(r6)
-	add r6, r6, r0
-	lfs f0, 0(r6)
-	stfs f0, 0(r5)
-	lfs f0, 0x10(r6)
-	stfs f0, 4(r5)
-	lfs f0, 0x20(r6)
-	stfs f0, 8(r5)
-	lfs f0, 0xc(r6)
-	stfs f0, 0(r4)
-	lfs f0, 0x1c(r6)
-	stfs f0, 4(r4)
-	lfs f0, 0x2c(r6)
-	stfs f0, 8(r4)
-	blr
-#endif // clang-format on
+	MtxPtr mtx = mActor->getModel()->getAnmMtx(mJointIdxTongue);
+
+	pos->x = mtx[0][0];
+	pos->y = mtx[1][0];
+	pos->z = mtx[2][0];
+
+	dir->x = mtx[0][3];
+	dir->y = mtx[1][3];
+	dir->z = mtx[2][3];
 }
 #pragma dont_inline off
 
