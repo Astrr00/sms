@@ -8,7 +8,20 @@ void TBathtub::hipdrop(const JGeometry::TVec3<f32>&) { }
 
 void TBathtub::quake(const JGeometry::TVec3<f32>&) { }
 
-int TBathtub::getNumGripsDead() const { return 0; }
+// TBathtubGrip is not reconstructed. Byte 0x249 is 0 while the grip is dead.
+struct TBathtubGripDead {
+	u8 pad[0x249];
+	u8 unk249;
+};
+
+int TBathtub::getNumGripsDead() const
+{
+	int count = 0;
+	for (int i = 0; i < 5; ++i)
+		if (reinterpret_cast<TBathtubGripDead*>(unk168[i])->unk249 == 0)
+			++count;
+	return count;
+}
 
 void TBathtub::tumble(f32, f32) { }
 

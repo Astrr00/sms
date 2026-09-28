@@ -10920,6 +10920,30 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R185 (`TBathtub::getNumGripsDead`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+- Zählt die fünf Griffe an `unk168`, deren Byte `0x249` null ist.
+- `for (i < 5)` wird von MWCC ausgerollt und lädt `unk168` vor jedem Griff neu.
+- `TBathtubGrip` ist noch nicht rekonstruiert; der Zugriff geht über ein
+  lokales Layout mit dem Byte an `0x249`.
+
+0 Abweichungen, 132 Bytes, 33 Instruktionen.
+`decomp-diff -u mario/MoveBG/MapObjCorona -d getNumGripsDead`: 100 %.
+`validate-symbol-order -u mario/MoveBG/MapObjCorona --baseline-object`:
+0 neue Symbolfehler (210 geerbt).
+
+R184 `TWaterHitPictureHideObj::load`, R183 `updateCheckData`,
+R182 `TMapObjTurn::touchWater`, R181 `TCloset::touchWater`,
+R180 `TCasinoPanelGate::touchWater`, R179 `waitingToAppear`,
+R178 `initDrawNear`, R177 `TWoodBox::kill`, R176 `receiveMessage`,
+R175 `touchGround`, R174 `perform`, R173 `startControlAnim`,
+R172 `TManhole::touchPlayer`, R171 `calcVelocity`, R170 `appearing`
+unverändert strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R184 (`TWaterHitPictureHideObj::load`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
