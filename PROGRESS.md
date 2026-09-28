@@ -11984,6 +11984,37 @@ before **`changes_all`**. **`100.0%` fuzzy** EP symbols are often **8–12 B**
 **Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged). Tip
 **`b821cab2`**.
 
+### R245 (Aufgabe B; opcode-first nerves + MAP spot-check, 0× ship)
+
+**Hunt.** Post-R244; prefer medium nerves with **non-frame** **`fadds`/`fmuls`** clusters
+(R243-style **`f32`** temps); **`mario.MAP`** size check for **`setDeadBathtubKillerAnm`**
+(**UNUSED `0xb8`**); skip R244 failure list + stuck/empty/Closet/MoveBG; **`ninja baseline`**
++ fresh **`report.json`** before **`changes_all`**; cap ~8.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~7, reverted / no-ship).**
+
+- **`TCoasterEnemy::bind`** (**99.9%**, **220 B**): retail is **int copy + per-component `fadds`**
+  on **`r1+0x28`**, not **`TVec3` `+=`** — **`nextPos.add` / `linearVel.set`** path **34%**;
+  reverted (defer **`coasterkiller`** family per R237).
+- **`TBathtubKiller::setDeadBathtubKillerAnm`**: **`mVelocity.set(0,0,0)`** vs copy-ctor only —
+  explosion nerve frame **`0x30→0x20`**, extra **160 B** symbol vs MAP **`0xb8`**; **+0** mf.
+- **`TSpineEnemy::resetToPosition`** (**99.9%**, **268 B**): MAP asm wants **`lfs f1=0`**, **`lfs f0=5`**
+  **`stfs`** triple at **`r1+0x1c`** — member **`f1`/`f0` assigns shrank frame (**87.7%**, **mf −1**);
+  reverted.
+- **`TWireBinder::bind`**, **`TNerveWalkerEscape`**, **`TNerveMameGessoJitabata`**: mass **`r1` `~`**
+  only (skipped).
+- **EP fuzzy-100% scan** (**`TNerveBGKAppear`**, **`TNerveHamuKuriWallDie`**, **`hinokuri2`**
+  **`MtxCalcTypeName` 50%**): stack / **`.ctors`** order, not isolated opcode wins.
+
+**Tip (R245).** R243-style temps must mirror **full retail store sequence** (e.g.
+**`resetToPosition`** **`0/5/0`** at **`0x1c`**, not just “right” scalar values). **`TCoasterEnemy::bind`**
+is a separate pattern: **manual stacked `fadds`**, not **`LiveActor::getBindingPosition`** spelling.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged). Tip
+**`50b4c218`**.
+
 ### R225 (Aufgabe B; bossManta rodata + EP diversify, 0× ship)
 
 **Hunt.** Post-**`385107f3`**; optional **`bossManta` `@2805`/`@2807`** lead (Amenbo
