@@ -10920,6 +10920,41 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R186 (`MapObjMonte` / `MapObjRicco`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+Außerhalb von Bathtub.
+Die beiden TUs waren leer; jeder Map-Symbol ist jetzt definiert, der Rest bleibt Stub.
+
+- `TJumpMushroom::receiveMessage`: `startAnim(1); return TRUE;`.
+  40 Bytes, 10 Instruktionen.
+- `TCraneRotY::calc`: `setRootMtxRotY();`.
+  32 Bytes, 8 Instruktionen.
+- `TRiccoWatermill::calc`: `setRootMtxRotZ();`.
+  32 Bytes, 8 Instruktionen.
+- `TCraneCargo::control`: `unk158` als z, dann y, dann x auf `0.0f`, danach `TMapObjBase::control`.
+  48 Bytes, 12 Instruktionen.
+- `TFluff::getRadiusAtY` und `TGoalFlag::getRadiusAtY` geben `20.0f` zurück und stehen weak im Header.
+  Je 8 Bytes.
+- `TLiveActor::getMActor` ist die bestehende Header-Inline.
+  Die schwache Kopie in `MapObjRicco` ist 8 Bytes (`lwz r3, 0x74(r3)`).
+- `__sinit_MapObjMonte_cpp` (764 Bytes) und `__sinit_MapObjRicco_cpp` (804 Bytes) kommen aus den rogue includes `MSSetSound.hpp` und `MSoundBGM.hpp`.
+  Ricco initialisiert davor `submarineCranePos_forSound` `(1956, 1000, 6425)` und `submarineSetWtPos_forSound` `(1956, -100, 6425)`.
+
+Destruktoren und `@32`-Thunks der Key-Funktionen sind ebenfalls 100 %.
+`validate-symbol-order` für beide Units: PASS mit UNUSED-Größenwarnungen.
+
+R185 `TBathtub::getNumGripsDead`, R184 `TWaterHitPictureHideObj::load`,
+R183 `updateCheckData`, R182 `TMapObjTurn::touchWater`,
+R181 `TCloset::touchWater`, R180 `TCasinoPanelGate::touchWater`,
+R179 `waitingToAppear`, R178 `initDrawNear`, R177 `TWoodBox::kill`,
+R176 `receiveMessage`, R175 `touchGround`, R174 `perform`,
+R173 `startControlAnim`, R172 `TManhole::touchPlayer`,
+R171 `calcVelocity`, R170 `appearing` unverändert strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R185 (`TBathtub::getNumGripsDead`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
