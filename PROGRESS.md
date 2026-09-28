@@ -10920,6 +10920,33 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R230 (`MapObjFence`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TRailFence::receiveMessage`.
+
+- `TRailFence::receiveMessage` bei Message `3` prüft `gpMSound->gateCheck(MSD_SE_OBJ_MVING_FENCT_PNCH)`.
+  Bei Erfolg `startSoundActor` an `&mPosition`.
+  Danach `setUpMapCollision(1)`, `offMapObjFlag(MAP_OBJ_FLAG_UNK100)` und `mState = 2`.
+  Rückgabe ist `TRUE`, sonst `FALSE`.
+  `char trash[1]` hält Frame `-0x28`.
+  140 Bytes, 35 Instruktionen.
+  `TFenceWater::changeStatusToGo`, `TFenceWaterH::changeStatusToGo`, `changeStatusToWait`, `receiveMessage`, `TRevolvingFenceInner::control` und `__sinit_MapObjFence_cpp` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjFence`: PASS.
+Schwache-Reihenfolge-Warnung und zwei bestehende UNUSED-Größenwarnungen.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.048134 % -> 79.05183 %, matched code 49.77304 % -> 49.776943 % (1786896 -> 1787036, +140).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9601 -> 9602.
+`MapObjFence` 3120 -> 3260 (+140).
+Kein R170–R229-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R229 (`MapObjBall`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

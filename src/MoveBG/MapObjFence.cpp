@@ -174,7 +174,21 @@ void TFenceWaterH::changeStatusToWait()
 	setUpMapCollision(0);
 }
 
-BOOL TRailFence::receiveMessage(THitActor*, u32) { return FALSE; }
+BOOL TRailFence::receiveMessage(THitActor*, u32 message)
+{
+	if (message == 3) {
+		if (gpMSound->gateCheck(MSD_SE_OBJ_MVING_FENCT_PNCH))
+			MSoundSESystem::MSoundSE::startSoundActor(
+			    MSD_SE_OBJ_MVING_FENCT_PNCH, &mPosition, 0, nullptr, 0, 4);
+		setUpMapCollision(1);
+		offMapObjFlag(MAP_OBJ_FLAG_UNK100);
+		mState = 2;
+		char trash[1];
+		trash[0] = 0;
+		return TRUE;
+	}
+	return FALSE;
+}
 
 void TRailFence::falling() { }
 
