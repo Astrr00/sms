@@ -12122,6 +12122,31 @@ must codegen as **`lwz` at `0x180`** off the **`getSaveParam`** pointer (same ob
 **Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged). Tip
 **`c5442021`**.
 
+### R255 (Aufgabe B; defer wait + EP diversify, 0× ship)
+
+**Hunt.** Post-R254; **defer `waitingCommonEvents`** (`mFlag` bit17/`0x20000` vs **`IS_PERFORMING`**); prefer other
+Player/Enemy opcode/PARAM paths; skip R251–R254 thrash/stuck, empty/Closet/MoveBG; **`ninja baseline`** +
+**`report.json`** + **`changes_all`**; cap ~8.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, reverted / no-ship).**
+
+- **`waitingCommonEvents`**: skipped (per R254 defer).
+- **`TNerveSmallEnemyJump`**: split early **`return true`** (retail sequential **`cmpwi`**, not **`||`**
+  lowering) + **`mSLJumpForce.get()`** → **95.9%** (extra branches, **`clrlwi`** remains, **`-0x58`**
+  frame); reverted.
+- **`emWaitingToInviteMario`**: **`distance()`** load order like **`checkReturn`** — frame + **`fmuls`**
+  scheduling; defer.
+- **Frame/reg `~`:** **`jumpProcess`**, **`tryTake`**, **`killEnemiesWithin`**, **`moveRoof`**, **`TNerveSmallEnemyFreeze`**.
+
+**Tip (R255).** Retail **`TNerveSmallEnemyJump`** early-out is **two `cmpwi` clusters** on **`mLiveFlag`**
+(**`rlwinm` 16 then 13**), not a single C **`||`** — but duplicating with separate **`if (return true)`**
+still diverges (extra **`b`** / frame); needs UNUSED-inline-sized stack or flag helpers matching retail
+**`li`/`cmpwi`** shape.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged).
+
 ### R254 (Aufgabe B; defer wait MAP ambiguity + EP diversify, 0× ship)
 
 **Hunt.** Post-R253; optional **`waitingCommonEvents`** only if MAP-clear **`IConverge`** + **`rlwinm`**;
