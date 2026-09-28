@@ -10920,6 +10920,24 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R174 (`TMapObjGeneral::perform`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+- `isStateTimerEngaged()` verbraucht den ersten `mStateTimer`-Load (`r0` + `clrlwi`).
+- `int timer = *(volatile int*)&mStateTimer` vor `getFlushTime()` lädt `0x104(r28)`
+  erneut nach `r31` und hält den Wert über den virtuellen Call.
+- Dritter Load für die Intervall-Division bleibt `lwz r3, 0x104(r28)`.
+- `char trash[8]` am Funktionskopf → Frame `-0x30`.
+
+0 Abweichungen, 248 Bytes, 62 Instruktionen.
+`decomp-diff -u mario/MoveBG/MapObjGeneral -d TMapObjGeneral::perform`: 100 %.
+
+R173 `startControlAnim`, R172 `TManhole::touchPlayer`, R171 `calcVelocity`,
+R170 `appearing` unverändert strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R173 (`TMapObjBase::startControlAnim`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

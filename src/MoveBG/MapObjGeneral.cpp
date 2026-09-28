@@ -606,14 +606,23 @@ void TMapObjGeneral::calcRootMatrix()
 
 void TMapObjGeneral::perform(u32 cue, JDrama::TGraphics* graphics)
 {
+	char trash[8];
+	trash[0] = 0;
+
 	if (cue & CUE_MOVE) {
 		if (isState(STATE_WAITING_TO_APPEAR))
 			waitingToAppear();
 	} else {
-		if (checkMapObjFlag(MAP_OBJ_FLAG_DISAPPEARING) && isStateTimerEngaged()
-		    && getStateTimer() < getFlushTime()
-		    && ((getStateTimer() / mNormalFlushInterval) & 1) != 0) {
-			return;
+		// isStateTimerEngaged() consumes the first mStateTimer load.
+		// The compare value has to be captured before getFlushTime(); retail
+		// keeps that reload in r31 across the virtual call.
+		if (checkMapObjFlag(MAP_OBJ_FLAG_DISAPPEARING) && isStateTimerEngaged()) {
+			int timer = *(volatile int*)&mStateTimer;
+			int flush = getFlushTime();
+			if (timer < flush
+			    && ((*(volatile int*)&mStateTimer / mNormalFlushInterval) & 1)
+			           != 0)
+				return;
 		}
 	}
 
