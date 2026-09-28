@@ -3,6 +3,7 @@
 #include <M3DUtil/MActor.hpp>
 #include <Map/MapWireManager.hpp>
 #include <System/Particles.hpp>
+#include <MSound/MSound.hpp>
 
 extern void MsMtxSetTRS(MtxPtr result, f32 x, f32 y, f32 z, f32 r, f32 p, f32 h,
                         f32 sx, f32 sy, f32 sz);
@@ -255,7 +256,27 @@ MtxPtr TMareCork::getTakingMtx()
 	return mMActor->getModel()->getAnmMtx(2);
 }
 
-void TMareCork::drawObject(JDrama::TGraphics*) { }
+// Extra inline level so MWCC keeps the dead 8-byte temp (frame -0x28).
+static inline f32 mareCorkFrame(MActor* actor)
+{
+	return actor->getFrameCtrl(0)->getFrame();
+}
+
+void TMareCork::drawObject(JDrama::TGraphics* graphics)
+{
+	TLiveActor::drawObject(graphics);
+	if (unk154 != 0 && mareCorkFrame(mMActor) > 250.0f) {
+		unk148.x = 2773.0f;
+		unk148.y = 8618.0f;
+		unk148.z = 7006.0f;
+		if (gpMSound->gateCheck(MSD_SE_ENV_FALL_JET_LEVEL))
+			MSoundSESystem::MSoundSE::startSoundActor(
+			    MSD_SE_ENV_FALL_JET_LEVEL, &unk148, 0, nullptr, 0, 4);
+		gpMarioParticleManager->emitAndBindToPosPtr(0x14C, &unk13C, 1, this);
+		gpMarioParticleManager->emitAndBindToPosPtr(0x14D, &unk13C, 1, this);
+		gpMarioParticleManager->emitAndBindToPosPtr(0x14E, &unk13C, 1, this);
+	}
+}
 
 BOOL TMareEventPoint::receiveMessage(THitActor*, u32) { return FALSE; }
 

@@ -10920,6 +10920,32 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R216 (`MapObjMare`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMareCork::drawObject` ohne `SMatrix34C`-Leer-Konstruktor.
+`TRevolvingFenceInner::setGroundCollision` und `TMapObjBall::hold` bleiben geparkt.
+
+- `TMareCork::drawObject` ruft `TLiveActor::drawObject`.
+  Wenn `unk154` gesetzt ist und `mareCorkFrame` über 250 liegt, schreibt es `unk148` auf (2773, 8618, 7006), spielt `MSD_SE_ENV_FALL_JET_LEVEL` nach `gateCheck` und bindet die Partikel `0x14C`/`0x14D`/`0x14E` an `unk13C`.
+  `fcmpo`+`ble` ist das natürliche `>`.
+  Der zusätzliche Inline hält das tote Stack-Slot, Frame `-0x28`.
+  228 Bytes, 57 Instruktionen.
+  `moveObject`, `getTakingMtx` und `__sinit_MapObjMare_cpp` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMare`: PASS.
+Fünf bestehende UNUSED-Größenwarnungen.
+`MapObjBase.hpp` unverändert.
+
+`ninja changes_all`: fuzzy 78.96385 % -> 78.970085 %, matched code 49.686695 % -> 49.693047 % (1783796 -> 1784024, +228).
+Matched data bleibt 65.24985 % (417815).
+Funktionen matched 9583 -> 9584.
+`MapObjMare` 3656 -> 3884 (+228).
+Kein R170-R215-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R215 (`MapObjMonte`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
