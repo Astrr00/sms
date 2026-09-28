@@ -11646,6 +11646,33 @@ retail section (**`.data` vs `.rodata`**) in **`build/GMSJ01/asm/*.s`** before a
 
 **Verify.** `ninja baseline` + `ninja changes_all` ggü. **`132ddf9a`** — **no diff**.
 
+### R231 (Aufgabe B; `TBossEelAwaCollision::behaveToMario`, 1× ship)
+
+**Hunt.** Post-**`c005c09c`**; string/PARAM/float/vtable/small ASM; skip stuck lists, empty TUs,
+Closet/MoveBG, **`getNowGravity`**, **`DebuTelesa` bastable**, **`bossManta` `@2805`**, R222–R230;
+**`createModelData` `entry$`** exhausted; cap ~8.
+
+**Ship.**
+
+- **`TBossEelAwaCollision::behaveToMario`** (124 B): retail builds **`TVec3`** at **`r1+0x14`** ( ctor
+  **`(0,10,0)`** then **`y=15`** ); component init + **`char trashAfterMarioTarget[4]`** after the vec
+  → **100%**.
+
+**Probes (~8, no-ship).**
+
+- **`TBossEelAwaCollision`:** **`localPad[4]` before** vec — still **`r1+0x10`** (99.6%).
+- **EP ≤100 B @ ≥99%:** only **`getNowGravity`** / WaterGun callbacks (skip/stuck band).
+- **EP non-**`.ctors`** data:** still no object-level nonmatching symbols.
+- **`enemytable::getMatchedInfo`**, **`fireWanwan` `TLerpControl` UNUSED**, **`bosspakkun` `initJParticle`**
+  — unchanged from R230.
+- **`tamaNoko` / `createModelData`:** still **100%** with **`.data`** pool (no **`const`**).
+
+**Tip (R231).** For small **`TVec3`** temps at **99.6%** with uniform **`r1+0x10` vs `+0x14`**, mirror
+  sibling collision helpers (**`trashAfterMarioTarget[N]`** *after* the vec) before touching ctor syntax.
+
+**Verify.** `ninja changes_all` ggü. **`c005c09c`**: **+1** matched function (**9264 → 9265**), **+124 B**
+  matched code.
+
 ### R225 (Aufgabe B; bossManta rodata + EP diversify, 0× ship)
 
 **Hunt.** Post-**`385107f3`**; optional **`bossManta` `@2805`/`@2807`** lead (Amenbo
