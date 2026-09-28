@@ -1,1 +1,229 @@
+#include <MoveBG/MapObjMare.hpp>
+#include <JSystem/J3D/J3DGraphAnimator/J3DModel.hpp>
+#include <M3DUtil/MActor.hpp>
+#include <Map/MapWireManager.hpp>
 
+static JGeometry::TVec3<f32> fall_upper_pos(2827.0f, 8604.0f, 7202.0f);
+
+// rogue includes needed for matching sinit & bss
+#include <MSound/MSSetSound.hpp>
+#include <MSound/MSoundBGM.hpp>
+
+// -inline deferred: source order is the reverse of mario.MAP emission order.
+
+f32 TCogwheelScale::mWaterLeakSpeed = 0.01f;
+static f32 sRadius                  = 800.0f;
+f32 TCogwheel::mRopeWidthX          = 10.0f;
+f32 TCogwheel::mRopeWidthZ          = 7.0f;
+f32 TCogwheel::mTexPosRate          = 0.01f;
+f32 TCogwheel::mMinSpeed            = 3.0f;
+static f32 mGrowStartFrame          = 90.0f;
+static f32 mGrowEndFrame            = 175.0f;
+
+// TODO: retail is fcmpo + bge.
+u32 TCogwheelScale::touchWater(THitActor*) { return 1; }
+
+// TODO: retail lfsu of unk158->unk138. `+=` emits lfs + stfs 0x138.
+BOOL TCogwheelScale::receiveMessage(THitActor* sender, u32 message)
+{
+	return TMapObjBase::receiveMessage(sender, message);
+}
+
+void TCogwheelScale::touchPlayer(THitActor*) { }
+
+// control is fcmpo + ble. Left as a stub.
+void TCogwheelScale::control() { }
+
+TCogwheelScale::TCogwheelScale(const char* name)
+    : TMapObjBase(name)
+    , unk138(0.0f)
+    , unk13C(0.0f)
+    , unk140(0.0f)
+    , unk144(0.0f)
+    , unk148(0.0f)
+    , unk14C(0.01f)
+    , unk150(5.0f)
+    , unk154(0)
+    , unk158(nullptr)
+{
+}
+
+void TCogwheel::initDraw() const { }
+
+void TCogwheel::draw() const { }
+
+void TCogwheel::rebound() { }
+
+void TCogwheel::calc() { }
+
+void TCogwheel::control() { }
+
+void TCogwheel::initMapObj() { }
+
+TCogwheel::TCogwheel(const char* name)
+    : TMapObjBase(name)
+    , unk138(0.0f)
+    , unk13C(0.0f)
+    , unk140(0.0f)
+    , unk144(0.0f)
+    , unk148(0.0f)
+    , unk14C(0.0f)
+    , unk150(0)
+    , unk160(0.0f)
+    , unk164(0)
+    , unk174(0.0f)
+{
+	unk154.zero();
+	unk168.zero();
+}
+
+void TMapObjElasticCode::draw() const { }
+
+void TMapObjElasticCode::control() { }
+
+void TMapObjElasticCode::initMapObj()
+{
+	TMapObjBase::initMapObj();
+	unk140   = 0.997f;
+	mGravity = 0.01f;
+	unk138   = 2.0f;
+	unk13C   = 0.0005f;
+}
+
+void TMapObjGrowTree::getGrowHeightFromRate(float) const { }
+
+void TMapObjGrowTree::updateHeight() { }
+
+u32 TMapObjGrowTree::touchWater(THitActor*) { return 0; }
+
+void TMapObjGrowTree::control() { }
+
+void TMapObjGrowTree::loadAfter()
+{
+	TMapObjBase::loadAfter();
+	removeMapCollision();
+}
+
+void TMapObjGrowTree::initMapObj()
+{
+	TMapObjBase::initMapObj();
+	unk138 = 1000.0f;
+	unk13C = 0.5f;
+	unk140 = 0.1f;
+	unk144 = 360;
+	unk148 = mDamageHeight;
+	mMActor->setBtp("moyasi_wink");
+}
+
+TMapObjGrowTree::TMapObjGrowTree(const char* name)
+    : TMapObjBase(name)
+    , unk138(0.0f)
+    , unk13C(0.0f)
+    , unk140(0.0f)
+    , unk144(0)
+    , unk148(0.0f)
+{
+}
+
+void TWireBell::initDraw() const { }
+
+void TWireBell::draw() const { }
+
+void TWireBell::control() { }
+
+void TWireBell::loadAfter()
+{
+	TMapObjBase::loadAfter();
+	unk138 = gpMapWireManager->getWireNo(mPosition);
+}
+
+TWireBell::TWireBell(const char* name)
+    : TMapObjBase(name)
+    , unk138(-1)
+    , unk13C(200.0f)
+    , unk140(10.0f)
+    , unk144(5.0f)
+    , unk148(0.01f)
+{
+	unk14C.zero();
+}
+
+void TMapObjPuncher::touchPlayer(THitActor*) { }
+
+void TMapObjPuncher::control() { }
+
+void TMapObjPuncher::load(JSUMemoryInputStream&) { }
+
+void TMuddyBoat::moveByWater() { }
+
+void TMuddyBoat::calcRootMatrix() { }
+
+void TMuddyBoat::kill() { }
+
+void TMuddyBoat::touchWall(JGeometry::TVec3<float>*,
+                           const TBGWallCheckRecord&)
+{
+}
+
+void TMuddyBoat::bindToWall(const JGeometry::TVec3<float>&, float,
+                            JGeometry::TVec3<float>*)
+{
+}
+
+void TMuddyBoat::bind()
+{
+	// Retail bind calls the weak out-of-line copy. Address-of keeps that
+	// symbol in this TU; the header body is empty, so the copy stays off.
+	void (TMapObjBase::*fn)() const = &TMapObjBase::getObjCollisionHeightOffset;
+	(this->*fn)();
+}
+
+void TMuddyBoat::control() { }
+
+void TMuddyBoat::calc() { }
+
+u32 TMuddyBoat::getSDLModelFlag() const { return 0; }
+
+void TMuddyBoat::initMapObj() { }
+
+TMuddyBoat::TMuddyBoat(const char* name)
+    : TMapObjBase(name)
+    , unk138(0.0f)
+    , unk13C(0.0f)
+    , unk140(0.0f)
+    , unk144(0.0f)
+    , unk148(0.0f)
+    , unk14C(0.0f)
+    , unk150(0.0f)
+    , unk154(0.0f)
+    , unk158(0.0f)
+    , unk15C(0.0f)
+    , unk160(0.0f)
+    , unk164(0.0f)
+    , unk168(0)
+    , unk16C(0)
+{
+	unk170.zero();
+	unk17C.zero();
+}
+
+void TMareFall::calc() { }
+
+void TMareFall::load(JSUMemoryInputStream&) { }
+
+void TMareCork::loadAfter() { }
+
+void TMareCork::moveObject() { }
+
+void TMareCork::calcRootMatrix() { }
+
+MtxPtr TMareCork::getTakingMtx()
+{
+	return mMActor->getModel()->getAnmMtx(2);
+}
+
+void TMareCork::drawObject(JDrama::TGraphics*) { }
+
+BOOL TMareEventPoint::receiveMessage(THitActor*, u32) { return FALSE; }
+
+void TMareEventPoint::load(JSUMemoryInputStream&) { }

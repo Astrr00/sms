@@ -10920,6 +10920,54 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R193 (`MapObjMare`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+Bisher leerer TU.
+Jeder Map-Symbol ist definiert, der Rest bleibt Stub.
+`TCogwheelScale::touchWater` bleibt Stub (`fcmpo`+`bge`).
+`TCogwheelScale::control` bleibt Stub (`fcmpo`+`ble`).
+`receiveMessage` bleibt Stub: Retail nutzt `lfsu` auf `unk158->unk138`.
+
+- `TMuddyBoat::getSDLModelFlag` gibt 0 zurück.
+  8 Bytes, 2 Instruktionen.
+- `TMuddyBoat::calcRootMatrix` ist leer.
+  4 Bytes, 1 Instruktion.
+- `TMuddyBoat::TMuddyBoat` nullt zwölf Floats, `unk168`, `unk16C` und zwei `TVec3` über `zero()`.
+  156 Bytes, 39 Instruktionen.
+- `TWireBell::loadAfter` ruft `TMapObjBase::loadAfter` und speichert `getWireNo(mPosition)`.
+  60 Bytes, 15 Instruktionen.
+- `TWireBell::TWireBell` setzt `unk138 = -1`, vier Floats und nullt `unk14C` über `zero()`.
+  124 Bytes, 31 Instruktionen.
+- `TMapObjGrowTree::loadAfter` ruft `TMapObjBase::loadAfter` und `removeMapCollision`.
+  52 Bytes, 13 Instruktionen.
+- `TMapObjGrowTree::initMapObj` setzt Höhe, Timer, `mDamageHeight` und `setBtp("moyasi_wink")`.
+  100 Bytes, 25 Instruktionen.
+- `TMapObjGrowTree::TMapObjGrowTree` nullt die Felder ab `0x138`.
+  96 Bytes, 24 Instruktionen.
+- `TMapObjElasticCode::initMapObj` setzt `unk140`, `mGravity`, `unk138` und `unk13C`.
+  76 Bytes, 19 Instruktionen.
+- `TCogwheel::TCogwheel` nullt die Skalare und zwei `TVec3` über `zero()`.
+  140 Bytes, 35 Instruktionen.
+- `TCogwheelScale::TCogwheelScale` nullt fünf Floats, setzt `0.01` und `5`, dann `unk154` und `unk158`.
+  120 Bytes, 30 Instruktionen.
+- `TMareCork::getTakingMtx` gibt `mMActor->getModel()->getAnmMtx(2)` zurück.
+  20 Bytes, 5 Instruktionen.
+- `__sinit_MapObjMare_cpp` (788 Bytes) baut `fall_upper_pos` vor den JALList-Inits aus `MSSetSound.hpp` / `MSoundBGM.hpp`.
+  Die sdata-Statics (`mWaterLeakSpeed` bis `mGrowEndFrame`) sind 100 %.
+
+Destruktoren, alle `@32`-Thunks und alle VTables der TU sind ebenfalls 100 %.
+`getObjCollisionHeightOffset` bleibt 50 %: die Header-Kopie ist leer, `MapObjBase.hpp` bleibt unangetastet.
+`validate-symbol-order`: PASS, nur fünf UNUSED-Größenwarnungen.
+
+`ninja changes_all`: fuzzy 78.60 % → 78.70 %, matched code 49.31 % → 49.40 %, matched data 64.62 % → 65.19 %.
+Kein R170–R192-Unit hat matched code verloren.
+`MapObjManager` tickt fuzzy 99.68 % → 99.69 %, matched code bleibt 7064.
+`MarNameRefGen_MapObj` bleibt bei matched code 2348.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R192 (`MapObjMamma`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
