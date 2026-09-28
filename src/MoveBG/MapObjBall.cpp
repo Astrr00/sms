@@ -10,6 +10,7 @@
 #include <MSound/MSSetSound.hpp>
 #include <MSound/MSoundBGM.hpp>
 #include <System/FlagManager.hpp>
+#include <System/MarDirector.hpp>
 
 // -inline deferred: source order is the reverse of mario.MAP emission order.
 
@@ -116,7 +117,21 @@ void TResetFruit::checkGroundCollision(JGeometry::TVec3<f32>*) { }
 
 void TResetFruit::waitingToAppear() { }
 
-void TResetFruit::makeObjWaitingToAppear() { }
+void TResetFruit::makeObjWaitingToAppear()
+{
+	char trash[0x10];
+	trash[0] = 0;
+	mState = 11;
+	makeObjDefault();
+	makeObjDead();
+	calcRootMatrix();
+	getModel()->calc();
+	mStateTimer = mFruitWaitTimeToAppear;
+	offMapObjFlag(MAP_OBJ_FLAG_DISAPPEARING);
+	mState = TMapObjGeneral::STATE_WAITING_TO_APPEAR;
+	if (gpMarDirector->mMap == 3 && unk1A4 != 0)
+		makeObjDead();
+}
 
 void TResetFruit::thrown()
 {
