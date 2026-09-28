@@ -12232,6 +12232,26 @@ the goal **`Vec`** with **`lwz`/`stw`**, then **`fcmpu`** zero-X/Z before **`MsV
 
 **Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged).
 
+### R262 (Aufgabe B; expanded defer list + opcode/data probes, 0× ship)
+
+**Hunt.** Post-R261 dry; **defer `EffectObjBase`**, **`SMS_IsMarioOnWire`**, **`getEmitPosDir`**, TamaNoko/Telesa **`isReachedToGoal`** thrash, spill-only **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; prefer other opcode/data/PARAM/vtable wins; **`ninja baseline`** + **`changes_all`**; cap ~8; strict 100% only.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8).**
+
+- **`TGraphWeb::startIsEnd`**: **98.8%** baseline — **`r4`/`r5`** swap on rail loads; **`TGraphNode* r4` / `TRailNode* r5`** + **`||`** kept retail branches but **`r4[r3].unk0`** became **`add`/`lwz -0x10`** vs retail **`lwzx`** (94.2%); split **`||`** into early **`return false`** inverted **`bgt`** targets (86%); reverted to **`getFirstGraphNode`/`getLastGraphNode`**.
+- **`TBubbleCallBack::execute`**: **99.6%** — stack **`0x48`/`pos@0x30`** vs **`0x38`/`0x24`**; **`mFlag` bitmask** + **`trashAfterPos[0x10]`** broke **`checkFlag`** branch polarity (**85.8%**), reverted.
+- **`TDebuTelesa` `entry$2835`**: **85.7%** — **`static TModelDataLoadEntry entry[]`** (drop **`const`**) clears **`.ctors`** **`entry$2835`** but **`createModelData`** text → **99.2%**; reverted **`const`**.
+- **`TConductor::getManagerByName`**, **`TDangoHamuKuri::getTakingMtx`**, **`PakkunRootCallback2`**: spill / matrix stack (**≥99.5%** / frame class) — skipped.
+- **`TGraphGroup::perform`**: **96.8%** — peel loop **`r6`/`r7`** vs **`r5`/`r6`** (deferred).
+- **`TBossGesso::__vtable` (`.ctors` 99.3%)**, **`fireWanwan` `setQuat`**: float-register / **`.data`** label gap — not one-line MAP fixes.
+- **`TGessoPolluteObj::getNowGravity`**, spill-only **≥99.7%**: skipped.
+
+**Tip (R262).** **`TDebuTelesaManager::createModelData`**: retail **`entry$2835`** is a **non-const** function-local **`TModelDataLoadEntry[]`** in **`.rodata`**; dropping **`const`** can match the **24 B** pool while **`createModelData`** itself picks up **operand-only** drift — fix both together or neither.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9274**): **+0** (**9274** unchanged).
+
 ### R258 (Aufgabe B; defer GraphGroup/ColumSand pool + diversify, 0× ship)
 
 **Hunt.** Post-R257 dry; **defer `TGraphGroup::perform`** (empty **`TGraphWeb::perform` DCE**) and
