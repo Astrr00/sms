@@ -10920,6 +10920,32 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R229 (`MapObjBall`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TBigWatermelon::touchWaterSurface`.
+
+- `TBigWatermelon::touchWaterSurface` ruft `emitColumnWater` auf.
+  Danach `gpMSound->gateCheck(MSD_SE_OBJ_DRINA_TO_WATER)` und bei Erfolg `startSoundActor` an `&mPosition`.
+  Abschluss ist virtuelles `kill` (vtable `0xE4`).
+  `char trash[1]` hält Frame `-0x20`.
+  112 Bytes, 28 Instruktionen.
+  `TMapObjBall::makeObjDefault`, `put`, `touchPollution` und `__sinit_MapObjBall_cpp` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS.
+Schwache-Reihenfolge-Warnung und vier bestehende UNUSED-Größenwarnungen.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.04512 % -> 79.048134 %, matched code 49.769924 % -> 49.77304 % (1786784 -> 1786896, +112).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9600 -> 9601.
+`MapObjBall` 3060 -> 3172 (+112).
+Kein R170–R228-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R228 (`MapObjBianco`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

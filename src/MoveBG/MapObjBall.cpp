@@ -2,6 +2,8 @@
 #include <JSystem/J3D/J3DGraphAnimator/J3DModel.hpp>
 #include <JSystem/JDrama/JDRNameRefGen.hpp>
 #include <MarioUtil/PacketUtil.hpp>
+#include <MSound/MSound.hpp>
+#include <MSound/SoundEffects.hpp>
 #include <string.h>
 
 // rogue includes needed for matching sinit & bss
@@ -221,7 +223,16 @@ void TCoverFruit::loadAfter()
 		makeObjDead();
 }
 
-void TBigWatermelon::touchWaterSurface() { }
+void TBigWatermelon::touchWaterSurface()
+{
+	emitColumnWater();
+	if (gpMSound->gateCheck(MSD_SE_OBJ_DRINA_TO_WATER))
+		MSoundSESystem::MSoundSE::startSoundActor(
+		    MSD_SE_OBJ_DRINA_TO_WATER, &mPosition, 0, nullptr, 0, 4);
+	kill();
+	char trash[1];
+	trash[0] = 0;
+}
 
 void TBigWatermelon::touchWall(JGeometry::TVec3<f32>* param_1,
                                TBGWallCheckRecord* param_2)
