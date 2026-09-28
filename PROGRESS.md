@@ -11488,6 +11488,32 @@ als Member-Name. Check: **`decomp-diff -u … -t object -s nonmatching`**.
 **Verify.** `ninja changes_all` ggü. **`cf903cfc`**; **`namekuri` matched_data
 70.86% → 100%**; **`build.sha1` OK**.
 
+### R207 (Aufgabe B; sdata2/rodata literals + short-angle scale, 4× data)
+
+**Hunt.** `.sdata2` ULP / unfused operands; tiny 4 B objects; skip **DebuTelesa**,
+**koopajr** stubs; cap ~8.
+
+**Ship (data, 4).**
+
+- **`@3043`**, **`@3044`** (`DrawUtil`): `SMS_AddDamageFogEffect` — keep
+**`-400.0f`** / **`800.0f`** as separate pool loads (`fogStart * s - startBase * s`,
+not folded `(fogStart - startBase) * s`).
+- **`@2081`**, **`@2209`** (`CameraNotice`): `calcNoticeTargetYrot_` uses
+**`1.0f / 32768.0f`** for `ratio`; `getNoticeActor_` passes
+**`(f32)*gpMarioAngleY * 0.005493164f`** to `MsIsInSight` (not
+`DEG2SHORTANGLE` on s16 yaw).
+
+**Probes (~4, no-ship).** `ModelWaterManager` `@3757`/`@4740`; `MtxUtil` `@2551`;
+`tinkoopa` `@3000`; `tobiPuku` `forceLaunch` text still ~67%.
+
+**Tip (R207).** **`DEG2SHORTANGLE` on s16** is wrong for `MsIsInSight` sight yaw
+— retail **`short * (360/65536)`** (`@2209`). Short-angle magnitude → float via
+**`1/32768`** (`@2081`), not **`65536/360`**. Fog oscillation: **multiply-then-subtract**
+so MWCC does not fold **`±400`/`800`** away.
+
+**Verify.** `ninja changes_all` ggü. **`c3562f70`**; **`DrawUtil`** + **`CameraNotice`**
+data 100%; `@3043`–`@3044`, `@2081`, `@2209` 100%.
+
 ### R206 (Aufgabe B; JMA 16384/90 sdata2 + probes, 2× data)
 
 **Hunt.** `.sdata2` `@nnnn` 4 B scan (Enemy + Camera/Player/MarioUtil); skip

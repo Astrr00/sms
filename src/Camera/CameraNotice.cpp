@@ -107,8 +107,8 @@ TLiveActor* CPolarSubCamera::getNoticeActor_()
 		if (!inClipY)
 			continue;
 
-		if (!MsIsInSight(*gpMarioPos, DEG2SHORTANGLE(*gpMarioAngleY),
-		                 unk2A0[i]->mPosition, dist2,
+		f32 marioYawDeg = (f32)*gpMarioAngleY * 0.005493164f;
+		if (!MsIsInSight(*gpMarioPos, marioYawDeg, unk2A0[i]->mPosition, dist2,
 		                 mSaveNotice->mOnDegree.get(), -1.0f))
 			continue;
 
@@ -166,7 +166,7 @@ void CPolarSubCamera::calcNoticeTargetYrot_(const Vec& target)
 		int absAngle = ang - mCurrentTarget.mYaw >= 0
 		                   ? ang - mCurrentTarget.mYaw
 		                   : -(ang - mCurrentTarget.mYaw);
-		f32 ratio    = DEG2SHORTANGLE(1.0f) * (f32)absAngle;
+		f32 ratio    = (f32)absAngle * (1.0f / 32768.0f);
 
 		f32 chase;
 		if (dist2 > farClip2) {
