@@ -11321,6 +11321,37 @@ unverändert ggü. **`63f8cdc0`**.
 
 **Verify.** `ninja baseline` / `changes_all` ohne Code-Delta.
 
+### R189 (Aufgabe B; `emitGetWaterEffect` Arg-Order, 1 Vollmatch)
+
+**Hunt.** Weak/Header-Inlines + Scanner-Dry-Liste (≤3 Nicht-Spill-`~`, Cap ~8);
+`emitGetWaterEffect` vs. 100 % `emitGetEffect`; Caller-Retune nur bei Inline-Wachstum.
+
+**Skip (User + R187/R188).** Unverändert; `getRandomNextIndex`, `TNerveGessoTurn`,
+`startJumpWall`, `thinkSituation`, …
+
+**Scanner (tight 95–99,4 %, ≤400 B, Frame-Δ-Set, ≤3 Nicht-Spill-`~`).** **0** Treffer.
+
+**Probes (~8, revertiert / no-ship).** `toroccoEffect`: Entry-`trash[8]` → Frame OK,
+TVec3-Spill **+4** (0x60 vs 0x5c); `delta`-Local + `trashAfter` → **56 %**.
+`TBubbleCallBack::execute`: Entry-`trash[0x10]` → Frame **−0x50** vs Retail **−0x38**.
+`TNerveGessoTurn` / `isReachedToGoalXZ` (R188-Wiederholung): schlechter.
+`emitGetWaterEffect`: `(u8*)this+0x160` / direkter Call → **`mr r4,r3`** (82 %).
+
+**Vollmatch, strikt (`decomp-diff` 0× `~`/`|`/`</>`).**
+
+1. **`TMario::emitGetWaterEffect`** (`MarioParticle.cpp`) — vor dem Call
+`JGeometry::TVec3<f32>* unk160Ptr; unk160Ptr = &unk160;` erzwingt Retail-Reihenfolge
+(`addi r5,r3,0x160` vor `stw`/`li r4,0xf`/`stwu −8`/`li r7`). Keine Caller-Retune
+(nur `bl` aus `MarioReceiveMsg`).
+
+**Tip (R189).** Wenn ein kleiner Helfer **`mr r4,r3`** statt frühem **`addi r5,r3,0x160`**
+zeigt: **Adresse in zwei Statements** laden (`ptr = &member;` dann Call) — nicht nur
+Literal **`0xf`** oder **`(u8*)this+0x160`** im Call-Argument (MWCC-Reihenfolge).
+
+**Verify.** `decomp-diff` → **100,0 %** `emitGetWaterEffect`; `ninja baseline` /
+`changes_all`: **+1** Funktion (9259→9260), `mario/Player/MarioParticle` matched_code
+**82,52 %→83,11 %**.
+
 ### R188 (Aufgabe B; 95–99,4 % Scanner + `isEmitting`, 1 Vollmatch)
 
 **Hunt.** B-scope Enemy/Player `nonmatching` **95,0–99,4 %**, **≤400 B**, Frame-Δ
