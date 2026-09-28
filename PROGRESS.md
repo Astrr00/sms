@@ -11488,6 +11488,28 @@ als Member-Name. Check: **`decomp-diff -u … -t object -s nonmatching`**.
 **Verify.** `ninja changes_all` ggü. **`cf903cfc`**; **`namekuri` matched_data
 70.86% → 100%**; **`build.sha1` OK**.
 
+### R212 (Aufgabe B; Enemy manager vtable, 1× data)
+
+**Hunt.** Enemy/Player B-scope text+data; other TUs only for clear `.sdata2`
+literal wins; skip gesso/bossManta/bossgesso thrash; cap ~8.
+
+**Ship (data, 1).**
+
+- **`TRiccoHookManager::__vtable`** (`riccohook`, 84 B): drop spurious
+  **`virtual perform`** on the manager — retail slot is **`TEnemyManager::perform`**
+  (no **`perform__17TRiccoHookManager`** in MAP).
+
+**Probes (~6, no-ship).** Repo-wide **4 B `.sdata2`** scan dry post-R211;
+**`WaterGun` `@4827`** / **`Tongue` `@2843`** (`.ctors`); **`gesso`/`bossgesso`**
+text; **`Map` `@3705`**; **`CameraOption` `@1650`**.
+
+**Tip (R212).** If MAP has no out-of-line **`Class::method`** but the header
+declares an override, the vtable may still get a wrong slot — compare **`__vt__`**
+ASM to **`TEnemyManager`** / base thunks before chasing ctor tables.
+
+**Verify.** `ninja changes_all` ggü. **`31b88eed`**; **`riccohook` vtable 100%**;
+**`entry$2170` 100%**.
+
 ### R211 (Aufgabe B; `.sdata2` literals, 2× data)
 
 **Hunt.** B-scope Enemy/Player data+text first; other TUs for clear tiny pool
