@@ -67,9 +67,12 @@ void TEnemyAttachment::recoverScale()
 
 void TEnemyAttachment::bind()
 {
+	JGeometry::TVec3<f32> local_10;
+	TBGWallCheckRecord local_48;
 	JGeometry::TVec3<f32> local_1C = mPosition;
 	local_1C += mLinearVelocity;
 	local_1C += mVelocity;
+	char trash[0x10]; // matching: spill local_1C @0x5c
 	recoverScale();
 	mVelocity.y -= getNowGravity();
 	if (mVelocity.y < mVelocityMinY)
@@ -80,17 +83,18 @@ void TEnemyAttachment::bind()
 		mGroundHeight += 1.0f;
 	}
 
-	if (local_1C.y + mVelocity.y <= mGroundHeight)
+	f32 f31 = local_1C.y;
+	if (f31 + mVelocity.y <= mGroundHeight)
 		behaveToHitGround();
 	else
 		onLiveFlag(LIVE_FLAG_AIRBORNE);
 
-	TBGWallCheckRecord local_48(local_1C.x, local_1C.y + mHeadHeight, local_1C.z,
-	                            mBodyRadius * 2.0f, 1, 0);
+	local_48.set(local_1C.x, f31 + mHeadHeight, local_1C.z, mBodyRadius * 2.0f,
+	             1, 0);
 	if (gpMap->isTouchedWallsAndMoveXZ(&local_48))
 		behaveToHitWall(local_48.mResultWalls[0]);
 
-	JGeometry::TVec3<f32> local_10 = local_1C;
+	local_10                       = local_1C;
 	mPosition                      = local_1C;
 	local_10.sub(mPosition);
 	mLinearVelocity                = local_10;

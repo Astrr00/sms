@@ -12454,6 +12454,26 @@ scalar ctor over **`TVec3`** temp.
 
 **Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0** (**bind** fuzzy **78.5% → 82.9%**).
 
+### R272 (Aufgabe B; bind f31/frame/wall@0x30, 0× ship)
+
+**Hunt.** Post-R271 dry (**9275**); continue **`TEnemyAttachment::bind`**; skip Dango pad,
+**`setGoalPathFromGraph`** ctor thrash, spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8;
+strict **100%** only.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8).**
+
+- **`TEnemyAttachment::bind`**: **`f32 f31 = local_1C.y`** after **`checkGround`** + **`char trash[0x10]`** after
+  **`local_1C`** integrate + **`local_10`** / early **`local_48`** + **`local_48.set`** — **~85.5%** (was **~82.9%**);
+  retail **`stfd f31@0x70`**, **`-0x78`**, wall **`r1+0x30`** align; open: **`local_1C`** spill **`0x5c`** vs **`0x50`**,
+  **`TVec3::sub`** epilogue; component-wise integrate / **`trash[0x1c]`** / **`trash2[0xc]`** regressed or blew frame.
+
+**Tip (R272).** **`bind`**: **`f31`** reload after ground + **`trash[0x10]`** after position integrate unlocks **`-0x78`**
+/**`stfd f31`**; hoist **`TBGWallCheckRecord`** + **`local_48.set`** for **`0x30`** wall spills.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0** (**bind** fuzzy **82.9% → 85.5%**).
+
 ### R258 (Aufgabe B; defer GraphGroup/ColumSand pool + diversify, 0× ship)
 
 **Hunt.** Post-R257 dry; **defer `TGraphGroup::perform`** (empty **`TGraphWeb::perform` DCE**) and

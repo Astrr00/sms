@@ -152,6 +152,14 @@ spills better than **`TVec3 p` + record ctor**; epilogue still wants **`addi r3,
 **`TVec3::sub`** before **`mLinearVelocity@0x94`** (MWCC may fold when **`mPosition == nextPos`**).
 **`stfd f31`** / **`lfs f31, 0x60(r1)`** ground compare needs **`local_1C.y`** home at **`0x60`** on **`-0x78`**
 frame — not fixed by **`char pad[0x10]`** alone.
+After **`checkGround`**, assign **`f32 f31 = local_1C.y`** and use **`f31`** for ground/airborne and wall
+**`y + mHeadHeight`** — retail reloads **`f31`** from **`0x60(r1)`** and keeps it through **`TBGWallCheckRecord`**
+manual spills at **`r1+0x30`**.
+Declare **`JGeometry::TVec3<f32> local_10`** first ( **`addi r3, r1, 0x10`** epilogue) and
+**`TBGWallCheckRecord local_48`** before **`local_1C`**; **`local_48.set(...)`** matches **`0x30`** wall buffer better
+than a mid-function ctor.
+**`char trash[0x10]`** immediately after integrating **`local_1C`** (not before) helps **`-0x78`** with **`f31`** live;
+still open: **`local_1C`** spill **`0x5c`** vs **`0x50`**, explicit **`TVec3::sub`** vs folded **`fsubs`**.
 
 **`TEnemyAttachment::sendMessage`** walks **`mCollisions`** with **`lwz r3, 0x44(r29)`** then
 **`lwzx r4, r3, r31`** (byte offset in **`r31`**, index in **`r30`**). For collisions that are not Mario
