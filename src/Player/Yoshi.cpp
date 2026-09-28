@@ -52,6 +52,7 @@ BOOL YoshiHeadCtrl(J3DNode* param_1, int param_2)
 		const TWaterGun* waterGun = SMS_GetMarioWaterGun();
 		s16 angle                 = waterGun->getCurrentNozzle()->getGunAngle();
 		Mtx mtx;
+		char trashAfterMtx[4];
 		MsMtxSetRotRPH(mtx, 0.0f, 0.0f, SHORTANGLE2DEG(angle));
 		MTXConcat(J3DSys::mCurrentMtx, mtx, J3DSys::mCurrentMtx);
 	}
