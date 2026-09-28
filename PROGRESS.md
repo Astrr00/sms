@@ -12571,6 +12571,26 @@ retail order — need cue touched without a call (compare **`TEnemyAttachment::p
 
 **Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
 
+### R278 (Aufgabe B; PolluteModel pad/reg sweep, 0× ship)
+
+**Hunt.** Post-R277 dry (**9275**); **`TEnemyPolluteModel::perform`** (**~91.8%**, **`-0x80`**); defer **bind**/Dango/setGoal;
+spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%** only.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8).**
+
+- Split **`!unk5D` / `unk5C`** guards (retail shape): **~89.8%** — reverted.
+- **`trash[8]`** / **`0x28`–`0x40` sweep**: only **`trash[0x38]`** keeps **`stwu -0x80`**; smaller pads shrink frame; **`r30`/`r31`** swap on all sizes tried.
+- No trash pad: **`-0x48`** frame — reverted.
+- **`register u32 cue`**: no prologue change — reverted.
+- **`TEnemyPolluteModelManager::perform`** explicit **`f32`** temps before **`SetViewFrustumClipCheckPerspective`**: frame **`−0x70`** — reverted.
+- **`(void)graphics`** kept; retail body still has no **`graphics`** loads — no legit gfx hook found this round.
+
+**Tip (R278).** **`trash[0x38]`** and **`addi r31,r4` / `mr r30,r3`** decouple: **`-0x80`** needs the **`0x38`** pad, but the reg swap persists even when retail’s first insn is **`lbz …(r3)`** (same as attachment). Split early returns change branch opcodes vs retail — keep combined **`!unk5D || unk5C`**.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
 ### R258 (Aufgabe B; defer GraphGroup/ColumSand pool + diversify, 0× ship)
 
 **Hunt.** Post-R257 dry; **defer `TGraphGroup::perform`** (empty **`TGraphWeb::perform` DCE**) and

@@ -167,10 +167,12 @@ Open: **`local_10@0x10`** — decl-top **`trash[0x10]`** (before **`local_48`**)
 **`behaveToHitWall`**: retail **`lwz r12`** before **`mr r3`/`lwz r4, 0x4c(r1)`** — **`wallHit`** temp did not fix.
 
 **`TEnemyPolluteModel::perform`**: retail **`stwu -0x80`**, **`mr r30,r3`**, **`addi r31,r4,0`** (cue in **r31**).
-**`char trash[0x38]`** at prologue matches **`-0x80`**; **`r30`/`r31`** swap remains. Do not use dead **`cue`**
+**`char trash[0x38]`** at prologue matches **`-0x80`**; **`r30`/`r31`** swap remains even when retail’s first **`lbz`**
+uses **`r3`**. **`trash[8]`** shrinks the frame to **`-0x48`** / **`-0x50`** and does not fix the swap. Split
+**`!unk5D`** then **`unk5C`** returns regresses to **~89.8%** (branch shape). Do not use dead **`cue`**
 comparisons to steer regs — breaks **`addi r31,r4`**. **`#pragma dont_inline`** prologue **`bl`** on **`cue`/`graphics`**
 raises fuzzy **%** but emits **`addi r31,r3`** / extra **`bl`** — not a ship path. **`TEnemyAttachment::perform`**
-(**100%**, **`trash[8]`**) uses **`graphics`** on real paths; PolluteModel ignores **`graphics`** today.
+(**100%**, **`trash[8]`**, **`-0x30`**) uses **`graphics`** on real paths; PolluteModel ignores **`graphics`** today.
 
 **`TEnemyAttachment::sendMessage`** walks **`mCollisions`** with **`lwz r3, 0x44(r29)`** then
 **`lwzx r4, r3, r31`** (byte offset in **`r31`**, index in **`r30`**). For collisions that are not Mario
