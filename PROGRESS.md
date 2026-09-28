@@ -10920,6 +10920,39 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R254 (`MapObjCorona`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TBathtub::hipdrop`.
+
+- `unk29A` bricht ab.
+  `unk250 > unk16C->unk7C` bricht ebenfalls ab.
+  Zwei Referenzen auf den Trefferpunkt und `mInitialPosition` halten die XZ-Lasten in der Retail-Reihenfolge.
+  `!(lsq <= epsilon)` erzeugt `cror`+`beq` und ruft `inv_sqrt`.
+  Das Ergebnis bleibt unbenutzt.
+  Die Header-Inline faltet diesen Aufruf zu einem Compare, deshalb deklariert diese TU `TUtil` lokal und definiert `inv_sqrt` out-of-line.
+  `JGUtil.hpp` bleibt unverändert.
+  `unk7C` geht nach `unk250` und `unk254`, `unk90` nach `unk258` und `unk25C`.
+  `TNameRefGen::search("クッパ")` ruft `TKoopa::stagger(false)`.
+  `char trash[0x60]` hält das Frame bei `-0x98` (`r31` bei `r1+0x94`).
+  228 Bytes, 57 Instruktionen.
+  Dtor, `tumble`, `getNumGripsDead`, die Demo-Mtx-Getter, beide Grip-`receiveMessage` und beide `getRootJointMtx` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjCorona`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.14868 % -> 79.15492 %, matched code 49.88100 % -> 49.88736 % (1790772 -> 1791000, +228).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9626 -> 9627.
+`MapObjCorona` 824 -> 1052 (+228).
+Kein R170–R253-Unit hat matched code verloren.
+Nur `MapObjCorona` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R253 (`MapObjCorona`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

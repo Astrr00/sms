@@ -1,7 +1,88 @@
+// hipdrop calls inv_sqrt. The header body is inline and MWCC folds an
+// unused call down to a compare, so this TU sees a declaration only.
+// The guard is local: JGUtil.hpp itself stays untouched (its source
+// text is load-bearing for other TUs).
+#define JG_UTIL_HPP
+#include <dolphin/types.h>
+#include <math.h>
+namespace JGeometry {
+
+template <typename T> struct TUtil {
+	static T clamp(T value, T min, T max)
+	{
+		if (value < min)
+			return min;
+		if (value > max)
+			return max;
+		return value;
+	}
+
+	static T mod(T value, T modulus);
+};
+
+template <class T> T TUtil<T>::mod(T value, T modulus)
+{
+	return value % modulus;
+}
+
+template <> struct TUtil<f32> {
+#pragma dont_inline on
+	static f32 one() { return 1.0f; }
+#pragma dont_inline off
+	static f32 epsilon() { return 3.81469727e-06f; }
+	static f32 PI() { return 3.14159265358979323846f; }
+	static f32 halfPI() { return 1.5707963267948966f; }
+
+	static bool epsilonEquals(f32 param_1, f32 param_2, f32 eps)
+	{
+		return -eps <= param_2 - param_1 && param_2 - param_1 <= eps;
+	}
+
+	static bool epsilonEquals(f32 param_1, f32 param_2)
+	{
+		return -epsilon() <= param_2 - param_1
+		       && param_2 - param_1 <= epsilon();
+	}
+
+	static f32 clamp(f32 value, f32 min, f32 max)
+	{
+		if (value < min)
+			return min;
+		if (value > max)
+			return max;
+		return value;
+	}
+
+	static f32 sqrt(f32 mag)
+	{
+		if (mag <= 0.0f)
+			return mag;
+
+		f32 root = __frsqrte(mag);
+		return 0.5f * root * (3.0f - mag * (root * root)) * mag;
+	}
+
+	static f32 inv_sqrt(f32 mag);
+};
+
+} // namespace JGeometry
+
+#pragma dont_inline on
+f32 JGeometry::TUtil<f32>::inv_sqrt(f32 mag)
+{
+	if (mag <= 0.0f)
+		return mag;
+
+	f32 root = __frsqrte(mag);
+	return 0.5f * root * (3.0f - mag * (root * root));
+}
+#pragma dont_inline off
+
 #include "MoveBG/MapObjCorona.hpp"
 #include "MoveBG/MapObjBase.hpp"
 #include <M3DUtil/MActor.hpp>
 #include <JSystem/JMath.hpp>
+#include <JSystem/JDrama/JDRNameRefGen.hpp>
 
 // Incomplete: only getRootJointMtx is defined here. Not a TLiveActor
 // subclass, so this TU does not emit the grip vtable.
@@ -77,7 +158,51 @@ Mtx* TBathtubGrip::getRootJointMtx() const
 
 void TBathtub::loadAfter() { }
 
-void TBathtub::hipdrop(const JGeometry::TVec3<f32>&) { }
+// Incomplete. Timer fields copied into the bathtub on a hipdrop.
+class TBathtubParams {
+public:
+	/* 0x0 */ u8 pad[0x7C];
+	/* 0x7C */ s32 unk7C;
+	/* 0x80 */ u8 pad80[0x10];
+	/* 0x90 */ u32 unk90;
+};
+
+class TKoopa {
+public:
+	void stagger(bool);
+};
+
+void TBathtub::hipdrop(const JGeometry::TVec3<f32>& pos)
+{
+	if (unk29A != 0)
+		return;
+
+	if (unk250 > unk16C->unk7C)
+		return;
+
+	// Refs keep init.z loaded after the x subtract.
+	const JGeometry::TVec3<f32>& point = pos;
+	const JGeometry::TVec3<f32>& home  = mInitialPosition;
+	f32 dx = point.x - home.x;
+	f32 dz = point.z - home.z;
+	f32 zero = 0.0f;
+	f32 lsq = zero + dx * dx;
+	lsq += dz * dz;
+	if (!(lsq <= JGeometry::TUtil<f32>::epsilon()))
+		JGeometry::TUtil<f32>::inv_sqrt(lsq);
+
+	unk250 = unk16C->unk7C;
+	unk258 = unk16C->unk90;
+	unk25C = unk16C->unk90;
+	unk254 = unk16C->unk7C;
+
+	((TKoopa*)JDrama::TNameRefGen::search("クッパ"))->stagger(false);
+
+	// Dead slot so the frame stays at -0x98 (r31 at r1+0x94).
+	char trash[0x60];
+	trash[0] = 0;
+}
+
 
 void TBathtub::quake(const JGeometry::TVec3<f32>&) { }
 
