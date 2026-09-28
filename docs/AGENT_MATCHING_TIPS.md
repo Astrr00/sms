@@ -205,7 +205,7 @@ temp** both get DCE’d; assigning **`BOOL bckPass`** adds stack (**`−0x30`**)
 
 **`TSmallEnemy::changeMove`**: block-wait compare builds **`lfd` pairs** from **`lis 0x4330` + `xoris` on `mBlockWaitTime`**; **`fcmpo`** uses **`f0` vs `f6`** in that order. The **`mSLJumpForce`/`mSL*` `.sdata2` path** follows a **`lwz` from `this+0x178`**, not early param **`get()`** calls.
 
-**`TEnemyMario::consider`**: AI stick updates in the big **`mEMDoing` switch** use the same inlined sin/cos stick pattern as **`emWaiting`** (**`@4108`/`@4291` in `enemyMario.cpp` `.sdata2`**), not calls to **`setStickToAngle`**.
+**`TEnemyMario::consider`**: retail is a **`0x854`** **`mEMDoing` jump table** with **inlined case bodies** in one frame (**`−0x220`**), not **`switch` → `emWaiting()`/`emRunAway()`** calls. Stick paths inline **`JMASSin`/`JMASCos`×`@4108`×`@4291`**, **`fctiwz`**, and often **`neg`/`lhau`** on **`unk108` stick shorts** — same math as **`setStickToAngle`**, but no **`bl`** to it.
 
 **`TTamaNoko::isReachedToGoal`** (and **`TTelesa`**): retail inlines **`TPathNode`** at **`this+0x104`** — **`unk0` ? `unk0+0x10` : `&unk4`** — not an out-of-line **`getPoint()`** call; **`TVec3` assign from `mPosition`** breaks the **`addi r5,r4,4`** branch.
 
