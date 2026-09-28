@@ -12,7 +12,7 @@ class MActor;
 
 class TFerrisWheel : public TMapObjBase {
 public:
-	void becomeCalmlyCallback(u32, u32);
+	s32 becomeCalmlyCallback(u32, u32);
 	void control();
 	void initMapObj();
 	TFerrisWheel(const char* name = "観覧車");

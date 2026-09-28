@@ -25,7 +25,19 @@ f32 TShellCup::mShellDamageRot = 45.0f;
 f32 TShellCup::mWaterOpenAccel = 5.0f;
 f32 TShellCup::mCloseAccel     = 3.5f;
 
-void TFerrisWheel::becomeCalmlyCallback(u32, u32) { }
+s32 TFerrisWheel::becomeCalmlyCallback(u32 param_1, u32)
+{
+	if (param_1 == 0) {
+		mState = 2;
+		MSound* sound = gpMSound;
+		if (sound->unk80 != nullptr) {
+			sound->unk80->setVolume(0.0f, 200, 0);
+			sound->unk80->setPitch(0.5f, 200, 0);
+		}
+		mStateTimer = 120;
+	}
+	return 0;
+}
 
 void TFerrisWheel::control() { }
 

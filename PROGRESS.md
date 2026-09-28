@@ -10920,6 +10920,33 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R219 (`MapObjPinna`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TFerrisWheel::becomeCalmlyCallback`.
+`TRevolvingFenceInner::setGroundCollision` und `TMapObjBall::hold` bleiben geparkt.
+
+- `TFerrisWheel::becomeCalmlyCallback` gibt `s32` zurück, passend zu `fireStartDemoCamera`.
+  Bei `param_1 == 0` setzt es `mState` auf 2.
+  Wenn `gpMSound->unk80` gesetzt ist, `setVolume(0.0f, 200, 0)` und `setPitch(0.5f, 200, 0)`.
+  Danach `mStateTimer = 120`.
+  Der lokale `MSound*` hält `gpMSound` in r31, Frame `-0x20`.
+  128 Bytes, 32 Instruktionen.
+  `__sinit_MapObjPinna_cpp` bleibt 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjPinna`: PASS.
+Sechs bestehende UNUSED-Größenwarnungen.
+`MapObjBase.hpp` unverändert.
+
+`ninja changes_all`: fuzzy 78.99749 % -> 79.000946 %, matched code 49.720898 % -> 49.724464 % (1785024 -> 1785152, +128).
+Matched data bleibt 65.24985 % (417815).
+Funktionen matched 9588 -> 9589.
+`MapObjPinna` 4448 -> 4576 (+128).
+Kein R170–R218-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R218 (`MapObjBianco`, `MapObjMare`, `MapObjRicco`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
