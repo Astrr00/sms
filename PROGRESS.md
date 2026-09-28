@@ -13012,6 +13012,25 @@ spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%
 
 **Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
 
+### R285p (Enemy/Player B; Bathtub optional + fresh TUs, 0× ship)
+
+**Hunt.** Optional **`TBathtubKillerManager::load`**; else fresh MAP; skip **R285 thrash**, spill **≥99.7%**, Closet/MoveBG; strict **100%** only.
+
+**Ship.** none.
+
+**Probes (~7, reverted).**
+
+- **`TBathtubKillerManager::load`**: **`unk38` `cmplwi`** before/after parent **`load`**, **`r30` `new`** — **~99.7%** (108B); **`−0x58`/`0x5c`** frame only — **`local_38[0x38]`** → **100%** validation, not shipped.
+- **`Kumokun` / `TQuat4::rotate`**: **~90.4%** (152B) — deferred.
+- **`hinokuri2` / `TNerveHino2Landing::execute`**: **~87.4%** (192B) — deferred.
+- **`gesso` / `TGessoManager::initSetEnemies`**: **~81.2%** (188B) — deferred.
+- **`namekuri` / `TNerveNameKuriLand::execute`**: **~83.9%** (144B) — deferred.
+- **`MarioParticle` / `TBubbleCallBack`**, **`conductor` / `getManagerByName`**: **~99.6%** spill — skipped.
+
+**Tip (R285p).** **`TBathtubKillerManager::load`**: epilogue **`lwz`/`cmplwi` on `unk38(r31)`** needs **`if (unk38 != nullptr) (void)unk38`** after **`stw r30`** — not **`== nullptr`**. **`−0x58`** still needs a separate frame fix (not **`r30` alone**).
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
 ### R258 (Aufgabe B; defer GraphGroup/ColumSand pool + diversify, 0× ship)
 
 **Hunt.** Post-R257 dry; **defer `TGraphGroup::perform`** (empty **`TGraphWeb::perform` DCE**) and
