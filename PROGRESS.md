@@ -12719,6 +12719,21 @@ spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%
 
 **Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
 
+**R285 (continued).** Six fresh Enemy/Player B-scope targets (MAP/asm); no strict ships.
+
+**Probes (~6).**
+
+- **`TEnemyMario::checkReturn`**: retail **`stwu −0xa0`**, manual **`getPoint`→`0x78`**, **`sqrtf`** distance vs **`1000.f` in `f31`**; **`mFlags & ILLEGAL`** not **`checkFlag`** — trial rewrite used **`std::sqrtf`/`Vec`** → **`−0x68`** frame / spill — **~19.6%** — reverted.
+- **`TEnemyMario::emJumping`**: retail inlines **`setStickToAngle`** (**`@4108`/`@4291`**, **`fctiwz` stick**); pollution path **`stamp` then `stw`/`sth` `mEMDoingTimer`/`mEMDoing`** not **`changeEMDoing`** — inline stick trial → **~89.5%** (was **~94.9%**) — reverted.
+- **`TMario::startJumpWall`**: retail **`addi r3,0x34`** + **`matan(normal.x, normal.z)`** not **`mMinY`**; MWCC may emit **`lfsu`** pair — **`mNormal`/`matan`** trial → **~96.8%** + **`−0x18`** frame — reverted.
+- **`TPakkun::perform`**: **`r29=this`/`r30=graphics`/`r31=view`** save order — **~93.7%** — deferred.
+- **`PakkunSeedCallback`**: **`−0xa0`** matrix locals, **`@5342`/`@3450`/`@4061` `.sdata2`**, no **`r31`** spill — **~88.7%** — deferred.
+- **`TNerveTamaNokoThrown::execute`**: throw-power / sin-cos scheduling vs **`0x378`/`0x364` loads** — **~75.9%** — deferred.
+
+**Tip (R285 cont.).** **`checkReturn`**: match retail loop flag **`li r31,1`** + in-place **`gpMarioPos`** **`fsubs`** order (Mario **Y/Z loads after first `fsubs`**); avoid **`TVec3::distance`**. **`emJumping`**: don’t call **`setStickToAngle`** — duplicate **`JMASSin`/`JMASCos`×64×power`** in-body. **`startJumpWall`**: **`matan(mNormal.x, mNormal.z)`** via **`&mWallPlane->mNormal`** offset **0x34**, not **`getNormal()`/`mMinY`**.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
 ### R258 (Aufgabe B; defer GraphGroup/ColumSand pool + diversify, 0× ship)
 
 **Hunt.** Post-R257 dry; **defer `TGraphGroup::perform`** (empty **`TGraphWeb::perform` DCE**) and
