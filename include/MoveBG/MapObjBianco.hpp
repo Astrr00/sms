@@ -123,6 +123,10 @@ public:
 	virtual void setGroundCollision();
 	virtual u32 touchWater(THitActor*);
 	TBiancoWatermillVertical(const char* name = "水車（ビアンコ垂直）");
+
+public:
+	/* 0x138 */ f32 unk138;
+	/* 0x13C */ f32 unk13C;
 };
 
 class TBiancoWatermill : public TMapObjBase {

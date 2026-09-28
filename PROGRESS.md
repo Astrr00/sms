@@ -10920,6 +10920,49 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R197 (`MapObjMonte` / `MapObjRicco` / `MapObjPinna` / `MapObjBianco`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+Acht kurze Fills ohne `ble`/`bge`/`lfsu` und ohne `SMatrix34C`-Leer-Konstruktor.
+`TGoalWatermelon::load` und `TChangeStageMerrygoround::calc` bleiben geparkt.
+Zurückgenommen, nur Frame (kein Strukturfehler):
+`TMapObjMonteRoot::initMapObj` (`-0x20` statt `-0x18`),
+`TJumpMushroom::load` (`-0x28` statt `-0x20`),
+`TFenceWater::changeStatusToGo` und `TFenceWaterH::changeStatusToGo` (`-0x20` statt `-0x18`).
+
+- `THangingBridgeBoard::calcDefaultMtx` baut RotX/RotY, `MTXConcat`, kopiert in `mDefaultMtx`, nullt `mVelocity.y` und setzt `mPosition.y` auf `mInitialPosition.y`.
+  104 Bytes, 26 Instruktionen.
+- `THangingBridgeBoard::initMapObj` ruft `TLeanBlock::initMapObj`, dann `unk140 = 0.01`, `unk144 = 0.02`, `unk148 = 0.08`.
+  68 Bytes, 17 Instruktionen.
+- `TFluff::kill` sendet `HIT_MESSAGE_UNK8` an `mHeldObject`, löscht den Zeiger und setzt `mState` auf 3.
+  92 Bytes, 23 Instruktionen.
+- `TCraneCargo::calc` ruft `updateRootMtxTrans` und `calcLeanMtx` auf `getAnmMtx(1)`.
+  68 Bytes, 17 Instruktionen.
+- `THorizontalViking::initMapObj` ruft `TMapObjBase::initMapObj`, setzt `unk138`/`unk13C`/`unk140` und ruft virtuell `reset`.
+  88 Bytes, 22 Instruktionen.
+- `TBalloonKoopaJr::touchActor` ruft virtuell `kill`.
+  44 Bytes, 11 Instruktionen.
+- `TAmiKing::bind` prüft `LIVE_FLAG_UNK10` und ruft dann `gpMap->checkGround`, sonst `TLiveActor::bind`.
+  88 Bytes, 22 Instruktionen.
+- `TBiancoWatermillVertical::load` liest `unk13C`, teilt durch 1000 und kopiert nach `unk138`.
+  96 Bytes, 24 Instruktionen.
+
+`validate-symbol-order` für Monte, Ricco, Pinna und Bianco: PASS.
+Dieselben UNUSED-Größenwarnungen wie zuvor.
+Kein neues Linkage- oder Order-Problem.
+
+`ninja changes_all`: fuzzy 78.73961 % → 78.75675 %, matched code 49.43923 % → 49.457283 % (1774912 → 1775560, +648).
+Matched data bleibt 65.18551 %.
+MapObjMonte matched code 2032 → 2296.
+MapObjPinna matched code 3056 → 3276.
+MapObjBianco matched code 3496 → 3592.
+MapObjRicco matched code 1952 → 2020.
+Kein R170–R196-Unit hat matched code verloren.
+`MarNameRefGen_MapObj` und `MapObjManager` unverändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R196 (`MapObjMonte` / `MapObjMamma` / `MapObjFence` / `MapObjPinna`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

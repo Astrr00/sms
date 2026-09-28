@@ -43,7 +43,13 @@ void TBiancoWatermillVertical::control() { }
 
 void TBiancoWatermillVertical::loadAfter() { }
 
-void TBiancoWatermillVertical::load(JSUMemoryInputStream&) { }
+void TBiancoWatermillVertical::load(JSUMemoryInputStream& stream)
+{
+	TMapObjBase::load(stream);
+	stream >> unk13C;
+	unk13C /= 1000.0f;
+	unk138 = unk13C;
+}
 
 TBiancoWatermillVertical::TBiancoWatermillVertical(const char* name)
     : TMapObjBase(name)

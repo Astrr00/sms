@@ -27,8 +27,8 @@ public:
 	THorizontalViking(const char*);
 
 public:
-	/* 0x138 */ u32 unk138;
-	/* 0x13C */ u32 unk13C;
+	/* 0x138 */ f32 unk138;
+	/* 0x13C */ f32 unk13C;
 	/* 0x140 */ f32 unk140;
 	/* 0x144 */ f32 unk144;
 	/* 0x148 */ f32 unk148;

@@ -1,4 +1,5 @@
 #include <MoveBG/MapObjRicco.hpp>
+#include <JSystem/J3D/J3DGraphAnimator/J3DModel.hpp>
 
 static JGeometry::TVec3<f32> submarineCranePos_forSound(1956.0f, 1000.0f,
                                                         6425.0f);
@@ -30,7 +31,11 @@ void TCraneCargo::control()
 	TMapObjBase::control();
 }
 
-void TCraneCargo::calc() { }
+void TCraneCargo::calc()
+{
+	updateRootMtxTrans();
+	calcLeanMtx(getModel()->getAnmMtx(1));
+}
 
 u32 TRiccoWatermill::touchWater(THitActor*) { return 0; }
 

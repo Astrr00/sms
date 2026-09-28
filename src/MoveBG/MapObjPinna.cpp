@@ -9,6 +9,7 @@
 #include <MSound/MSSetSound.hpp>
 #include <MSound/MSoundBGM.hpp>
 #include <System/Particles.hpp>
+#include <Map/Map.hpp>
 
 // -inline deferred: source order is the reverse of mario.MAP emission order.
 
@@ -40,7 +41,14 @@ void THorizontalViking::reset()
 		mState = 1;
 }
 
-void THorizontalViking::initMapObj() { }
+void THorizontalViking::initMapObj()
+{
+	TMapObjBase::initMapObj();
+	unk138 = 2500.0f;
+	unk13C = 0.0008f;
+	unk140 = 0.23f;
+	reset();
+}
 
 THorizontalViking::THorizontalViking(const char* name)
     : TMapObjBase(name)
@@ -134,7 +142,7 @@ void TChangeStageMerrygoround::touchPlayer(THitActor*) { }
 
 void TChangeStageMerrygoround::calc() { }
 
-void TBalloonKoopaJr::touchActor(THitActor*) { }
+void TBalloonKoopaJr::touchActor(THitActor*) { kill(); }
 
 void TBalloonKoopaJr::kill() { }
 
@@ -156,7 +164,14 @@ void TAmiKing::moveObject() { }
 
 void TAmiKing::calcRootMatrix() { }
 
-void TAmiKing::bind() { }
+void TAmiKing::bind()
+{
+	if (checkLiveFlag(LIVE_FLAG_UNK10))
+		gpMap->checkGround(mPosition.x, mPosition.y + mHeadHeight, mPosition.z,
+		                   &mGroundPlane);
+	else
+		TLiveActor::bind();
+}
 
 void TAmiKing::touchPlayer(THitActor*) { SMS_SendMessageToMario(this, 9); }
 

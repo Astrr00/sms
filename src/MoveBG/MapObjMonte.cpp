@@ -1,4 +1,5 @@
 #include <MoveBG/MapObjMonte.hpp>
+#include <dolphin/mtx.h>
 
 // rogue includes needed for matching sinit & bss
 #include <MSound/MSSetSound.hpp>
@@ -27,11 +28,27 @@ void THangingBridgeBoard::pushNeighbor(f32) { }
 
 void THangingBridgeBoard::control() { }
 
-void THangingBridgeBoard::calcDefaultMtx() { }
+void THangingBridgeBoard::calcDefaultMtx()
+{
+	Mtx rotX;
+	Mtx rotY;
+	makeRootMtxRotX(rotX);
+	makeRootMtxRotY(rotY);
+	MTXConcat(rotY, rotX, rotY);
+	mDefaultMtx.set(rotY);
+	mVelocity.y    = 0.0f;
+	mPosition.y    = mInitialPosition.y;
+}
 
 void THangingBridgeBoard::setGroundCollision() { }
 
-void THangingBridgeBoard::initMapObj() { }
+void THangingBridgeBoard::initMapObj()
+{
+	TLeanBlock::initMapObj();
+	unk140 = 0.01f;
+	unk144 = 0.02f;
+	unk148 = 0.08f;
+}
 
 THangingBridgeBoard::THangingBridgeBoard(const char* name)
     : TLeanBlock(name)
@@ -101,7 +118,14 @@ u32 TFluff::touchWater(THitActor*) { return 0; }
 
 void TFluff::move() { }
 
-void TFluff::kill() { }
+void TFluff::kill()
+{
+	if (mHeldObject != nullptr) {
+		mHeldObject->receiveMessage(this, HIT_MESSAGE_UNK8);
+		mHeldObject = nullptr;
+	}
+	mState = 3;
+}
 
 void TFluff::control() { }
 
