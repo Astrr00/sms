@@ -10920,6 +10920,33 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R293 (`MapObjMamma`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TGoalWatermelon::touchActor`.
+
+- `isState(1)` und Actor-Typ `0x400000D0`.
+  Der Actor landet in `unk13C`.
+  `setBck("watermelon_shrink")`.
+  `offMapObjFlag(MAP_OBJ_FLAG_UNK100)`.
+  `mVelocity` wird null.
+  `fireStartDemoCamera("スイカゴールカメラ", ...)`.
+  Danach `mState = 2`.
+  `char trash[4]` hält das Frame bei `-0x48`.
+  260 Bytes, 65 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMamma`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.3603 % -> 79.36743 %, matched code 50.131916 % -> 50.13916 % (1799780 -> 1800040, +260).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9665 -> 9666.
+`MapObjMamma` 6820 -> 7080 (+260).
+Kein R170–R292-Unit hat matched code verloren.
+
 ### R292 (`MapObjPinna`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

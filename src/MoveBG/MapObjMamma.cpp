@@ -17,6 +17,7 @@
 #include <MSound/MSoundBGM.hpp>
 #include <MoveBG/MapObjManager.hpp>
 #include <System/Particles.hpp>
+#include <System/MarDirector.hpp>
 
 // -inline deferred: source order is the reverse of mario.MAP emission order.
 
@@ -440,7 +441,23 @@ TSandBird::TSandBird(const char* name)
 
 void TWatermelon::control() { }
 
-void TGoalWatermelon::touchActor(THitActor*) { }
+void TGoalWatermelon::touchActor(THitActor* actor)
+{
+	char trash[4];
+	trash[0] = 0;
+	if (isState(1) && actor->isActorType(0x400000D0)) {
+		unk13C = (TMapObjBase*)actor;
+		unk13C->getMActor()->setBck("watermelon_shrink");
+		unk13C->offMapObjFlag(MAP_OBJ_FLAG_UNK100);
+		JGeometry::TVec3<f32> zero(0.0f);
+		unk13C->mVelocity = zero;
+		TMarDirector* director = gpMarDirector;
+		director->fireStartDemoCamera("スイカゴールカメラ", &unk13C->mPosition,
+		                              -1, 0.0f, true, nullptr, 0, nullptr,
+		                              JDrama::TFlagT<u16>(0));
+		mState = 2;
+	}
+}
 
 void TGoalWatermelon::control()
 {
