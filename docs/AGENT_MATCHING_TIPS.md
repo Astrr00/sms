@@ -211,6 +211,10 @@ temp** both get DCE’d; assigning **`BOOL bckPass`** adds stack (**`−0x30`**)
 
 **`TEnemyMario::checkController`**: horizontal dist uses **`fmadds`+`fcmpo`+`frsqrte` Newton** with a **`stfs`/`lfs` spill** before **`stfs`→`0x429c`**; stick tail matches **`emWaiting`** **`lis 0x4330`/`xoris`** pattern for analog dead-zone math.
 
+**`PakkunRootCallback2`**: retail **`stwu −0x90`** and **`stfs`**-builds a **`3×4` scale mtx** at **`r1+0x5c`** (**`@3450`/`@4061`**, **`fdivs 1.0f/unk1B8`**) before **`PSMTXConcat`** — not **`TRotation3f::setScale`** (**`−0x70`**).
+
+**`JGeometry::TRotation3::setQuat` (e.g. fireWanwan TU)**: **`f1`/`f2` register swap** on **`2.0f×quat` muls** and **`.sdata2` literal slots** — header **`// TODO: regswap`**; fix via **MAP-order pool + operand schedule**, not one-line C tweaks.
+
 **`TTamaNoko::isReachedToGoal`** (and **`TTelesa`**): retail inlines **`TPathNode`** at **`this+0x104`** — **`unk0` ? `unk0+0x10` : `&unk4`** — not an out-of-line **`getPoint()`** call; **`TVec3` assign from `mPosition`** breaks the **`addi r5,r4,4`** branch.
 
 **`TEnemyAttachment::sendMessage`** walks **`mCollisions`** with **`lwz r3, 0x44(r29)`** then
