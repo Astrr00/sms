@@ -13031,6 +13031,26 @@ spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%
 
 **Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
 
+### R285q (Enemy/Player B; defer Bathtub, 0× ship)
+
+**Hunt.** **~6** fresh MAP; **defer `TBathtubKillerManager::load` (`−0x58`)**; no frame fakematch pads; skip **R285 thrash**, spill **≥99.7%**, Closet/MoveBG; strict **100%** only.
+
+**Ship.** none.
+
+**Probes (~6).**
+
+- **`poihana` / `TNervePoihanaTrapped::execute`**: **~81.1%** (1232B) — deferred.
+- **`poihana` / `TPoiHana::walkBehavior`**: **~97.9%** (376B) — deferred.
+- **`gatekeeper` / `TNerveBGKDive::execute`**: **~97.4%** (520B) — deferred.
+- **`gatekeeper` / `TNerveBGKSleep::execute`**: **~98.2%** (756B) — deferred.
+- **`Kumokun` / `TQuat4::rotate`**: **~90.4%** (152B) — deferred.
+- **`hinokuri2` / `TNerveHino2Landing::execute`**: **~87.4%** (192B) — deferred.
+- **`enemy` / `TSpineEnemy::setGoalPathFromGraph`**: manual **`Vec`/`unkF4`** writes — **~29%** — reverted.
+
+**Tip (R285q).** **`TSpineEnemy::setGoalPathFromGraph`**: retail builds **`TPathNode`** at **`r1+0x38`** from **`getPoint(Vec*)` @ `r1+0x48`** then **`stw`** into **`unkF4`/`unk104`** — not **`TPathNode` assign** from **`TVec3` ctor** alone.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
 ### R258 (Aufgabe B; defer GraphGroup/ColumSand pool + diversify, 0× ship)
 
 **Hunt.** Post-R257 dry; **defer `TGraphGroup::perform`** (empty **`TGraphWeb::perform` DCE**) and

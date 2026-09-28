@@ -223,7 +223,9 @@ temp** both get DCE’d; assigning **`BOOL bckPass`** adds stack (**`−0x30`**)
 
 **`TEffectObjBase::perform`**: **`clrlwi. r4`** runs **before** **`stwu`** (draw-cue early path); **`stw r31`** only on the **non-trivial** path — not a uniform **`−0x20`** frame.
 
-**`TBathtubKillerManager::load`**: **`if (unk38 != nullptr) (void)unk38`** before parent **`load`**, **`TBathtubKillerParams* r30 = new …`**, **`unk38 = r30`**, then **`if (unk38 != nullptr) (void)unk38`** — gets **~99.7%** (both **`cmplwi`** clusters + **`mr r3,r31`**). Remaining gap is **`stwu −0x58`** / epilogue **`0x5c`** vs **`−0x20`/`0x24`**; **`char local_38[0x38]`** validates **100%** but is not retail C (frame-only fakematch).
+**`TBathtubKillerManager::load`**: defer **`−0x58`** frame (see R285p); opcode body **`unk38` `cmplwi` + `r30` `new`** is **~99.7%** without pads — do not ship **`local_38[0x38]`**.
+
+**`TSpineEnemy::setGoalPathFromGraph`**: retail **`−0x60`**, **`getPoint` into `r1+0x48`**, manual **`stw`** cluster **`0x38–0x44`**, then member **`stw`** to **`unkF4`/`unk104`** — **`TPathNode(local_48)` + assign** shrinks frame and regresses (~**29%** if forced to **`Vec`** writes without stack layout).
 
 **`TTamaNoko::isReachedToGoal`** (and **`TTelesa`**): retail inlines **`TPathNode`** at **`this+0x104`** — **`unk0` ? `unk0+0x10` : `&unk4`** — not an out-of-line **`getPoint()`** call; **`TVec3` assign from `mPosition`** breaks the **`addi r5,r4,4`** branch.
 
