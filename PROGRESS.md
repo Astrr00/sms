@@ -10920,6 +10920,31 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R286 (`MapObjMare`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TCogwheelScale::control`.
+
+- `unk148` wird auf `0` gesetzt.
+  Danach `TMapObjBase::control`.
+  Wenn `unk140 > 0`, wird `mWaterLeakSpeed` abgezogen.
+  `startSoundActorWithInfo` spielt `MSD_SE_OBJ_MR_TSUBO_WATER` mit `fabsf(unk140)`.
+  Negative Werte werden auf `0` geklemmt.
+  `char trash[4]` hält das Frame bei `-0x28`.
+  176 Bytes, 44 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMare`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.31652 % -> 79.32131 %, matched code 50.087463 % -> 50.09236 % (1798184 -> 1798360, +176).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9659 -> 9660.
+`MapObjMare` 4928 -> 5104 (+176).
+Kein R170–R285-Unit hat matched code verloren.
+
 ### R285 (`MapObjMare`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

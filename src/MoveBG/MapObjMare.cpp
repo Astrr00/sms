@@ -48,8 +48,21 @@ BOOL TCogwheelScale::receiveMessage(THitActor* sender, u32 message)
 
 void TCogwheelScale::touchPlayer(THitActor*) { }
 
-// control is fcmpo + ble. Left as a stub.
-void TCogwheelScale::control() { }
+void TCogwheelScale::control()
+{
+	unk148 = 0.0f;
+	TMapObjBase::control();
+	if (unk140 > 0.0f) {
+		unk140 -= mWaterLeakSpeed;
+		gpMSound->startSoundActorWithInfo(
+		    MSD_SE_OBJ_MR_TSUBO_WATER, &mPosition, nullptr, fabsf(unk140), 0,
+		    0, nullptr, 0, 4);
+		if (unk140 < 0.0f)
+			unk140 = 0.0f;
+	}
+	char trash[4];
+	trash[0] = 0;
+}
 
 TCogwheelScale::TCogwheelScale(const char* name)
     : TMapObjBase(name)
