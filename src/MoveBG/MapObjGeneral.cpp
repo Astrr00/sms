@@ -444,6 +444,15 @@ void TMapObjGeneral::checkRoofCollision(JGeometry::TVec3<f32>* param_1)
 		touchRoof(param_1);
 }
 
+// Frame pad. A direct local sits above the TVec3 temps and leaves them at
+// 0x2c; an inlined local is allocated in the temp region, below those copies.
+// 0x34 (not 0x38) lands the three copies on retail 0x60/0x6c/0x78.
+static inline void touchGroundFramePad()
+{
+	char trash[0x34];
+	trash[0] = 0;
+}
+
 void TMapObjGeneral::touchGround(JGeometry::TVec3<f32>* param_1)
 {
 	if (mMapObjData->mPhysical ? true : false) {
@@ -469,6 +478,7 @@ void TMapObjGeneral::touchGround(JGeometry::TVec3<f32>* param_1)
 		onLiveFlag(LIVE_FLAG_UNK10);
 		param_1->y = mGroundHeight;
 	}
+	touchGroundFramePad();
 }
 
 void TMapObjGeneral::checkGroundCollision(JGeometry::TVec3<f32>* param_1)

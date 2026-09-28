@@ -10920,6 +10920,24 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R175 (`TMapObjGeneral::touchGround`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+- Drei `TVec3`-Kopien von `mVelocity` lagen 0x38 zu tief (Frame `-0x60` statt
+  `-0x98`). Ein direktes `char trash[]` polstert über den Temps, nicht darunter.
+- `static inline touchGroundFramePad()` mit `char trash[0x34]` wird am
+  Funktionsende inlined: Slot landet in der Temp-Region, Kopien auf
+  `0x60`/`0x6c`/`0x78`, Frame `-0x98`. Store ist DCE, kein Extra-Symbol.
+
+0 Abweichungen, 472 Bytes, 118 Instruktionen.
+`decomp-diff -u mario/MoveBG/MapObjGeneral -d TMapObjGeneral::touchGround`: 100 %.
+
+R174 `perform`, R173 `startControlAnim`, R172 `TManhole::touchPlayer`,
+R171 `calcVelocity`, R170 `appearing` unverändert strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R174 (`TMapObjGeneral::perform`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
