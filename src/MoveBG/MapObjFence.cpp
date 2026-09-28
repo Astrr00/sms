@@ -2,6 +2,7 @@
 
 #include <Enemy/Conductor.hpp>
 #include <Enemy/Graph.hpp>
+#include <Map/MapCollisionManager.hpp>
 #include <MarioUtil/MathUtil.hpp>
 
 // rogue includes needed for matching sinit & bss
@@ -77,7 +78,25 @@ void TRevolvingFenceInner::control()
 
 void TRevolvingFenceInner::initMapCollisionData() { }
 
-void TRevolvingFenceInner::initMapObj() { }
+void TRevolvingFenceInner::initMapObj()
+{
+	if (strstr(unkF4, "bamboo") != nullptr)
+		unk138 = 1;
+
+	TMapObjBase::initMapObj();
+
+	if (fabsf(mRotation.x) < 1.0f && fabsf(mRotation.z) < 1.0f)
+		unk140 = 1;
+	else
+		unk140 = 0;
+
+	TMapCollisionManager* mgr = mMapCollisionManager;
+	Mtx mtx;
+	MsMtxSetTRS(mtx, mPosition, mRotation, mScaling);
+	TMapCollisionBase* col = mgr->unk8;
+	MTXCopy(mtx, col->unk20);
+	col->setUp();
+}
 
 void TFenceWater::draw() const { }
 

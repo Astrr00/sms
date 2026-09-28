@@ -10920,6 +10920,31 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R211 (`MapObjFence`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TRevolvingFenceInner::initMapObj` ohne `SMatrix34C`-Leer-Konstruktor.
+Zurückgenommen, ein `~`:
+`TRevolvingFenceInner::setGroundCollision` (Rumpf passt, Matrix-Slot `0x34` statt `0x38`).
+
+- `TRevolvingFenceInner::initMapObj` setzt `unk138` auf 1, wenn `strstr(unkF4, "bamboo")` trifft.
+  Danach `TMapObjBase::initMapObj()`.
+  `unk140` ist 1, wenn `fabsf` von Rotation X und Z beide kleiner als 1.0f sind, sonst 0.
+  `MsMtxSetTRS` aus Position, Rotation und Scale, `MTXCopy` auf `unk8->unk20`, dann virtuelles `setUp()`.
+  228 Bytes, 57 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjFence`: PASS.
+Bestehende Weak-Reihenfolge-Warnung, zwei UNUSED-Größenwarnungen.
+
+`ninja changes_all`: fuzzy 78.9331 % -> 78.93934 %, matched code 49.655384 % -> 49.661736 % (1782672 -> 1782900, +228).
+Matched data bleibt 65.2486 % (417807).
+Funktionen matched 9578 -> 9579.
+`MapObjFence` 2504 -> 2732 (+228).
+Kein R170-R210-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R210 (`MapObjMonte`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
