@@ -10920,6 +10920,36 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R280 (`MapObjBall`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TResetFruit::touchActor`.
+
+- `STATE_APPEARING`, `STATE_BREAKING` oder Zustand `0xC` beenden die Funktion.
+  Sonst, wenn der Zustand nicht `STATE_WAITING_TO_APPEAR` ist, läuft `TMapObjBall::touchActor`.
+  `MAP_OBJ_FLAG_UNK4000000`, ein Zustand ungleich `1` oder `LIVE_FLAG_UNK10` beenden die Funktion.
+  Ohne laufenden State-Timer geht `MAP_OBJ_FLAG_DISAPPEARING` an und virtuelles `getLivingTime` setzt `mStateTimer`.
+  `LIVE_FLAG_UNK10` geht aus.
+  `mState` wird `11`.
+  `char trash[0xC]` hält das Frame bei `-0x28`.
+  `#pragma dont_inline` auf dem leeren `TMapObjBall::touchActor` hält den `bl`.
+  308 Bytes, 77 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.28905 % -> 79.297516 %, matched code 50.047016 % -> 50.0556 % (1796732 -> 1797040, +308).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9653 -> 9654.
+`MapObjBall` 6508 -> 6816 (+308).
+Kein R170–R279-Unit hat matched code verloren.
+Nur `MapObjBall` hat matched code gewonnen.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R279 (`MapObjBall`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

@@ -60,7 +60,10 @@ u32 TMapObjBall::touchWater(THitActor*) { return 0; }
 
 void TMapObjBall::boundByActor(THitActor*) { }
 
+// Empty here. dont_inline keeps the qualified call in TResetFruit::touchActor.
+#pragma dont_inline on
 void TMapObjBall::touchActor(THitActor*) { }
+#pragma dont_inline off
 
 void TMapObjBall::calcCurrentMtx() { }
 
@@ -267,7 +270,33 @@ void TResetFruit::touchWaterSurface()
 
 u32 TResetFruit::touchWater(THitActor*) { return 0; }
 
-void TResetFruit::touchActor(THitActor*) { }
+void TResetFruit::touchActor(THitActor* param_1)
+{
+	// Dead slot so MWCC keeps the frame at -0x28.
+	char trash[0xC];
+	trash[0] = 0;
+	if (isState(TMapObjGeneral::STATE_APPEARING))
+		return;
+	if (isState(TMapObjGeneral::STATE_BREAKING))
+		return;
+	if (isState(0xC))
+		return;
+	if (!isState(TMapObjGeneral::STATE_WAITING_TO_APPEAR)) {
+		TMapObjBall::touchActor(param_1);
+		if (checkMapObjFlag(MAP_OBJ_FLAG_UNK4000000))
+			return;
+		if (!isState(1))
+			return;
+		if (checkLiveFlag(LIVE_FLAG_UNK10))
+			return;
+		if (!isStateTimerEngaged()) {
+			onMapObjFlag(MAP_OBJ_FLAG_DISAPPEARING);
+			mStateTimer = getLivingTime();
+		}
+		offLiveFlag(LIVE_FLAG_UNK10);
+		mState = 11;
+	}
+}
 
 void TResetFruit::touchGround(JGeometry::TVec3<f32>* param_1)
 {
