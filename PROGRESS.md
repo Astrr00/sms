@@ -11488,6 +11488,38 @@ als Member-Name. Check: **`decomp-diff -u … -t object -s nonmatching`**.
 **Verify.** `ninja changes_all` ggü. **`cf903cfc`**; **`namekuri` matched_data
 70.86% → 100%**; **`build.sha1` OK**.
 
+### R222 (Aufgabe B; small EP `.text` ASM patterns, 0× ship)
+
+**Hunt.** Post-**`8de329bc`**; diversify off dry **`@NNNN`** data hunts — prefer
+small Enemy/Player **`.text`** (trash/locals, load order, virtual **`blrl`**,
+**`createModelData`**); skip switch **`.rel`** like **`@4827`**; cap ~8.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, no-ship).**
+
+- **`TEffectObjBase::perform`** (90.8%, 88 B): retail **`stwu -0x20`**, **`stw
+  r31`**, **`blrl`** → **`moveObject`** @ vtable **+0xb0**; ours inlines direct
+  call + **`0x8`** frame — **`#pragma dont_inline`/`trash[0x18]`/`r31=cue`**
+  still **`0x8`** frame (reverted).
+- **`TGessoPolluteObj::getNowGravity`** (98.1%, 32 B): retail loads **`unk1E8`**
+  into **`r4`** before **`beqlr`**; **`getSaveParams()`** inline keeps **`r3`**
+  — **`unk1E8` direct + gravity-before-branch** still **`~r4`/`r3`** only.
+- **`SMS_IsMarioOnWire`** (93.8%, 72 B): needs **`mHolder`** in **`r0`** then
+  **`mario+0x68`→`r3`→`+0x4c`**; **`&&`/`!!ret`** unchanged (reverted rewrites).
+- **`TSmallEnemy::decHpByWater`**: **`r4`/`r5`** temps regressed to **92.4%**
+  (reverted).
+- **`TYoshi::getEmitPosDir`**: **`~r6`/`r3`** on mtx pointer only (operand).
+- **`TGraphGroup::perform`**: loop peel/unroll drift (88 B).
+- **`createModelData`**: all sampled managers **100%** except skipped **`bossgesso`**.
+
+**Tip (R222).** **`TEffectObjBase::perform`** is the template for “looks like tiny
+text, actually frame + virtual slot”: match **`clrlwi` → `stwu 0x20` → `stw r31`**
+*before* the **`CUE_MOVE`** branch, and keep **`moveObject`** out-of-line via
+vtable **`blrl`** — not a string/table fix.
+
+**Verify.** `ninja changes_all` ggü. **`8de329bc`** — **no diff**.
+
 ### R221 (Aufgabe B; EP data / MAP scan, 0× ship)
 
 **Hunt.** Post-**`855f960e`**; data/vtable/string/float/table or MAP **`virtual`**
