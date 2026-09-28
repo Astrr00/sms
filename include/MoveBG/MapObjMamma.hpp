@@ -4,6 +4,7 @@
 #include <MoveBG/MapObjBase.hpp>
 #include <MoveBG/MapObjEx.hpp>
 
+class TMapCollisionMove;
 class TMapObjGeneral;
 
 class TSandLeaf : public TMapObjBase {
@@ -199,8 +200,8 @@ public:
 	/* 0x138 */ u32 unk138;
 	/* 0x13C */ u32 unk13C;
 	/* 0x140 */ u32 unk140;
-	/* 0x144 */ u32 unk144;
-	/* 0x148 */ u32 unk148;
+	/* 0x144 */ TMapCollisionMove* unk144;
+	/* 0x148 */ TMapCollisionMove* unk148;
 };
 
 class TMammaYacht : public TMapObjBase {
@@ -211,6 +212,9 @@ public:
 	    : TMapObjBase(name)
 	{
 	}
+
+public:
+	/* 0x138 */ TMapObjBase* unk138;
 };
 
 class TSandBird : public TJointCoin {

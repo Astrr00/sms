@@ -10920,6 +10920,37 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R203 (`MapObjPinna` / `MapObjMamma`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+Vier kurze Fills ohne `SMatrix34C`-Leer-Konstruktor.
+Zurückgenommen, nur Frame:
+`TSandBase::withering` (Rumpf passt, Frame `-0x18` statt `-0x20`).
+
+- `TWaterRecoverObj::touchPlayer` reagiert auf `isActorType(0x80000001)`, solange der State-Timer nicht läuft, mit `HIT_MESSAGE_ATTACK` und setzt `mStateTimer` auf `0x258`.
+  144 Bytes, 36 Instruktionen.
+- `TShellCup::control` ruft `getMActor()->calc()` und dann `control` auf den sechs eingebetteten `TPinnaShell`.
+  `#pragma dont_inline` hält den leeren `TPinnaShell::control`-Stub als `bl`.
+  100 Bytes, 25 Instruktionen.
+- `TMammaBlockRotate::load` legt zwei `TMapCollisionMove` an, initialisiert sie mit `MammaBlockDown.col` und `MammaBlockUp.col` und ruft danach `TMapObjBase::load`.
+  200 Bytes, 50 Instruktionen.
+- `TMammaYacht::control` ruft `TMapObjBase::control`, prüft `mGroundPlane->isWaterSurface()`, setzt `mPosition.y` aus `mInitialPosition.y` plus `getWaveHeight` und legt `unk138->mPosition.y` um 50 tiefer.
+  160 Bytes, 40 Instruktionen.
+
+`validate-symbol-order` für Pinna und Mamma: PASS.
+Dieselben UNUSED-Größenwarnungen wie zuvor.
+
+`ninja changes_all`: fuzzy 78.83033 % -> 78.846695 %, matched code 49.533607 % -> 49.55043 % (1778300 -> 1778904, +604).
+Matched data bleibt 65.18551 %.
+Funktionen matched 9548 -> 9552.
+MapObjPinna matched code 3468 -> 3712.
+MapObjMamma matched code 5036 -> 5396.
+Monte, `MapObjManager` und `MarNameRefGen_MapObj` unverändert (matched code 2348).
+Kein R170-R202-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R202 (`MapObjRicco` / `MapObjBianco` / `MapObjMamma`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

@@ -1,6 +1,7 @@
 #define PINNA_EMIT_MOVEMTX
 #include <MoveBG/MapObjPinna.hpp>
 
+#include <M3DUtil/MActor.hpp>
 #include <Map/MapCollisionEntry.hpp>
 #include <MarioUtil/MathUtil.hpp>
 #include <Player/MarioAccess.hpp>
@@ -116,14 +117,23 @@ __declspec(weak) void TMapCollisionMove::moveMtx(MtxPtr mtx)
 	move();
 }
 
+// dont_inline: the retail body is large. The empty stub must stay a call
+// so TShellCup::control can match.
+#pragma dont_inline on
 void TPinnaShell::control() { }
+#pragma dont_inline off
 
 TPinnaShell::TPinnaShell(const char* name)
     : THitActor(name)
 {
 }
 
-void TShellCup::control() { }
+void TShellCup::control()
+{
+	getMActor()->calc();
+	for (int i = 0; i < 6; ++i)
+		unk138[i].control();
+}
 
 void TShellCup::attachCoin(TCoin*, int) { }
 
@@ -171,7 +181,13 @@ void TBalloonKoopaJr::load(JSUMemoryInputStream&) { }
 
 void TPinnaEntrance::loadAfter() { }
 
-void TWaterRecoverObj::touchPlayer(THitActor*) { }
+void TWaterRecoverObj::touchPlayer(THitActor* actor)
+{
+	if (actor->isActorType(0x80000001) && !isStateTimerEngaged()) {
+		actor->receiveMessage(this, HIT_MESSAGE_ATTACK);
+		mStateTimer = 0x258;
+	}
+}
 
 void TAmiKing::loadAfter()
 {

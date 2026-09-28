@@ -1,7 +1,10 @@
 #include <MoveBG/MapObjMamma.hpp>
 #include <MoveBG/MapObjBall.hpp>
+#include <MoveBG/MapObjWave.hpp>
 #include <JSystem/JDrama/JDRNameRefGen.hpp>
 #include <Map/Map.hpp>
+#include <Map/MapCollisionEntry.hpp>
+#include <Map/MapData.hpp>
 #include <string.h>
 
 // rogue includes needed for matching sinit & bss
@@ -281,7 +284,14 @@ void TMammaBlockRotate::control() { }
 
 void TMammaBlockRotate::initMapObj() { }
 
-void TMammaBlockRotate::load(JSUMemoryInputStream&) { }
+void TMammaBlockRotate::load(JSUMemoryInputStream& stream)
+{
+	unk144 = new TMapCollisionMove;
+	unk144->init("/scene/mapObj/MammaBlockDown.col", 0, this);
+	unk148 = new TMapCollisionMove;
+	unk148->init("/scene/mapObj/MammaBlockUp.col", 0, this);
+	TMapObjBase::load(stream);
+}
 
 TMammaBlockRotate::TMammaBlockRotate(const char* name)
     : TMapObjBase(name)
@@ -292,7 +302,15 @@ TMammaBlockRotate::TMammaBlockRotate(const char* name)
 {
 }
 
-void TMammaYacht::control() { }
+void TMammaYacht::control()
+{
+	TMapObjBase::control();
+	if (mGroundPlane->isWaterSurface()) {
+		mPosition.y = mInitialPosition.y
+		              + gpMapObjWave->getWaveHeight(mPosition.x, mPosition.z);
+		unk138->mPosition.y = mPosition.y - 50.0f;
+	}
+}
 
 void TMammaYacht::initMapObj() { }
 
