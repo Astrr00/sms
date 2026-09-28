@@ -147,8 +147,8 @@ public:
 	/* 0x168 */ f32 unk168;
 	/* 0x16C */ f32 unk16C;
 	/* 0x170 */ f32 unk170;
-	/* 0x174 */ u32 unk174;
-	/* 0x178 */ u32 unk178;
+	/* 0x174 */ f32 unk174;
+	/* 0x178 */ f32 unk178;
 	/* 0x17C */ u32 unk17C;
 	/* 0x180 */ JGeometry::TVec3<f32> unk180;
 	/* 0x18C */ JGeometry::TVec3<f32> unk18C;

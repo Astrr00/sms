@@ -1,5 +1,7 @@
 #include <MoveBG/MapObjFence.hpp>
 
+#include <Enemy/Conductor.hpp>
+#include <Enemy/Graph.hpp>
 #include <MarioUtil/MathUtil.hpp>
 
 // rogue includes needed for matching sinit & bss
@@ -98,7 +100,19 @@ void TRailFence::control() { }
 
 void TRailFence::initMapCollisionData() { TMapObjBase::initMapCollisionData(); }
 
-void TRailFence::load(JSUMemoryInputStream&) { }
+void TRailFence::load(JSUMemoryInputStream& stream)
+{
+	TMapObjBase::load(stream);
+	char name[0x40];
+	stream.readString(name, 0x40);
+	TGraphWeb* graph = gpConductor->getGraphByName(name);
+	if (graph != nullptr && graph->isDummy() == 0) {
+		unk13C->setGraph(graph);
+		unk13C->setTo(graph->findNearestNodeIndex(mPosition, 0xffffffff));
+	}
+	unk140   = 8.0f;
+	mGravity = 0.3f;
+}
 
 TRailFence::TRailFence(const char* name)
     : TFence(name)

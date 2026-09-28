@@ -10920,6 +10920,41 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R199 (`MapObjMamma` / `MapObjPinna` / `MapObjFence`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+Vier kurze Fills ohne `ble`/`bge`/`lfsu` und ohne `SMatrix34C`-Leer-Konstruktor.
+Zurückgenommen, nur Frame bzw. Stack-Slot (kein Strukturfehler im Ablauf):
+`TLampSeesaw::load` (Float bei `0x10` statt `0x14`, Frame beide `-0x20`),
+`TBiancoWatermillVertical::setGroundCollision` (`-0x28` statt `-0x20`),
+`TBalloonKoopaJr::kill` (`-0x20` statt `-0x18`),
+`TBigWatermelon::touchWaterSurface` (`-0x20` statt `-0x18`).
+
+- `TSandCastle::initMapObj` ruft `TSandBombBase::initMapObj` (leer, `#pragma dont_inline`, damit das `bl` bleibt), setzt `unk13C` auf 0.11 und `unk148` auf 0x78 und ruft `sleep`.
+  68 Bytes, 17 Instruktionen.
+- `TLeanMirror::initMapObj` setzt die Spiegel-Konstanten und verzweigt über `strcmp` von `unkF4` mit `mirrorS` bzw. `mirrorM`.
+  216 Bytes, 54 Instruktionen.
+- `TViking::initMapObj` setzt `unk14C`, unterscheidet `viking 0` per `getName`, zieht `unk138` von `mPosition.y` ab und ruft `TMapObjBase::initMapObj`.
+  192 Bytes, 48 Instruktionen.
+- `TRailFence::load` liest den Graph-Namen, hängt `unk13C` an den nächsten Knoten, wenn der Graph kein Dummy ist, und setzt `unk140` auf 8 sowie `mGravity` auf 0.3.
+  160 Bytes, 40 Instruktionen.
+
+`validate-symbol-order` für Mamma, Pinna und Fence: PASS.
+Dieselben UNUSED-Größenwarnungen wie zuvor.
+Fence behält eine weak-only Order-Warnung (`MsWrap`).
+
+`ninja changes_all`: fuzzy 78.77492 % → 78.7922 %, matched code 49.476 % → 49.493717 % (1776232 → 1776868, +636).
+Matched data bleibt 65.18551 %.
+Funktionen matched 9531 → 9535.
+MapObjMamma matched code 4576 → 4860.
+MapObjPinna matched code 3276 → 3468.
+MapObjFence matched code 1916 → 2076.
+Bianco, Ball, `MapObjManager` (7064) und `MarNameRefGen_MapObj` (2348) unverändert.
+Kein R170–R198-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R198 (`MapObjBianco` / `MapObjMamma` / `MapObjBall`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

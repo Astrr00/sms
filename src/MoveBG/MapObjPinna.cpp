@@ -4,6 +4,7 @@
 #include <Map/MapCollisionEntry.hpp>
 #include <MarioUtil/MathUtil.hpp>
 #include <Player/MarioAccess.hpp>
+#include <string.h>
 
 // rogue includes needed for matching sinit & bss
 #include <MSound/MSSetSound.hpp>
@@ -76,7 +77,27 @@ void TViking::loadAfter()
 	reset();
 }
 
-void TViking::initMapObj() { }
+void TViking::initMapObj()
+{
+	unk14C = 1;
+	if (strcmp(getName(), "viking 0") == 0) {
+		unk138 = 1400.0f;
+		unk13C = 0.001f;
+		unk154 = 1.001f;
+		unk158 = 0.999f;
+		unk140 = -0.3f;
+		unk150 = 0.3f;
+	} else {
+		unk138 = 1400.0f;
+		unk13C = 0.001f;
+		unk154 = 1.001f;
+		unk158 = 0.999f;
+		unk140 = 0.3f;
+		unk150 = 0.3f;
+	}
+	mPosition.y -= unk138;
+	TMapObjBase::initMapObj();
+}
 
 TViking::TViking(const char* name)
     : THorizontalViking(name)

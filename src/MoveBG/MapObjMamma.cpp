@@ -118,7 +118,10 @@ void TSandBombBase::loadAfter()
 	unk144->appear();
 }
 
+// Empty in this TU. dont_inline keeps the qualified call in TSandCastle::initMapObj.
+#pragma dont_inline on
 void TSandBombBase::initMapObj() { }
+#pragma dont_inline off
 
 TSandBombBase::TSandBombBase(const char* name)
     : TSandBase(name)
@@ -158,7 +161,13 @@ void TSandCastle::loadAfter()
 	unk158->makeObjDead();
 }
 
-void TSandCastle::initMapObj() { }
+void TSandCastle::initMapObj()
+{
+	TSandBombBase::initMapObj();
+	unk13C = 0.11f;
+	unk148 = 0x78;
+	sleep();
+}
 
 TSandCastle::TSandCastle(const char* name)
     : TSandBombBase(name)
@@ -195,7 +204,30 @@ void TLeanMirror::loadAfter() { }
 
 u32 TLeanMirror::getSDLModelFlag() const { return 0; }
 
-void TLeanMirror::initMapObj() { }
+void TLeanMirror::initMapObj()
+{
+	TMapObjBase::initMapObj();
+	unk158 = 0.03f;
+	unk15C = 0.999f;
+	unk160 = 0.0001f;
+	unk168 = 1.0f;
+	unk16C = 0.0002f;
+	unk170 = 0.0001f;
+	unk174 = 0.865f;
+	unk178 = 0.5f;
+	if (strcmp(unkF4, "mirrorS") == 0) {
+		unk164 = 0.002f;
+		unk168 = 1.0f;
+		unk174 = 0.87f;
+		unk19C = 1;
+	} else if (strcmp(unkF4, "mirrorM") == 0) {
+		unk164 = 0.004f;
+		unk19C = 2;
+	} else {
+		unk164 = 0.006f;
+		unk19C = 3;
+	}
+}
 
 void TLeanMirror::load(JSUMemoryInputStream&) { }
 

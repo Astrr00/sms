@@ -42,6 +42,12 @@ public:
 	void loadAfter();
 	void initMapObj();
 	TViking(const char* name = "バイキング");
+
+public:
+	/* 0x14C */ u32 unk14C;
+	/* 0x150 */ f32 unk150;
+	/* 0x154 */ f32 unk154;
+	/* 0x158 */ f32 unk158;
 };
 
 class TPinnaShell : public THitActor {

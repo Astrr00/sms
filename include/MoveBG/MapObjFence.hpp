@@ -3,6 +3,8 @@
 
 #include <MoveBG/MapObjBase.hpp>
 
+class TGraphTracer;
+
 // TODO: mark virtual methods as such
 
 class TFence : public TMapObjBase {
@@ -93,6 +95,10 @@ public:
 	void initMapCollisionData();
 	void load(JSUMemoryInputStream&);
 	TRailFence(const char* name = "レールフェンス");
+
+public:
+	/* 0x13C */ TGraphTracer* unk13C;
+	/* 0x140 */ f32 unk140;
 };
 
 #endif
