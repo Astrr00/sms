@@ -11321,6 +11321,41 @@ unverändert ggü. **`63f8cdc0`**.
 
 **Verify.** `ninja baseline` / `changes_all` ohne Code-Delta.
 
+### R194 (Aufgabe B; isReached Option A + frische TU, keine Vollmatches)
+
+**Hunt.** Option **A** (max 2): `isReachedToGoalXZ` Retail-Register (`r4`=node, `r5`=goal,
+`lwz r4,0(r5)`…); Option **B**: frische Enemy/Player (amenbo, namekuri, gesso, hamukuri,
+bosspakkun, MarioSwim/Special) außer R193 + Skips; Cap ~8; strikt 100 %.
+
+**Skip.** R193-Probes + R192 J3D/`isReached`-Familie; Prior (`getTakingMtx` war Skip — erneut
+probiert).
+
+**Option A (2 Versuche, revertiert).**
+
+1. `nodeAt104` + `unk104.unk0` + `lo`/`hi` `u32`-Kopie → **98,4 %** (`r4`/`r5`, Spill 0x10).
+2. `unk104.unk0` ohne `actor`-Local → **94,6 %** (schlechter).
+
+**Option B (~6, revertiert).**
+
+1. **`TGessoPolluteObj::getNowGravity`:** `gesso`/`saveParams`-Locals → **`r3` statt `r4`** für
+`0x1e8` (32 B, kein Frame).
+2. **`TNerveNKFollowMario::execute`:** `trash[0x10]` → Frame **−0x58** OK, inlined `setGoalPath`
+Spill bleibt **0x2c** vs **0x3c**.
+3. **`THamuKuri::jumpToSearchActor`:** `trash[0x10]` → Frame **−0x68** OK, `TVec3`-Spill **+0xc**.
+4. **`TDangoHamuKuri::getTakingMtx`:** `trash[8]`+`trash[0]=0` → Frame **−0xb0** OK, `TPosition3f`/
+`Mtx` **+8**; `mtxPad` verschlechtert.
+5. **`TAmenbo::calcRootMatrix`:** `trash[4]` vor `TPosition3f` → Frame **−0x98** (overshoot).
+6. **`TNerveDoroHaneHitWater`:** nur Diff-Check (Frame **−0x50** vs **−0x48**).
+
+**Vollmatch, strikt.** keine (letzter Ship: R189 `emitGetWaterEffect`).
+
+**Tip (R194).** **`isReachedToGoalXZ`:** zwei `r4`/`r5`-Rollen + **`lwz`/`stw`-Paar** in C ohne
+Out-of-line-Helfer nicht steuerbar (2× stuck → stop). **`getTakingMtx`-Klasse:** Entry-`trash[8]`
+mit **`trash[0]=0`** fixt nur **Frame**; **`TPosition3f`/`Mtx`** braucht separaten **+8 B Slot-Pad**
+(zwischen `fVar2` und `pos`), nicht zweites Entry-Pad — analog R192 J3D-`Mtx`-Rest.
+
+**Verify.** `ninja baseline` / `changes_all` ohne Code-Delta ggü. **`49999ccc`**.
+
 ### R193 (Aufgabe B; non-J3D +0x10 helpers, keine Vollmatches)
 
 **Hunt.** R192-Scanner (59 Treffer); **Enemy/Player**, kein `*Ctrl`; exaktes Frame-Δ ohne
