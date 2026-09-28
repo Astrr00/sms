@@ -12776,6 +12776,25 @@ spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%
 
 **Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
 
+### R285d (Enemy/Player B; skip SmallEnemyJump + R285 thrash, 0× ship)
+
+**Hunt.** Skip **TNerveSmallEnemyJump**, R285–R285c thrash, spill **≥99.7%**, Closet/MoveBG; strict **100%** only.
+
+**Ship.** none.
+
+**Probes (~6).**
+
+- **`TSmallEnemy::changeMove`**: **`lis 0x4330`** double-float temps; retail **`fcmpo f0,f6`** vs swapped operands; mid-body **`lwz 0x178`** before **`.sdata2`** loads — **~94.2%** — deferred.
+- **`TTamaNokoManager::initSetEnemies`**: retail loop **`stwu −0xe0`/`stw` part @`0x84`** vs compact **`−0x38`** — **~97.0%** — deferred.
+- **`TCommonLauncher::init`**: **`rand`→`xoris`/`lfd`** vs **`lwz 0x168` load order** after **`MAnmSound`** setup — **~98.1%** — deferred.
+- **`TNerveFireWanwanFly::execute`**: **`−0x100`** sin/`TVec3::set` stack **`0xc4`** — **~96.5%** — deferred.
+- **`GessoBodyCallback`**: **`gpCurGesso`/`getModel`/`mulli`** scheduling + **`0x148` scale** before matrix **`@3420`** — **~85.5%** — deferred.
+- **`TEnemyMario::emReplayJumpToNearestNode`**: **`−0x2c0`** graph walk; **`stmw r20`** / extra **`f26–f27`** — **~93.6%** — deferred.
+
+**Tip (R285d).** **`changeMove`**: keep **`TSmallEnemyManager::mBlockWaitTime` `xoris`** pair on stack before **`fsubs`/`fcmpo`**; don’t hoist **`mSL*` param loads** ahead of the **`0x178`** field load retail uses in the **`f1`/`f2` branch**.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
 ### R258 (Aufgabe B; defer GraphGroup/ColumSand pool + diversify, 0× ship)
 
 **Hunt.** Post-R257 dry; **defer `TGraphGroup::perform`** (empty **`TGraphWeb::perform` DCE**) and
