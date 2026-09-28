@@ -12957,6 +12957,42 @@ spill **≥99.7%**, stuck lists, empty TUs, Closet/MoveBG; cap ~8; strict **100%
 
 **Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
 
+### R285m (Enemy/Player B; ≤200B opcode, 0× ship)
+
+**Hunt.** **≤200B** with **opcode** diffs (not **99.6% spill**); skip **R285–R285l thrash**, Pakkun/**`emWaiting`/`checkSink` pool**, Closet/MoveBG; strict **100%** only.
+
+**Ship.** none.
+
+**Probes (~6).**
+
+- **`TYoshi::getEmitPosDir`**: keep **`anmMtx` in `r6`** for column **`lfs`** — **~97.1%** (76B) — deferred.
+- **`TGraphWeb::startIsEnd`**: graph walk **`r4`/`r5` node ptr** schedule — **~98.8%** (120B) — deferred.
+- **`TEffectObjBase::perform`**: **`clrlwi`/`stwu`** prologue order — **~90.8%** (88B) — deferred.
+- **`TGraphGroup::perform`**: loop counter **`r6`/`r7` vs `r5`/`r6`** — **~96.8%** (88B) — deferred.
+- **`TNerveNameKuriLand::execute`**: cache **`r31` live actor** before anim checks — **~83.9%** (144B) — deferred.
+- **`TBathtubKillerManager::load`**: pre-**`TSmallEnemyManager::load`** **`unk38` null test** — **~81.0%** (108B) — deferred.
+
+**Tip (R285m).** **`TYoshi::getEmitPosDir`**: after **`getAnmMtx`**, retail keeps the matrix base in **`r6`** for every **`lfs` offset** — don't **`lwz r3`** and reuse **`r3`** mid-function.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
+### R285n (Enemy/Player B; R285m follow-up, 0× ship)
+
+**Hunt.** Re-probe **R285m** short opcode targets; strict **100%** only; gate **`matched_functions`**.
+
+**Ship.** none.
+
+**Probes (~4, reverted).**
+
+- **`TYoshi::getEmitPosDir`**: **`void* r6`** **`mActor→+4→+0x58`** + **`idx*0x30`** walk — still **~97.1%** (**`lwz r3,4(r6)`**).
+- **`TGraphWeb::startIsEnd`**: split **`mConnectionNum`** / conn checks (early **`return false`**) — **~86%** (inverted **`bgt`/`ble`** vs retail).
+- **`TGraphGroup::perform`**: empty **`for` body** (DCE) — still **~96.8%** (**`r6`/`r7`** vs **`r4`/`r5`** on **`unk4`**).
+- **`TEffectObjBase::perform`**: **`dont_inline`** + empty **`cue`** brace — **~90.8%** unchanged (**`−0x8`** vs **`−0x20`/`r31`**).
+
+**Tip (R285n).** **`TGraphGroup::perform`**: retail is **DCE'd** (no **`bl`** to **`TGraphWeb::perform`**); empty **`for`** is right semantics, but match wants **`unk4` in `r6`** and peel counter in **`r7`** — a scalar **`int n = unk4`** loop uses **`r4`/`r5`**.
+
+**Verify.** `ninja changes_all` ggü. baseline (**9275**): **+0**.
+
 ### R258 (Aufgabe B; defer GraphGroup/ColumSand pool + diversify, 0× ship)
 
 **Hunt.** Post-R257 dry; **defer `TGraphGroup::perform`** (empty **`TGraphWeb::perform` DCE**) and
