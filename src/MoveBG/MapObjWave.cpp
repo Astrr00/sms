@@ -1,5 +1,6 @@
 #include <MoveBG/MapObjWave.hpp>
 
+#include <System/MarDirector.hpp>
 #include <JSystem/JUtility/JUTColor.hpp>
 
 TMapObjWave* gpMapObjWave;
@@ -12,7 +13,10 @@ static JUtility::TColor sColor;
 
 // -inline deferred: source order is the reverse of mario.MAP emission order.
 
+// dont_inline: stub body. Without the pragma, MWCC inlines it into perform.
+#pragma dont_inline on
 void TMapObjWave::initDraw() { }
+#pragma dont_inline off
 
 void TMapObjWave::getMoveTexPos1(float) const { }
 
@@ -38,15 +42,38 @@ void TMapObjWave::noWave()
 
 void TMapObjWave::getAlpha(float, float) const { }
 
+// dont_inline: stub bodies. Without the pragma, MWCC inlines them into perform.
+#pragma dont_inline on
 void TMapObjWave::draw() { }
 
 void TMapObjWave::updateHeightAndAlpha() { }
 
 void TMapObjWave::updateTime() { }
+#pragma dont_inline off
 
 void TMapObjWave::movement() { }
 
-void TMapObjWave::perform(u32, JDrama::TGraphics*) { }
+void TMapObjWave::perform(u32 cue, JDrama::TGraphics*)
+{
+	if (!unk94)
+		return;
+
+	if (cue & CUE_MOVE) {
+		updateTime();
+		u8 map = gpMarDirector->getCurrentMap();
+		if (map == 4 || map == 6)
+			updateHeightAndAlpha();
+	}
+
+	if (cue & CUE_DRAW) {
+		initDraw();
+		draw();
+	}
+
+	// Dead slot so the frame stays at -0x40 (r31 at r1+0x3c).
+	char trash[0x18];
+	trash[0] = 0;
+}
 
 void TMapObjWave::load(JSUMemoryInputStream&) { }
 

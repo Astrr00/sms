@@ -42,6 +42,8 @@ public:
 	/* 0x38 */ f32 unk38;
 	/* 0x3C */ f32 unk3C;
 	/* 0x40 */ f32 unk40;
+	/* 0x44 */ u8 unk44[0x50];
+	/* 0x94 */ void* unk94;
 };
 
 #endif
