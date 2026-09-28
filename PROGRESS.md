@@ -10920,6 +10920,31 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R214 (`MapObjFence`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TRevolvingFenceInner::initMapCollisionData` ohne `SMatrix34C`-Leer-Konstruktor.
+`setGroundCollision` bleibt geparkt.
+
+- `TRevolvingFenceInner::initMapCollisionData` legt `new TMapCollisionManager(1, "mapObj", this)` an.
+  Wenn `fabsf` von Rotation X und Z beide kleiner als 80 sind, `init("fence_revolve_inner_v_tool", 1, nullptr)`, sonst `init("fence_revolve_inner_h_tool", 1, nullptr)`.
+  `fcmpo`+`bge` ist das natürliche `<`.
+  176 Bytes, 44 Instruktionen.
+  `initMapObj`, `TFence::initMapObj` und `__sinit_MapObjFence_cpp` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjFence`: PASS.
+Bestehende Weak-Reihenfolge-Warnung, zwei UNUSED-Größenwarnungen.
+`MapObjBase.hpp` unverändert.
+
+`ninja changes_all`: fuzzy 78.95292 % -> 78.95772 %, matched code 49.675552 % -> 49.680454 % (1783396 -> 1783572, +176).
+Matched data bleibt 65.2486 % (417807).
+Funktionen matched 9581 -> 9582.
+`MapObjFence` 2732 -> 2908 (+176).
+Kein R170-R213-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R213 (`MapObjBianco`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

@@ -76,7 +76,14 @@ void TRevolvingFenceInner::control()
 		controlGroundRoof();
 }
 
-void TRevolvingFenceInner::initMapCollisionData() { }
+void TRevolvingFenceInner::initMapCollisionData()
+{
+	mMapCollisionManager = new TMapCollisionManager(1, "mapObj", this);
+	if (fabsf(mRotation.x) < 80.0f && fabsf(mRotation.z) < 80.0f)
+		mMapCollisionManager->init("fence_revolve_inner_v_tool", 1, nullptr);
+	else
+		mMapCollisionManager->init("fence_revolve_inner_h_tool", 1, nullptr);
+}
 
 void TRevolvingFenceInner::initMapObj()
 {
