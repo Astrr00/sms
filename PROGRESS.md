@@ -11488,6 +11488,39 @@ als Member-Name. Check: **`decomp-diff -u … -t object -s nonmatching`**.
 **Verify.** `ninja changes_all` ggü. **`cf903cfc`**; **`namekuri` matched_data
 70.86% → 100%**; **`build.sha1` OK**.
 
+### R221 (Aufgabe B; EP data / MAP scan, 0× ship)
+
+**Hunt.** Post-**`855f960e`**; data/vtable/string/float/table or MAP **`virtual`**
+fix; **defer `DebuTelesa` `bastable`**; cap ~8; same skip list (+ **empty
+`koopajr`/`limitkoopajr`/`tinkoopa`** scaffolding).
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, no-ship).**
+
+- **EP objects ≥95% ≤128 B:** **dry** (same as R220).
+- **EP objects ≥80% ≤128 B:** **`bgtentacle` `@4448`** (81.8%, **`.rel`** in
+  **`moveConstraint`**); **`bossgesso` `@6268`/`idxarray$3450`** (pool order);
+  **`Player/Yoshi` `@3802`** (36 B, **`movement`** switch **`.rel`**).
+- **`TBossGesso::__vtable` (`.ctors` 99.3%):** **`.data` `__vt__10TBossGesso`**
+  still **0x114 B** both sides — objdiff **`.ctors`** label gap (R215); whole
+  **`.data`** section size still differs (1272 vs 1680 B) — not a one-slot MAP
+  **`virtual`** fix.
+- **`TBossGessoManager::createModelData`:** **99.2%** — **`entry$1840`** vs retail
+  **`entry$3707`** (TU static emission order).
+- **`enemyMario` `@4674`:** **60.7%** / 112 B — **`consider`** jump table
+  **`.rel`**, not literals.
+- **`TGraphWeb::startIsEnd` / `TGessoPolluteObj::getNowGravity`:** **98%+** register
+  / branch-target drift — stack-thrash class.
+- **`effectObj` / `MarioCap` / `bgtentacle` vtables:** objects **100%**; MAP
+  bogus-**`virtual`** scan unchanged.
+
+**Tip (R221).** **`@4448`/`@3802`/`@4674`** are **switch jump tables** (**.rel** in
+**`.ctors`/`.data`**), not string/float pools — treat like **`WaterGun` `@4827`**
+(control-flow emission), not R212 header edits.
+
+**Verify.** `ninja changes_all` ggü. **`855f960e`** — **no diff**.
+
 ### R220 (Aufgabe B; DebuTelesa closure + EP scan, 0× ship)
 
 **Hunt.** Post-**`da7dab8a`**; prefer data/vtable/string; **`DebuTelesa`** only with
