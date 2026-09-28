@@ -10920,6 +10920,37 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R251 (`MapObjWave`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjWave::updateTime`.
+
+- Vier Wrap-Adds, Blatt ohne Frame.
+  `unk64 += unk24` und `unk68 += unk28` ziehen `6.28318f` ab, wenn der Wert größer ist.
+  `6.28318f` ist `@2730` (`0x40c90fd0`).
+  `unk6C` und `unk70` ziehen `1.0f` von `unk60` ab, wenn der Wert größer ist.
+  Der letzte Vergleich ist `blelr`.
+  `>` erzeugt `fcmpo` + `ble`.
+  `#pragma dont_inline` bleibt, damit `perform` den `bl` behält.
+  164 Bytes, 41 Instruktionen.
+  Dtor, `perform`, `noWave`, `getHeight`, `getWaveHeight` und `__sinit_MapObjWave_cpp` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjWave`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+`MarNameRefGen_MapObj` matched code bleibt 2348.
+Klassengröße bleibt `0x98`.
+
+`ninja changes_all`: fuzzy 79.11861 % -> 79.12306 %, matched code 49.85059 % -> 49.85516 % (1789680 -> 1789844, +164).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9623 -> 9624.
+`MapObjWave` 1496 -> 1660 (+164).
+Kein R170–R250-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R250 (`MapObjWave`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

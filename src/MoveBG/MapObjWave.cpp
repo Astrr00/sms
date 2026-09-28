@@ -100,13 +100,32 @@ void TMapObjWave::noWave()
 
 void TMapObjWave::getAlpha(float, float) const { }
 
-// dont_inline: stub bodies. Without the pragma, MWCC inlines them into perform.
+// dont_inline: draw/updateHeightAndAlpha are still stubs, and updateTime
+// must stay out of line so perform keeps its bl.
 #pragma dont_inline on
 void TMapObjWave::draw() { }
 
 void TMapObjWave::updateHeightAndAlpha() { }
 
-void TMapObjWave::updateTime() { }
+void TMapObjWave::updateTime()
+{
+	// Retail bits of @2730. 2*pi is a few bits high.
+	unk64 += unk24;
+	if (unk64 > 6.28318f)
+		unk64 -= 6.28318f;
+
+	unk68 += unk28;
+	if (unk68 > 6.28318f)
+		unk68 -= 6.28318f;
+
+	unk6C += unk60;
+	if (unk6C > 1.0f)
+		unk6C -= 1.0f;
+
+	unk70 += unk60;
+	if (unk70 > 1.0f)
+		unk70 -= 1.0f;
+}
 #pragma dont_inline off
 
 void TMapObjWave::movement() { }
