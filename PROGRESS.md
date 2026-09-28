@@ -11488,6 +11488,34 @@ als Member-Name. Check: **`decomp-diff -u … -t object -s nonmatching`**.
 **Verify.** `ninja changes_all` ggü. **`cf903cfc`**; **`namekuri` matched_data
 70.86% → 100%**; **`build.sha1` OK**.
 
+### R215 (Aufgabe B; post-R214 vtable / MtxCalc hunt, 0× ship)
+
+**Hunt.** Same bogus-**`virtual`** / MAP closure as R212–R214; **`MtxCalcTypeName`**
+(`.data` 16 B ~50% on **`bosseel`/`hinokuri2`**); small EP text ≥99%; cap ~8;
+skip **WaterGun `@4827`**, **Tongue `@2843`**, **`TRiccoHook::init`**.
+
+**Ship.** none (strict 100% only).
+
+**Probes (~8, no-ship).**
+
+- **MAP/header scan:** no further EP header **`virtual`** forwards without a
+  linked **`Subclass::method`** (besides **`TEnemyAttachment::receiveMessage`**
+  — **`enemyAttachment` vtable already 100%**).
+- **`TBossGesso`/`THinokuri2` `.ctors` vtables ~99.3%:** byte-identical
+  **`__vt__*`** in **`.data`**; objdiff **`.ctors`** label is a false gap.
+- **`MtxCalcTypeName`:** needs **`.data`** order **`@1431`/`@1411`/`@1210`**
+  (from **`TBossEel::init`** pools) **before** pointer table **before**
+  **`bastable`** — moving **`InfectiousStrings.hpp`** alone insufficient.
+- **`TCoasterEnemy::bind`** (~99.9%): **`TVec3`** stack at **`0x1c`** vs retail
+  **`0x10`**; float-scalar rewrite regressed match — left as-is.
+- **Skipped (user):** **`@4827`**, **`@2843`**, **`TRiccoHook::init`**.
+
+**Tip (R215).** **`MtxCalcTypeName`** is not just the four strings — retail TU
+**`.data`** prefixes **`init()`**-emitted **`@1431`/`@1211`/`@1210`** pools;
+match **`graph.cpp`** / **`MarioDraw`** emission, not only **`InfectiousStrings`**.
+
+**Verify.** `ninja changes_all` ggü. **`a96fe42e`** — **no diff**.
+
 ### R214 (Aufgabe B; Enemy inline vtable slot, 1× data)
 
 **Hunt.** Player `@4827`/`@2843` switch **`.rel`**; boss/hino **`.ctors`**
