@@ -10920,6 +10920,33 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R341 (`MapObjFence`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TRevolvingFenceOuter::initMapCollisionData`.
+
+- Liegen Rotation X und Z unter 1 Grad, kommt `fence_revolve_outer_v_tool`, sonst das `_h_`-Tool.
+- Danach `MsMtxSetTRS`, `MTXCopy` auf `unk20` und virtuelles `setUp`.
+- `unk138` legt `bambooFence_revolve_inner` oder `fence_revolve_inner` mit Skala 1 an und ruft `appear`.
+- 384 Bytes, 96 Instruktionen.
+- `MapObjFence.cpp` bleibt `NonMatching`.
+- `TRevolvingFenceInner::receiveMessage` deckt nur den Bodenpfad (46 %), der Winkelpfad bleibt offen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjFence`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.633804 % -> 79.65275 %, matched code 50.546837 % -> 50.557537 % (1814676 -> 1815060, +384).
+Matched data bleibt 66.304306 % (424567).
+Funktionen matched 9706 -> 9707.
+`MapObjFence` 4448 -> 4832 (+384).
+Complete units bleiben 416.
+Kein R170–R340-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R340 (`MapObjFence`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

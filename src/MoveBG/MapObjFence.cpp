@@ -5,6 +5,7 @@
 #include <Enemy/Conductor.hpp>
 #include <Enemy/Graph.hpp>
 #include <Map/MapCollisionManager.hpp>
+#include <MoveBG/MapObjManager.hpp>
 #include <MarioUtil/MathUtil.hpp>
 #include <MSound/MSound.hpp>
 #include <MSound/SoundEffects.hpp>
@@ -16,20 +17,12 @@
 
 // -inline deferred: source order is the reverse of mario.MAP emission order.
 
-// Original rodata ahead of the pooled "fence3x3" literal.
-// initMapCollisionData addresses that pool by offset from the section base.
-// cDirty* and the two group names are the usual TU prefix.
-// The six fence names belong to still-stubbed outer/inner functions.
+// Usual TU prefix. initMapCollisionData pools string addresses from the
+// rodata base, so these bytes have to stay ahead of "fence3x3".
 static const char cDirtyFileName[] = "/scene/map/pollution/H_ma_rak.bti";
 static const char cDirtyTexName[]  = "H_ma_rak_dummy";
 static const char cMessengerName[] = "地形オブジェメッセンジャー";
 static const char cObjGroupName[]  = "オブジェクトグループ";
-static const char cRollDown[]      = "fence_revolve_inner_roll_down";
-static const char cRollUp[]        = "fence_revolve_inner_roll_up";
-static const char cOuterV[]        = "fence_revolve_outer_v_tool";
-static const char cOuterH[]        = "fence_revolve_outer_h_tool";
-static const char cBambooInner[]   = "bambooFence_revolve_inner";
-static const char cRevolveInner[]  = "fence_revolve_inner";
 
 f32 TFenceWater::mWaterAccel     = 2.1f;
 f32 TFenceWater::mBackSpeed      = 3.0f;
@@ -84,9 +77,69 @@ BOOL TRevolvingFenceOuter::receiveMessage(THitActor*, u32 message)
 	return FALSE;
 }
 
-void TRevolvingFenceOuter::initMapCollisionData() { }
+void TRevolvingFenceOuter::initMapCollisionData()
+{
+	mMapCollisionManager = new TMapCollisionManager(1, "mapObj", this);
+	if (fabsf(mRotation.x) < 1.0f && fabsf(mRotation.z) < 1.0f)
+		mMapCollisionManager->init("fence_revolve_outer_v_tool", 0, nullptr);
+	else
+		mMapCollisionManager->init("fence_revolve_outer_h_tool", 0, nullptr);
 
-BOOL TRevolvingFenceInner::receiveMessage(THitActor*, u32) { return FALSE; }
+	JGeometry::TVec3<f32> scaleBamboo;
+	JGeometry::TVec3<f32> scaleInner;
+	TMapCollisionManager* mgr = mMapCollisionManager;
+	Mtx mtx;
+	MsMtxSetTRS(mtx, mPosition, mRotation, mScaling);
+	TMapCollisionBase* col = mgr->unk8;
+	MTXCopy(mtx, col->unk20);
+	col->setUp();
+
+	TMapObjBase* child;
+	if (unk138 != 0) {
+		// Address in a pointer so it stays in r6 across the stores.
+		JGeometry::TVec3<f32>* scale = &scaleBamboo;
+		scale->x                     = 1.0f;
+		scale->y                     = 1.0f;
+		scale->z                     = 1.0f;
+		child = TMapObjBaseManager::newAndRegisterObj(
+		    "bambooFence_revolve_inner", mPosition, mRotation, *scale);
+	} else {
+		JGeometry::TVec3<f32>* scale = &scaleInner;
+		scale->x                     = 1.0f;
+		scale->y                     = 1.0f;
+		scale->z                     = 1.0f;
+		child = TMapObjBaseManager::newAndRegisterObj(
+		    "fence_revolve_inner", mPosition, mRotation, *scale);
+	}
+	unk13C = child;
+	unk13C->appear();
+}
+
+BOOL TRevolvingFenceInner::receiveMessage(THitActor*, u32 message)
+{
+	// TODO: unk140 != 0 still has the hip-drop angle path.
+	if (message == 3 && unk140 == 0) {
+		if (isState(1)) {
+			if (gpMSound->gateCheck(MSD_SE_OBJ_FENCE_REVERSE1))
+				MSoundSESystem::MSoundSE::startSoundActor(
+				    MSD_SE_OBJ_FENCE_REVERSE1, &mPosition, 0, nullptr, 0, 4);
+			setState(3);
+			startBck("fence_revolve_inner_roll_down");
+			offMapObjFlag(MAP_OBJ_FLAG_UNK100);
+			return TRUE;
+		}
+		if (isState(2)) {
+			if (gpMSound->gateCheck(MSD_SE_OBJ_FENCE_REVERSE2))
+				MSoundSESystem::MSoundSE::startSoundActor(
+				    MSD_SE_OBJ_FENCE_REVERSE2, &mPosition, 0, nullptr, 0, 4);
+			setState(4);
+			startBck("fence_revolve_inner_roll_up");
+			offMapObjFlag(MAP_OBJ_FLAG_UNK100);
+			return TRUE;
+		}
+	}
+	return FALSE;
+}
 
 void TRevolvingFenceInner::calcCurrentMtx() { }
 
