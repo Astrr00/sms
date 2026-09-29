@@ -337,7 +337,25 @@ void TFluffManager::getRandomZ() const { }
 
 void TFluffManager::loadAfter() { }
 
-void TFluffManager::load(JSUMemoryInputStream&) { }
+void TFluffManager::load(JSUMemoryInputStream& stream)
+{
+	TMapObjBase::load(stream);
+	stream.read(&unk138.z, 4);
+	f32 scale;
+	stream.read(&scale, 4);
+	scale *= 0.01f;
+	stream.read(&unk144, 4);
+	unk138.x = 5000.0f;
+	unk138.y = 5000.0f;
+	unk154 = 0.998f;
+
+	TPosition3f mtx;
+	MsMtxSetXYZRPH(mtx, 0.0f, 0.0f, 0.0f, mRotation.x, mRotation.y,
+	               mRotation.z);
+	unk148.set(0.0f, 0.0f, 1.0f);
+	mtx.mult(unk148, unk148);
+	unk148.scale(scale);
+}
 
 TFluffManager::TFluffManager(const char* name)
     : TMapObjBase(name)
