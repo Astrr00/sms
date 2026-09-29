@@ -286,11 +286,57 @@ void TShellCup::attachCoin(TCoin*, int) { }
 
 void TShellCup::calcAfter() { }
 
-void TShellCup::perform(u32, JDrama::TGraphics*)
+// Loop lives in its own function: inlining it initializes the byte-offset
+// induction with `addi` off the index. A for-loop written in perform emits
+// `li` instead. The function pointer keeps the weak MsMtxSetRotX copy and
+// a real `bl`; a direct call inlines the sine table.
+static inline void spinShells(TShellCup* self, MtxPtr rot)
 {
-	// Address-of keeps the weak out-of-line copy.
-	void (*volatile rot)(MtxPtr, f32) = &MsMtxSetRotX;
-	(void)rot;
+	for (int i = 0; i < 6; ++i) {
+		TPinnaShell* shell = self->unk138 + i;
+		void (*const setRotX)(MtxPtr, f32) = MsMtxSetRotX;
+		setRotX(rot, shell->unk6C);
+		MtxPtr shellMtx = (MtxPtr)shell->unk74;
+		TMapObjBase::concatOnlyRotFromRight(shellMtx, rot, shellMtx);
+	}
+}
+
+void TShellCup::perform(u32 cue, JDrama::TGraphics* graphics)
+{
+	Mtx rot;
+	TMapObjBase::perform(cue, graphics);
+	if (!(cue & CUE_CALC_ANIM))
+		return;
+
+	// Talk mode and demo mode are mutually exclusive, but both checks
+	// are present: a talk-mode state returns before the shells update.
+	if (gpMarDirector->isTalkModeNow()) {
+		if (!gpMarDirector->isDemoModeNow())
+			return;
+	}
+
+	spinShells(this, rot);
+
+	TLiveActor* coin = (TLiveActor*)unk498;
+	if (!coin->checkLiveFlag(LIVE_FLAG_DEAD)) {
+		coin->mPosition.x = unk138[0].mPosition.x;
+		coin->mPosition.y = unk138[0].mPosition.y;
+		coin->mPosition.z = unk138[0].mPosition.z;
+	}
+	coin = (TLiveActor*)unk49C;
+	if (!coin->checkLiveFlag(LIVE_FLAG_DEAD)) {
+		coin->mPosition.x = unk138[2].mPosition.x;
+		coin->mPosition.y = unk138[2].mPosition.y;
+		coin->mPosition.z = unk138[2].mPosition.z;
+	}
+	coin = (TLiveActor*)unk4A0;
+	if (!coin->checkLiveFlag(LIVE_FLAG_DEAD)) {
+		coin->mPosition.x = unk138[4].mPosition.x;
+		coin->mPosition.y = unk138[4].mPosition.y;
+		coin->mPosition.z = unk138[4].mPosition.z;
+	}
+	// Dead slot so the rotation matrix stays at r1+0x28 (frame -0x68).
+	char trash[12];
 }
 
 void TShellCup::loadAfter() { }
