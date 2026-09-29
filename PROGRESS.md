@@ -10920,6 +10920,29 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R318 (`MapObjMamma`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TSandBombBase::expanded`.
+
+- `unk144` erhöht `mFrame` um `unk150` über zwei `getFrameCtrl(0)`-Aufrufe.
+- `MSD_SE_OBJ_SAMDBOMB_REVERSE` läuft an der Position von `unk144`, wenn `gateCheck` wahr ist.
+- `animIsFinished` setzt `mState` auf 2.
+- TU-lokales `sandBombExpanded` hält Frame `-0x40` und die Float-Register.
+- 192 Bytes, 48 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMamma`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.50042 % -> 79.505646 %, matched code 50.3513 % -> 50.35665 % (1807656 -> 1807848, +192).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9687 -> 9688.
+`MapObjMamma` 7376 -> 7568 (+192).
+Kein R170–R317-Unit hat matched code verloren.
+
 ### R317 (`MapObjBianco`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

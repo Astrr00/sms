@@ -600,7 +600,23 @@ void TSandBombBase::withered()
 	unk144->sleep();
 }
 
-void TSandBombBase::expanded() { }
+static inline void sandBombExpanded(TSandBombBase* self)
+{
+	TMapObjBase* bomb = self->unk144;
+	f32 speed         = self->unk150;
+	f32 frame = bomb->getMActor()->getFrameCtrl(0)->getFrame();
+	bomb->getMActor()->getFrameCtrl(0)->setFrame(speed + frame);
+
+	const JGeometry::TVec3<f32>* pos = &self->unk144->mPosition;
+	if (gpMSound->gateCheck(MSD_SE_OBJ_SAMDBOMB_REVERSE))
+		MSoundSESystem::MSoundSE::startSoundActor(
+		    MSD_SE_OBJ_SAMDBOMB_REVERSE, pos, 0, nullptr, 0, 4);
+
+	if (self->unk144->animIsFinished())
+		self->mState = 2;
+}
+
+void TSandBombBase::expanded() { sandBombExpanded(this); }
 
 void TSandBombBase::exploding() { }
 
