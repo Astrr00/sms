@@ -277,25 +277,24 @@ void TNormalLift::load(JSUMemoryInputStream& stream)
 
 void TNormalLift::readRailFlag()
 {
+	// Dead slot: retail frame is -0x80, body alone is -0x70.
+	char trash[0x10];
+	trash[0] = 0;
+
 	TRailMapObj::readRailFlag();
 
-	TGraphWeb* graph = unk138->unk0;
-
-	if (!unk138->unk0)
-		return;
-
-	if (!graph->isDummy())
-		return;
-
-	TRailNode* railNode = graph->getCurrentNode().getRailNode();
-	if (railNode->mFlags & 0x800) {
-		unk150 = railNode->mPitch;
-	}
-	if (railNode->mFlags & 0x1000) {
-		u16 roll = railNode->mRoll;
-		if (roll == 0xffff)
-			roll = 0;
-		unk152 = roll;
+	TGraphWeb* graph;
+	graph = unk138->getGraph();
+	if (graph != nullptr && graph->isDummy() == 0) {
+		TGraphNode& node = graph->getGraphNode(unk138->mCurrIdx);
+		if (node.getRailNode()->mFlags & 0x800)
+			unk150 = node.getRailNode()->mPitch;
+		if (node.getRailNode()->mFlags & 0x1000) {
+			u16 roll = node.getRailNode()->mRoll;
+			if (roll == 0xffff)
+				roll = 0;
+			unk152 = roll;
+		}
 	}
 }
 

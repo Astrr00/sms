@@ -10920,6 +10920,34 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R360 (`MapObjRailBlock`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TNormalLift::readRailFlag`.
+
+- `getGraph()` liegt in einem eigenen Lokal, damit der Zeiger `isDummy` in `r30` überlebt.
+- Der Körper läuft nur, wenn der Graph da ist und `isDummy() == 0`.
+- Der Rail-Node kommt aus `graph->getGraphNode(mCurrIdx)`, damit der Index der Tracer-Index bleibt.
+- `char trash[0x10]` mit `trash[0] = 0` hebt den Frame auf `-0x80`.
+- 244 Bytes, 61 Instruktionen.
+- `MapObjRailBlock.cpp` bleibt `NonMatching`.
+
+`validate-symbol-order` `mario/MoveBG/MapObjRailBlock`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.71538 % -> 79.716 %, matched code 50.67731 % -> 50.684105 % (1819360 -> 1819604, +244).
+Matched data bleibt 66.393005 % (425135).
+Funktionen matched 9720 -> 9721.
+`MapObjRailBlock` 5852 -> 6096 (+244), Funktionen 40 -> 41.
+Complete units bleiben 416.
+Kein R170–R359-Unit hat matched code verloren.
+Nur `MapObjRailBlock` hat matched code gewonnen.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R359 (`MapObjBase`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
