@@ -762,7 +762,37 @@ void TBigWatermelon::touchWall(JGeometry::TVec3<f32>* param_1,
 	TMapObjBall::touchWall(param_1, param_2);
 }
 
-void TBigWatermelon::rebound(JGeometry::TVec3<f32>*) { }
+void TBigWatermelon::rebound(JGeometry::TVec3<f32>* param_1)
+{
+	// Dead slot so MWCC keeps the frame at -0x68.
+	char trash[0x38];
+	trash[0] = 0;
+	if (isState(0xC)) {
+		kill();
+		*param_1 = mPosition;
+		return;
+	}
+	calcReflectingVelocity(mGroundPlane, mMapObjData->mPhysical->unk4->unk4,
+	                       &mVelocity);
+	param_1->y = mGroundHeight;
+	onLiveFlag(LIVE_FLAG_AIRBORNE);
+	if (isActorType(0x400000D0)) {
+		if (mScaling.y >= 5.0f)
+			gpMSound->startSoundActorWithInfo(
+			    MSD_SE_OBJ_WATERMELON_BBUND, &mPosition, nullptr,
+			    fabsf(mGroundPlane->mNormal.y), 0, 0, nullptr, 0, 4);
+		else
+			gpMSound->startSoundActorWithInfo(
+			    MSD_SE_OBJ_WATERMELON_SBUND, &mPosition, nullptr,
+			    fabsf(mGroundPlane->mNormal.y), 0, 0, nullptr, 0, 4);
+	} else {
+		gpMSound->startSoundActorWithInfo(mMapObjData->mSound->unk4->unk0[4],
+		                                  &mPosition, &mVelocity, 0.0f, 0, 0,
+		                                  nullptr, 0, 4);
+	}
+	if (isState(0xB))
+		mState = 0xC;
+}
 
 void TBigWatermelon::touchGround(JGeometry::TVec3<f32>* param_1)
 {
