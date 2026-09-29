@@ -10920,6 +10920,35 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R345 (`MapObjCorona`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TBathtub::getNumKillerBurstable`.
+
+- Liefert 0, wenn `isKillerLaunchable` falsch ist.
+- Ab vier toten Griffen kommt 8.
+- Sonst nur wenn `allowsTumble` falsch ist und `unk250` sowie `unk258` null sind.
+- Der Schalter auf `getNumGripsDead` gibt 4, 6 oder 8 zurück, sonst 0.
+- 428 Bytes, 107 Instruktionen.
+- `unk258` ist `int`, damit der Vergleich `cmpwi` bleibt.
+- `allowsTumble` bleibt mit `dont_inline` ausserhalb, der Rumpf ist 0x26c.
+- `MapObjCorona.cpp` bleibt `NonMatching`.
+
+`validate-symbol-order` `mario/MoveBG/MapObjCorona`: PASS gegen die Basis.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.669970 % -> 79.681740 %, matched code 50.575030 % -> 50.586952 % (1815688 -> 1816116, +428).
+Matched data bleibt 66.304306 % (424567).
+Funktionen matched 9709 -> 9710.
+`MapObjCorona` 1692 -> 2120 (+428).
+Complete units bleiben 416.
+Kein R170–R344-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R344 (`MapObjCorona`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

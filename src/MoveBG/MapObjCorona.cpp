@@ -341,7 +341,10 @@ void TBathtub::removeCollisions_() { } // Unused
 
 void TBathtub::startDemo() { }
 
+// Real body is 0x26c. Keep the stub out of line so callers emit bl.
+#pragma dont_inline on
 bool TBathtub::allowsTumble() const { return false; }
+#pragma dont_inline off
 
 void TBathtub::calcRootMatrix() { }
 
@@ -387,12 +390,33 @@ int TBathtub::getNumKillerLaunchable() const
 
 bool TBathtub::isKillerAttackable() const { return unk248 <= 0; }
 
-u8 TBathtub::getNumKillerBurstable() const { return 0; }
+int TBathtub::getNumKillerBurstable() const
+{
+	if (!isKillerLaunchable())
+		return 0;
+
+	int count = getNumGripsDead();
+	if (count >= 4)
+		return 8;
+	if (!allowsTumble() && unk250 == 0 && unk258 == 0) {
+		switch (count) {
+		case 1:
+			return 4;
+		case 2:
+			return 6;
+		case 3:
+			return 8;
+		case 4:
+			return 8;
+		}
+	}
+	return 0;
+}
 
 // Unused
 bool TBathtub::isBreaking() const { return false; }
 
-// Unused out of line. Inlined into getNumKillerLaunchable.
+// Unused out of line. Inlined into the killer count getters.
 bool TBathtub::isKillerLaunchable() const
 {
 	bool ready;
