@@ -9,6 +9,7 @@
 #include <MSound/MSound.hpp>
 #include <System/MarDirector.hpp>
 #include <dolphin/gx.h>
+#include <JSystem/J3D/J3DGraphBase/J3DSys.hpp>
 
 extern void MsMtxSetTRS(MtxPtr result, f32 x, f32 y, f32 z, f32 r, f32 p, f32 h,
                         f32 sx, f32 sy, f32 sz);
@@ -144,7 +145,55 @@ TCogwheel::TCogwheel(const char* name)
 	unk168.zero();
 }
 
-void TMapObjElasticCode::draw() const { }
+// Dead inline: the 0xC local sits under the mat-color temp and the 0x4
+// return sits above it. No instructions. Frame is then 0x38.
+struct TElasticLow {
+	char c[0xC];
+};
+struct TElasticHigh {
+	char c[4];
+};
+static inline TElasticHigh elasticPad()
+{
+	TElasticLow low;
+	return *(TElasticHigh*)(void*)&low;
+}
+
+void TMapObjElasticCode::draw() const
+{
+	elasticPad();
+	GXSetVtxAttrFmt(GX_VTXFMT0, GX_VA_POS, GX_POS_XYZ, GX_F32, 0);
+	GXClearVtxDesc();
+	GXSetVtxDesc(GX_VA_POS, GX_DIRECT);
+	GXLoadPosMtxImm(j3dSys.getViewMtx(), GX_PNMTX0);
+	GXSetCurrentMtx(GX_PNMTX0);
+	GXSetNumChans(1);
+	GXSetChanCtrl(GX_COLOR0A0, GX_FALSE, GX_SRC_REG, GX_SRC_REG, 0, GX_DF_NONE,
+	              GX_AF_NONE);
+	GXSetChanCtrl(GX_COLOR1A1, GX_FALSE, GX_SRC_REG, GX_SRC_REG, 0, GX_DF_NONE,
+	              GX_AF_NONE);
+	GXSetChanMatColor(GX_COLOR0A0, (GXColor) { 0x00, 0x00, 0x64, 0xff });
+	GXSetNumTexGens(0);
+	GXSetNumTevStages(1);
+	GXSetTevOrder(GX_TEVSTAGE0, GX_TEXCOORD_NULL, GX_TEXMAP_NULL, GX_COLOR0A0);
+	GXSetTevColorIn(GX_TEVSTAGE0, GX_CC_RASC, GX_CC_ZERO, GX_CC_ZERO,
+	                GX_CC_ZERO);
+	GXSetTevColorOp(GX_TEVSTAGE0, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE,
+	                GX_TEVPREV);
+	GXSetTevAlphaIn(GX_TEVSTAGE0, GX_CA_RASA, GX_CA_ZERO, GX_CA_ZERO,
+	                GX_CA_ZERO);
+	GXSetTevAlphaOp(GX_TEVSTAGE0, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE,
+	                GX_TEVPREV);
+	GXSetBlendMode(GX_BM_BLEND, GX_BL_ONE, GX_BL_ZERO, GX_LO_NOOP);
+	GXSetAlphaCompare(GX_ALWAYS, 0, GX_AOP_OR, GX_ALWAYS, 0);
+	GXSetZMode(GX_TRUE, GX_LEQUAL, GX_FALSE);
+	GXSetCullMode(GX_CULL_NONE);
+	GXSetLineWidth(0x18, GX_TO_ZERO);
+	GXBegin(GX_LINES, GX_VTXFMT0, 2);
+	GXPosition3f32(mInitialPosition.x, mInitialPosition.y + 1000.0f,
+	               mInitialPosition.z);
+	GXPosition3f32(mPosition.x, mPosition.y, mPosition.z);
+}
 
 void TMapObjElasticCode::control()
 {
