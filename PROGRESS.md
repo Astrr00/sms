@@ -10920,6 +10920,31 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R338 (`MapObjPlane`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjPlane::draw`.
+
+- Vor `GXBegin` wird die nächste Z-Zeile als `worldZ + unkFC` berechnet.
+- `getTexPos` multipliziert den Gitterwert mit `mTexScale`.
+- 472 Bytes, 118 Instruktionen.
+- `MapObjPlane.cpp` bleibt `NonMatching` (`makeMountain`, `calcNrm`).
+
+`validate-symbol-order` `mario/MoveBG/MapObjPlane`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.623 % -> 79.62344 %, matched code 50.523216 % -> 50.536366 % (1813828 -> 1814300, +472).
+Matched data bleibt 66.304306 % (424567).
+Funktionen matched 9704 -> 9705.
+`MapObjPlane` 3776 -> 4248 (+472).
+Complete units bleiben 416.
+Kein R170–R336-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R336 (`MapObjTree`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
