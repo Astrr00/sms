@@ -10920,6 +10920,33 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R355 (`MapObjInit`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjBase::initActorData`.
+
+- Sucht den `sObjDataTable`-Eintrag per `calcKeyCode` und `strcmp` auf `unkF4`.
+- Der Keycode liegt in einem `u32`, damit er in `r27` bleibt und die Slot-Adresse in `r28`.
+- `char trash[0x10]` mit `trash[0] = 0` hebt den Frame auf `-0x58`.
+- 356 Bytes, 89 Instruktionen.
+- `MapObjInit.cpp` bleibt `NonMatching`.
+
+`validate-symbol-order` `mario/MoveBG/MapObjInit`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.71507 % -> 79.71511 %, matched code 50.619484 % -> 50.629402 % (1817284 -> 1817640, +356).
+Matched data bleibt 66.393005 % (425135).
+Funktionen matched 9716 -> 9717.
+`MapObjInit` 2084 -> 2440 (+356), Funktionen 10 -> 11.
+Complete units bleiben 416.
+Kein R170–R353-Unit hat matched code verloren.
+Nur `MapObjInit` hat matched code gewonnen.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R353 (`MapObjPinna`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

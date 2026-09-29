@@ -11125,8 +11125,10 @@ void TMapObjBase::initModelData()
 
 void TMapObjBase::initActorData()
 {
+	char trash[0x10];
+	trash[0] = 0;
 	int i    = 0;
-	u16 code = JDrama::TNameRef::calcKeyCode(unkF4);
+	u32 code = JDrama::TNameRef::calcKeyCode(unkF4);
 	for (; sObjDataTable[i]->unk4; ++i) {
 		if (code == sObjDataTable[i]->unk38
 		    && strcmp(sObjDataTable[i]->unk0, unkF4) == 0)
