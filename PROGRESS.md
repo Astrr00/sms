@@ -10920,6 +10920,35 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R350 (`MapObjFence`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TRevolvingFenceInner::setGroundCollision`.
+
+- Wenn Yoshi geschlüpft ist und in der XZ-Reichweite von `mBodyRadius` steht, kopiert es die Model-Matrix und schiebt die Bodenkollision.
+- Danach ruft es immer `TMapObjBase::setGroundCollision` auf.
+- `fenceAnmMtx` holt `getAnmMtx(0)`.
+- Der zusätzliche Inline lässt den toten 4-Byte-Slot stehen, damit die Matrix bei `0x38` liegt.
+- 264 Bytes, 66 Instruktionen.
+- `MapObjFence.cpp` bleibt `NonMatching`.
+
+`validate-symbol-order` `mario/MoveBG/MapObjFence`: PASS.
+0 neue Fehler.
+Die zwei UNUSED-Größenwarnungen sind die bisherigen Stubs.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.69402 % -> 79.701256 %, matched code 50.597977 % -> 50.60533 % (1816512 -> 1816776, +264).
+Matched data bleibt 66.393005 % (425135).
+Funktionen matched 9712 -> 9713.
+`MapObjFence` 4832 -> 5096 (+264), Funktionen 35 -> 36.
+Complete units bleiben 416.
+Kein R170–R349-Unit hat matched code verloren.
+Nur `MapObjFence` hat matched code gewonnen.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R349 (`MapObjMare`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

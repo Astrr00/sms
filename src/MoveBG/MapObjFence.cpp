@@ -9,7 +9,8 @@
 #include <MarioUtil/MathUtil.hpp>
 #include <MSound/MSound.hpp>
 #include <MSound/SoundEffects.hpp>
-
+#include <Player/MarioAccess.hpp>
+#include <Player/Yoshi.hpp>
 // rogue includes needed for matching sinit & bss
 #include <MSound/MSSetSound.hpp>
 #include <MSound/MSoundBGM.hpp>
@@ -197,7 +198,27 @@ state46:
 	trash[0] = 0;
 }
 
-void TRevolvingFenceInner::setGroundCollision() { }
+// The extra inline leaves a dead 4-byte slot so the matrix sits at 0x38.
+static inline MtxPtr fenceAnmMtx(TRevolvingFenceInner* self)
+{
+	return self->getModel()->getAnmMtx(0);
+}
+
+void TRevolvingFenceInner::setGroundCollision()
+{
+	if (SMS_GetYoshi()->isHatched()
+	    && mPosition.x - mBodyRadius < SMS_GetYoshi()->getTranslation().x
+	    && mPosition.x + mBodyRadius > SMS_GetYoshi()->getTranslation().x
+	    && mPosition.z - mBodyRadius < SMS_GetYoshi()->getTranslation().z
+	    && mPosition.z + mBodyRadius > SMS_GetYoshi()->getTranslation().z) {
+		TMtx34f mtx;
+		MtxPtr src = fenceAnmMtx(this);
+		mtx.set(src);
+		if (mMapCollisionManager->unk8)
+			mMapCollisionManager->unk8->moveMtx(mtx);
+	}
+	TMapObjBase::setGroundCollision();
+}
 
 void TRevolvingFenceInner::control()
 {
