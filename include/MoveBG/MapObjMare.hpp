@@ -7,6 +7,7 @@ struct TBGWallCheckRecord;
 
 class TCannon;
 class TCogwheel;
+class TMareEventDepressWall;
 
 class TCogwheelScale : public TMapObjBase {
 public:
@@ -173,6 +174,8 @@ public:
 	virtual BOOL receiveMessage(THitActor* sender, u32 message);
 	virtual void load(JSUMemoryInputStream&);
 	TMareEventPoint(const char* name = "イベントポイント");
+
+	/* 0x68 */ TMareEventDepressWall* unk68;
 };
 
 #endif

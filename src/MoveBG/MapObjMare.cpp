@@ -8,6 +8,9 @@
 #include <System/Particles.hpp>
 #include <MSound/MSound.hpp>
 #include <System/MarDirector.hpp>
+#include <Player/ModelWaterManager.hpp>
+#include <Map/MapData.hpp>
+#include <Map/MapEventMare.hpp>
 #include <dolphin/gx.h>
 #include <JSystem/J3D/J3DGraphBase/J3DSys.hpp>
 
@@ -554,7 +557,29 @@ void TMareCork::drawObject(JDrama::TGraphics* graphics)
 	}
 }
 
-BOOL TMareEventPoint::receiveMessage(THitActor*, u32) { return FALSE; }
+// One inline level: the dead 4-byte temp rounds the frame from -0x28 to -0x30.
+static inline TModelWaterManager* mareEventWater()
+{
+	return gpModelWaterManager;
+}
+
+BOOL TMareEventPoint::receiveMessage(THitActor* sender, u32 message)
+{
+	if (message == HIT_MESSAGE_SPRAYED_BY_WATER
+	    && !mareEventWater()->checkFlagBottom4Bits(
+	        TMapObjBase::getWaterID(sender), 1)
+	    && TMapObjBase::getWaterPlane(sender) != nullptr
+	    && TMapObjBase::getWaterPlane(sender)->getNormal().y < 0.1f) {
+		if (unk68->startEvent()) {
+			gpMarioParticleManager->emit(PARTICLE_MS_ENM_WATHIT,
+			                             &sender->mPosition, 0, nullptr);
+			gpMSound->startSoundSet(MSD_SE_EN_COMMON_W_HIT_OK, &mPosition, 0,
+			                        0.0f, 0, 0, 4);
+		}
+		return TRUE;
+	}
+	return FALSE;
+}
 
 void TMareEventPoint::load(JSUMemoryInputStream& stream)
 {
