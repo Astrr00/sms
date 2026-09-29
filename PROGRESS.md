@@ -10920,6 +10920,36 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R334 (`ItemManager`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TItemManager::newAndRegisterCoin`.
+
+- Unter `0x32` legt es `coin_blue` an.
+- `100` nimmt `gpItemManager->unk78`.
+- `200` legt `coin_red` an.
+- Sonst kommt `nullptr` zurück.
+- Danach schreibt es `mEventId`.
+- `static inline` mit `char pad[8]` setzt die `TVec3`-Cluster auf `0x18` und `0x3c`.
+- Ein lokales `char[8]` verschiebt dieselben Temps nur um 4.
+- 232 Bytes, 58 Instruktionen.
+- `ItemManager.cpp` steht auf `Matching`.
+
+`validate-symbol-order` `mario/MoveBG/ItemManager`: PASS.
+Vorhandene UNUSED-Size-Warnung `makeShineAppearWithTimeOffset` (Map `0xc8`, Objekt `0x4`).
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.62295 % -> 79.62296 %, matched code 50.487453 % -> 50.493916 % (1812544 -> 1812776, +232).
+Matched data bleibt 66.304306 % (424567).
+Funktionen matched 9701 -> 9702.
+`ItemManager` 2484 -> 2716 (+232).
+Complete code 726888 -> 729604 (+2716), complete data 140784 -> 141140 (+356), complete units 415 -> 416.
+Kein R170–R333-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R333 (`MapObjBall`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

@@ -83,10 +83,17 @@ TShine* TItemManager::makeShineAppearWithDemoOffset(const char* shine_name,
 	return shine;
 }
 
+// Inline, not a local: char[8] here keeps the TVec3 temps at 0x18/0x3c.
+static inline void reserveCoinVecSlot()
+{
+	char pad[8];
+	pad[0] = 0;
+}
+
 TCoin* TItemManager::newAndRegisterCoin(u32 event_id)
 {
-	char trash[8];
 	TCoin* result;
+	reserveCoinVecSlot();
 	if (event_id < 0x32) {
 		result = (TCoin*)newAndRegisterObj(
 		    "coin_blue", JGeometry::TVec3<f32>(0.0f, 0.0f, 0.0f),

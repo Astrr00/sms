@@ -1011,7 +1011,7 @@ config.libs = [
             PCHObject(NonMatching, "MoveBG/MapObjManager.cpp"),
             PCHObject(NonMatching, "MoveBG/MapObjLib.cpp"),
             PCHObject(NonMatching, "MoveBG/Item.cpp"),
-            PCHObject(NonMatching, "MoveBG/ItemManager.cpp"),
+            PCHObject(Matching, "MoveBG/ItemManager.cpp"),
             PCHObject(NonMatching, "MoveBG/MapObjTown.cpp"),
             PCHObject(NonMatching, "MoveBG/MapObjBlock.cpp"),
             PCHObject(NonMatching, "MoveBG/MapObjBianco.cpp"),
