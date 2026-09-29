@@ -42,9 +42,40 @@ void TJumpMushroom::load(JSUMemoryInputStream& stream)
 	trash[0] = 0;
 }
 
-// dont_inline: empty stub would otherwise fold into the rope draw.
+// dont_inline: keep the call in drawRopes.
 #pragma dont_inline on
-void THangingBridgeBoard::drawOneRope(const JGeometry::TVec3<f32>&) const { }
+void THangingBridgeBoard::drawOneRope(const JGeometry::TVec3<f32>& pos) const
+{
+	f32 yBot = pos.y;
+	f32 x1   = pos.x + mRopeWidthX;
+	f32 x0   = pos.x - mRopeWidthX;
+	f32 z1   = pos.z + mRopeWidthZ;
+	f32 z0   = pos.z - mRopeWidthZ;
+	f32 yTop = pos.y + THangingBridge::mRopeHeight;
+	f32 tTop = mTexPosRate * (yTop - pos.y);
+	f32 tBot = mTexPosRate * (yBot - pos.y);
+
+	GXBegin(GX_TRIANGLESTRIP, GX_VTXFMT0, 8);
+	GXPosition3f32(pos.x, yTop, z1);
+	GXTexCoord2f32(0.0f, tTop);
+	GXPosition3f32(pos.x, yBot, z1);
+	GXTexCoord2f32(0.0f, tBot);
+	GXPosition3f32(x0, yTop, z0);
+	GXTexCoord2f32(1.0f, tTop);
+	GXPosition3f32(x0, yBot, z0);
+	GXTexCoord2f32(1.0f, tBot);
+	GXPosition3f32(x1, yTop, z0);
+	GXTexCoord2f32(2.0f, tTop);
+	GXPosition3f32(x1, yBot, z0);
+	GXTexCoord2f32(2.0f, tBot);
+	GXPosition3f32(pos.x, yTop, z1);
+	GXTexCoord2f32(3.0f, tTop);
+	GXPosition3f32(pos.x, yBot, z1);
+	GXTexCoord2f32(3.0f, tBot);
+	// Dead slot so MWCC keeps frame -0x70.
+	char trash[4];
+	trash[0] = 0;
+}
 #pragma dont_inline off
 
 // Extra inline level so the inlined copy keeps the dead stack slot (frame -0x40).
@@ -147,6 +178,10 @@ void THangingBridge::drawRopeBetweenBoards(f32, int) const { }
 
 void THangingBridge::initDraw() const { }
 #pragma dont_inline off
+
+f32 THangingBridgeBoard::mRopeWidthX = 10.0f;
+f32 THangingBridgeBoard::mRopeWidthZ = 7.0f;
+f32 THangingBridgeBoard::mTexPosRate = 0.01f;
 
 int THangingBridge::mPointNumBetweenBoards = 10;
 f32 THangingBridge::mRopeHeight;

@@ -31,6 +31,10 @@ public:
 	void initMapObj();
 	THangingBridgeBoard(const char*);
 
+	static f32 mRopeWidthX;
+	static f32 mRopeWidthZ;
+	static f32 mTexPosRate;
+
 public:
 	/* 0x194 */ u32 unk194;
 	/* 0x198 */ u32 unk198;
