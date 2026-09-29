@@ -1239,7 +1239,33 @@ u32 TMammaBlockRotate::touchWater(THitActor*)
 
 void TMammaBlockRotate::control() { }
 
-void TMammaBlockRotate::initMapObj() { }
+void TMammaBlockRotate::initMapObj()
+{
+	TMapObjBase::initMapObj();
+	unk138 = gpMap->getModelManager()->getJointModel(0);
+
+	unk13C = unk138->getChild(0)->getChild(0)->getChild(0)->getChild(1);
+	J3DJoint* joint = unk13C->getJoint();
+	f32 dy         = joint->getMax().y - joint->getMin().y;
+	TMapObjBase::moveJoint(joint, 0.0f, dy, 0.0f);
+	JGeometry::TVec3<f32> off(0.0f, dy, 0.0f);
+	char trash[0x70];
+	unk144->setUp();
+	unk144->moveTrans(off);
+
+	unk140 = unk138->getChild(0)->getChild(0)->getChild(0)->getChild(2);
+	joint  = unk140->getJoint();
+	dy     = joint->getMax().y - joint->getMin().y;
+	TMapObjBase::moveJoint(joint, 0.0f,
+	                       joint->getMax().y - joint->getMin().y, 0.0f);
+	unk148->setUp();
+	off.x = 0.0f;
+	off.y = dy;
+	off.z = 0.0f;
+	unk148->moveTrans(off);
+
+	unk138->getModel()->calc();
+}
 
 void TMammaBlockRotate::load(JSUMemoryInputStream& stream)
 {

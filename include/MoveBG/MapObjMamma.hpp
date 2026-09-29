@@ -4,6 +4,8 @@
 #include <MoveBG/MapObjBase.hpp>
 #include <MoveBG/MapObjEx.hpp>
 
+class TJointModel;
+class TJointObj;
 class TMapCollisionMove;
 class TMapObjFlag;
 class TMapObjGeneral;
@@ -198,9 +200,9 @@ public:
 	static u32 mWaitTime;
 
 public:
-	/* 0x138 */ u32 unk138;
-	/* 0x13C */ u32 unk13C;
-	/* 0x140 */ u32 unk140;
+	/* 0x138 */ TJointModel* unk138;
+	/* 0x13C */ TJointObj* unk13C;
+	/* 0x140 */ TJointObj* unk140;
 	/* 0x144 */ TMapCollisionMove* unk144;
 	/* 0x148 */ TMapCollisionMove* unk148;
 };
