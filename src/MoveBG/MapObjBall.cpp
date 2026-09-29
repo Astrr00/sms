@@ -1,4 +1,5 @@
 #include <MoveBG/MapObjBall.hpp>
+#include <Player/MarioAccess.hpp>
 #include <JSystem/J3D/J3DGraphAnimator/J3DModel.hpp>
 #include <JSystem/JDrama/JDRNameRefGen.hpp>
 #include <MarioUtil/PacketUtil.hpp>
@@ -127,9 +128,26 @@ u32 TMapObjBall::touchWater(THitActor* actor)
 void TMapObjBall::boundByActor(THitActor*) { }
 #pragma dont_inline off
 
-// Empty here. dont_inline keeps the qualified call in TResetFruit::touchActor.
+// dont_inline keeps the qualified call in TResetFruit::touchActor.
 #pragma dont_inline on
-void TMapObjBall::touchActor(THitActor*) { }
+void TMapObjBall::touchActor(THitActor* actor)
+{
+	if ((s32)unk194 != 0)
+		return;
+	if (isState(TMapObjGeneral::STATE_HOLDING))
+		return;
+	if (isHideObj(actor))
+		return;
+	if (actor->isActorType(0x08000083) || actor->isActorType(0x400000CA)
+	    || actor->isActorType(0x400000CC))
+		return;
+	if (actor->isActorType(0x80000001) && !isActorType(0x400000D0)
+	    && SMS_GetMarioSpeedY() != 0.0f) {
+		kicked();
+		return;
+	}
+	boundByActor(actor);
+}
 #pragma dont_inline off
 
 void TMapObjBall::calcCurrentMtx() { }
