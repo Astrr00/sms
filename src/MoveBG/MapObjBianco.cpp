@@ -1,4 +1,5 @@
 #include <MoveBG/MapObjBianco.hpp>
+#include <JSystem/JDrama/JDRNameRefGen.hpp>
 #include <MoveBG/MapObjMessenger.hpp>
 #include <Map/MapCollisionManager.hpp>
 #include <MarioUtil/MathUtil.hpp>
@@ -16,6 +17,7 @@
 // rogue includes needed for matching sinit & bss
 #include <MSound/MSSetSound.hpp>
 #include <MSound/MSoundBGM.hpp>
+#include <M3DUtil/InfectiousStrings.hpp>
 
 // -inline deferred: source order is the reverse of mario.MAP emission order.
 
@@ -412,7 +414,25 @@ u32 TBellWatermill::touchWater(THitActor*)
 
 void TBellWatermill::control() { }
 
-void TBellWatermill::loadAfter() { }
+void TBellWatermill::loadAfter()
+{
+	TMapObjTurn::loadAfter();
+	unk150 = 2;
+	unk15C = -0.02f;
+	unk160 = -0.008f;
+	unk164 = 10.0f;
+	unk18C = 10.0f;
+	unk174 = 1000.0f;
+	unk180 = 0.15f;
+	unk184 = 0.1f;
+	unk16C = 4.0f;
+	unk188 = 0.5f;
+	unk17C = 1.0f;
+	unk194 = (TBiancoBell*)JDrama::TNameRefGen::search("BiaBell 0");
+	unk198 = (TBiancoBell*)JDrama::TNameRefGen::search("BiaBell 1");
+	unk19C = (TBiancoBell*)JDrama::TNameRefGen::search("BiaBell 2");
+	unk1A0 = 1;
+}
 
 TBellWatermill::TBellWatermill(const char* name)
     : TMapObjTurn(name)

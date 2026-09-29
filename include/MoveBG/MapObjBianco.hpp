@@ -8,6 +8,7 @@
 
 struct TBGWallCheckRecord;
 class TMapObjMessenger;
+class TBiancoBell;
 
 class TWoodLog : public TMapObjFloatOnSea {
 public:
@@ -32,7 +33,12 @@ public:
 	/* 0x188 */ f32 unk188;
 	/* 0x18C */ f32 unk18C;
 	/* 0x190 */ u8 unk190;
-	/* 0x191 */ u8 unk191[0xF];
+	/* 0x191 */ u8 unk191;
+	/* 0x192 */ u8 unk192;
+	/* 0x193 */ u8 unk193;
+	/* 0x194 */ TBiancoBell* unk194;
+	/* 0x198 */ TBiancoBell* unk198;
+	/* 0x19C */ TBiancoBell* unk19C;
 	/* 0x1A0 */ u8 unk1A0;
 	/* 0x1A1 */ u8 unk1A1[3];
 	/* 0x1A4 */ u32 unk1A4;

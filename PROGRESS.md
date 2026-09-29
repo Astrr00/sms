@@ -10920,6 +10920,30 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R307 (`MapObjBianco`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TBellWatermill::loadAfter`.
+
+- `TMapObjTurn::loadAfter`, dann `unk150 = 2` und die Dreh-Konstanten.
+  `TNameRefGen::search` von `"BiaBell 0"`, `"BiaBell 1"` und `"BiaBell 2"` nach `unk194`, `unk198`, `unk19C`.
+  `unk1A0 = 1`.
+- `InfectiousStrings` legt die String-Offsets ab `0xF8`.
+- 304 Bytes, 76 Instruktionen.
+  Frame `-0x68`.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBianco`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.45703 % -> 79.46537 %, matched code 50.23398 % -> 50.242447 % (1803444 -> 1803748, +304).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9677 -> 9678.
+`MapObjBianco` 6612 -> 6916 (+304).
+Kein R170–R306-Unit hat matched code verloren.
+
 ### R306 (`MapObjMare`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
