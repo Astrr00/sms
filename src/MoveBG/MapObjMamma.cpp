@@ -700,7 +700,33 @@ TSandBombBase::TSandBombBase(const char* name)
 
 bool TSandCastle::withering() { return false; }
 
-void TSandCastle::expanded() { }
+extern "C" MActor* getMActor__10TLiveActorCFv(const TLiveActor*);
+
+static inline void sandCastleExpanded(TSandCastle* self)
+{
+	char trash[5];
+	trash[0] = 0;
+	TMapObjBase* bomb = self->unk144;
+	f32 speed         = self->unk150;
+	f32 frame = getMActor__10TLiveActorCFv(bomb)->getFrameCtrl(0)->getFrame();
+	getMActor__10TLiveActorCFv(bomb)->getFrameCtrl(0)->setFrame(speed + frame);
+
+	const JGeometry::TVec3<f32>* pos = &self->unk144->mPosition;
+	if (gpMSound->gateCheck(MSD_SE_OBJ_SAMDBOMB_REVERSE))
+		MSoundSESystem::MSoundSE::startSoundActor(
+		    MSD_SE_OBJ_SAMDBOMB_REVERSE, pos, 0, nullptr, 0, 4);
+
+	if (self->unk144->animIsFinished())
+		self->mState = 2;
+
+	if (self->unk144->animIsFinished()) {
+		self->mState = 2;
+		self->startControlAnim(2);
+		self->startControlAnim(3);
+	}
+}
+
+void TSandCastle::expanded() { sandCastleExpanded(this); }
 
 void TSandCastle::explode() { }
 
