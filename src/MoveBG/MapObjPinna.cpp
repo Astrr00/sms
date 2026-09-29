@@ -8,6 +8,7 @@
 #include <System/Application.hpp>
 #include <System/MarDirector.hpp>
 #include <System/FlagManager.hpp>
+#include <MoveBG/ItemManager.hpp>
 #include <MSound/MSound.hpp>
 #include <MSound/SoundEffects.hpp>
 #include <Map/MapCollisionEntry.hpp>
@@ -339,7 +340,49 @@ void TShellCup::perform(u32 cue, JDrama::TGraphics* graphics)
 	char trash[12];
 }
 
-void TShellCup::loadAfter() { }
+// Shifts the newAndRegisterObj temps up to r1+0x30 (frame -0x68).
+static inline void reserveShellCupVecSlot()
+{
+	char pad[0x14];
+	pad[0] = 0;
+}
+
+// director, then coin: flag check keeps the coin pointer in r4.
+static inline bool shellCupBlueCoinGot(TMarDirector* director,
+                                       TMapObjBase* coin)
+{
+	return TFlagManager::smInstance->getBlueCoinFlag(director->getCurrentMap(),
+	                                                 coin->mEventId);
+}
+
+void TShellCup::loadAfter()
+{
+	reserveShellCupVecSlot();
+	TMapObjBase::loadAfter();
+	for (int i = 0; i < 6; ++i)
+		TMapObjBase::joinToGroup("オブジェクトグループ",
+		                         (THitActor*)unk138[i].unk88);
+
+	unk498 = TMapObjBaseManager::newAndRegisterObj(
+	    "coin_blue", JGeometry::TVec3<f32>(0.0f, 0.0f, 0.0f),
+	    JGeometry::TVec3<f32>(0.0f, 0.0f, 0.0f),
+	    JGeometry::TVec3<f32>(1.0f, 1.0f, 1.0f));
+	unk49C = gpItemManager->newAndRegisterCoinReal();
+	unk4A0 = gpItemManager->newAndRegisterCoinReal();
+
+	((TMapObjBase*)unk498)->mEventId = 2;
+	if (!shellCupBlueCoinGot(gpMarDirector, (TMapObjBase*)unk498)) {
+		((TMapObjBase*)unk498)->makeObjAppeared();
+		unk138[0].unk80 = (u32)unk498;
+	}
+
+	((TMapObjBase*)unk49C)->makeObjAppeared();
+	((TMapObjBase*)unk49C)->onMapObjFlag(MAP_OBJ_FLAG_UNK10000000);
+	((TMapObjBase*)unk4A0)->makeObjAppeared();
+	((TMapObjBase*)unk4A0)->onMapObjFlag(MAP_OBJ_FLAG_UNK10000000);
+	unk138[2].unk80 = (u32)unk49C;
+	unk138[4].unk80 = (u32)unk4A0;
+}
 
 void TShellCup::initMapObj() { }
 
