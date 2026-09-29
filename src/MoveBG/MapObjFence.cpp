@@ -1,5 +1,6 @@
 #include <MoveBG/MapObjFence.hpp>
 #include <JSystem/J3D/J3DGraphAnimator/J3DAnimation.hpp>
+#include <M3DUtil/InfectiousStrings.hpp>
 
 #include <Enemy/Conductor.hpp>
 #include <Enemy/Graph.hpp>
@@ -15,6 +16,21 @@
 
 // -inline deferred: source order is the reverse of mario.MAP emission order.
 
+// Original rodata ahead of the pooled "fence3x3" literal.
+// initMapCollisionData addresses that pool by offset from the section base.
+// cDirty* and the two group names are the usual TU prefix.
+// The six fence names belong to still-stubbed outer/inner functions.
+static const char cDirtyFileName[] = "/scene/map/pollution/H_ma_rak.bti";
+static const char cDirtyTexName[]  = "H_ma_rak_dummy";
+static const char cMessengerName[] = "地形オブジェメッセンジャー";
+static const char cObjGroupName[]  = "オブジェクトグループ";
+static const char cRollDown[]      = "fence_revolve_inner_roll_down";
+static const char cRollUp[]        = "fence_revolve_inner_roll_up";
+static const char cOuterV[]        = "fence_revolve_outer_v_tool";
+static const char cOuterH[]        = "fence_revolve_outer_h_tool";
+static const char cBambooInner[]   = "bambooFence_revolve_inner";
+static const char cRevolveInner[]  = "fence_revolve_inner";
+
 f32 TFenceWater::mWaterAccel     = 2.1f;
 f32 TFenceWater::mBackSpeed      = 3.0f;
 int TFenceWater::mTurnedWaitTime = 600;
@@ -28,7 +44,28 @@ BOOL TFence::receiveMessage(THitActor*, u32 message)
 	return FALSE;
 }
 
-void TFence::initMapCollisionData() { }
+void TFence::initMapCollisionData()
+{
+	mMapCollisionManager = new TMapCollisionManager(1, "mapObj", this);
+	if (strcmp(unkF4, "fence3x3") != 0) {
+		if (fabsf(mRotation.x) < 1.0f && fabsf(mRotation.z) < 1.0f)
+			mMapCollisionManager->init("fence_normal_v_tool", 0, nullptr);
+		else
+			mMapCollisionManager->init("fence_h_tool", 0, nullptr);
+	} else {
+		if (fabsf(mRotation.x) < 1.0f && fabsf(mRotation.z) < 1.0f)
+			mMapCollisionManager->init("fence_half_v_tool", 0, nullptr);
+		else
+			mMapCollisionManager->init("fence_half_h_tool", 0, nullptr);
+	}
+
+	TMapCollisionManager* mgr = mMapCollisionManager;
+	Mtx mtx;
+	MsMtxSetTRS(mtx, mPosition, mRotation, mScaling);
+	TMapCollisionBase* col = mgr->unk8;
+	MTXCopy(mtx, col->unk20);
+	col->setUp();
+}
 
 void TFence::initMapObj()
 {

@@ -10920,6 +10920,33 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R340 (`MapObjFence`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TFence::initMapCollisionData`.
+
+- `fence3x3` wählt die Half-Tools, sonst die Normal-Tools.
+- Liegen Rotation X und Z unter 1 Grad, kommt das `_v_`-Tool, sonst das `_h_`-Tool.
+- Danach `MsMtxSetTRS`, `MTXCopy` auf `unk20` und virtuelles `setUp`.
+- Der String-Pool vor `fence3x3` ist der übliche Präfix plus die Literale der noch offenen Fence-Funktionen.
+- 376 Bytes, 94 Instruktionen.
+- `MapObjFence.cpp` bleibt `NonMatching`.
+
+`validate-symbol-order` `mario/MoveBG/MapObjFence`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.62344 % -> 79.633804 %, matched code 50.536366 % -> 50.546837 % (1814300 -> 1814676, +376).
+Matched data bleibt 66.304306 % (424567).
+Funktionen matched 9705 -> 9706.
+`MapObjFence` 4072 -> 4448 (+376).
+Complete units bleiben 416.
+Kein R170–R338-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R338 (`MapObjPlane`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
