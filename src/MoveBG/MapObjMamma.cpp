@@ -491,6 +491,9 @@ public:
 #include <System/TargetArrow.hpp>
 #include <Camera/CameraShake.hpp>
 #include <MarioUtil/RumbleMgr.hpp>
+#include <Camera/Camera.hpp>
+#include <Player/MarioAccess.hpp>
+#include <GC2D/GCConsole2.hpp>
 
 // -inline deferred: source order is the reverse of mario.MAP emission order.
 
@@ -1366,7 +1369,46 @@ void TMammaYacht::initMapObj()
 	unk138->init("MammaYacht00");
 }
 
-void TSandBird::control() { }
+void TSandBird::control()
+{
+	// Dead slot so the frame stays at -0x78.
+	char trash[0x28];
+	trash[0] = 0;
+
+	TJointCoin::control();
+
+	if (gpMSound->gateCheck(MSD_SE_EN_SANDBIRD_CRY))
+		MSoundSESystem::MSoundSE::startSoundActor(
+		    MSD_SE_EN_SANDBIRD_CRY, &mPosition, 0, nullptr, 0, 4);
+
+	if (gpMSound->gateCheck(MSD_SE_ENV_SANDBIRD_WIND))
+		MSoundSESystem::MSoundSE::startSoundSystemSE(
+		    MSD_SE_ENV_SANDBIRD_WIND, 0, nullptr, 0);
+
+	for (s32 i = 0; i < unk13C; ++i) {
+		if (unk140[i]->isActorType(0x2000000E)
+		    || unk140[i]->isActorType(0x40000023)) {
+			gpMarioParticleManager->emitAndBindToPosPtr(
+			    0x159, &unk140[i]->mPosition, 1, unk140[i]);
+			gpMarioParticleManager->emitAndBindToPosPtr(
+			    0x15A, &unk140[i]->mPosition, 1, unk140[i]);
+		}
+	}
+
+	if (!gpCamera->isDemoCamera() && unk150 == 0) {
+		const TLiveActor* actor = SMS_GetMarioGroundPlane()->getActor();
+		if (actor != nullptr && actor->isActorType(0x400002C9)) {
+			gpMarDirector->getConsole()->startAppearBalloon(0xE002F, false);
+			mStateTimer = 0x960;
+			unk150      = 1;
+		}
+	}
+
+	if (unk151 == 0 && unk150 != 0 && !isStateTimerEngaged()) {
+		gpMarDirector->getConsole()->startDisappearBalloon(0xE002F, false);
+		unk151 = 1;
+	}
+}
 
 TMapObjBase* TSandBird::makeObjFromJointName(const char* name, unsigned short param)
 {
