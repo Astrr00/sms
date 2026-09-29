@@ -1431,6 +1431,45 @@ void TMammaMirrorMapOperator::loadAfter() { }
 TMammaMirrorMapOperator::TMammaMirrorMapOperator(const char* name)
     : JDrama::TViewObj(name)
 {
+	unk10[0] = nullptr;
+	unk30[0].zero();
+	unk90[0] = 0.0f;
+	unkB0[0] = 0;
+	unk10[1] = nullptr;
+	unk30[1].zero();
+	unk90[1] = 0.0f;
+	unkB0[1] = 0;
+	unk10[2] = nullptr;
+	unk30[2].zero();
+	unk90[2] = 0.0f;
+	unkB0[2] = 0;
+	unk10[3] = nullptr;
+	unk30[3].zero();
+	unk90[3] = 0.0f;
+	unkB0[3] = 0;
+	unk10[4] = nullptr;
+	unk30[4].zero();
+	unk90[4] = 0.0f;
+	unkB0[4] = 0;
+	unk10[5] = nullptr;
+	unk30[5].zero();
+	unk90[5] = 0.0f;
+	unkB0[5] = 0;
+	unk10[6] = nullptr;
+	unk30[6].zero();
+	unk90[6] = 0.0f;
+	unkB0[6] = 0;
+	unk10[7] = nullptr;
+	unk30[7].zero();
+	unk90[7] = 0.0f;
+	unkB0[7] = 0;
+	unkB8[0].zero();
+	unkB8[1].zero();
+	unkB8[2].zero();
+
+	// Dead slot so MWCC keeps the frame at -0x30.
+	char trash[8];
+	trash[0] = 0;
 }
 
 u32 TSandEgg::getSDLModelFlag() const { return 0; }

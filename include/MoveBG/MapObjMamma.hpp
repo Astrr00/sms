@@ -257,6 +257,13 @@ public:
 	virtual void perform(u32 cue, JDrama::TGraphics* graphics);
 	virtual void loadAfter();
 	TMammaMirrorMapOperator(const char* name = "鏡内地形操作");
+
+public:
+	/* 0x10 */ JDrama::TNameRef* unk10[8];
+	/* 0x30 */ JGeometry::TVec3<f32> unk30[8];
+	/* 0x90 */ f32 unk90[8];
+	/* 0xB0 */ u8 unkB0[8];
+	/* 0xB8 */ JGeometry::TVec3<f32> unkB8[3];
 };
 
 class TSandEgg : public TMapObjBase {
