@@ -508,7 +508,42 @@ void TAmiKing::initMapObj()
 
 void TAmiKing::moveObject() { }
 
-void TAmiKing::calcRootMatrix() { }
+void TAmiKing::calcRootMatrix()
+{
+	TMapObjBase::calcRootMatrix();
+	gpMarioParticleManager->emitAndBindToMtxPtr(0x184, getModel()->getAnmMtx(0),
+	                                            1, this);
+	if (unk138 == 0) {
+		char pad[8];
+		JGeometry::TVec3<f32> off;
+		Mtx rot;
+		char trash[0x14];
+		MtxPtr joint = getMActor()->getModel()->getAnmMtx(6);
+		unk13C.set(joint[0][3], joint[1][3], joint[2][3]);
+
+		off.x = 0.0f;
+		off.y = 0.0f;
+		off.z = 200.0f;
+		MsMtxSetRotRPH(rot, 0.0f, mRotation.y, 0.0f);
+		MTXMultVec(rot, &off, &off);
+		unk13C += off;
+
+		JPABaseEmitter* emitter = gpMarioParticleManager->emitAndBindToPosPtr(
+		    PARTICLE_MS_POI_ZZZ, &unk13C, 1, this);
+		if (emitter != nullptr) {
+			JGeometry::TVec3<f32> scale(2.0f, 2.0f, 2.0f);
+			emitter->setGlobalScale(scale);
+		}
+
+		if (gpMSound->gateCheck(MSD_SE_EN_AMIKING_SPARK))
+			MSoundSESystem::MSoundSE::startSoundActor(MSD_SE_EN_AMIKING_SPARK,
+			                                          &mPosition, 0, nullptr, 0,
+			                                          4);
+	} else if (gpMSound->gateCheck(MSD_SE_EN_AMIKING_FLY)) {
+		MSoundSESystem::MSoundSE::startSoundActor(MSD_SE_EN_AMIKING_FLY,
+		                                          &mPosition, 0, nullptr, 0, 4);
+	}
+}
 
 void TAmiKing::bind()
 {

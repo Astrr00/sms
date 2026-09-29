@@ -181,6 +181,9 @@ public:
 	void bind();
 	void touchPlayer(THitActor*);
 	TAmiKing(const char* name = "アミキング");
+
+	/* 0x138 */ u8 unk138;
+	/* 0x13C */ JGeometry::TVec3<f32> unk13C;
 };
 
 class TPinnaCoaster : public TMapObjBase {
