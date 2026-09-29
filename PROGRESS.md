@@ -10920,6 +10920,28 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R312 (`MapObjGeneral`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjGeneral::calcRootMatrix`.
+
+- Halte-Matrix kommt von `mHolder->getTakingMtx()`.
+- Translation der 3x4-Matrix steht in `[0][3]`, `[1][3]`, `[2][3]`.
+- Freier Pfad übergibt Position und Offset direkt an `MsMtxSetXYZRPH`.
+- 412 Bytes, 103 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjGeneral`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.47678 % -> 79.477066 %, matched code 50.274086 % -> 50.285564 % (1804884 -> 1805296, +412).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9681 -> 9682.
+`MapObjGeneral` 7300 -> 7712 (+412).
+Kein R170–R311-Unit hat matched code verloren.
+
 ### R311 (`Item`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
