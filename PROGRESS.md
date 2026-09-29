@@ -10920,6 +10920,29 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R316 (`MapObjBianco`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TBiancoWatermillVertical::loadAfter` und `TLampSeesawMain::loadAfter`.
+
+- Watermill vergleicht `mName` mit `BiaWatermillVertical 0` und sucht `BiaTurnBridge 0` oder `1`.
+- `mBodyRadius` wird auf `1000.0f` gesetzt.
+- Seesaw kopiert das Namenssuffix von `ランプシーソーＡ` auf `ランプシーソーＢ００`, sucht das Gegenstück und setzt `unk138->unk138 = this`.
+- `char trash[1]` hebt den Seesaw-Frame von `-0x88` auf `-0x90`.
+- Je 196 Bytes, 49 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBianco`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.47712 % -> 79.487816 %, matched code 50.327682 % -> 50.338596 % (1806808 -> 1807200, +392).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9684 -> 9686.
+`MapObjBianco` 6916 -> 7308 (+392).
+Kein R170–R314-Unit hat matched code verloren.
+
 ### R314 (`MapObjBase`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

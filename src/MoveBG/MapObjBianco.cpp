@@ -101,7 +101,15 @@ void TBiancoWatermillVertical::setGroundCollision()
 
 void TBiancoWatermillVertical::control() { }
 
-void TBiancoWatermillVertical::loadAfter() { }
+void TBiancoWatermillVertical::loadAfter()
+{
+	TMapObjBase::loadAfter();
+	if (strcmp(mName, "BiaWatermillVertical 0") == 0)
+		unk140 = (u32)JDrama::TNameRefGen::search("BiaTurnBridge 0");
+	else
+		unk140 = (u32)JDrama::TNameRefGen::search("BiaTurnBridge 1");
+	mBodyRadius = 1000.0f;
+}
 
 void TBiancoWatermillVertical::load(JSUMemoryInputStream& stream)
 {
@@ -305,7 +313,25 @@ void TLampSeesawMain::touchPlayer(THitActor*)
 
 void TLampSeesawMain::control() { }
 
-void TLampSeesawMain::loadAfter() { }
+void TLampSeesawMain::loadAfter()
+{
+	char trash[1];
+	char nameBuf[0x40];
+	trash[0]     = 0;
+	size_t len   = strlen("ランプシーソーＡ");
+	char suffix0 = mName[len];
+	char suffix1 = mName[len + 1];
+	char suffix2 = mName[len + 2];
+	char suffix3 = mName[len + 3];
+	snprintf(nameBuf, 0x40, "ランプシーソーＢ００");
+	nameBuf[len]     = suffix0;
+	nameBuf[len + 1] = suffix1;
+	nameBuf[len + 2] = suffix2;
+	nameBuf[len + 3] = suffix3;
+
+	unk138 = (TLampSeesaw*)JDrama::TNameRefGen::search(nameBuf);
+	unk138->unk138 = this;
+}
 
 TLampSeesawMain::TLampSeesawMain(const char* name)
     : TLampSeesaw(name)
