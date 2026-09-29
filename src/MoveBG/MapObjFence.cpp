@@ -426,8 +426,60 @@ void TRailFence::falling()
 	}
 }
 
+// Dead inline, kept only for the stack slots it leaves behind (no code).
+// The 0x40 local sits under the indexToPoint return temps; the 0x8 return
+// sits above them. trash[0x8] then lands goal at r1+0x70 in a 0x88 frame.
+struct TRailFenceBig {
+	char c[0x40];
+};
+struct TRailFenceSmall {
+	char c[0x8];
+};
+static inline TRailFenceSmall railFencePad()
+{
+	TRailFenceBig big;
+	return *(TRailFenceSmall*)(void*)&big;
+}
+
 #pragma dont_inline on
-void TRailFence::goOnRail() { }
+void TRailFence::goOnRail()
+{
+	if (unk13C->unk0 == nullptr)
+		return;
+
+	railFencePad();
+	JGeometry::TVec3<f32> goal
+	    = unk13C->unk0->indexToPoint(unk13C->mCurrIdx);
+	char trash[0x8];
+	goal.sub(mPosition);
+	if (goal.squared() < 50.0f) {
+		TGraphTracer* tracer = unk13C;
+		TRailNode* rail      = tracer->unk0->unk0[tracer->mCurrIdx].unk0;
+		if (rail->mConnectionNum == 0 && (rail->mFlags & 8)) {
+			if (gpMSound->gateCheck(MSD_SE_OBJ_MVING_FENCT_SET))
+				MSoundSESystem::MSoundSE::startSoundActor(
+				    MSD_SE_OBJ_MVING_FENCT_SET, &mPosition, 0, nullptr, 0,
+				    4);
+			mStateTimer = mWaitTime;
+			startAnim(1);
+			mState = 3;
+			return;
+		}
+		// void* reload: a typed tracer->unk0 stays in r3 and this lwz disappears.
+		// prev is named so its load is scheduled before that reload.
+		int prev = tracer->mPrevIdx;
+		tracer->moveTo((*(TGraphWeb**)(void*)tracer)
+		                   ->getShortestNextIndex(tracer->mCurrIdx, prev,
+		                                          0xffffffff));
+		goal.set(unk13C->unk0->indexToPoint(unk13C->mCurrIdx));
+	}
+	if (gpMSound->gateCheck(MSD_SE_OBJ_MVING_FENCE_MOVE))
+		MSoundSESystem::MSoundSE::startSoundActor(
+		    MSD_SE_OBJ_MVING_FENCE_MOVE, &mPosition, 0, nullptr, 0, 4);
+	VECNormalize(&goal, &goal);
+	goal.scale(unk140);
+	mLinearVelocity.add(goal);
+}
 #pragma dont_inline off
 
 void TRailFence::control()
