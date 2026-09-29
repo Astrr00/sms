@@ -10920,6 +10920,36 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R351 (`MapObjBall`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjBall::hold`.
+
+- Kopiert `mVelocity` und lässt `sqrt` über `doSqrt` als `bl` stehen.
+- `length()` direkt würde `sqrt` zu `frsqrte` expandieren.
+- `ballVelocity` holt `mVelocity`.
+- Der zusätzliche Inline lässt den toten 4-Byte-Slot stehen, damit das Frame bei `-0x38` bleibt.
+- Wenn die Länge nicht über 10 liegt, ruft es `TMapObjGeneral::hold` auf und nullt die Geschwindigkeit.
+- 152 Bytes, 38 Instruktionen.
+- `MapObjBall.cpp` bleibt `NonMatching`.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS.
+0 neue Fehler.
+Die vier UNUSED-Größenwarnungen sind die bisherigen Stubs.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.701256 % -> 79.705376 %, matched code 50.60533 % -> 50.609566 % (1816776 -> 1816928, +152).
+Matched data bleibt 66.393005 % (425135).
+Funktionen matched 9713 -> 9714.
+`MapObjBall` 9712 -> 9864 (+152), Funktionen 54 -> 55.
+Complete units bleiben 416.
+Kein R170–R350-Unit hat matched code verloren.
+Nur `MapObjBall` hat matched code gewonnen.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R350 (`MapObjFence`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

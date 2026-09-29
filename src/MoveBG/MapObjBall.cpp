@@ -78,7 +78,23 @@ void TMapObjBall::put()
 	calcCurrentMtx();
 }
 
-void TMapObjBall::hold(TTakeActor*) { }
+// One inline deep so sqrt stays a call. length() would expand it to frsqrte.
+inline f32 doSqrt(f32 lenSq) { return JGeometry::TUtil<f32>::sqrt(lenSq); }
+
+// The extra inline leaves a dead 4-byte slot so the frame stays at -0x38.
+static inline const JGeometry::TVec3<f32>& ballVelocity(const TMapObjBall* self)
+{
+	return self->mVelocity;
+}
+
+void TMapObjBall::hold(TTakeActor* actor)
+{
+	JGeometry::TVec3<f32> velocity = ballVelocity(this);
+	if (!(doSqrt(velocity.squared()) > 10.0f)) {
+		TMapObjGeneral::hold(actor);
+		mVelocity.x = mVelocity.y = mVelocity.z = 0.0f;
+	}
+}
 
 void TMapObjBall::kicked() { }
 
@@ -270,9 +286,6 @@ void TResetFruit::thrown()
 	TMapObjGeneral::thrown();
 	mState = 11;
 }
-
-// One inline deep so sqrt stays a call. The direct length() call inlines it.
-inline f32 doSqrt(f32 x) { return JGeometry::TUtil<f32>::sqrt(x); }
 
 void TResetFruit::hold(TTakeActor* actor)
 {
