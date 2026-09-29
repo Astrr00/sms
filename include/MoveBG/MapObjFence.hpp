@@ -103,6 +103,9 @@ public:
 	void load(JSUMemoryInputStream&);
 	TRailFence(const char* name = "レールフェンス");
 
+	static f32 mFallHeight;
+	static int mWaitTime;
+
 public:
 	/* 0x13C */ TGraphTracer* unk13C;
 	/* 0x140 */ f32 unk140;

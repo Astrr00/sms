@@ -28,6 +28,8 @@ static const char cObjGroupName[]  = "オブジェクトグループ";
 f32 TFenceWater::mWaterAccel     = 2.1f;
 f32 TFenceWater::mBackSpeed      = 3.0f;
 int TFenceWater::mTurnedWaitTime = 600;
+f32 TRailFence::mFallHeight      = 50000.0f;
+int TRailFence::mWaitTime        = 240;
 
 BOOL TFence::receiveMessage(THitActor*, u32 message)
 {
@@ -403,11 +405,73 @@ BOOL TRailFence::receiveMessage(THitActor*, u32 message)
 	return FALSE;
 }
 
-void TRailFence::falling() { }
+void TRailFence::falling()
+{
+	JGeometry::TVec3<f32> velocity = mVelocity;
+	mPosition.y += velocity.y;
+	mVelocity.y -= mGravity;
+	if (mVelocity.y < -100.0f)
+		mVelocity.y = -100.0f;
+	if (mPosition.y < mInitialPosition.y - mFallHeight) {
+		mPosition.x = mInitialPosition.x;
+		mPosition.y = mInitialPosition.y;
+		mPosition.z = mInitialPosition.z;
+		setUpMapCollision(0);
+		unk13C->setTo(
+		    unk13C->unk0->findNearestNodeIndex(mPosition, 0xffffffff));
+		makeObjAppeared();
+		calcRootMatrix();
+		getModel()->calc();
+		onMapObjFlag(MAP_OBJ_FLAG_UNK100);
+	}
+}
 
+#pragma dont_inline on
 void TRailFence::goOnRail() { }
+#pragma dont_inline off
 
-void TRailFence::control() { }
+void TRailFence::control()
+{
+	TMapObjBase::control();
+	switch (mState) {
+	case 1:
+		break;
+	case 2:
+		goOnRail();
+		break;
+	case 3:
+		if (isStateTimerEngaged())
+			break;
+		removeMapCollision();
+		if (gpMSound->gateCheck(MSD_SE_OBJ_SUPERBLOCK_BREAK))
+			MSoundSESystem::MSoundSE::startSoundActor(
+			    MSD_SE_OBJ_SUPERBLOCK_BREAK, &mPosition, 0, nullptr, 0, 4);
+		mState = 4;
+		break;
+	case 4: {
+		// falling() inlined. The out-of-line copy stays UNUSED.
+		JGeometry::TVec3<f32> velocity = mVelocity;
+		char trash[0x24];
+		mPosition.y += velocity.y;
+		mVelocity.y -= mGravity;
+		if (mVelocity.y < -100.0f)
+			mVelocity.y = -100.0f;
+		if (mPosition.y < mInitialPosition.y - mFallHeight) {
+			mPosition.x = mInitialPosition.x;
+			mPosition.y = mInitialPosition.y;
+			mPosition.z = mInitialPosition.z;
+			setUpMapCollision(0);
+			unk13C->setTo(unk13C->unk0->findNearestNodeIndex(mPosition,
+			                                                 0xffffffff));
+			makeObjAppeared();
+			calcRootMatrix();
+			getModel()->calc();
+			onMapObjFlag(MAP_OBJ_FLAG_UNK100);
+		}
+		break;
+	}
+	}
+}
 
 void TRailFence::initMapCollisionData() { TMapObjBase::initMapCollisionData(); }
 
