@@ -10,6 +10,8 @@
 #include <MSound/MSSetSound.hpp>
 #include <MSound/MSoundBGM.hpp>
 #include <System/Particles.hpp>
+#include <Player/ModelWaterManager.hpp>
+#include <M3DUtil/InfectiousStrings.hpp>
 #include <System/FlagManager.hpp>
 #include <System/MarDirector.hpp>
 #include <Map/MapData.hpp>
@@ -597,12 +599,6 @@ void TBigWatermelon::touchGround(JGeometry::TVec3<f32>* param_1)
 
 void TBigWatermelon::touchActor(THitActor*) { }
 
-class TWaterEmitInfo;
-class TModelWaterManager {
-public:
-	u8 emitRequest(const TWaterEmitInfo&);
-};
-extern TModelWaterManager* gpModelWaterManager;
 class TItemManager;
 extern TItemManager* gpItemManager;
 extern "C" TMapObjBase*
@@ -703,7 +699,16 @@ void TBigWatermelon::loadAfter()
 	actor->mPosition.z = 13620.0f;
 }
 
-void TBigWatermelon::initMapObj() { }
+void TBigWatermelon::initMapObj()
+{
+	TMapObjBall::initMapObj();
+	SMS_LoadParticle("/scene/mapObj/watermelon_bomb.jpa", 0x5D);
+	SMS_LoadParticle("/scene/mapObj/watermelon_bomb_a.jpa", 0x5E);
+	SMS_LoadParticle("/scene/mapObj/watermelon_bomb_b.jpa", 0x5F);
+	SMS_LoadParticle("/scene/mapObj/watermelon_shrink_a.jpa", 0x6B);
+	SMS_LoadParticle("/scene/mapObj/watermelon_shrink_b.jpa", 0x6C);
+	unk198 = (u32)new TWaterEmitInfo("/watermelon.prm");
+}
 
 TBigWatermelon::TBigWatermelon(const char* name)
     : TMapObjBall(name)

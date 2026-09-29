@@ -10920,6 +10920,29 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R305 (`MapObjBall`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TBigWatermelon::initMapObj`.
+
+- `TMapObjBall::initMapObj`, dann fünf `SMS_LoadParticle` (`0x5D`, `0x5E`, `0x5F`, `0x6B`, `0x6C`).
+  `unk198` ist `new TWaterEmitInfo("/watermelon.prm")`.
+- `InfectiousStrings.hpp` setzt die Rodata-Basis, die Offsets ab `0xE0` treffen.
+- 340 Bytes, 85 Instruktionen.
+  Frame `-0x20`.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.43852 % -> 79.44788 %, matched code 50.215263 % -> 50.224728 % (1802772 -> 1803112, +340).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9675 -> 9676.
+`MapObjBall` 8400 -> 8740 (+340).
+Kein R170–R304-Unit hat matched code verloren.
+
 ### R304 (`MapObjBall`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
