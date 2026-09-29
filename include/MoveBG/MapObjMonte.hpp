@@ -63,6 +63,8 @@ public:
 	THangingBridge(const char* name = "つり橋");
 
 public:
+	static f32 mRopeWidthBetweenBoards;
+	static f32 mRopeWidthBetweenBoardsY;
 	static int mPointNumBetweenBoards;
 	static f32 mBetweenBoardsTexPosRate;
 	static f32 mRopeHeight;
