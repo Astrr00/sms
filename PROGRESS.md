@@ -10920,6 +10920,37 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R352 (`MapObjBall`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjBall::checkWallCollision`.
+
+- Setzt die Prüfposition auf X, Y plus `mBodyRadius` und Z.
+- `radius = mBodyRadius` steht im Addenden, damit Y vor dem Radius geladen wird und `f1` den Radius behält.
+- `checkBallWall` legt den Record über den Positionsvektor.
+- `char pad[0x10]` hält Frame `-0x68` und die Position auf `r1+0x28`.
+- Bei Treffer schreibt es `unk138`, kopiert X/Z zurück und ruft virtuelles `touchWall`.
+- Sonst setzt es `unk138` auf null.
+- 220 Bytes, 55 Instruktionen.
+- `MapObjBall.cpp` bleibt `NonMatching`.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS.
+0 neue Fehler.
+Die vier UNUSED-Größenwarnungen sind die bisherigen Stubs.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.705376 % -> 79.7114 %, matched code 50.609566 % -> 50.6157 % (1816928 -> 1817148, +220).
+Matched data bleibt 66.393005 % (425135).
+Funktionen matched 9714 -> 9715.
+`MapObjBall` 9864 -> 10084 (+220), Funktionen 55 -> 56.
+Complete units bleiben 416.
+Kein R170–R351-Unit hat matched code verloren.
+Nur `MapObjBall` hat matched code gewonnen.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R351 (`MapObjBall`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

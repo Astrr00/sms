@@ -4,6 +4,8 @@
 #include <MarioUtil/PacketUtil.hpp>
 #include <MSound/MSound.hpp>
 #include <MSound/SoundEffects.hpp>
+#include <Map/Map.hpp>
+#include <Map/MapCollisionData.hpp>
 #include <string.h>
 
 // rogue includes needed for matching sinit & bss
@@ -132,7 +134,36 @@ void TMapObjBall::touchActor(THitActor*) { }
 
 void TMapObjBall::calcCurrentMtx() { }
 
-void TMapObjBall::checkWallCollision(JGeometry::TVec3<f32>*) { }
+// Inlined so the wall record is allocated above the position vector.
+static inline void checkBallWall(TMapObjBall* self,
+                                 JGeometry::TVec3<f32>* param_1)
+{
+	// Dead slot so the position sits at r1+0x28 and the frame stays at -0x68.
+	char pad[0x10];
+	f32 radius;
+	JGeometry::TVec3<f32> pos;
+	pad[0] = 0;
+	pos.x  = param_1->x;
+	// Radius is captured in the add so Y loads first and f1 keeps it.
+	pos.y = param_1->y + (radius = self->mBodyRadius);
+	pos.z  = param_1->z;
+
+	TBGWallCheckRecord check(pos, radius, 4,
+	                         self->mMapObjData->mPhysical->mWallCheckFlags);
+	if (gpMap->isTouchedWallsAndMoveXZ(&check)) {
+		self->unk138 = check.mResultWalls[0];
+		param_1->x   = pos.x;
+		param_1->z   = pos.z;
+		self->touchWall(param_1, &check);
+	} else {
+		self->unk138 = nullptr;
+	}
+}
+
+void TMapObjBall::checkWallCollision(JGeometry::TVec3<f32>* param_1)
+{
+	checkBallWall(this, param_1);
+}
 
 void TMapObjBall::makeObjDefault()
 {
