@@ -10920,6 +10920,28 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R311 (`Item`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TShine::receiveMessage`.
+
+- Übernimmt Mario-Position und Y-Rotation, setzt die Basis-Matrix und startet
+  `shine_demo_shine_get` bzw. die Yoshi- und Empty-Variante.
+- `char trash[1]` hebt den Frame von `-0x78` auf `-0x80`.
+- 436 Bytes, 109 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/Item`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.476746 % -> 79.47678 %, matched code 50.261944 % -> 50.274086 % (1804448 -> 1804884, +436).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9680 -> 9681.
+`Item` 14360 -> 14796 (+436).
+Kein R170–R310-Unit hat matched code verloren.
+
 ### R310 (`MapObjTown`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

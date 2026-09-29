@@ -648,6 +648,8 @@ void TShine::perform(u32 cue, JDrama::TGraphics* graphics)
 
 BOOL TShine::receiveMessage(THitActor* sender, u32 message)
 {
+	char trash[1];
+	trash[0] = 0;
 	unkF8 &= 0xF7FFFFFF;
 	mPosition.set(SMS_GetMarioPos());
 	mRotation.y = 180.0f * (f32)*gpMarioAngleY / 32768.0f;
