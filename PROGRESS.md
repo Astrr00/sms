@@ -10920,6 +10920,30 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R326 (`MapObjMamma`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TSandBomb::touchWater`.
+
+- Frame 0 und 5 laufen um `mFiringFrameSpeed` vor.
+- Danach vier `soundBas`-Rufe für `MSD_SE_OBJ_SANDBOMB_WATER_1` bis `_4`.
+- Wenn die Anim endet, ruft `unk138->getLivingTime`, startet Anim 3 bis 5 und setzt `HIT_FLAG_NO_COLLISION`.
+- Rückgabe ist immer 1.
+- `char trash[28]` hält Frame `-0x68`.
+- 332 Bytes, 83 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMamma`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.5738 % -> 79.582886 %, matched code 50.425617 % -> 50.434864 % (1810324 -> 1810656, +332).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9695 -> 9696.
+`MapObjMamma` 10044 -> 10376 (+332).
+Kein R170–R325-Unit hat matched code verloren.
+
 ### R325 (`MapObjMamma`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

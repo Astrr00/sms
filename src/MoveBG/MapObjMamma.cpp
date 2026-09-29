@@ -678,7 +678,37 @@ void TSandBomb::makeObjAppeared()
 	startControlAnim(2);
 }
 
-u32 TSandBomb::touchWater(THitActor*) { return 0; }
+static inline void addFiringFrame(TLiveActor* actor, int idx)
+{
+	f32 speed = TSandBombBase::mFiringFrameSpeed;
+	f32 frame = actor->getMActor()->getFrameCtrl(idx)->getFrame();
+	actor->getMActor()->getFrameCtrl(idx)->setFrame(speed + frame);
+}
+
+u32 TSandBomb::touchWater(THitActor*)
+{
+	addFiringFrame(this, 0);
+	addFiringFrame(this, 5);
+	getMActor()->getFrameCtrl(0);
+	soundBas(MSD_SE_OBJ_SANDBOMB_WATER_1, 7.0f,
+	          TSandBombBase::mFiringFrameSpeed);
+	soundBas(MSD_SE_OBJ_SANDBOMB_WATER_2, 50.0f,
+	          TSandBombBase::mFiringFrameSpeed);
+	soundBas(MSD_SE_OBJ_SANDBOMB_WATER_3, 100.0f,
+	          TSandBombBase::mFiringFrameSpeed);
+	soundBas(MSD_SE_OBJ_SANDBOMB_WATER_4, 150.0f,
+	          TSandBombBase::mFiringFrameSpeed);
+	if (getMActor()->curAnmEndsNext()) {
+		unk138->getLivingTime();
+		startControlAnim(3);
+		startControlAnim(4);
+		startControlAnim(5);
+		onHitFlag(HIT_FLAG_NO_COLLISION);
+	}
+	char trash[28];
+	trash[27] = 0;
+	return 1;
+}
 
 u32 TSandBomb::getSDLModelFlag() const { return 0; }
 
