@@ -10920,6 +10920,29 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R314 (`MapObjBase`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjBase::makeObjAppeared`.
+
+- `mVelocity` wird z, y, x genullt.
+- Anm-Mtx-Pfad bleibt inlined `setMtx`.
+- TRS-Pfad ruft `setMtx__17TMapCollisionBaseFPA4_f` direkt.
+- `char trash[29]` hebt den Frame von `-0x98` auf `-0xc0`.
+- 776 Bytes, 194 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBase`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.47708 % -> 79.47712 %, matched code 50.306065 % -> 50.327682 % (1806032 -> 1806808, +776).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9683 -> 9684.
+`MapObjBase` 5852 -> 6628 (+776).
+Kein R170–R313-Unit hat matched code verloren.
+
 ### R313 (`Item`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

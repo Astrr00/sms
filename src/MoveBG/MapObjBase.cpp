@@ -338,12 +338,16 @@ void TMapObjBase::makeObjDead()
 		SMS_HideAllShapePacket(getModel());
 }
 
+extern "C" void setMtx__17TMapCollisionBaseFPA4_f(TMapCollisionBase*, MtxPtr);
+
 void TMapObjBase::makeObjAppeared()
 {
+	char trash[29];
+	trash[0] = 0;
 	offLiveFlag(LIVE_FLAG_DEAD | LIVE_FLAG_UNK8);
-	mVelocity.x = 0.0f;
-	mVelocity.y = 0.0f;
 	mVelocity.z = 0.0f;
+	mVelocity.y = 0.0f;
+	mVelocity.x = 0.0f;
 	onLiveFlag(LIVE_FLAG_UNK10);
 	mStateTimer = 0;
 	offHitFlag(HIT_FLAG_NO_COLLISION);
@@ -398,7 +402,7 @@ void TMapObjBase::makeObjAppeared()
 			            mScaling.x, mScaling.y, mScaling.z);
 
 			TMapCollisionBase* col = manager->getUnk8();
-			col->setMtx(mtx);
+			setMtx__17TMapCollisionBaseFPA4_f(col, mtx);
 			col->setUp();
 		}
 	}
