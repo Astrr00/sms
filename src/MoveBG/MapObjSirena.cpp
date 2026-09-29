@@ -412,9 +412,14 @@ void TItemSlotDrum::moveObject()
 	if (unk1A4 > 0) {
 		unk1A4++;
 		if (unk1A4 > 160) {
-			unk1A4                             = 0;
-			unk19C[TMsRange<s32>(0, 2).rand()] = true;
-			f32 v = TMsRange<f32>(0.0f, 100.0f).rand();
+			unk1A4 = 0;
+			TMsRange<s32> pick(0, 2);
+			s32 idx;
+			idx = pick.rand();
+			unk19C[idx] = true;
+			TMsRange<f32> roll(0.0f, 100.0f);
+			f32 v;
+			v = roll.rand();
 			if (v < unk1A8 && unk1A8 > 10.0f)
 				unk198 = 0;
 			else if (v < 30.0f)
@@ -457,21 +462,28 @@ void TItemSlotDrum::moveObject()
 					SMSGetMSound()->startSoundActor(MSD_SE_BS_TELESA_SLT_STOP,
 					                                &mPosition, 0, nullptr, 0,
 					                                4);
-					bool allStopped = 0.0f == unk138[0] && 0.0f == unk138[1]
-					                  && 0.0f == unk138[2];
+					bool allStopped = true;
+					for (int k = 0; k < 3; ++k)
+						if (unk138[k] != 0.0f)
+							allStopped = false;
 					if (allStopped) {
 						unk1A2 = true;
 						generateItem();
 					}
 					for (int j = 0; j < unk148; ++j) {
 						if (unk19F[j]) {
-							if (TMsRange<f32>(0.0f, 1.0f).rand() < 0.9f)
+							TMsRange<f32> keep(0.0f, 1.0f);
+							f32 chance;
+							chance = keep.rand();
+							if (chance <= 0.9f)
 								unk19C[j] = true;
 							else
 								unk19F[j] = false;
 						}
 					}
-					if (unk13C[i] < (f32)unk168) {
+					f32 ang  = unk13C[i];
+					s32 step = unk168;
+					if (ang < (f32)step) {
 						unk170[i].r = 255;
 						unk170[i].g = 255;
 						unk170[i].b = 70;
