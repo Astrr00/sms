@@ -1237,7 +1237,58 @@ u32 TMammaBlockRotate::touchWater(THitActor*)
 	return 1;
 }
 
-void TMammaBlockRotate::control() { }
+void TMammaBlockRotate::control()
+{
+	TMapObjBase::control();
+	JGeometry::TVec3<f32> off;
+	// Places off at r1+0xa0 so the frame stays -0xb8.
+	char trash[8];
+	trash[0] = 0;
+	switch (mState) {
+	case 1:
+		if (mRotation.y > 0.0f)
+			mRotation.y -= mRotReturnSpeed;
+		else
+			mRotation.y = 0.0f;
+		break;
+	case 2: {
+		TMapObjBase::moveJoint(unk140->getJoint(), 0.0f, -mMapGoSpeed, 0.0f);
+		TMapObjBase::moveJoint(unk13C->getJoint(), 0.0f, -mMapGoSpeed, 0.0f);
+		J3DTransformInfo& info = unk140->getJoint()->getTransformInfo();
+		unk138->getModel()->calc();
+		f32 y = info.mTranslate.y;
+		off.set(0.0f, y, 0.0f);
+		unk144->moveTrans(off);
+		off.set(0.0f, info.mTranslate.y, 0.0f);
+		unk148->moveTrans(off);
+		if (info.mTranslate.y < 0.0f) {
+			mStateTimer = mWaitTime;
+			mState = 3;
+		}
+		break;
+	}
+	case 3:
+		if (!isStateTimerEngaged())
+			mState = 4;
+		break;
+	case 4: {
+		TMapObjBase::moveJoint(unk140->getJoint(), 0.0f, mMapBackSpeed, 0.0f);
+		TMapObjBase::moveJoint(unk13C->getJoint(), 0.0f, mMapBackSpeed, 0.0f);
+		J3DJoint* joint = unk140->getJoint();
+		f32 y           = joint->getTransformInfo().mTranslate.y;
+		J3DTransformInfo& info = joint->getTransformInfo();
+		off.set(0.0f, y, 0.0f);
+		unk144->moveTrans(off);
+		off.set(0.0f, info.mTranslate.y, 0.0f);
+		unk148->moveTrans(off);
+		unk138->getModel()->calc();
+		y = info.mTranslate.y;
+		if (y > unk140->getJoint()->getMax().y - unk140->getJoint()->getMin().y)
+			mState = 1;
+		break;
+	}
+	}
+}
 
 void TMammaBlockRotate::initMapObj()
 {
