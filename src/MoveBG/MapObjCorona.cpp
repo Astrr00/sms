@@ -180,6 +180,7 @@ class TKoopa {
 public:
 	void stagger(bool);
 	void getDown();
+	bool allowsLaunch() const;
 };
 
 void TBathtub::hipdrop(const JGeometry::TVec3<f32>& pos)
@@ -370,7 +371,19 @@ TBathtub::TBathtub(const char* name)
 
 void TBathtub::load(JSUMemoryInputStream&) { }
 
-u8 TBathtub::getNumKillerLaunchable() const { return 0; }
+int TBathtub::getNumKillerLaunchable() const
+{
+	if (!isKillerLaunchable())
+		return 0;
+
+	int count = getNumGripsDead();
+	int num   = count + 1;
+	if (num < 2)
+		num = 2;
+	if (num > 4)
+		num = 4;
+	return num;
+}
 
 bool TBathtub::isKillerAttackable() const { return unk248 <= 0; }
 
@@ -379,8 +392,21 @@ u8 TBathtub::getNumKillerBurstable() const { return 0; }
 // Unused
 bool TBathtub::isBreaking() const { return false; }
 
-// Unused
-bool TBathtub::isKillerLaunchable() const { return false; }
+// Unused out of line. Inlined into getNumKillerLaunchable.
+bool TBathtub::isKillerLaunchable() const
+{
+	bool ready;
+	if (unk29A != 0) {
+		ready = false;
+	} else {
+		JDrama::TNameRef* ref = JDrama::TNameRefGen::search("クッパ");
+		if (!((TKoopa*)ref)->allowsLaunch())
+			ready = false;
+		else
+			ready = unk248 <= 0;
+	}
+	return ready;
+}
 
 // Unused
 void TBathtub::showMessage(u32) { }

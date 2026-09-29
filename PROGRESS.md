@@ -10920,6 +10920,33 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R344 (`MapObjCorona`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TBathtub::getNumKillerLaunchable`.
+
+- Liefert 0, wenn `isKillerLaunchable` falsch ist.
+- `isKillerLaunchable` prüft `unk29A`, sucht `クッパ` und fragt `allowsLaunch`, sonst `unk248 <= 0`.
+- Die Zahl ist `getNumGripsDead() + 1`, geklemmt auf 2 bis 4.
+- 324 Bytes, 81 Instruktionen.
+- Die ungenutzte Kopie von `isKillerLaunchable` ist 0x9c, wie in der Map.
+- `MapObjCorona.cpp` bleibt `NonMatching`.
+
+`validate-symbol-order` `mario/MoveBG/MapObjCorona`: PASS gegen die Basis.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.661095 % -> 79.669970 %, matched code 50.566006 % -> 50.575030 % (1815364 -> 1815688, +324).
+Matched data bleibt 66.304306 % (424567).
+Funktionen matched 9708 -> 9709.
+`MapObjCorona` 1368 -> 1692 (+324).
+Complete units bleiben 416.
+Kein R170–R343-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R343 (`MapObjMamma`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
