@@ -10920,6 +10920,31 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R306 (`MapObjMare`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMareCork::loadAfter`.
+
+- `TNameRefGen::search("砲台")` nach `unk138`.
+  `receiveMessage(this, HIT_MESSAGE_TAKE)` schreibt den Zeiger nach `mHeldObject`.
+  Drei `SMS_LoadParticle` (`0x14C`, `0x14D`, `0x14E`), dann `TMapObjBase::loadAfter`.
+  `unk13C` wird genullt, danach `initAnmSound`.
+- `InfectiousStrings` und Rogue-Rodata `@2690`/`@2692` legen die String-Offsets.
+- 332 Bytes, 83 Instruktionen.
+  Frame `-0x38`.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMare`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.44788 % -> 79.45703 %, matched code 50.224728 % -> 50.23398 % (1803112 -> 1803444, +332).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9676 -> 9677.
+`MapObjMare` 5584 -> 5916 (+332).
+Kein R170–R305-Unit hat matched code verloren.
+
 ### R305 (`MapObjBall`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

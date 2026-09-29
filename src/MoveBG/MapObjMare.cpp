@@ -1,4 +1,5 @@
 #include <MoveBG/MapObjMare.hpp>
+#include <JSystem/JDrama/JDRNameRefGen.hpp>
 #include <JSystem/J3D/J3DGraphAnimator/J3DModel.hpp>
 #include <JSystem/JParticle/JPAEmitter.hpp>
 #include <M3DUtil/MActor.hpp>
@@ -22,6 +23,11 @@ static JGeometry::TVec3<f32> fall_upper_pos(2827.0f, 8604.0f, 7202.0f);
 // rogue includes needed for matching sinit & bss
 #include <MSound/MSSetSound.hpp>
 #include <MSound/MSoundBGM.hpp>
+#include <M3DUtil/InfectiousStrings.hpp>
+
+// rogue rodata so @2690/@2692 sit ahead of the shine strings
+static const char rogueRodata2690[0xc] = { 0 };
+static const f32 rogueRodata2692[3]    = { 1.0f, 1.0f, 1.0f };
 
 // -inline deferred: source order is the reverse of mario.MAP emission order.
 
@@ -370,7 +376,20 @@ void TMareFall::load(JSUMemoryInputStream& stream)
 	SMS_LoadParticle("/scene/mapObj/mareFallSmoke.jpa", 0x14A);
 }
 
-void TMareCork::loadAfter() { }
+void TMareCork::loadAfter()
+{
+	unk138 = (TCannon*)JDrama::TNameRefGen::search("砲台");
+	if (((THitActor*)unk138)->receiveMessage(this, HIT_MESSAGE_TAKE))
+		mHeldObject = (TTakeActor*)unk138;
+	SMS_LoadParticle("/scene/map/map/ms_mare_gunwat_a.jpa", 0x14C);
+	SMS_LoadParticle("/scene/map/map/ms_mare_gunwat_b.jpa", 0x14D);
+	SMS_LoadParticle("/scene/map/map/ms_mare_gunwat_c.jpa", 0x14E);
+	TMapObjBase::loadAfter();
+	unk13C.x = 0.0f;
+	unk13C.y = 0.0f;
+	unk13C.z = 0.0f;
+	initAnmSound();
+}
 
 void TMareCork::moveObject()
 {
