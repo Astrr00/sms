@@ -10920,6 +10920,29 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R310 (`MapObjTown`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjSwitch::receiveMessage`.
+
+- Hip-Drop startet `objswitch`, `MSD_SE_OBJ_AP_BUTTON`, `removeMapCollision`,
+  `unk144[i]->action(unk140)` und `fireStartDemoCamera` mit `TFlagT<u16>()`.
+- `static inline fireSwitchCam` mit `char pad[1]` legt das Flag-Temp auf `r1+0x2c`
+  bei Frame `-0x40`.
+- 288 Bytes, 72 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjTown`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy bleibt 79.476746 %, matched code 50.25392 % -> 50.261944 % (1804160 -> 1804448, +288).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9679 -> 9680.
+`MapObjTown` 9524 -> 9812 (+288).
+Kein R170–R308-Unit hat matched code verloren.
+
 ### R308 (`MapObjRicco`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

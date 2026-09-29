@@ -515,11 +515,17 @@ void TMapObjSwitch::control()
 	}
 }
 
+static inline void fireSwitchCam(const char* name)
+{
+	char pad[1];
+	pad[0] = 0;
+	SMSGetMarDirector()->fireStartDemoCamera(name, nullptr, -1, 0.0f, true,
+	                                         nullptr, 0, nullptr,
+	                                         JDrama::TFlagT<u16>());
+}
+
 BOOL TMapObjSwitch::receiveMessage(THitActor*, u32 message)
 {
-	char trash[4];
-	trash[0] = 0;
-
 	if (message == HIT_MESSAGE_HIP_DROP) {
 		startBck("objswitch");
 		SMSGetMSound()->startSoundActor(MSD_SE_OBJ_AP_BUTTON, &mPosition, 0,
@@ -527,9 +533,7 @@ BOOL TMapObjSwitch::receiveMessage(THitActor*, u32 message)
 		removeMapCollision();
 		for (int i = 0; i < unk13C; ++i)
 			unk144[i]->action(unk140);
-		SMSGetMarDirector()->fireStartDemoCamera(
-		    "オブジェスイッチ用カメラ", nullptr, -1, 0.0f, true, nullptr, 0,
-		    nullptr, JDrama::TFlagT<u16>(0));
+		fireSwitchCam("オブジェスイッチ用カメラ");
 		mStateTimer = unk140;
 		onHitFlag(HIT_FLAG_NO_COLLISION);
 		return TRUE;
