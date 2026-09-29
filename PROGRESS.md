@@ -10920,6 +10920,31 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R302 (`MapObjBall`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TBigWatermelon::receiveMessage`.
+
+- `isActorType(0x80000001)` ruft `boundByActor` und liefert 1.
+  Sonst liefert `TMapObjGeneral::receiveMessage` bei Erfolg 1.
+  Nachricht 4 mit `MAP_OBJ_FLAG_UNK100000` ruft `hold`.
+  Dieselbe Actor-Art, nicht `0x400000D0` und nicht Nachricht 4, ruft `kicked`.
+  Sonst 0.
+- `#pragma dont_inline` hält den `bl` auf das leere `boundByActor`.
+- 316 Bytes, 79 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.41127 % -> 79.419914 %, matched code 50.18763 % -> 50.196426 % (1801780 -> 1802096, +316).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9672 -> 9673.
+`MapObjBall` 7408 -> 7724 (+316).
+Kein R170–R301-Unit hat matched code verloren.
+
 ### R301 (`MapObjBall`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

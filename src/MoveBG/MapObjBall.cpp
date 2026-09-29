@@ -79,7 +79,9 @@ u32 TMapObjBall::touchWater(THitActor* actor)
 	return 1;
 }
 
+#pragma dont_inline on
 void TMapObjBall::boundByActor(THitActor*) { }
+#pragma dont_inline off
 
 // Empty here. dont_inline keeps the qualified call in TResetFruit::touchActor.
 #pragma dont_inline on
@@ -598,7 +600,25 @@ void TBigWatermelon::checkWallCollision(JGeometry::TVec3<f32>* param_1)
 	TMapObjGeneral::checkWallCollision(param_1);
 }
 
-BOOL TBigWatermelon::receiveMessage(THitActor*, u32) { return 0; }
+BOOL TBigWatermelon::receiveMessage(THitActor* sender, u32 message)
+{
+	if (sender->isActorType(0x80000001)) {
+		boundByActor(sender);
+		return true;
+	}
+	if (TMapObjGeneral::receiveMessage(sender, message))
+		return true;
+	if (message == 4 && checkMapObjFlag(MAP_OBJ_FLAG_UNK100000)) {
+		hold((TTakeActor*)sender);
+		return true;
+	}
+	if (sender->isActorType(0x80000001) && !isActorType(0x400000D0)
+	    && message != 4) {
+		kicked();
+		return true;
+	}
+	return false;
+}
 
 void TBigWatermelon::loadAfter()
 {
