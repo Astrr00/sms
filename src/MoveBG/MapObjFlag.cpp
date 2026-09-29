@@ -1,6 +1,7 @@
 #include <MoveBG/MapObjFlag.hpp>
 #include <System/MarDirector.hpp>
 #include <MarioUtil/MathUtil.hpp>
+#include <MarioUtil/RandomUtil.hpp>
 
 // rogue includes needed for matching sinit & bss
 #include <MSound/MSSetSound.hpp>
@@ -49,7 +50,20 @@ void TMapObjFlag::load(JSUMemoryInputStream& stream)
 
 TMapObjFlag::TMapObjFlag(const char* name)
     : THitActor(name)
+    , unk68(0.0f)
+    , unk6C(0.0f)
+    , unk70(0)
+    , unk74(0)
+    , unk78(nullptr)
+    , unk7C(125.0f)
+    , unk80(130.0f)
+    , unk84(20.0f)
+    , unk88(MsRandF() * 360.0f)
+    , unkBC(1)
 {
+	unk8C.identity();
+	// Dead slot: retail frame is -0x48, the live locals only fill -0x40.
+	char trash[8];
 }
 
 void TMapObjFlagManager::initDraw() { }

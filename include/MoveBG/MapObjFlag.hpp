@@ -2,6 +2,7 @@
 #define MOVE_BG_MAP_OBJ_FLAG_HPP
 
 #include <JSystem/JDrama/JDRViewObj.hpp>
+#include <JSystem/JGeometry.hpp>
 #include <Strategic/HitActor.hpp>
 
 class TMapObjFlag;
@@ -50,7 +51,7 @@ public:
 
 	static f32 mFlutterSpeed;
 
-	// Retail `new TMapObjFlag` is 0xC0. Field init belongs to the parked ctor.
+	// Retail `new TMapObjFlag` is 0xC0.
 	/* 0x68 */ f32 unk68;
 	/* 0x6C */ f32 unk6C;
 	/* 0x70 */ s32 unk70;
@@ -60,7 +61,7 @@ public:
 	/* 0x80 */ f32 unk80;
 	/* 0x84 */ f32 unk84;
 	/* 0x88 */ f32 unk88;
-	/* 0x8C */ u8 unk8C[0x30];
+	/* 0x8C */ TMtx34f unk8C;
 	/* 0xBC */ s32 unkBC;
 };
 
