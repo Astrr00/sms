@@ -10920,6 +10920,34 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R356 (`MapObjGeneral`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjGeneral::recover`.
+
+- `gpPollution` bleibt ein Lokales, damit der Zeiger in `r3` über das `this`-Sichern lebt.
+- `x` und `y` sind Lokale, damit die Loads in der Retail-Reihenfolge stehen.
+- `cleanFromRadius` hält den Radius-Dividend in `f5`.
+- `char trash[0x28]` mit `trash[0] = 0` hebt den Frame auf `-0x50`.
+- 264 Bytes, 66 Instruktionen.
+- `MapObjGeneral.cpp` bleibt `NonMatching`.
+
+`validate-symbol-order` `mario/MoveBG/MapObjGeneral`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.71511 % -> 79.715164 %, matched code 50.629402 % -> 50.636753 % (1817640 -> 1817904, +264).
+Matched data bleibt 66.393005 % (425135).
+Funktionen matched 9717 -> 9718.
+`MapObjGeneral` 7712 -> 7976 (+264), Funktionen 38 -> 39.
+Complete units bleiben 416.
+Kein R170–R355-Unit hat matched code verloren.
+Nur `MapObjGeneral` hat matched code gewonnen.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R355 (`MapObjInit`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

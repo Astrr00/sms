@@ -303,10 +303,25 @@ void TMapObjGeneral::touchPlayer(THitActor* player)
 	}
 }
 
+// Parameter boundary keeps the radius dividend in f5 and x/y loads in order.
+static inline void cleanFromRadius(TPollutionManager* pollution, f32 x, f32 y,
+                                   f32 z, f32 radius)
+{
+	pollution->clean(x, y, z, (u16)radius);
+}
+
 void TMapObjGeneral::recover()
 {
-	gpPollution->clean(mPosition.x, unk144, mPosition.z,
-	                   (u16)(mMapObjData->mHit->unkC[2].unk0 / 6.0f));
+	// Dead slot so the fctiwz spill stays at r1+0x40 (frame -0x50).
+	char trash[0x28];
+	trash[0] = 0;
+
+	// Local keeps gpPollution in r3 across the this-save.
+	TPollutionManager* pollution = gpPollution;
+	f32 x                        = mPosition.x;
+	f32 y                        = unk144;
+	cleanFromRadius(pollution, x, y, mPosition.z,
+	                mMapObjData->mHit->unkC[2].unk0 / 6.0f);
 
 	setUpMapCollision(1);
 	startAnim(6);
