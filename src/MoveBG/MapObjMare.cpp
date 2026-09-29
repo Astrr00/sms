@@ -8,6 +8,7 @@
 #include <System/Particles.hpp>
 #include <MSound/MSound.hpp>
 #include <System/MarDirector.hpp>
+#include <dolphin/gx.h>
 
 extern void MsMtxSetTRS(MtxPtr result, f32 x, f32 y, f32 z, f32 r, f32 p, f32 h,
                         f32 sx, f32 sy, f32 sz);
@@ -207,9 +208,43 @@ TMapObjGrowTree::TMapObjGrowTree(const char* name)
 {
 }
 
+// Retail body is large; the stub must stay a call from draw.
+#pragma dont_inline on
 void TWireBell::initDraw() const { }
+#pragma dont_inline off
 
-void TWireBell::draw() const { }
+void TWireBell::draw() const
+{
+	initDraw();
+
+	// Declaration order is the float-reg order (f31 down).
+	f32 yBot = mPosition.y;
+	f32 x1   = unk14C.x + unk140;
+	f32 x0   = unk14C.x - unk140;
+	f32 z1   = unk14C.z + unk144;
+	f32 z0   = unk14C.z - unk144;
+	f32 yTop = unk14C.y;
+	f32 tTop = unk148 * (yTop - mPosition.y);
+	f32 tBot = unk148 * (yBot - mPosition.y);
+
+	GXBegin(GX_TRIANGLESTRIP, GX_VTXFMT0, 8);
+	GXPosition3f32(x0, yTop, z0);
+	GXTexCoord2f32(0.0f, tTop);
+	GXPosition3f32(x0, yBot, z0);
+	GXTexCoord2f32(0.0f, tBot);
+	GXPosition3f32(x1, yTop, z1);
+	GXTexCoord2f32(1.0f, tTop);
+	GXPosition3f32(x1, yBot, z1);
+	GXTexCoord2f32(1.0f, tBot);
+	GXPosition3f32(x1, yTop, z0);
+	GXTexCoord2f32(0.0f, tTop);
+	GXPosition3f32(x1, yBot, z0);
+	GXTexCoord2f32(0.0f, tBot);
+	GXPosition3f32(x0, yTop, z1);
+	GXTexCoord2f32(1.0f, tTop);
+	GXPosition3f32(x0, yBot, z1);
+	GXTexCoord2f32(1.0f, tBot);
+}
 
 void TWireBell::control()
 {
