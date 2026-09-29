@@ -10920,6 +10920,35 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R359 (`MapObjBase`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjBase::perform`.
+
+- Die Talk-Mode-Frühausstiege `LIVE_FLAG_DEAD` und `isActorType(0x4000003B)` sind ein Oder, damit der zweite Term `beq`/`b` bleibt.
+- `getModel()` wird als `SDLModel` nach `viewCalcSimple` gerufen (vtable `0x1c`).
+- `char trash[0x28]` mit `trash[0] = 0` hebt den Frame auf `-0x90`.
+- 1068 Bytes, 267 Instruktionen.
+- `MapObjBase.cpp` bleibt `NonMatching`.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBase`: FAIL.
+`setMtx__17TMapCollisionBaseFPA4_f` fehlt schon auf dem unveränderten Objekt.
+UNUSED-Größen von `moveByBck` und `stopAnim` weichen schon vorher ab.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.71525 % -> 79.71538 %, matched code 50.647564 % -> 50.67731 % (1818292 -> 1819360, +1068).
+Matched data bleibt 66.393005 % (425135).
+Funktionen matched 9719 -> 9720.
+`MapObjBase` 6628 -> 7696 (+1068), Funktionen 38 -> 39.
+Complete units bleiben 416.
+Kein R170–R357-Unit hat matched code verloren.
+Nur `MapObjBase` hat matched code gewonnen.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R357 (`Item`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
