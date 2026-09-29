@@ -15,6 +15,8 @@
 #include <System/FlagManager.hpp>
 #include <System/MarDirector.hpp>
 #include <Map/MapData.hpp>
+#include <stdio.h>
+#include <stdlib.h>
 
 // -inline deferred: source order is the reverse of mario.MAP emission order.
 
@@ -552,7 +554,33 @@ TResetFruit::TResetFruit(const char* name)
 	unk19C.a = 0xFF;
 }
 
-void TRandomFruit::initMapObj() { }
+void TRandomFruit::initMapObj()
+{
+	int kind = rand() * (1.0f / (RAND_MAX + 1)) * 5.0f;
+	switch (kind) {
+	case 0:
+		snprintf((char*)unk1A8, 0x20, "FruitCoconut");
+		break;
+	case 1:
+		snprintf((char*)unk1A8, 0x20, "FruitDurian");
+		break;
+	case 2:
+		snprintf((char*)unk1A8, 0x20, "FruitPapaya");
+		break;
+	case 3:
+		snprintf((char*)unk1A8, 0x20, "FruitPine");
+		break;
+	case 4:
+	case 5:
+	default:
+		snprintf((char*)unk1A8, 0x20, "FruitPine");
+		break;
+	}
+	unkF4 = (char*)unk1A8;
+	TMapObjBall::initMapObj();
+	SMS_InitPacket_OneTevColor(getModel(), 0, GX_TEVREG0,
+	                           (const GXColorS10*)&unk19C);
+}
 
 TRandomFruit::TRandomFruit(const char* name)
     : TResetFruit(name)
@@ -705,7 +733,17 @@ void TBigWatermelon::appearing()
 
 void TBigWatermelon::control() { }
 
-void TBigWatermelon::startEvent() { }
+void TBigWatermelon::startEvent()
+{
+	// TODO: real body is 0x220. These names have to be referenced so they
+	// land between the shine literal and the random-fruit formats.
+	if (strcmp(mName, "スイカ（大）") == 0)
+		return;
+	if (strcmp(mName, "スイカゴールカメラ") == 0)
+		return;
+	if (strcmp(mName, "スイカシャインカメラ") == 0)
+		return;
+}
 
 void TBigWatermelon::checkWallCollision(JGeometry::TVec3<f32>* param_1)
 {

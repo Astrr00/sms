@@ -10920,6 +10920,37 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R346 (`MapObjBall`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TRandomFruit::initMapObj`.
+
+- `rand` mal `1/32768` mal `5` wählt die Fruchtart.
+- `snprintf` schreibt Coconut, Durian, Papaya oder Pine nach `unk1A8`.
+- Die Fälle 4 und 5 fallen auf Pine durch.
+- Der Puffer wird `unkF4`, danach folgt `TMapObjBall::initMapObj`.
+- `SMS_InitPacket_OneTevColor` färbt mit `GX_TEVREG0` und `unk19C`.
+- 320 Bytes, 80 Instruktionen.
+- Die drei スイカ-Namen in `startEvent` füllen die Rodata-Lücke, ohne ein Null-Pad.
+- `TBigWatermelon::initMapObj` bleibt 100 %.
+- `startEvent` bleibt ein Stub und `MapObjBall.cpp` bleibt `NonMatching`.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS gegen die Basis.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.681740 % -> 79.692810 %, matched code 50.586952 % -> 50.595863 % (1816116 -> 1816436, +320).
+Matched data 66.304306 % -> 66.393005 % (424567 -> 425135, +568).
+Funktionen matched 9710 -> 9711.
+`MapObjBall` Code 9392 -> 9712 (+320), Data 212 -> 780 (+568).
+Complete units bleiben 416.
+Kein R170–R345-Unit hat matched code verloren.
+Nur `MapObjBall` hat matched code gewonnen.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R345 (`MapObjCorona`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
