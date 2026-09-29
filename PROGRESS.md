@@ -10920,6 +10920,32 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R330 (`MapObjTown`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjWaterSpray::load`.
+
+- Lädt zuerst `TMapObjBase::load`.
+- Name `WaterSprayCylinder` setzt `unk138` auf `0x154` und lädt `ms_shib_cyl1.jpa`.
+- Sonst ist `unk138` `0x155` und der Pfad `ms_shib_cub1.jpa`.
+- Ein früher `bool* flag` hält den Rodata-Pool in r29 und den Partikel-Flag-Zeiger in r28.
+- Rate über 100 wird `0.5`, sonst durch 100 geteilt.
+- Skala `-1` wird `1`, sonst durch 100 geteilt, und dreifach nach `unk140` geschrieben.
+- Vier Stream-Ints landen in `unk14C`.
+- 444 Bytes, 111 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjTown`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.615524 % -> 79.615814 %, matched code 50.467842 % -> 50.48021 % (1811840 -> 1812284, +444).
+Matched data bleibt 66.304306 % (424567).
+Funktionen matched 9699 -> 9700.
+`MapObjTown` 9812 -> 10256 (+444).
+Kein R170–R329-Unit hat matched code verloren.
+
 ### R329 (`MapObjBall`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

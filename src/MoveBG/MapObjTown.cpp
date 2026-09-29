@@ -424,13 +424,24 @@ void TMapObjWaterSpray::calc()
 
 void TMapObjWaterSpray::load(JSUMemoryInputStream& stream)
 {
+	bool* flag;
 	TMapObjBase::load(stream);
 	if (strcmp(unkF4, "WaterSprayCylinder") == 0) {
 		unk138 = 0x154;
-		SMS_LoadParticle("/scene/mapObj/ms_shib_cyl1.jpa", unk138);
+		u16 id = unk138;
+		flag   = &gParticleFlagLoaded[id];
+		if (!*flag) {
+			gpResourceManager->load("/scene/mapObj/ms_shib_cyl1.jpa", id);
+			*flag = true;
+		}
 	} else {
 		unk138 = 0x155;
-		SMS_LoadParticle("/scene/mapObj/ms_shib_cub1.jpa", unk138);
+		u16 id = unk138;
+		flag   = &gParticleFlagLoaded[id];
+		if (!*flag) {
+			gpResourceManager->load("/scene/mapObj/ms_shib_cub1.jpa", id);
+			*flag = true;
+		}
 	}
 
 	stream >> unk13C;
