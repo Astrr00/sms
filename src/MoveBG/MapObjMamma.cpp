@@ -1007,7 +1007,23 @@ void TSandCastle::explode()
 
 static void SandCastleCallBack(u32, u32) { }
 
-void TSandCastle::waitBeforeExplode() { }
+static inline void startSandCastleDemo(TMarDirector* director)
+{
+	char trash[4];
+	trash[3] = 0;
+	director->fireStartDemoCamera(
+	    "mamma1_sandcastle", nullptr, -1, 0.0f, true,
+	    (s32 (*)(u32, u32))SandCastleCallBack, 0, nullptr,
+	    JDrama::TFlagT<u16>(0));
+}
+
+void TSandCastle::waitBeforeExplode()
+{
+	mState      = 6;
+	mStateTimer = unk148;
+	startSandCastleDemo(gpMarDirector);
+	unk15C = 1;
+}
 
 void TSandCastle::calcRootMatrix()
 {

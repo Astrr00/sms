@@ -10920,6 +10920,29 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R328 (`MapObjMamma`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TSandCastle::waitBeforeExplode`.
+
+- Setzt den State auf 6 und den State-Timer auf `unk148`.
+- Startet die Demokamera `mamma1_sandcastle` mit `SandCastleCallBack`.
+- Setzt `unk15C` auf 1.
+- `char trash[4]` im Inline hält Frame `-0x28`.
+- 128 Bytes, 32 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMamma`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.601265 % -> 79.60473 %, matched code 50.453358 % -> 50.456924 % (1811320 -> 1811448, +128).
+Matched data bleibt 66.304306 % (424567).
+Funktionen matched 9697 -> 9698.
+`MapObjMamma` 11040 -> 11168 (+128).
+Kein R170–R327-Unit hat matched code verloren.
+
 ### R327 (`MapObjMamma`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
