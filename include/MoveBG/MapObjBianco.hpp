@@ -131,7 +131,9 @@ public:
 	virtual u32 touchWater(THitActor*);
 	TBiancoMiniWindmill(const char* name = "風車（ビアンコ小）");
 
+	static f32 mRotWaterAccel;
 	static f32 mFriction;
+	static f32 mRotSpeedMax;
 
 public:
 	/* 0x150 */ f32 unk150;

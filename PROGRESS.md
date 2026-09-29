@@ -10920,6 +10920,30 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R300 (`MapObjBianco`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TBiancoMiniWindmill::touchWater`.
+
+- Liegt `getWaterPos` unter `mPosition.y + sMessengerPosY - 300`, kommt 1 zurück.
+  Zeigt die Wassergeschwindigkeit in die Modellachse, kommt 0 zurück.
+  Sonst `unk154 += mRotWaterAccel`, gedeckelt bei `mRotSpeedMax`.
+  Dann `appearObjFromPoint` an `mPosition` mit Messenger-Y plus 550, `mAppearSpeed = 0`.
+- `char pad[8]` und `char trash[0x20]` halten den Frame auf `-0x60`.
+- 284 Bytes, 71 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBianco`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.39437 % -> 79.40212 %, matched code 50.170357 % -> 50.178272 % (1801160 -> 1801444, +284).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9670 -> 9671.
+`MapObjBianco` 6328 -> 6612 (+284).
+Kein R170–R299-Unit hat matched code verloren.
+
 ### R299 (`MapObjBall`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

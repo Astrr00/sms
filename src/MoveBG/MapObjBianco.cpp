@@ -123,7 +123,35 @@ TBiancoWatermillVertical::TBiancoWatermillVertical(const char* name)
 	trash[0] = 0;
 }
 
-u32 TBiancoMiniWindmill::touchWater(THitActor*) { return 0; }
+static f32 sMessengerPosZ = 200.0f;
+static f32 sMessengerPosY = 6400.0f;
+
+u32 TBiancoMiniWindmill::touchWater(THitActor* actor)
+{
+	char pad[8];
+	pad[0] = 0;
+	const JGeometry::TVec3<f32>& waterPos = getWaterPos(actor);
+	if (waterPos.y < mPosition.y + sMessengerPosY - 300.0f)
+		return 1;
+
+	const JGeometry::TVec3<f32>& water = getWaterSpeed(actor);
+	MtxPtr mtx = getModel()->getAnmMtx(0);
+	if (water.z * mtx[2][2] + (water.x * mtx[0][2] + water.y * mtx[1][2])
+	    > 0.0f)
+		return 0;
+
+	unk154 += mRotWaterAccel;
+	if (unk154 > mRotSpeedMax) {
+		unk154 = mRotSpeedMax;
+		JGeometry::TVec3<f32> point(mPosition.x,
+		                            550.0f + unk15C->mPosition.y, mPosition.z);
+		mAppearSpeed = 0.0f;
+		appearObjFromPoint(point);
+	}
+	char trash[0x20];
+	trash[0] = 0;
+	return 1;
+}
 
 void TBiancoMiniWindmill::calc() { }
 
@@ -132,7 +160,9 @@ f32 TMapObjRootPakkun::mTrembleAccel = 0.95f;
 f32 TMapObjRootPakkun::mTrembleBrake = 0.98f;
 int TMapObjRootPakkun::mTrembleTime  = 0x168;
 
-f32 TBiancoMiniWindmill::mFriction = 0.01f;
+f32 TBiancoMiniWindmill::mRotWaterAccel = 0.01f;
+f32 TBiancoMiniWindmill::mFriction      = 0.01f;
+f32 TBiancoMiniWindmill::mRotSpeedMax   = 10.0f;
 
 void TBiancoMiniWindmill::control()
 {
@@ -143,9 +173,6 @@ void TBiancoMiniWindmill::control()
 	unk150 += unk154;
 	unk150 = MsWrap(unk150, 0.0f, 360.0f);
 }
-
-static f32 sMessengerPosZ = 200.0f;
-static f32 sMessengerPosY = 6400.0f;
 
 void TBiancoMiniWindmill::initMapObj()
 {
