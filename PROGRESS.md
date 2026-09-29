@@ -10920,6 +10920,35 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R349 (`MapObjMare`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TCogwheelScale::receiveMessage`.
+
+- Bei `HIT_MESSAGE_HIP_DROP` addiert es `unk150` auf `unk158->unk138` und gibt wahr zurück.
+- Sonst ruft es `TMapObjBase::receiveMessage` auf.
+- `takeScale` liefert den Slot als `f32` zurück, damit `lfsu` und `fadds f0, f0, f1` stehen bleiben.
+- Ein direktes `+=` schreibt `lfs`/`stfs` und dreht die `fadds`-Operanden.
+- 76 Bytes, 19 Instruktionen.
+- `MapObjMare.cpp` bleibt `NonMatching`.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMare`: PASS.
+0 neue Fehler.
+Die fünf UNUSED-Größenwarnungen sind die bisherigen Stubs.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.69281 % -> 79.69402 %, matched code 50.595863 % -> 50.597977 % (1816436 -> 1816512, +76).
+Matched data bleibt 66.393005 % (425135).
+Funktionen matched 9711 -> 9712.
+`MapObjMare` 5916 -> 5992 (+76), Funktionen 49 -> 50.
+Complete units bleiben 416.
+Kein R170–R346-Unit hat matched code verloren.
+Nur `MapObjMare` hat matched code gewonnen.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R346 (`MapObjBall`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

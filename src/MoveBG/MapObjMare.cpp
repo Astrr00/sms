@@ -47,9 +47,18 @@ u32 TCogwheelScale::touchWater(THitActor*)
 	return 1;
 }
 
-// TODO: retail lfsu of unk158->unk138. `+=` emits lfs + stfs 0x138.
+// Inline return lands in f1 and the reference is lfsu.
+// A direct += is lfs/stfs and swaps the fadds operands.
+static inline f32 takeScale(f32& slot) { return slot; }
+
 BOOL TCogwheelScale::receiveMessage(THitActor* sender, u32 message)
 {
+	if (message == HIT_MESSAGE_HIP_DROP) {
+		f32 inc = takeScale(unk158->unk138);
+		f32 base = unk150;
+		unk158->unk138 = base + inc;
+		return TRUE;
+	}
 	return TMapObjBase::receiveMessage(sender, message);
 }
 
