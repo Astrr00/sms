@@ -940,15 +940,20 @@ void TEggYoshi::startBalloonAnim()
 
 void TEggYoshi::touchFruit(THitActor* fruit)
 {
+	// Dead slot so the s16-to-float spill stays at r1+0x38 (frame -0x48).
+	char trash[0x18];
+	trash[0] = 0;
+
 	if (isState(0xE) || isState(STATE_HOLDING))
 		return;
 
 	if (unk14C == (u32)fruit->mActorType) {
 		startAnim(1);
 		unk148->getFrameCtrl(ANM_TYPE_BTP)->setFrame(11.0f);
-		mRotation.y = (360.0f / 65536.0f)
-		              * matan(fruit->mPosition.z - mPosition.z,
-		                      fruit->mPosition.x - mPosition.x);
+		f32 dx  = fruit->mPosition.x - mPosition.x;
+		f32 dz  = fruit->mPosition.z - mPosition.z;
+		s16 raw = matan(dz, dx);
+		mRotation.y = raw * (360.0f / 65536.0f);
 		mState = 0xB;
 		unk150 = fruit;
 		SMSGetMSound()->startSoundSystemSE(MSD_SE_SY_COLLECT_PRETTY, 0, nullptr,
