@@ -404,7 +404,18 @@ void TAmiKing::loadAfter()
 	SMS_LoadParticle("/scene/Mapobj/amiking.jpa", 0x184);
 }
 
-void TAmiKing::initMapObj() { }
+void TAmiKing::initMapObj()
+{
+	TMapObjBase::initMapObj();
+	initAnmSound();
+	getMActor()->setBck("amiking_sleep1");
+	setAnmSound("/scene/mapObj/amiking_sleep1.bas");
+	offLiveFlag(LIVE_FLAG_UNK10);
+	// Empty trip over the joints. MWCC keeps the counted loop.
+	for (u8 i = 0; i < getMActor()->getModel()->getModelData()->getJointNum();
+	     ++i)
+		;
+}
 
 void TAmiKing::moveObject() { }
 
