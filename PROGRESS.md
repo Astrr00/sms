@@ -10920,6 +10920,29 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R303 (`MapObjBall`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TCoverFruit::calcRootMatrix`.
+
+- Mit `mHolder` kopiert `setBaseTRMtx` die Taking-Matrix und übernimmt die Translation.
+  Sonst baut `MsMtxSetXYZRPH` die Root-Matrix aus Position, `mYOffset` und Rotation.
+  `setBaseScale` kopiert `mScaling`.
+- `char trash[8]` hält Frame `-0x70`.
+- 324 Bytes, 81 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.419914 % -> 79.428825 %, matched code 50.196426 % -> 50.205456 % (1802096 -> 1802420, +324).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9673 -> 9674.
+`MapObjBall` 7724 -> 8048 (+324).
+Kein R170–R302-Unit hat matched code verloren.
+
 ### R302 (`MapObjBall`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

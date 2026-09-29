@@ -515,7 +515,39 @@ TRandomFruit::TRandomFruit(const char* name)
 	memset(unk1A8, 0, sizeof(unk1A8));
 }
 
-void TCoverFruit::calcRootMatrix() { }
+void MsMtxSetXYZRPH(MtxPtr mtx, f32 x, f32 y, f32 z, s16 r, s16 p, s16 h);
+
+static inline void coverSetPos(JGeometry::TVec3<f32>& p, f32 x, f32 y, f32 z)
+{
+	p.x = x;
+	p.y = y;
+	p.z = z;
+}
+
+void TCoverFruit::calcRootMatrix()
+{
+	char trash[8];
+	trash[0] = 0;
+	if (mHolder != nullptr) {
+		MtxPtr mtx = mHolder->getTakingMtx();
+		getModel()->setBaseTRMtx(mtx);
+		coverSetPos(mPosition, mtx[0][3], mtx[1][3], mtx[2][3]);
+	} else {
+		f32 x, y, z, rx, ry, rz;
+		rz = mRotation.z;
+		ry = mRotation.y;
+		rx = mRotation.x;
+		z  = mPosition.z;
+		y  = mPosition.y - mYOffset;
+		x  = mPosition.x;
+		J3DModel* model = getModel();
+		MsMtxSetXYZRPH(model->getBaseTRMtx(), x, y, z,
+		               (s16)(rx * (65536.0f / 360.0f)),
+		               (s16)(ry * (65536.0f / 360.0f)),
+		               (s16)(rz * (65536.0f / 360.0f)));
+	}
+	getModel()->setBaseScale(mScaling);
+}
 
 BOOL TCoverFruit::receiveMessage(THitActor* sender, u32 message)
 {
