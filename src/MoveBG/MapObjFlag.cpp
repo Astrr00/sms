@@ -1,5 +1,6 @@
 #include <MoveBG/MapObjFlag.hpp>
 #include <System/MarDirector.hpp>
+#include <MarioUtil/MathUtil.hpp>
 
 // rogue includes needed for matching sinit & bss
 #include <MSound/MSSetSound.hpp>
@@ -17,7 +18,20 @@ void TMapObjFlagLower::updateVertex() { }
 
 void TMapObjFlag::draw() { }
 
-void TMapObjFlag::updateVertex() { }
+void TMapObjFlag::updateVertex()
+{
+	f32 lo = -180.0f;
+	f32 hi = 180.0f;
+	for (s32 i = 0; i < unk74; i += unkBC) {
+		f32 outer = (f32)i * unk80;
+		for (s32 j = 0; j < unk70; j += unkBC) {
+			f32 ratio = (f32)j / (f32)unk70;
+			f32 angle = unk88 + ((f32)(-j) * unk7C + outer);
+			angle = MsWrap(angle, lo, hi);
+			unk78[i][j * 3] = unk84 * ratio * MsSin(angle);
+		}
+	}
+}
 
 void TMapObjFlag::update() { }
 
