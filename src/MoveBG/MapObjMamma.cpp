@@ -819,7 +819,69 @@ void TSandBombBase::waitBeforeExplode()
 
 void TSandBombBase::grow() { mState = 5; }
 
-void TSandBombBase::control() { }
+static inline void addBombFrame(TLiveActor* actor, int idx)
+{
+	f32 speed = TSandBombBase::mExplodeFrameSpeed;
+	f32 frame = actor->getMActor()->getFrameCtrl(idx)->getFrame();
+	actor->getMActor()->getFrameCtrl(idx)->setFrame(speed + frame);
+}
+
+void TSandBombBase::control()
+{
+	TMapObjBase::control();
+	TSandBomb* bomb = (TSandBomb*)unk144;
+	switch (mState) {
+	case 1: {
+		f32 frame = bomb->getMActor()->getFrameCtrl(0)->getFrame()
+		            - mFiringFrameDownSpeed;
+		if (frame >= 0.0f) {
+			unk144->getMActor()->getFrameCtrl(0)->setFrame(frame);
+			unk144->getMActor()->getFrameCtrl(5)->setFrame(frame);
+		}
+		break;
+	}
+	case 5:
+		addBombFrame(bomb, 0);
+		addBombFrame(unk144, 5);
+		addBombFrame(unk144, 3);
+		if (unk144->animIsFinished())
+			waitBeforeExplode();
+		break;
+	case 6:
+		if (isStateTimerEngaged())
+			break;
+		explode();
+		break;
+	case 7:
+		exploding();
+		break;
+	case 8:
+		expanded();
+		break;
+	case 2:
+		SMSRumbleMgr->start(0x13, -1, &mPosition);
+		if (withering()) {
+			withered();
+			SMSRumbleMgr->stop(0x13);
+		}
+		break;
+	case 3:
+		if (isStateTimerEngaged())
+			break;
+		mState = 1;
+		unk144->awake();
+		unk144->startControlAnim(1);
+		unk144->startControlAnim(2);
+		break;
+	case 0:
+	case 4:
+		break;
+	}
+	if (unk144->mColCount == 0)
+		bomb->unk140 = 0;
+	char trash[24];
+	trash[23] = 0;
+}
 
 TMapObjBase* TSandBombBase::findTriggerActor()
 {

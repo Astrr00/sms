@@ -10920,6 +10920,37 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R327 (`MapObjMamma`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TSandBombBase::control`.
+
+- Zuerst läuft `TMapObjBase::control`.
+- State 1 senkt Anim-Frames 0 und 5 um `mFiringFrameDownSpeed`, solange das Ergebnis nicht negativ ist.
+- State 5 schiebt Frames 0, 5 und 3 um `mExplodeFrameSpeed` und ruft danach `waitBeforeExplode`, wenn die Anim fertig ist.
+- State 6 ruft `explode`, sobald der State-Timer abgelaufen ist.
+- State 7 ruft `exploding`, State 8 ruft `expanded`.
+- State 2 startet Rumble `0x13` und ruft bei `withering` zuerst `withered`, dann `stop`.
+- State 3 setzt den State auf 1, weckt die Bombe und startet Anim 1 und 2, sobald der Timer abgelaufen ist.
+- Ohne Kollisionen wird `unk140` der Bombe gelöscht.
+- Die Case-Reihenfolge im Switch ist 1, 5, 6, 7, 8, 2, 3.
+- `char trash[24]` hält Frame `-0x88`.
+- 664 Bytes, 166 Instruktionen.
+- Die Jump-Table macht `.data` vollständig matchend.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMamma`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.582886 % -> 79.601265 %, matched code 50.434864 % -> 50.453358 % (1810656 -> 1811320, +664).
+Matched data 65.58592 % -> 66.304306 % (419967 -> 424567, +4600).
+Funktionen matched 9696 -> 9697.
+`MapObjMamma` Code 10376 -> 11040 (+664).
+`MapObjMamma` Data 260 -> 4860, weil `.data` jetzt 100 % ist.
+Kein R170–R326-Unit hat matched code verloren.
+
 ### R326 (`MapObjMamma`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
