@@ -10920,6 +10920,28 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R308 (`MapObjRicco`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TCraneRotY::control`.
+
+- `switch (mState)` dreht `mRotation.y` mit `unk144` und setzt `mStateTimer` aus `mWaitTime`.
+  Ton bei `isState(0) || isState(2)` über `gateCheck(unk148)`.
+- `char trash[0x11]` hält den Frame bei `-0x30`.
+- 412 Bytes, 103 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjRicco`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.46537 % -> 79.476746 %, matched code 50.242447 % -> 50.25392 % (1803748 -> 1804160, +412).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9678 -> 9679.
+`MapObjRicco` 2972 -> 3384 (+412).
+Kein R170–R307-Unit hat matched code verloren.
+
 ### R307 (`MapObjBianco`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

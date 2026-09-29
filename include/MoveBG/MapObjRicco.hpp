@@ -20,6 +20,8 @@ public:
 	/* 0x140 */ f32 unk140;
 	/* 0x144 */ f32 unk144;
 	/* 0x148 */ u32 unk148;
+
+	static s32 mWaitTime;
 };
 
 class TCraneUpDown : public TMapObjBase {

@@ -21,7 +21,44 @@ static JGeometry::TVec3<f32> submarineSetWtPos_forSound(1956.0f, -100.0f,
 
 void TCraneRotY::calc() { setRootMtxRotY(); }
 
-void TCraneRotY::control() { }
+void TCraneRotY::control()
+{
+	char trash[0x11];
+	trash[0] = 0;
+	TMapObjBase::control();
+	switch (mState) {
+	case 0:
+		mRotation.y += unk144;
+		if (mRotation.y > unk138 + unk140) {
+			mStateTimer = mWaitTime;
+			mState = 3;
+		}
+		break;
+	case 1:
+		if (!isStateTimerEngaged())
+			mState = 0;
+		break;
+	case 2:
+		mRotation.y -= unk144;
+		if (mRotation.y < unk138 + unk13C) {
+			mStateTimer = mWaitTime;
+			mState = 1;
+		}
+		break;
+	case 3:
+		if (!isStateTimerEngaged())
+			mState = 2;
+		break;
+	}
+	if (isState(0) || isState(2)) {
+		u32 se = unk148;
+		if (gpMSound->gateCheck(se))
+			MSoundSESystem::MSoundSE::startSoundActor(se, &mPosition, 0,
+			                                          nullptr, 0, 4);
+	}
+}
+
+s32 TCraneRotY::mWaitTime = 120;
 
 void TCraneRotY::load(JSUMemoryInputStream& stream)
 {
