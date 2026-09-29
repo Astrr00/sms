@@ -233,13 +233,19 @@ void TMapObjPlane::perform(u32 cue, JDrama::TGraphics*)
 	}
 }
 
+static inline int readBmpDim(const u8* bmp, int base)
+{
+	int b0 = bmp[base];
+	int b1 = bmp[base + 1];
+	int b2 = bmp[base + 2];
+	int b3 = bmp[base + 3];
+	return (b3 << 24) + (b2 << 16) + (b1 << 8) + b0;
+}
+
 void TMapObjPlane::makeMountain()
 {
-	int width = (unk118[0x15] << 24) + (unk118[0x14] << 16)
-	            + (unk118[0x13] << 8) + unk118[0x12];
-
-	int height = (unk118[0x19] << 24) + (unk118[0x18] << 16)
-	             + (unk118[0x17] << 8) + unk118[0x16];
+	int width  = readBmpDim(unk118, 0x12);
+	int height = readBmpDim(unk118, 0x16);
 
 	for (int z = 0; z < mExtents; z = z + 1) {
 		for (int x = 0; x < mExtents; x = x + 1) {
