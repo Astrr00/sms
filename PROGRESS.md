@@ -10920,6 +10920,32 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R361 (`MapObjRailBlock`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TNormalLift::setGroundCollision`.
+
+- Die Matrix ist ein `TPosition3f`, damit der leere `SMatrix34C`-Konstruktor im Inlining als `bl` stehen bleibt.
+- Die eigenständige `TRailMapObj::setGroundCollision` bleibt ohne diesen `bl` bei 100 %.
+- 188 Bytes, 47 Instruktionen.
+- `MapObjRailBlock.cpp` bleibt `NonMatching`.
+
+`validate-symbol-order` `mario/MoveBG/MapObjRailBlock`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.716 % -> 79.71623 %, matched code 50.684105 % -> 50.68934 % (1819604 -> 1819792, +188).
+Matched data bleibt 66.393005 % (425135).
+Funktionen matched 9721 -> 9722.
+`MapObjRailBlock` 6096 -> 6284 (+188), Funktionen 41 -> 42.
+Complete units bleiben 416.
+Kein R170–R360-Unit hat matched code verloren.
+Nur `MapObjRailBlock` hat matched code gewonnen.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R360 (`MapObjRailBlock`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
