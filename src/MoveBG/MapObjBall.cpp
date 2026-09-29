@@ -269,7 +269,28 @@ void TResetFruit::thrown()
 	mState = 11;
 }
 
-void TResetFruit::hold(TTakeActor*) { }
+// One inline deep so sqrt stays a call. The direct length() call inlines it.
+inline f32 doSqrt(f32 x) { return JGeometry::TUtil<f32>::sqrt(x); }
+
+void TResetFruit::hold(TTakeActor* actor)
+{
+	JGeometry::TVec3<f32> vel = mVelocity;
+	// Dead slot so MWCC keeps the frame at -0x38.
+	char trash[4];
+	trash[0] = 0;
+	if (!(doSqrt(vel.squared()) > 10.0f)) {
+		TMapObjGeneral::hold(actor);
+		mVelocity.x = mVelocity.y = mVelocity.z = 0.0f;
+	}
+	mVelocity.x = mVelocity.y = mVelocity.z = 0.0f;
+	onLiveFlag(LIVE_FLAG_UNK10);
+	if (!checkMapObjFlag(MAP_OBJ_FLAG_UNK4000000)) {
+		if (!isStateTimerEngaged()) {
+			onMapObjFlag(MAP_OBJ_FLAG_DISAPPEARING);
+			mStateTimer = getLivingTime();
+		}
+	}
+}
 
 void TResetFruit::touchPollution()
 {

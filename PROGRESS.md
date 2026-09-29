@@ -10920,6 +10920,34 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R333 (`MapObjBall`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TResetFruit::hold`.
+
+- Kopiert `mVelocity` und lässt `sqrt` über ein einzeiliges `doSqrt` als `bl` stehen.
+- `length()` direkt würde `sqrt` zu `frsqrte` expandieren.
+- Wenn die Länge nicht über 10 liegt, ruft es `TMapObjGeneral::hold` auf und nullt die Geschwindigkeit.
+- Danach wird die Geschwindigkeit immer noch einmal genullt.
+- Setzt `LIVE_FLAG_UNK10`.
+- Ohne `MAP_OBJ_FLAG_UNK4000000` und ohne laufenden State-Timer setzt es `MAP_OBJ_FLAG_DISAPPEARING` und `mStateTimer = getLivingTime()`.
+- `char trash[4]` hält Frame `-0x38`.
+- 260 Bytes, 65 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.615814 % -> 79.62295 %, matched code 50.48021 % -> 50.487453 % (1812284 -> 1812544, +260).
+Matched data bleibt 66.304306 % (424567).
+Funktionen matched 9700 -> 9701.
+`MapObjBall` 9132 -> 9392 (+260).
+Kein R170–R330-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R330 (`MapObjTown`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
