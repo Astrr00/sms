@@ -563,7 +563,47 @@ TSandBase::TSandBase(const char* name)
 {
 }
 
-void TSandLeafBase::grow() { }
+extern f32 SMSGetAnmFrameRate();
+
+void TSandLeafBase::grow()
+{
+	if (mState != 1 && mState != 4)
+		return;
+	if (mScaling.y < 1.0f) {
+		mScaling.y += unk138;
+		if (mScaling.y > 1.0f)
+			mScaling.y = 1.0f;
+
+		if (mState == 1) {
+			mMapCollisionManager->changeCollision(1);
+			TMapCollisionManager* colMgr = mMapCollisionManager;
+			Mtx mtx;
+			MsMtxSetTRS(mtx, mPosition.x, mPosition.y, mPosition.z, mRotation.x,
+			            mRotation.y, mRotation.z, mScaling.x, mScaling.y,
+			            mScaling.z);
+			TMapCollisionBase* col = colMgr->unk8;
+			MTXCopy(mtx, col->unk20);
+			col->setUp();
+			unk144->startControlAnim(2);
+			mState = 4;
+		}
+
+		f32 rate          = SMSGetAnmFrameRate();
+		TMapObjBase* leaf = unk144;
+		f32 frame         = leaf->getMActor()->getFrameCtrl(0)->getFrame();
+		leaf->getMActor()->getFrameCtrl(0)->setFrame(rate + frame);
+		SMSRumbleMgr->start(0x15, 5, &mPosition);
+
+		const JGeometry::TVec3<f32>* pos = &unk144->mPosition;
+		if (gpMSound->gateCheck(MSD_SE_OBJ_SANDBUD_NORMAL))
+			MSoundSESystem::MSoundSE::startSoundActor(
+			    MSD_SE_OBJ_SANDBUD_NORMAL, pos, 0, nullptr, 0, 4);
+
+		mStateTimer = TSandBase::mWitherTime;
+	}
+	char trash[21];
+	trash[20] = 0;
+}
 
 void TSandLeafBase::control() { }
 

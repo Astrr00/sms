@@ -10920,6 +10920,31 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R324 (`MapObjMamma`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TSandLeafBase::grow`.
+
+- Wächst nur in State 1 und 4, solange `mScaling.y` unter 1 liegt.
+- Addiert `unk138` und klemmt die Scale auf 1.
+- In State 1 wechselt die Kollision, `MsMtxSetTRS` plus `MTXCopy` nach `unk8`, dann `setUp`, Anim 2 und State 4.
+- `SMSGetAnmFrameRate` schiebt Frame 0 von `unk144`.
+- Rumble `0x15` für 5 Frames, Sound `MSD_SE_OBJ_SANDBUD_NORMAL`, Timer `mWitherTime`.
+- `char trash[21]` hält Frame `-0x80`.
+- 396 Bytes, 99 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMamma`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.550514 % -> 79.561424 %, matched code 50.402103 % -> 50.41314 % (1809480 -> 1809876, +396).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9693 -> 9694.
+`MapObjMamma` 9200 -> 9596 (+396).
+Kein R170–R323-Unit hat matched code verloren.
+
 ### R323 (`MapObjMamma`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
