@@ -10920,6 +10920,28 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R313 (`Item`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TShine::calc`.
+
+- `StageUtil.hpp` zog ungenutzte Shine-Tabellen ins `.data` und legte `mPromiLife` auf `0x1a0` statt `0x38`.
+- Deklaration `extern u8 SMS_getShineStage(u8)` ersetzt das Include.
+- `char trash[45]` hebt den Frame von `-0x50` auf `-0x88`.
+- 736 Bytes, 184 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/Item`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.477066 % -> 79.47708 %, matched code 50.285564 % -> 50.306065 % (1805296 -> 1806032, +736).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9682 -> 9683.
+`Item` 14796 -> 15532 (+736).
+Kein R170–R312-Unit hat matched code verloren.
+
 ### R312 (`MapObjGeneral`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

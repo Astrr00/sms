@@ -6,7 +6,7 @@
 #include <MSound/MSound.hpp>
 #include <MSound/MSoundSE.hpp>
 #include <System/Application.hpp>
-#include <System/StageUtil.hpp>
+extern u8 SMS_getShineStage(u8);
 #include <System/FlagManager.hpp>
 #include <System/MarDirector.hpp>
 #include <System/EmitterViewObj.hpp>
@@ -425,6 +425,8 @@ f32 TShine::mSpeedDownRate = 0.99f;
 
 void TShine::calc()
 {
+	char trash[45];
+	trash[0] = 0;
 	MtxPtr mtxPos = getMActor()->getModel()->getAnmMtx(2);
 
 	if (checkLiveFlag(LIVE_FLAG_UNK200 | LIVE_FLAG_CLIPPED_OUT
