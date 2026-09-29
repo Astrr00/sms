@@ -158,6 +158,11 @@ public:
 	virtual u32 touchWater(THitActor*);
 	TBiancoWatermillVertical(const char* name = "水車（ビアンコ垂直）");
 
+	static f32 mRotAccel;
+	static f32 mRotSpeedDownRate;
+	static f32 mRotSpeedMax;
+	static f32 mBridgeRotRate;
+
 public:
 	/* 0x138 */ f32 unk138;
 	/* 0x13C */ f32 unk13C;

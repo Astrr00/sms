@@ -10920,6 +10920,29 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R317 (`MapObjBianco`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TBiancoWatermillVertical::control`.
+
+- Drehzahl läuft mit `mRotSpeedDownRate` auf `unk13C` zu und wird dort geklemmt.
+- `mRotation.y` und die Y-Drehung der Brücke an `unk140` werden um den Schritt erhöht und mit `MsWrap` auf `[0, 360)` gelegt.
+- Zwei `startSoundActorWithInfo`-Aufrufe: Wind `0x3040` an `mPosition`, Bewegung `0x3042` an der Brücke.
+- `char trash[1]` hebt den Frame von `-0x38` auf `-0x40`.
+- 456 Bytes, 114 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBianco`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.487816 % -> 79.50042 %, matched code 50.338596 % -> 50.3513 % (1807200 -> 1807656, +456).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9686 -> 9687.
+`MapObjBianco` 7308 -> 7764 (+456).
+Kein R170–R316-Unit hat matched code verloren.
+
 ### R316 (`MapObjBianco`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

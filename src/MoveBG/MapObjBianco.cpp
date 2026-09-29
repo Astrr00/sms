@@ -99,7 +99,37 @@ void TBiancoWatermillVertical::setGroundCollision()
 	trash[0] = 0;
 }
 
-void TBiancoWatermillVertical::control() { }
+void TBiancoWatermillVertical::control()
+{
+	char trash[1];
+	trash[0] = 0;
+	if (unk138 != unk13C) {
+		if (unk138 > unk13C) {
+			unk138 -= mRotSpeedDownRate;
+			if (unk138 < unk13C)
+				unk138 = unk13C;
+		} else {
+			unk138 += mRotSpeedDownRate;
+			if (unk138 > unk13C)
+				unk138 = unk13C;
+		}
+	}
+
+	mRotation.y += unk138;
+	mRotation.y = MsWrap(mRotation.y, 0.0f, 360.0f);
+
+	f32 delta = unk138 * mBridgeRotRate;
+	((TMapObjBase*)unk140)->mRotation.y += delta;
+	f32* rotY = &((TMapObjBase*)unk140)->mRotation.y;
+	*rotY     = MsWrap(*rotY, 0.0f, 360.0f);
+
+	SMSGetMSound()->startSoundActorWithInfo(
+	    MSD_SE_OBJ_BI_STEPMILL_WIND, &mPosition, nullptr, fabsf(unk138), 0, 0,
+	    (JAISoundHandle*)&unk148, 0, 4);
+	SMSGetMSound()->startSoundActorWithInfo(
+	    MSD_SE_OBJ_BI_STEPMILL_MOVE, &((TMapObjBase*)unk140)->mPosition,
+	    nullptr, fabsf(delta), 0, 0, (JAISoundHandle*)&unk14C, 0, 4);
+}
 
 void TBiancoWatermillVertical::loadAfter()
 {
@@ -169,6 +199,11 @@ f32 TMapObjRootPakkun::mTremblePower = 15.0f;
 f32 TMapObjRootPakkun::mTrembleAccel = 0.95f;
 f32 TMapObjRootPakkun::mTrembleBrake = 0.98f;
 int TMapObjRootPakkun::mTrembleTime  = 0x168;
+
+f32 TBiancoWatermillVertical::mRotAccel         = 0.15f;
+f32 TBiancoWatermillVertical::mRotSpeedDownRate = 0.005f;
+f32 TBiancoWatermillVertical::mRotSpeedMax      = 3.0f;
+f32 TBiancoWatermillVertical::mBridgeRotRate    = 0.03f;
 
 f32 TBiancoMiniWindmill::mRotWaterAccel = 0.01f;
 f32 TBiancoMiniWindmill::mFriction      = 0.01f;
