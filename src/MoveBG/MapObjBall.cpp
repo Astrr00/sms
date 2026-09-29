@@ -282,7 +282,45 @@ TMapObjBall::TMapObjBall(const char* name)
 	mInitialScaling.zero();
 }
 
-void TResetFruit::checkGroundCollision(JGeometry::TVec3<f32>*) { }
+void TResetFruit::checkGroundCollision(JGeometry::TVec3<f32>* pos)
+{
+	char trash[0x30];
+	u8 map = gpMarDirector->mMap;
+	if (map != 7 && map != 4) {
+		TMapObjGeneral::checkGroundCollision(pos);
+		return;
+	}
+
+	if (map == 4) {
+		mGroundHeight = gpMap->checkGround(pos->x, pos->y + 200.0f, pos->z,
+		                                    &mGroundPlane);
+		mGroundHeight += 1.0f;
+		if (pos->y <= mGroundHeight)
+			touchGround(pos);
+		else
+			onLiveFlag(LIVE_FLAG_AIRBORNE);
+		return;
+	}
+
+	mGroundHeight = gpMap->checkGround(pos->x, pos->y + mHeadHeight, pos->z,
+	                                    &mGroundPlane);
+	bool phaseThrough;
+	if (mGroundPlane->mBGType
+	        == BG_TYPE_EVERYTHING_BUT_MAP_OBJECTS_PHASE_THROUGH
+	    || mGroundPlane->mBGType == BG_TYPE_MAP_CHANGE_PHASE_THROUGH)
+		phaseThrough = true;
+	else
+		phaseThrough = false;
+	if (phaseThrough) {
+		mGroundHeight = gpMap->checkGroundExactY(
+		    pos->x, mGroundHeight - 200.0f, pos->z, &mGroundPlane);
+	}
+	mGroundHeight += 1.0f;
+	if (pos->y <= mGroundHeight)
+		touchGround(pos);
+	else
+		onLiveFlag(LIVE_FLAG_AIRBORNE);
+}
 
 void TResetFruit::waitingToAppear()
 {
