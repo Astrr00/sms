@@ -10920,6 +10920,31 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R325 (`MapObjMamma`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TSandLeafBase::control`.
+
+- Zuerst läuft `TMapObjBase::control`.
+- State 2 startet Rumble `0x13`.
+- Nach `withering` stoppt das Rumble, die Kollision geht auf 0, die TRS-Matrix wird kopiert, und der State wird 3.
+- State 3 wartet den Timer ab, weckt `unk144`, startet Anim 1 und `MSD_SE_IT_COMMON_APPEAR`, dann State 5.
+- State 5 setzt Anim 0 und State 1, sobald die Anim fertig ist.
+- `char trash[9]` hält Frame `-0x60`.
+- 448 Bytes, 112 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMamma`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.561424 % -> 79.5738 %, matched code 50.41314 % -> 50.425617 % (1809876 -> 1810324, +448).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9694 -> 9695.
+`MapObjMamma` 9596 -> 10044 (+448).
+Kein R170–R324-Unit hat matched code verloren.
+
 ### R324 (`MapObjMamma`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

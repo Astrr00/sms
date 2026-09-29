@@ -605,7 +605,54 @@ void TSandLeafBase::grow()
 	trash[20] = 0;
 }
 
-void TSandLeafBase::control() { }
+void TSandLeafBase::control()
+{
+	TSandLeafBase* self = this;
+	self->TMapObjBase::control();
+	switch (self->mState) {
+	case 1:
+		break;
+	case 2:
+		SMSRumbleMgr->start(0x13, -1, &self->mPosition);
+		if (self->withering()) {
+			SMSRumbleMgr->stop(0x13);
+			self->mMapCollisionManager->changeCollision(0);
+			TMapCollisionManager* colMgr = self->mMapCollisionManager;
+			Mtx mtx;
+			MsMtxSetTRS(mtx, self->mPosition.x, self->mPosition.y,
+			            self->mPosition.z, self->mRotation.x, self->mRotation.y,
+			            self->mRotation.z, self->mScaling.x, self->mScaling.y,
+			            self->mScaling.z);
+			TMapCollisionBase* col = colMgr->unk8;
+			MTXCopy(mtx, col->unk20);
+			col->setUp();
+			self->mStateTimer = self->unk140;
+			self->mState      = 3;
+		}
+		break;
+	case 3:
+		if (self->isStateTimerEngaged())
+			break;
+		if (self->unk144->animIsFinished()) {
+			self->unk144->awake();
+			self->unk144->startAnim(1);
+			const JGeometry::TVec3<f32>* pos = &self->unk144->mPosition;
+			if (gpMSound->gateCheck(MSD_SE_IT_COMMON_APPEAR))
+				MSoundSESystem::MSoundSE::startSoundActor(
+				    MSD_SE_IT_COMMON_APPEAR, pos, 0, nullptr, 0, 4);
+			self->mState = 5;
+		}
+		break;
+	case 5:
+		if (self->unk144->animIsFinished()) {
+			self->unk144->startAnim(0);
+			self->mState = 1;
+		}
+		break;
+	}
+	char trash[9];
+	trash[8] = 0;
+}
 
 void TSandLeafBase::initMapObj()
 {
