@@ -10928,7 +10928,7 @@ DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
 - `addWitherFrame` schiebt Frame-Ctrl 0 und 5 um `unk13C` vor.
 - `mScaling.y` wird `mCollisionRate * (mEnd - frame) / mEnd` von Ctrl 0.
-- Ab Frame 240 tötet ein lebendes `unk158` den Pfeil (`gpTargetArrow->unk14 = 0`).
+- Ab Frame 240 ruft ein lebendes `unk158` `kill` auf und setzt `gpTargetArrow->unk14` auf 0.
 - `animIsFinished` ruft `sleep` und gibt wahr zurück, sonst falsch.
 - `char trash[20]` hält Frame `-0x70`.
 - 320 Bytes, 80 Instruktionen.
