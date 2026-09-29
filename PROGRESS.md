@@ -10920,6 +10920,28 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R323 (`MapObjMamma`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TSandCastle::explode`.
+
+- Gleicher Ablauf wie `TSandBombBase::explode`: Anim 1, Scale 1, Kollision, Partikel `0x55`, Shake `0xd`, Bang, Rumble, `mState = 7`.
+- Danach `awake`, `unk158->appear` und `startControlAnim(3)`.
+- `char trash[36]` hält Frame `-0x40`.
+- 360 Bytes, 90 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMamma`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.54058 % -> 79.550514 %, matched code 50.39208 % -> 50.402103 % (1809120 -> 1809480, +360).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9692 -> 9693.
+`MapObjMamma` 8840 -> 9200 (+360).
+Kein R170–R322-Unit hat matched code verloren.
+
 ### R322 (`MapObjMamma`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

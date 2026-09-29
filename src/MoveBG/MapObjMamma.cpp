@@ -791,7 +791,40 @@ static inline void sandCastleExpanded(TSandCastle* self)
 
 void TSandCastle::expanded() { sandCastleExpanded(this); }
 
-void TSandCastle::explode() { }
+void TSandCastle::explode()
+{
+	char trash[36];
+	trash[0] = 0;
+	startControlAnim(1);
+	mScaling.y = 1.0f;
+	mMapCollisionManager->changeCollision(1);
+	mMapCollisionManager->unk8->setUp();
+	if (mMapCollisionManager->unk8 != nullptr)
+		mMapCollisionManager->unk8->moveSRT(mPosition, mRotation, mScaling);
+
+	JPABaseEmitter* emitter
+	    = gpMarioParticleManager->emit(0x55, &mPosition, 0, nullptr);
+	f32 scale                       = unk14C;
+	emitter->mGlobalDynamicsScale.x = scale;
+	emitter->mGlobalDynamicsScale.y = scale;
+	emitter->mGlobalDynamicsScale.z = scale;
+	emitter->mGlobalParticleScale.x = scale;
+	emitter->mGlobalParticleScale.y = scale;
+	emitter->mGlobalParticleScale.z = scale;
+
+	if (!gpMarDirector->isDemoModeNow())
+		gpCameraShake->startShake((EnumCamShakeMode)0xd, 1.0f);
+
+	if (gpMSound->gateCheck(MSD_SE_OBJ_SANDBOMB_BANG))
+		MSoundSESystem::MSoundSE::startSoundActor(
+		    MSD_SE_OBJ_SANDBOMB_BANG, &mPosition, 0, nullptr, 0, 4);
+
+	SMSRumbleMgr->start(0x15, mExlodingRumbleTime, &mPosition);
+	mState = 7;
+	awake();
+	unk158->appear();
+	startControlAnim(3);
+}
 
 static void SandCastleCallBack(u32, u32) { }
 
