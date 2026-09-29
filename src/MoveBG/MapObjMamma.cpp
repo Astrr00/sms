@@ -487,6 +487,7 @@ public:
 #include <MoveBG/MapObjManager.hpp>
 #include <System/Particles.hpp>
 #include <System/MarDirector.hpp>
+#include <System/TargetArrow.hpp>
 
 // -inline deferred: source order is the reverse of mario.MAP emission order.
 
@@ -698,7 +699,36 @@ TSandBombBase::TSandBombBase(const char* name)
 {
 }
 
-bool TSandCastle::withering() { return false; }
+static inline void addWitherFrame(TSandCastle* self, int idx)
+{
+	f32 speed = self->unk13C;
+	f32 frame = self->getMActor()->getFrameCtrl(idx)->getFrame();
+	self->getMActor()->getFrameCtrl(idx)->setFrame(speed + frame);
+}
+
+bool TSandCastle::withering()
+{
+	char trash[20];
+	trash[0] = 0;
+	addWitherFrame(this, 0);
+	addWitherFrame(this, 5);
+
+	f32 frame = getMActor()->getFrameCtrl(0)->getFrame();
+	f32 end   = getMActor()->getFrameCtrl(0)->getEnd();
+	mScaling.y = TSandCastle::mCollisionRate * ((end - frame) / end);
+
+	if (frame > 240.0f)
+		if (!unk158->checkLiveFlag(LIVE_FLAG_DEAD)) {
+			unk158->kill();
+			gpTargetArrow->unk14 = 0;
+		}
+
+	if (animIsFinished()) {
+		sleep();
+		return true;
+	}
+	return false;
+}
 
 extern "C" MActor* getMActor__10TLiveActorCFv(const TLiveActor*);
 

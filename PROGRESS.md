@@ -10920,6 +10920,30 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R321 (`MapObjMamma`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TSandCastle::withering`.
+
+- `addWitherFrame` schiebt Frame-Ctrl 0 und 5 um `unk13C` vor.
+- `mScaling.y` wird `mCollisionRate * (mEnd - frame) / mEnd` von Ctrl 0.
+- Ab Frame 240 tötet ein lebendes `unk158` den Pfeil (`gpTargetArrow->unk14 = 0`).
+- `animIsFinished` ruft `sleep` und gibt wahr zurück, sonst falsch.
+- `char trash[20]` hält Frame `-0x70`.
+- 320 Bytes, 80 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMamma`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.523026 % -> 79.53179 %, matched code 50.374252 % -> 50.383167 % (1808480 -> 1808800, +320).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9690 -> 9691.
+`MapObjMamma` 8200 -> 8520 (+320).
+Kein R170–R320-Unit hat matched code verloren.
+
 ### R320 (`MapObjMamma`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
