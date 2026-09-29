@@ -168,10 +168,29 @@ void THangingBridge::drawLowerPlus(const JGeometry::TVec3<f32>&,
 {
 }
 
-void THangingBridge::drawUpper(const JGeometry::TVec3<f32>&,
-                               const JGeometry::TVec3<f32>&,
-                               const JGeometry::TVec2<f32>&, int) const
+void THangingBridge::drawUpper(const JGeometry::TVec3<f32>& start,
+                               const JGeometry::TVec3<f32>& end,
+                               const JGeometry::TVec2<f32>& width,
+                               int count) const
 {
+	f32 x   = start.x;
+	f32 y   = start.y;
+	f32 z   = start.z;
+	f32 inv = 1.0f / (f32)count;
+	f32 dx  = (end.x - start.x) * inv;
+	f32 dy  = (end.y - start.y) * inv;
+	f32 dz  = (end.z - start.z) * inv;
+	for (int i = 0; i < count; ++i) {
+		f32 h = y - ((f32*)unk38)[i];
+		f32 t = mBetweenBoardsTexPosRate * (x + z);
+		GXPosition3f32(x + width.x, h, z + width.y);
+		GXTexCoord2f32(0.0f, t);
+		GXPosition3f32(x - width.x, h, z - width.y);
+		GXTexCoord2f32(1.0f, t);
+		x += dx;
+		y += dy;
+		z += dz;
+	}
 }
 
 void THangingBridge::setDrawPos(int, f32, JGeometry::TVec3<f32>*) const { }
@@ -260,6 +279,7 @@ f32 TSwingBoard::mRopeWidthZ = 7.0f;
 f32 TSwingBoard::mTexPosRate = 0.01f;
 
 int THangingBridge::mPointNumBetweenBoards = 10;
+f32 THangingBridge::mBetweenBoardsTexPosRate = 0.01f;
 f32 THangingBridge::mRopeHeight;
 
 void THangingBridge::perform(unsigned long cue, JDrama::TGraphics*)

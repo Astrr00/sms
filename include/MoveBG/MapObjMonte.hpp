@@ -64,6 +64,7 @@ public:
 
 public:
 	static int mPointNumBetweenBoards;
+	static f32 mBetweenBoardsTexPosRate;
 	static f32 mRopeHeight;
 
 	/* 0x10 */ u32 unk10;
