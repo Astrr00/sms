@@ -10920,6 +10920,30 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R319 (`MapObjMamma`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TSandBombBase::exploding`.
+
+- `addExplodeFrame` erhöht `mFrame` von `this` und von `unk144` um `mExplodeFrameSpeed`.
+- Actor-Typ `0x400000CE` überspringt den Wurf.
+- Sonst, bei Frame unter 80, Mario über `gpMarioPos->y - 30` und XZ-Distanz unter `unk154`: `HIT_MESSAGE_THROWN` und `SMS_ThrowMario` entlang (0, 1, 0) mit `mMarioJumpRate * (unk154 - dist)`.
+- `animIsFinished` startet Animation 6 an `unk144` und setzt `mState` auf 8.
+- TU-lokales `sandBombExploding` und `char trash[0xC]` halten Frame `-0x60`.
+- 388 Bytes, 97 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMamma`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.505646 % -> 79.51634 %, matched code 50.35665 % -> 50.36746 % (1807848 -> 1808236, +388).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9688 -> 9689.
+`MapObjMamma` 7568 -> 7956 (+388).
+Kein R170–R318-Unit hat matched code verloren.
+
 ### R318 (`MapObjMamma`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

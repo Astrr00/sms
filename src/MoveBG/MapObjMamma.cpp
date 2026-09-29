@@ -618,7 +618,45 @@ static inline void sandBombExpanded(TSandBombBase* self)
 
 void TSandBombBase::expanded() { sandBombExpanded(this); }
 
-void TSandBombBase::exploding() { }
+extern JGeometry::TVec3<f32>* gpMarioPos;
+extern f32 SMS_GetMarioGrLevel();
+extern bool SMS_SendMessageToMario(THitActor*, u32);
+extern void SMS_ThrowMario(const JGeometry::TVec3<f32>&, f32);
+
+static inline void addExplodeFrame(TLiveActor* actor)
+{
+	f32 speed = TSandBombBase::mExplodeFrameSpeed;
+	f32 frame = actor->getMActor()->getFrameCtrl(0)->getFrame();
+	actor->getMActor()->getFrameCtrl(0)->setFrame(speed + frame);
+}
+
+static inline void sandBombExploding(TSandBombBase* self)
+{
+	char trash[0xC];
+	trash[0] = 0;
+	addExplodeFrame(self);
+	addExplodeFrame(self->unk144);
+
+	f32 dist = self->getDistanceXZ(*gpMarioPos);
+	if ((self->mActorType == 0x400000CE ? true : false) ? true : false) {
+	} else if (self->getMActor()->getFrameCtrl(0)->getFrame() < 80.0f
+	           && SMS_GetMarioGrLevel() > gpMarioPos->y - 30.0f
+	           && dist < self->unk154) {
+		SMS_SendMessageToMario(self, HIT_MESSAGE_THROWN);
+		JGeometry::TVec3<f32> dir;
+		dir.x = 0.0f;
+		dir.y = 1.0f;
+		dir.z = 0.0f;
+		SMS_ThrowMario(dir, self->mMarioJumpRate * (self->unk154 - dist));
+	}
+
+	if (self->animIsFinished()) {
+		self->unk144->startControlAnim(6);
+		self->mState = 8;
+	}
+}
+
+void TSandBombBase::exploding() { sandBombExploding(this); }
 
 void TSandBombBase::explode() { }
 
