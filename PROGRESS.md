@@ -10920,6 +10920,37 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R335 (`Item`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TCoin::perform`.
+
+- Bei `LIVE_FLAG_DEAD` kehrt es sofort zurück.
+- Im Move-Zweig mit `LIVE_FLAG_UNK10` bricht Talk-Mode ohne Demo ab.
+- Ein laufender State-Timer wird heruntergezählt.
+- Ohne Kollisions-Flag setzt es `MAP_OBJ_FLAG_DISAPPEARING` und `mStateTimer = unk14C`, sonst `receiveMessage` mit `HIT_MESSAGE_UNK5` und `makeObjDead`.
+- Danach ruft es `touchActor` für jede Kollision auf.
+- Im anderen Zweig fordert `CUE_CALC_VIEW` ohne Model `gpQuestionManager->request(mPosition, 60.0f)` an und ruft `TItem::perform`.
+- `static inline` mit `char pad[16]` hält Frame `-0x50` und das By-Value-`TVec3` auf `0x34`.
+- Ein lokales `char[16]` verschiebt das `TVec3` nur um 4.
+- 608 Bytes, 152 Instruktionen.
+- `Item.cpp` bleibt `NonMatching` (`TShine::control`, `appearWithTime`, `touchFruit`).
+
+`validate-symbol-order` `mario/MoveBG/Item`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.62296 % -> 79.62298 %, matched code 50.493916 % -> 50.510853 % (1812776 -> 1813384, +608).
+Matched data bleibt 66.304306 % (424567).
+Funktionen matched 9702 -> 9703.
+`Item` 15532 -> 16140 (+608).
+Complete units bleiben 416.
+Kein R170–R334-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R334 (`ItemManager`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

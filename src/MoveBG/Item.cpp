@@ -260,8 +260,16 @@ void TCoin::makeObjAppeared()
 		unk154->unk1A &= ~1;
 }
 
+// Inline, not a local: char[16] keeps the by-value TVec3 at 0x34.
+static inline void reserveCoinPerformSlot()
+{
+	char pad[16];
+	pad[0] = 0;
+}
+
 void TCoin::perform(u32 cue, JDrama::TGraphics* graphics)
 {
+	reserveCoinPerformSlot();
 	if (checkLiveFlag(LIVE_FLAG_DEAD))
 		return;
 
