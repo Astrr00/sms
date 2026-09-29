@@ -2,6 +2,7 @@
 #include <Player/MarioAccess.hpp>
 #include <JSystem/J3D/J3DGraphAnimator/J3DModel.hpp>
 #include <JSystem/JDrama/JDRNameRefGen.hpp>
+#include <MarioUtil/MapUtil.hpp>
 #include <MarioUtil/PacketUtil.hpp>
 #include <MSound/MSound.hpp>
 #include <MSound/SoundEffects.hpp>
@@ -831,7 +832,65 @@ void TBigWatermelon::appearing()
 	}
 }
 
-void TBigWatermelon::control() { }
+void TBigWatermelon::control()
+{
+	// Declare scale, then velocity, then the take matrix so the
+	// slots land low-to-high as matrix, velocity, scale.
+	JGeometry::TVec3<f32> scale;
+	JGeometry::TVec3<f32> vel;
+	Mtx mtx;
+	// Dead slot so the matrix stays at r1+0x38 and the frame at -0x90.
+	char trash[0x18];
+	trash[0] = 0;
+	TMapObjGeneral::control();
+	if ((s32)unk194 != 0)
+		unk194 -= 1;
+	if (isState(TMapObjGeneral::STATE_HOLDING)) {
+		MTXCopy(mHolder->getTakingMtx(), mtx);
+		mtx[1][3] += unk190;
+		MTXCopy(mtx, getModel()->getAnmMtx(0));
+	} else {
+		vel = mVelocity;
+		if (!(vel.squared() <= JGeometry::TUtil<f32>::epsilon()
+		      && mGroundPlane->mActor == nullptr))
+			calcCurrentMtx();
+	}
+	switch (mState) {
+	case TMapObjBase::STATE_NORMAL:
+		if (checkLiveFlag(LIVE_FLAG_UNK10))
+			offLiveFlag(LIVE_FLAG_UNK10);
+		{
+			const TLiveActor* actor = mGroundPlane->getActor();
+			// Second identical type test is in the retail body.
+			if (mPosition.y < 200.0f + mGroundHeight && actor != nullptr
+			    && (actor->isActorType(0x400000CD)
+			        || actor->isActorType(0x400000CD))) {
+				f32 prev = unk1A0;
+				unk1A0   = SMS_GetSandRiseUpRatio(actor);
+				if (unk1A0 > 0.05f && unk1A0 > prev)
+					mVelocity.y += 20.0f;
+			}
+		}
+		break;
+	case TMapObjGeneral::STATE_APPEARING:
+		break;
+	// 0xA..0xC are empty. They are what makes the compare split at 0xA.
+	case TMapObjGeneral::STATE_WAITING_TO_APPEAR:
+	case 0xB:
+	case 0xC:
+		break;
+	case 0xD:
+		if (!isStateTimerEngaged()) {
+			scale.setAll(1.0f);
+			emitAndScale(0x6B, 0, &mPosition, scale);
+			emitAndScale(0x6C, 0, &mPosition, scale);
+			mStateTimer = 0x1E;
+		}
+		if (animIsFinished())
+			makeObjDead();
+		break;
+	}
+}
 
 void TBigWatermelon::startEvent()
 {
