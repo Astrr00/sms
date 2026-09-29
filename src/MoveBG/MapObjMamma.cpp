@@ -897,10 +897,36 @@ void TSandBombBase::loadAfter()
 	unk144->appear();
 }
 
-// Empty in this TU. dont_inline keeps the qualified call in TSandCastle::initMapObj.
+// dont_inline keeps the qualified call in TSandCastle::initMapObj.
 #pragma dont_inline on
-void TSandBombBase::initMapObj() { }
+void TSandBombBase::initMapObj()
+{
+	unk138     = 0.006f;
+	unk13C     = 0.005f;
+	unk140     = 0;
+	unk148     = 0x3C;
+	unk154     = 1000.0f;
+	mScaling.y = TSandBase::mScaleMin;
+	TMapObjBase::initMapObj();
+	unk150 = 0.5f;
+	if (strcmp(unkF4, "SandBombBasePyramid") == 0) {
+		unk14C = 1.3f;
+		unk154 = 1200.0f;
+	} else if (strcmp(unkF4, "SandBombBaseShit") == 0) {
+		unk14C = 1.3f;
+		unk154 = 1500.0f;
+	} else if (strcmp(unkF4, "SandBombBaseStar") == 0) {
+		unk14C = 1.2f;
+	} else if (strcmp(unkF4, "SandBombBaseTurtle") == 0) {
+		unk14C = 1.2f;
+	}
+	SMS_LoadParticle("/scene/mapObj/SandBomb.jpa", 0x55);
+}
 #pragma dont_inline off
+
+// Retail rodata has 0x328 bytes between the leading pool and
+// "SandBombBasePyramid". This keeps initMapObj's addi offsets.
+static const char cSandBombRodataPad[0x328] = { 0 };
 
 TSandBombBase::TSandBombBase(const char* name)
     : TSandBase(name)

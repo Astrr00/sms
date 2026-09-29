@@ -10920,6 +10920,34 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R343 (`MapObjMamma`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TSandBombBase::initMapObj`.
+
+- Setzt `unk138`/`unk13C`/`unk140`/`unk148`/`unk154` und `mScaling.y` auf `TSandBase::mScaleMin`, dann `TMapObjBase::initMapObj`.
+- `unk150` wird 0.5.
+- `unkF4` wählt Pyramid (1.3 / 1200), Shit (1.3 / 1500), Star oder Turtle (1.2).
+- Danach lädt `SMS_LoadParticle` `/scene/mapObj/SandBomb.jpa` als Partikel 0x55.
+- 304 Bytes, 76 Instruktionen.
+- `MapObjMamma.cpp` bleibt `NonMatching`.
+- Ein 0x328-Byte-Rodata-Block hält die String-Offsets bei 0x494.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMamma`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.65275 % -> 79.661095 %, matched code 50.557537 % -> 50.566006 % (1815060 -> 1815364, +304).
+Matched data bleibt 66.304306 % (424567).
+Funktionen matched 9707 -> 9708.
+`MapObjMamma` 11168 -> 11472 (+304).
+Complete units bleiben 416.
+Kein R170–R341-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R341 (`MapObjFence`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
