@@ -289,7 +289,34 @@ void TResetFruit::touchWaterSurface()
 		makeObjDead();
 }
 
-u32 TResetFruit::touchWater(THitActor*) { return 0; }
+u32 TResetFruit::touchWater(THitActor* actor)
+{
+	char trash[4];
+	trash[0] = 0;
+	if (!isState(TMapObjGeneral::STATE_HOLDING)
+	    && !isState(TMapObjGeneral::STATE_APPEARING)) {
+		JGeometry::TVec3<f32> tmp(mVelocity);
+		JGeometry::TVec3<f32> work;
+		work.set(tmp);
+		const JGeometry::TVec3<f32>& water = getWaterSpeed(actor);
+		register f32 w                      = water.x;
+		register f32 s                      = unk17C;
+		work.x = w * s + work.x;
+		w      = water.y;
+		work.y = w * s + work.y;
+		w      = water.z;
+		work.z = w * s + work.z;
+		mVelocity = work;
+		offLiveFlag(LIVE_FLAG_UNK10);
+	}
+	if (!isStateTimerEngaged()) {
+		onMapObjFlag(MAP_OBJ_FLAG_DISAPPEARING);
+		mStateTimer = getLivingTime();
+	}
+	offLiveFlag(LIVE_FLAG_UNK10);
+	mState = 11;
+	return 1;
+}
 
 void TResetFruit::touchActor(THitActor* param_1)
 {

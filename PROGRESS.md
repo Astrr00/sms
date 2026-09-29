@@ -10920,6 +10920,31 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R301 (`MapObjBall`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TResetFruit::touchWater`.
+
+- `STATE_HOLDING` oder `STATE_APPEARING` überspringt die Geschwindigkeit.
+  Sonst kommt `getWaterSpeed` auf eine Kopie von `mVelocity`, skaliert mit `unk17C`.
+  Danach `offLiveFlag(LIVE_FLAG_UNK10)`.
+  Ist der State-Timer aus, setzt `MAP_OBJ_FLAG_DISAPPEARING` und `mStateTimer = getLivingTime()`.
+  Zum Schluss noch einmal `offLiveFlag` und `mState = 11`.
+- `char trash[4]` hält den Frame auf `-0x38`.
+- 336 Bytes, 84 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.40212 % -> 79.41127 %, matched code 50.178272 % -> 50.18763 % (1801444 -> 1801780, +336).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9671 -> 9672.
+`MapObjBall` 7072 -> 7408 (+336).
+Kein R170–R300-Unit hat matched code verloren.
+
 ### R300 (`MapObjBianco`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
