@@ -84,6 +84,10 @@ public:
 	void load(JSUMemoryInputStream&);
 	TSwingBoard(const char* name = "つり橋");
 
+	static f32 mRopeWidthX;
+	static f32 mRopeWidthZ;
+	static f32 mTexPosRate;
+
 public:
 	/* 0x138 */ f32 unk138;
 	/* 0x13C */ f32 unk13C;

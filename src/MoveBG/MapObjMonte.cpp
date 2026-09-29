@@ -183,6 +183,10 @@ f32 THangingBridgeBoard::mRopeWidthX = 10.0f;
 f32 THangingBridgeBoard::mRopeWidthZ = 7.0f;
 f32 THangingBridgeBoard::mTexPosRate = 0.01f;
 
+f32 TSwingBoard::mRopeWidthX = 10.0f;
+f32 TSwingBoard::mRopeWidthZ = 7.0f;
+f32 TSwingBoard::mTexPosRate = 0.01f;
+
 int THangingBridge::mPointNumBetweenBoards = 10;
 f32 THangingBridge::mRopeHeight;
 
@@ -210,9 +214,38 @@ THangingBridge::THangingBridge(const char* name)
 {
 }
 
-void TSwingBoard::drawOneRope(const JGeometry::TVec3<f32>&,
-                              const JGeometry::TVec3<f32>&) const
+void TSwingBoard::drawOneRope(const JGeometry::TVec3<f32>& from,
+                              const JGeometry::TVec3<f32>& to) const
 {
+	// Second endpoint first so r5 lands in f23.
+	// t is computed after the adds so it lands in f25.
+	f32 bx1 = to.x + mRopeWidthX;
+	f32 bx0 = to.x - mRopeWidthX;
+	f32 bz1 = to.z + mRopeWidthZ;
+	f32 bz0 = to.z - mRopeWidthZ;
+	f32 ax1 = from.x + mRopeWidthX;
+	f32 ax0 = from.x - mRopeWidthX;
+	f32 az1 = from.z + mRopeWidthZ;
+	f32 az0 = from.z - mRopeWidthZ;
+	f32 t   = unk138 * mTexPosRate;
+
+	GXBegin(GX_TRIANGLESTRIP, GX_VTXFMT0, 8);
+	GXPosition3f32(from.x, from.y, az1);
+	GXTexCoord2f32(0.0f, t);
+	GXPosition3f32(to.x, to.y, bz1);
+	GXTexCoord2f32(0.0f, 0.0f);
+	GXPosition3f32(ax1, from.y, az0);
+	GXTexCoord2f32(1.0f, t);
+	GXPosition3f32(bx1, to.y, bz0);
+	GXTexCoord2f32(1.0f, 0.0f);
+	GXPosition3f32(ax0, from.y, az0);
+	GXTexCoord2f32(2.0f, t);
+	GXPosition3f32(bx0, to.y, bz0);
+	GXTexCoord2f32(2.0f, 0.0f);
+	GXPosition3f32(from.x, from.y, az1);
+	GXTexCoord2f32(3.0f, t);
+	GXPosition3f32(to.x, to.y, bz1);
+	GXTexCoord2f32(3.0f, 0.0f);
 }
 
 void TSwingBoard::initDraw() const { }
