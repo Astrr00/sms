@@ -10920,6 +10920,36 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R336 (`MapObjTree`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjTree::controlLeaf`.
+
+- Steht die Winkelgeschwindigkeit, kopiert es die Blattmatrix und ruft `moveMtx` auf, wenn Mario nicht steigt.
+- Sonst integriert es Winkel und Dämpfung über `mLeafStiffness` und `mLeafDamping`.
+- `MTXRotAxisRad` dreht um die X-Achse, `MTXConcat` hängt die Blattmatrix an, `setAnmMtx` schreibt sie zurück.
+- Bei nicht steigendem Mario folgt ein weiteres `moveMtx`.
+- Beide Vergleiche nutzen `abs(mAngle)` gegen `mLeafTouchImpulse`.
+- Ein `int pad` als letztes Local schließt die 4-Byte-Lücke unter den Matrizen.
+- Frame bleibt `-0xd0`.
+- 444 Bytes, 111 Instruktionen.
+- `MapObjTree.cpp` bleibt `NonMatching` (`initMapObj`).
+
+`validate-symbol-order` `mario/MoveBG/MapObjTree`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.62298 % -> 79.623 %, matched code 50.510853 % -> 50.523216 % (1813384 -> 1813828, +444).
+Matched data bleibt 66.304306 % (424567).
+Funktionen matched 9703 -> 9704.
+`MapObjTree` 4036 -> 4480 (+444).
+Complete units bleiben 416.
+Kein R170–R335-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
 ### R335 (`Item`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**

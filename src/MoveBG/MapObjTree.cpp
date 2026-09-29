@@ -96,6 +96,8 @@ int TMapObjTree::controlLeaf(int index)
 	if (abs(leaf.mAngle) < mLeafTouchImpulse
 	    && abs(leaf.mAngle) < mLeafTouchImpulse)
 		return 1;
+	// Last local, so it sits under the matrices and closes the 4-byte gap.
+	int pad = 0;
 	return 0;
 }
 
