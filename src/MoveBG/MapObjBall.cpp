@@ -42,7 +42,29 @@ void TMapObjBall::touchPollution() { kill(); }
 
 void TMapObjBall::touchWaterSurface() { kill(); }
 
-void TMapObjBall::rebound(JGeometry::TVec3<f32>*) { }
+void TMapObjBall::rebound(JGeometry::TVec3<f32>* param_1)
+{
+	calcReflectingVelocity(mGroundPlane, mMapObjData->mPhysical->unk4->unk4,
+	                       &mVelocity);
+	param_1->y = mGroundHeight;
+	onLiveFlag(LIVE_FLAG_AIRBORNE);
+	if (isActorType(0x400000D0)) {
+		if (mScaling.y >= 5.0f)
+			gpMSound->startSoundActorWithInfo(
+			    MSD_SE_OBJ_WATERMELON_BBUND, &mPosition, nullptr,
+			    fabsf(mGroundPlane->mNormal.y), 0, 0, nullptr, 0, 4);
+		else
+			gpMSound->startSoundActorWithInfo(
+			    MSD_SE_OBJ_WATERMELON_SBUND, &mPosition, nullptr,
+			    fabsf(mGroundPlane->mNormal.y), 0, 0, nullptr, 0, 4);
+	} else {
+		gpMSound->startSoundActorWithInfo(mMapObjData->mSound->unk4->unk0[4],
+		                                  &mPosition, &mVelocity, 0.0f, 0, 0,
+		                                  nullptr, 0, 4);
+	}
+	char trash[48];
+	trash[47] = 0;
+}
 
 #pragma dont_inline on
 void TMapObjBall::touchGround(JGeometry::TVec3<f32>*) { }

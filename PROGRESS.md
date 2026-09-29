@@ -10920,6 +10920,32 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R329 (`MapObjBall`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjBall::rebound`.
+
+- Spiegelt die Geschwindigkeit an `mGroundPlane` mit `mPhysical->unk4->unk4`.
+- Setzt die Y-Komponente des übergebenen Vektors auf `mGroundHeight`.
+- Setzt `LIVE_FLAG_AIRBORNE`.
+- Typ `0x400000D0` mit `mScaling.y >= 5` spielt `MSD_SE_OBJ_WATERMELON_BBUND`, sonst `MSD_SE_OBJ_WATERMELON_SBUND`.
+- Die Lautstärke ist `fabsf` der Boden-Normale Y.
+- Andere Typen spielen Sound-Index 4 mit `&mVelocity` und `0.0f`.
+- `char trash[48]` hält Frame `-0x60`.
+- 392 Bytes, 98 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.60473 % -> 79.615524 %, matched code 50.456924 % -> 50.467842 % (1811448 -> 1811840, +392).
+Matched data bleibt 66.304306 % (424567).
+Funktionen matched 9698 -> 9699.
+`MapObjBall` 8740 -> 9132 (+392).
+Kein R170–R328-Unit hat matched code verloren.
+
 ### R328 (`MapObjMamma`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
