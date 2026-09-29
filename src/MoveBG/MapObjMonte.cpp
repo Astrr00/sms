@@ -6,6 +6,7 @@
 #include <JSystem/J3D/J3DGraphBase/J3DSys.hpp>
 #include <JSystem/JUtility/JUTTexture.hpp>
 #include <MoveBG/MapObjManager.hpp>
+#include <System/MarDirector.hpp>
 
 // rogue includes needed for matching sinit & bss
 #include <MSound/MSSetSound.hpp>
@@ -175,12 +176,80 @@ void THangingBridge::drawUpper(const JGeometry::TVec3<f32>&,
 
 void THangingBridge::setDrawPos(int, f32, JGeometry::TVec3<f32>*) const { }
 
+// Dead inline: a 0xC local under the mat-color temp, and a 0x4 return
+// above it. No instructions.
+struct TSwingDrawLow {
+	char c[0xC];
+};
+struct TSwingDrawHigh {
+	char c[4];
+};
+static inline TSwingDrawHigh swingDrawPad()
+{
+	TSwingDrawLow low;
+	return *(TSwingDrawHigh*)(void*)&low;
+}
+
+// Extra 0x14 local plus a 4-byte return. The swing pad alone leaves
+// THangingBridge's frame at 0xE0 with the texture slots 0x14 too low.
+struct THangDrawLow {
+	char c[0x14];
+};
+struct THangDrawHigh {
+	char c[4];
+};
+static inline THangDrawHigh hangDrawPad()
+{
+	THangDrawLow low;
+	return *(THangDrawHigh*)(void*)&low;
+}
+
 // dont_inline: empty stubs would otherwise fold into THangingBridge::perform.
 #pragma dont_inline on
 void THangingBridge::drawRopeBetweenBoards(f32, int) const { }
-
-void THangingBridge::initDraw() const { }
 #pragma dont_inline off
+
+void THangingBridge::initDraw() const
+{
+	swingDrawPad();
+	hangDrawPad();
+	GXSetVtxAttrFmt(GX_VTXFMT0, GX_VA_POS, GX_POS_XYZ, GX_F32, 0);
+	GXSetVtxAttrFmt(GX_VTXFMT0, GX_VA_TEX0, GX_TEX_ST, GX_F32, 0);
+	GXClearVtxDesc();
+	GXSetVtxDesc(GX_VA_POS, GX_DIRECT);
+	GXSetVtxDesc(GX_VA_TEX0, GX_DIRECT);
+	GXLoadPosMtxImm(j3dSys.getViewMtx(), GX_PNMTX0);
+	GXSetCurrentMtx(GX_PNMTX0);
+	GXSetNumChans(1);
+	GXSetChanCtrl(GX_COLOR0A0, GX_FALSE, GX_SRC_REG, GX_SRC_REG, 0, GX_DF_NONE,
+	              GX_AF_NONE);
+	GXSetChanCtrl(GX_COLOR1A1, GX_FALSE, GX_SRC_REG, GX_SRC_REG, 0, GX_DF_NONE,
+	              GX_AF_NONE);
+	GXSetChanMatColor(GX_COLOR0A0, (GXColor) { 0x00, 0x00, 0x64, 0xff });
+	GXSetNumTexGens(1);
+	GXSetTexCoordGen(GX_TEXCOORD0, GX_TG_MTX2x4, GX_TG_TEX0, GX_IDENTITY);
+	if (gpMarDirector->getCurrentMap() == 0xD) {
+		JUTTexture tex(gpMapObjManager->unkCC);
+		tex.load(GX_TEXMAP0);
+	} else {
+		JUTTexture tex(gpMapObjManager->unkCC);
+		tex.load(GX_TEXMAP0);
+	}
+	GXSetNumTevStages(1);
+	GXSetTevOrder(GX_TEVSTAGE0, GX_TEXCOORD0, GX_TEXMAP0, GX_COLOR_NULL);
+	GXSetTevColorIn(GX_TEVSTAGE0, GX_CC_TEXC, GX_CC_ZERO, GX_CC_ZERO,
+	                GX_CC_ZERO);
+	GXSetTevColorOp(GX_TEVSTAGE0, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE,
+	                GX_TEVPREV);
+	GXSetTevAlphaIn(GX_TEVSTAGE0, GX_CA_TEXA, GX_CA_ZERO, GX_CA_ZERO,
+	                GX_CA_ZERO);
+	GXSetTevAlphaOp(GX_TEVSTAGE0, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE,
+	                GX_TEVPREV);
+	GXSetBlendMode(GX_BM_BLEND, GX_BL_ONE, GX_BL_ZERO, GX_LO_NOOP);
+	GXSetAlphaCompare(GX_ALWAYS, 0, GX_AOP_OR, GX_ALWAYS, 0);
+	GXSetZMode(GX_TRUE, GX_LEQUAL, GX_TRUE);
+	GXSetCullMode(GX_CULL_BACK);
+}
 
 f32 THangingBridgeBoard::mRopeWidthX = 10.0f;
 f32 THangingBridgeBoard::mRopeWidthZ = 7.0f;
@@ -249,20 +318,6 @@ void TSwingBoard::drawOneRope(const JGeometry::TVec3<f32>& from,
 	GXTexCoord2f32(3.0f, t);
 	GXPosition3f32(to.x, to.y, bz1);
 	GXTexCoord2f32(3.0f, 0.0f);
-}
-
-// Dead inline: a 0xC local under the mat-color temp, and a 0x4 return
-// above it. No instructions. Frame is then 0x80.
-struct TSwingDrawLow {
-	char c[0xC];
-};
-struct TSwingDrawHigh {
-	char c[4];
-};
-static inline TSwingDrawHigh swingDrawPad()
-{
-	TSwingDrawLow low;
-	return *(TSwingDrawHigh*)(void*)&low;
 }
 
 void TSwingBoard::initDraw() const
