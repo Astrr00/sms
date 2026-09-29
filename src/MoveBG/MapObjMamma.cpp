@@ -474,6 +474,7 @@ public:
 #include <JSystem/JDrama/JDRNameRefGen.hpp>
 #include <Map/Map.hpp>
 #include <Map/MapCollisionEntry.hpp>
+#include <Map/MapCollisionManager.hpp>
 #include <Map/MapData.hpp>
 #include <M3DUtil/MActor.hpp>
 #include <MSound/MSound.hpp>
@@ -488,6 +489,8 @@ public:
 #include <System/Particles.hpp>
 #include <System/MarDirector.hpp>
 #include <System/TargetArrow.hpp>
+#include <Camera/CameraShake.hpp>
+#include <MarioUtil/RumbleMgr.hpp>
 
 // -inline deferred: source order is the reverse of mario.MAP emission order.
 
@@ -659,7 +662,37 @@ static inline void sandBombExploding(TSandBombBase* self)
 
 void TSandBombBase::exploding() { sandBombExploding(this); }
 
-void TSandBombBase::explode() { }
+void TSandBombBase::explode()
+{
+	char trash[36];
+	trash[0] = 0;
+	startControlAnim(1);
+	mScaling.y = 1.0f;
+	mMapCollisionManager->changeCollision(1);
+	mMapCollisionManager->unk8->setUp();
+	if (mMapCollisionManager->unk8 != nullptr)
+		mMapCollisionManager->unk8->moveSRT(mPosition, mRotation, mScaling);
+
+	JPABaseEmitter* emitter
+	    = gpMarioParticleManager->emit(0x55, &mPosition, 0, nullptr);
+	f32 scale                         = unk14C;
+	emitter->mGlobalDynamicsScale.x   = scale;
+	emitter->mGlobalDynamicsScale.y   = scale;
+	emitter->mGlobalDynamicsScale.z   = scale;
+	emitter->mGlobalParticleScale.x   = scale;
+	emitter->mGlobalParticleScale.y   = scale;
+	emitter->mGlobalParticleScale.z   = scale;
+
+	if (!gpMarDirector->isDemoModeNow())
+		gpCameraShake->startShake((EnumCamShakeMode)0xd, 1.0f);
+
+	if (gpMSound->gateCheck(MSD_SE_OBJ_SANDBOMB_BANG))
+		MSoundSESystem::MSoundSE::startSoundActor(
+		    MSD_SE_OBJ_SANDBOMB_BANG, &mPosition, 0, nullptr, 0, 4);
+
+	SMSRumbleMgr->start(0x15, mExlodingRumbleTime, &mPosition);
+	mState = 7;
+}
 
 void TSandBombBase::waitBeforeExplode()
 {

@@ -10920,6 +10920,31 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R322 (`MapObjMamma`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TSandBombBase::explode`.
+
+- `startControlAnim(1)` und `mScaling.y = 1`.
+- Kollision wechselt auf 1, `unk8` ruft `setUp` und bei Bedarf `moveSRT`.
+- Partikel `0x55` übernimmt `unk14C` als Dynamics- und Particle-Scale.
+- Außerhalb des Demo-Modus startet Kamera-Shake `0xd`.
+- `MSD_SE_OBJ_SANDBOMB_BANG`, Rumble `0x15` und `mState = 7`.
+- `char trash[36]` hält Frame `-0x40`.
+- 320 Bytes, 80 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMamma`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.53179 % -> 79.54058 %, matched code 50.383167 % -> 50.39208 % (1808800 -> 1809120, +320).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9691 -> 9692.
+`MapObjMamma` 8520 -> 8840 (+320).
+Kein R170–R321-Unit hat matched code verloren.
+
 ### R321 (`MapObjMamma`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
