@@ -597,7 +597,48 @@ void TBigWatermelon::touchGround(JGeometry::TVec3<f32>* param_1)
 
 void TBigWatermelon::touchActor(THitActor*) { }
 
-void TBigWatermelon::kill() { }
+class TWaterEmitInfo;
+class TModelWaterManager {
+public:
+	u8 emitRequest(const TWaterEmitInfo&);
+};
+extern TModelWaterManager* gpModelWaterManager;
+class TItemManager;
+extern TItemManager* gpItemManager;
+extern "C" TMapObjBase*
+makeObjAppear__18TMapObjBaseManagerFfffUlb(TItemManager*, f32, f32, f32, u32,
+                                           bool);
+
+void TBigWatermelon::kill()
+{
+	emitAndScale(0x5D, 0, &mPosition);
+	emitAndScale(0x5E, 0, &mPosition);
+	emitAndScale(0x5F, 0, &mPosition);
+	JGeometry::TVec3<f32> scale;
+	scale.setAll(1.0f);
+	emitAndScale(0x6B, 0, &mPosition, scale);
+	emitAndScale(0x6C, 0, &mPosition, scale);
+	*(Vec*)((u8*)unk198 + 0x70) = *(Vec*)&mPosition;
+	gpModelWaterManager->emitRequest(*(TWaterEmitInfo*)unk198);
+	if (gpMSound->gateCheck(MSD_SE_OBJ_WATERMELON_BLOCK))
+		MSoundSESystem::MSoundSE::startSoundActor(
+		    MSD_SE_OBJ_WATERMELON_BLOCK, &mPosition, 0, nullptr, 0, 4);
+	if ((int)unk19C < 10) {
+		TMapObjBase* obj = makeObjAppear__18TMapObjBaseManagerFfffUlb(
+		    gpItemManager, mPosition.x, mPosition.y, mPosition.z, 0x2000000E,
+		    true);
+		if (obj != nullptr) {
+			obj->mVelocity.x = 0.0f;
+			obj->mVelocity.y = 25.0f;
+			obj->mVelocity.z = 0.0f;
+			obj->offLiveFlag(LIVE_FLAG_UNK10);
+			unk19C += 1;
+		}
+	}
+	TMapObjGeneral::kill();
+	char trash[0x10];
+	trash[0] = 0;
+}
 
 void TBigWatermelon::appearing()
 {

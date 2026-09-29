@@ -10920,6 +10920,31 @@ unverändert strikt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R304 (`MapObjBall`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TBigWatermelon::kill`.
+
+- Drei `emitAndScale` ohne Scale, dann zwei mit `(1, 1, 1)`.
+  Position geht wortweise nach `unk198 + 0x70`, danach `emitRequest`.
+  `MSD_SE_OBJ_WATERMELON_BLOCK` über `gateCheck`.
+  Unter `unk19C < 10` erscheint `0x2000000E` mit Velocity `(0, 25, 0)` und `offLiveFlag(LIVE_FLAG_UNK10)`.
+  Danach `TMapObjGeneral::kill`.
+- `char trash[0x10]` am Ende hält Frame `-0x38`.
+- 352 Bytes, 88 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.428825 % -> 79.43852 %, matched code 50.205456 % -> 50.215263 % (1802420 -> 1802772, +352).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9674 -> 9675.
+`MapObjBall` 8048 -> 8400 (+352).
+Kein R170–R303-Unit hat matched code verloren.
+
 ### R303 (`MapObjBall`)
 
 **Vollmatch, strikt (0 `~`, 0 `|`).**
