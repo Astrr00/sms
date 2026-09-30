@@ -1,5 +1,6 @@
 #include <MoveBG/MapObjRicco.hpp>
 #include <MoveBG/MapObjManager.hpp>
+#include <JSystem/JDrama/JDRNameRefGen.hpp>
 #include <JSystem/J3D/J3DGraphAnimator/J3DModel.hpp>
 #include <Map/MapCollisionManager.hpp>
 #include <MarioUtil/RandomUtil.hpp>
@@ -76,9 +77,10 @@ void TCraneRotY::load(JSUMemoryInputStream& stream)
 f32 TCraneUpDown::mRotSpeed = 0.1f;
 s32 TCraneUpDown::mWaitTime = 120;
 
-f32 TRiccoWatermill::mRotAccel           = 1.0f;
-f32 TRiccoWatermill::mRotSpeedMaxUp     = 3.0f;
-f32 TRiccoWatermill::mSubmarineMaxTransY = 750.0f;
+f32 TRiccoWatermill::mRotAccel               = 1.0f;
+f32 TRiccoWatermill::mRotSpeedMaxUp         = 3.0f;
+f32 TRiccoWatermill::mSubmarineMaxTransY    = 750.0f;
+f32 TRiccoWatermill::mSubmarineBottomTransY = -950.0f;
 
 void TCraneUpDown::control() { }
 
@@ -149,7 +151,19 @@ void TRiccoWatermill::control() { }
 
 void TRiccoWatermill::calc() { setRootMtxRotZ(); }
 
-void TRiccoWatermill::loadAfter() { }
+// Leading zeroes so "submarine" sits at the retail rodata offset 0x1C4.
+static const char cRiccoWatermillRodataPad[0x1A0] = { 0 };
+
+void TRiccoWatermill::loadAfter()
+{
+	TMapObjBase::loadAfter();
+	unk13C = (TMapObjBase*)JDrama::TNameRefGen::search("submarine");
+	unk148 = (TMapObjBase*)JDrama::TNameRefGen::search("青コイン（潜水艦用）");
+	unk148->makeObjDead();
+	unk13C->mPosition.y = mSubmarineBottomTransY;
+	unk13C->removeMapCollision();
+	unk13C->setUpCurrentMapCollision();
+}
 
 TRiccoWatermill::TRiccoWatermill(const char* name)
     : TMapObjBase(name)

@@ -61,13 +61,14 @@ public:
 	static f32 mRotAccel;
 	static f32 mRotSpeedMaxUp;
 	static f32 mSubmarineMaxTransY;
+	static f32 mSubmarineBottomTransY;
 
 public:
 	/* 0x138 */ f32 unk138;
 	/* 0x13C */ TMapObjBase* unk13C;
 	/* 0x140 */ u32 unk140;
 	/* 0x144 */ u8 unk144;
-	/* 0x148 */ u32 unk148;
+	/* 0x148 */ TMapObjBase* unk148;
 	/* 0x14C */ u32 unk14C;
 	/* 0x150 */ u32 unk150;
 	/* 0x154 */ u32 unk154;
