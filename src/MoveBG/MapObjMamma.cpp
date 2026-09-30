@@ -500,6 +500,7 @@ public:
 #include <GC2D/GCConsole2.hpp>
 #include <Map/MapStaticObject.hpp>
 #include <Map/MapMirror.hpp>
+#include <Enemy/Beam.hpp>
 #include <printf.h>
 
 // -inline deferred: source order is the reverse of mario.MAP emission order.
@@ -1099,7 +1100,26 @@ TSandCastle::TSandCastle(const char* name)
 
 void TLeanMirror::enemyIsOn() const { }
 
-void TLeanMirror::draw() const { }
+void TLeanMirror::draw() const
+{
+	MtxPtr mtx = getModel()->getAnmMtx(0);
+	JGeometry::TVec3<f32> axis;
+	JGeometry::TVec3<f32> pos;
+	JGeometry::TVec3<f32> dir;
+	axis.x = mtx[0][1];
+	axis.y = mtx[1][1];
+	axis.z = mtx[2][1];
+	*(Vec*)&dir = *(Vec*)&axis;
+	dir.scale((350.0f * mBodyRadius) * 0.001f);
+	dir.add(mPosition);
+	*(Vec*)&pos = *(Vec*)&axis;
+	pos.scale(10000.0f);
+	pos.add(mPosition);
+	gpBeamManager->requestCone(pos, dir, 1.7f * mBodyRadius, true, true,
+	                           false);
+	char trash[0x14];
+	(void)trash;
+}
 
 void TLeanMirror::updateSpeedVec(const JGeometry::TVec3<f32>&, f32) { }
 
