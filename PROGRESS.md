@@ -16343,3 +16343,46 @@ Nur `MapObjFlag` hat sich geändert.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R430B (`TResetFruit::receiveMessage`)
+
+**Vollmatch, strikt.**
+
+- `TResetFruit::receiveMessage`: `HIT_MESSAGE_UNKB` in Zustand 1,
+  Holding oder 11 setzt Zustand 11 und spielt die Waiting-Sequenz
+  (`makeObjDefault`, `makeObjDead`, `calcRootMatrix`, `getModel()->calc`,
+  `mFruitWaitTimeToAppear`, `MAP_OBJ_FLAG_DISAPPEARING` aus,
+  Zustand Waiting).
+  Map 3 mit `unk1A4` ruft noch einmal `makeObjDead`.
+- `HIT_MESSAGE_UNKD` ruft `kill`.
+- Danach nur in Zustand 1, Holding oder 11:
+  `TMapObjBall::touchActor`, und ohne `MAP_OBJ_FLAG_UNK4000000`,
+  in Zustand 1 und ohne `LIVE_FLAG_UNK10`, startet `getLivingTime`
+  falls der Timer nicht läuft, löscht `LIVE_FLAG_UNK10` und setzt Zustand 11.
+- `TMapObjGeneral::receiveMessage` wird auf 1 normalisiert.
+  Take mit `MAP_OBJ_FLAG_UNK100000` ruft `hold`.
+  Spieler `0x80000001`, der nicht `0x400000D0` ist und nicht Take kommt,
+  ruft `kicked`.
+- Put in Zustand 1 setzt Zustand 11, ohne den Rückgabewert zu ändern.
+- `char trash[0x30]` hält das Frame bei `-0x58`.
+  Der Store fällt weg.
+- `MapObjBall.cpp` bleibt `NonMatching`.
+
+0 Abweichungen, 988 Bytes, 247 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS
+(4 bekannte UNUSED-Stub-Größen).
+
+`TMapObjBall::touchGround`, `TFluffManager::control`,
+`TFluffManager::loadAfter` und `TMammaMirrorMapOperator::loadAfter`
+unverändert @ 100 %.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+
+`ninja changes_all`: fuzzy 80.30582 % -> 80.33318 %,
+matched code 51.39339 % -> 51.420914 % (1845068 -> 1846056, +988).
+Matched data bleibt 66.399254 % (425175).
+Funktionen matched 9766 -> 9767.
+`MapObjBall` 12860 -> 13848 (+988), Funktionen 61 -> 62.
+Complete units bleiben 416.
+Nur `MapObjBall` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+

@@ -693,7 +693,71 @@ void TResetFruit::makeObjAppeared()
 	trash[0] = 0;
 }
 
-BOOL TResetFruit::receiveMessage(THitActor*, u32) { return 0; }
+BOOL TResetFruit::receiveMessage(THitActor* sender, u32 message)
+{
+	char trash[0x30];
+	if (message == HIT_MESSAGE_UNKB) {
+		if (isState(1) || isState(TMapObjGeneral::STATE_HOLDING)
+		    || isState(11)) {
+			mState = 11;
+			makeObjDefault();
+			makeObjDead();
+			calcRootMatrix();
+			getModel()->calc();
+			mStateTimer = mFruitWaitTimeToAppear;
+			offMapObjFlag(MAP_OBJ_FLAG_DISAPPEARING);
+			mState = TMapObjGeneral::STATE_WAITING_TO_APPEAR;
+			if (gpMarDirector->mMap == 3 && unk1A4 != 0)
+				makeObjDead();
+			return true;
+		}
+		return false;
+	}
+
+	if (message == HIT_MESSAGE_UNKD) {
+		kill();
+		return true;
+	}
+
+	if (isState(1) || isState(TMapObjGeneral::STATE_HOLDING)
+	    || isState(11)) {
+		if (!isState(TMapObjGeneral::STATE_APPEARING)
+		    && !isState(TMapObjGeneral::STATE_BREAKING) && !isState(0xC)
+		    && !isState(TMapObjGeneral::STATE_WAITING_TO_APPEAR)) {
+			TMapObjBall::touchActor(sender);
+			if (!checkMapObjFlag(MAP_OBJ_FLAG_UNK4000000)
+			    && isState(1) && !checkLiveFlag(LIVE_FLAG_UNK10)) {
+				if (!isStateTimerEngaged()) {
+					onMapObjFlag(MAP_OBJ_FLAG_DISAPPEARING);
+					mStateTimer = getLivingTime();
+				}
+				offLiveFlag(LIVE_FLAG_UNK10);
+				mState = 11;
+			}
+		}
+
+		BOOL ret = TMapObjGeneral::receiveMessage(sender, message);
+		if (ret)
+			ret = true;
+		else if (message == HIT_MESSAGE_TAKE
+		         && checkMapObjFlag(MAP_OBJ_FLAG_UNK100000)) {
+			hold((TTakeActor*)sender);
+			ret = true;
+		} else if (sender->isActorType(0x80000001)
+		           && !isActorType(0x400000D0)
+		           && message != HIT_MESSAGE_TAKE) {
+			kicked();
+			ret = true;
+		} else {
+			ret = false;
+		}
+
+		if (message == HIT_MESSAGE_PUT && isState(1))
+			mState = 11;
+		return ret;
+	}
+	return false;
+}
 
 void TResetFruit::initMapObj()
 {
