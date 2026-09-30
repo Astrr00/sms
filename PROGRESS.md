@@ -17443,3 +17443,27 @@ Nur `Application` hat sich geändert.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R516B (`WaterGunDivingCtrlR`)
+
+**Vollmatch, strikt.**
+
+- `char trash[0x1c]` hinter der `Mtx` legt die Matrix auf `r1+0x2c`.
+  Der Rahmen ist `-0x70`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 144 Bytes, 36 Instruktionen.
+`validate-symbol-order` `mario/Player/WaterGun`: PASS
+(ererbte schwache Ordnung, UNUSED-Größen, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `29502cbb`: fuzzy unverändert 81.12521 %,
+matched code 52.44362 % -> 52.447628 % (1882772 -> 1882916, +144).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9841 -> 9842.
+`WaterGun` 5492 -> 5636 (+144), Funktionen 29 -> 30.
+Fuzzy der Unit 97.871796 % -> 97.873764 %.
+Complete units bleiben 416.
+Nur `WaterGun` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+

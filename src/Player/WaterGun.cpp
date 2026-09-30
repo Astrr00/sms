@@ -183,8 +183,7 @@ static BOOL WaterGunDivingCtrlR(J3DNode* node, BOOL param_2)
 		s32 nozzleSpeedY = gpMarioForCallBack->mWaterGun->unk1CCC;
 		s16 neg          = -nozzleSpeedY;
 		Mtx mtx;
-		// Unused stack space
-		// volatile u32 unused2[7];
+		char trash[0x1c];
 		MsMtxSetRotRPH(mtx, 0.0f, 0.0f, 0.005493164f * neg);
 		MTXConcat(J3DSys::mCurrentMtx, mtx, J3DSys::mCurrentMtx);
 	}
