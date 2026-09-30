@@ -16599,3 +16599,32 @@ Nur `MapObjMonte` hat sich geändert.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R440 (`TNormalLift::control`)
+
+**Vollmatch, strikt.**
+
+- `char trash[0x10]` hebt den Rahmen auf `-0x78`.
+  Das Double der Yaw-Umwandlung bleibt bei `r1+0x60`.
+- `moveToNextNode(getUnk144())` lässt `lfs` vor `mr r3`.
+- `resetStep(unk144)` statt `getUnk144()`.
+  Der Getter ließ ein 4-Byte-Temp unter dem inlined Vec-Paar.
+  Kopie bei `r1+0x30`, Return bei `r1+0x3c`.
+- `resetStep` out-of-line bleibt 100 %.
+
+0 Abweichungen, 436 Bytes, 109 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/MapObjRailBlock`: PASS.
+
+`TRailMapObj::control`, `initGraphTracer` und `resetStep` bleiben 100 %.
+`calcRootMatrix`, `TRailBlock::control` und `moveToNextNode` unberührt.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+
+`ninja changes_all` gegen `0cb26fde`: fuzzy 80.547 % -> 80.54702 %,
+matched code 51.63539 % -> 51.647537 % (1853756 -> 1854192, +436).
+Matched data unverändert 66.815285 % (427839).
+Funktionen matched 9773 -> 9774.
+`MapObjRailBlock` 6284 -> 6720 (+436), Funktionen 42 -> 43.
+Complete units bleiben 416.
+Nur `MapObjRailBlock` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+

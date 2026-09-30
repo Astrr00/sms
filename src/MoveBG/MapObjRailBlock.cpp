@@ -302,6 +302,9 @@ void TNormalLift::initMapObj() { TRailMapObj::initMapObj(); }
 
 void TNormalLift::control()
 {
+	// Dead slot: retail frame is -0x78. Pass unk144 into resetStep;
+	// getUnk144() leaves a 4-byte temp under the inlined vec pair.
+	char trash[0x10];
 	TMapObjBase::control();
 	checkMarioRiding();
 	if (unk158 != 0 && unk152 != 0) {
@@ -321,7 +324,7 @@ void TNormalLift::control()
 					if (yaw != 0xffff)
 						unk144 = yaw * 0.01f;
 
-					resetStep(getUnk144());
+					resetStep(unk144);
 				}
 			}
 		}
