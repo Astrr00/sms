@@ -1524,13 +1524,14 @@ void TWaterGun::changeNozzle(TNozzleType nozzleType, bool animate)
 
 void TWaterGun::movement()
 {
+	char trash[0xF0];
 	if (!canSpray()) {
 		unk1CC2 = 0;
 		unk1CC4 = 0;
 	}
 
-	unk1CC8 += (unk1CC2 - unk1CC8) * mWatergunParams.mChangeSpeed.get();
-	unk1CCC += (unk1CC4 - unk1CCC) * mWatergunParams.mChangeSpeed.get();
+	unk1CC8 += (unk1CC2 - unk1CC8) * mWatergunParams.mHoverSmooth.get();
+	unk1CCC += (unk1CC4 - unk1CCC) * mWatergunParams.mHoverSmooth.get();
 
 	rotateProp(getCurrentNozzle()->unk378);
 
@@ -1564,8 +1565,8 @@ void TWaterGun::movement()
 
 	// Nozzle swapping
 	if (mSwitchToSecondNozzleSpeed != 0.0f) {
+		f32 after = mSwitchToSecondNozzleProgress + mSwitchToSecondNozzleSpeed;
 		f32 before                    = mSwitchToSecondNozzleProgress;
-		f32 after                     = before + mSwitchToSecondNozzleSpeed;
 		mSwitchToSecondNozzleProgress = after;
 
 		if (before < 0.5f && 0.5f <= after)

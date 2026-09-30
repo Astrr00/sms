@@ -17587,3 +17587,29 @@ Nur `namekuri` hat sich geändert.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R519B (`TWaterGun::movement`)
+
+**Vollmatch, strikt.**
+
+- `char trash[0xF0]` am Funktionsanfang legt den Rahmen auf `-0x1c8`.
+  Die Düsen-Nachführung liest `mHoverSmooth`.
+  `mNozzleAngleYSpeedMax` steht vor `mHoverSmooth`, damit der Wert auf `0x1DB8` liegt.
+  `after` wird vor `before` gebildet, damit der alte Fortschritt in `f30` bleibt.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 1348 Bytes, 337 Instruktionen.
+`validate-symbol-order` `mario/Player/WaterGun`: PASS
+(ererbte schwache Ordnung, UNUSED-Größen, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `0381f87b`: fuzzy 81.125946 % -> 81.12644 %,
+matched code 52.48941 % -> 52.52696 % (1884416 -> 1885764, +1348).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9847 -> 9848.
+`WaterGun` 6352 -> 7700 (+1348), Funktionen 32 -> 33.
+Fuzzy der Unit 97.88284 % -> 97.970215 %.
+Complete units bleiben 416.
+Nur `WaterGun` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+

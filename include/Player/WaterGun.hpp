@@ -21,8 +21,8 @@ public:
 	    , PARAM_INIT(mNozzleAngleYSpeed, 1.0f)
 	    , PARAM_INIT(mNozzleAngleYBrake, 0.995f)
 	    , PARAM_INIT(mHoverRotMax, 0x2000)
-	    , PARAM_INIT(mHoverSmooth, 0.05f)
 	    , PARAM_INIT(mNozzleAngleYSpeedMax, 0x2000)
+	    , PARAM_INIT(mHoverSmooth, 0.05f)
 	    , PARAM_INIT(mChangeSpeed, 0.1f)
 	{
 	}
@@ -32,8 +32,8 @@ public:
 	TParamRT<f32> mNozzleAngleYSpeed;
 	TParamRT<f32> mNozzleAngleYBrake;
 	TParamRT<s16> mHoverRotMax;
-	TParamRT<f32> mHoverSmooth;
 	TParamRT<s16> mNozzleAngleYSpeedMax;
+	TParamRT<f32> mHoverSmooth;
 	TParamRT<f32> mChangeSpeed;
 };
 
