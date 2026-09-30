@@ -17099,3 +17099,28 @@ Nur `EmitterViewObj` hat sich geändert.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R497A (`TBossManta::getPolluteRadius`)
+
+**Vollmatch, strikt.**
+
+- `f32 radius = getSaveParams()->mSLPolluteRadius.get()` hält den Radius in `f1`.
+  `mScaling.x` folgt in `f0`, `fmuls f1, f1, f0`.
+  Der Rahmen ist `-0x28` (`r31` bei `0x24`).
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 124 Bytes, 31 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bossManta`: PASS
+(ererbte `theNerve`-Ordnung, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `23915c0e`: fuzzy 81.12375 % -> 81.12377 %,
+matched code 52.3693 % -> 52.372753 % (1880104 -> 1880228, +124).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9827 -> 9828.
+`bossManta` 4072 -> 4196 (+124), Funktionen 25 -> 26.
+Fuzzy der Unit 98.1472 % -> 98.150314 %.
+Complete units bleiben 416.
+Nur `bossManta` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
