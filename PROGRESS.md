@@ -17024,3 +17024,27 @@ Nur `MarioGamePad` hat sich geändert.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R506B (`SMSSetEmitterPolColor`)
+
+**Vollmatch, strikt.**
+
+- `int value = param_2` hält den Farbindex in `r4`.
+  Ohne die Initialisierung landet er in `r0`.
+  Fallthrough bei `param_2 != 6` benutzt `param_2` als Index.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 284 Bytes, 71 Instruktionen.
+`validate-symbol-order` `mario/System/EmitterViewObj`: PASS.
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `61b17e0a`: fuzzy 81.12359 % -> 81.12363 %,
+matched code 52.346127 % -> 52.35404 % (1879272 -> 1879556, +284).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9824 -> 9825.
+`EmitterViewObj` 5656 -> 5940 (+284), Funktionen 24 -> 25.
+Fuzzy der Unit 99.907524 % -> 99.93218 %.
+Complete units bleiben 416.
+Nur `EmitterViewObj` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
