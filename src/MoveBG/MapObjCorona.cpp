@@ -164,17 +164,21 @@ public:
 	void perform(u32 cue, JDrama::TGraphics* graphics);
 	void removeCollisions_();
 	Mtx* getRootJointMtx() const;
+	void calcRootMatrix();
 
 	/* 0x0 */ u8 pad0[0x150];
 	/* 0x150 */ TGripCollision* unk150[5];
 	/* 0x164 */ TGripCollision* unk164[17];
 	/* 0x1A8 */ u8 pad1A8[0x58];
 	/* 0x200 */ s32 unk200[1];
-	/* 0x204 */ u8 pad204[0x44];
+	/* 0x204 */ u8 pad204[0x40];
+	/* 0x244 */ TBathtub* unk244;
 	/* 0x248 */ u8 unk248;
 	/* 0x249 */ u8 pad249;
 	/* 0x24A */ u8 unk24A;
-	/* 0x24B */ u8 pad24B[0x9];
+	/* 0x24B */ u8 pad24B;
+	/* 0x24C */ f32 unk24C;
+	/* 0x250 */ u8 pad250[4];
 	/* 0x254 */ s32 unk254;
 	/* 0x258 */ u8 pad258[4];
 	/* 0x25C */ MActor* unk25C;
@@ -264,6 +268,25 @@ Mtx* TBathtubGrip::getRootJointMtx() const
 	return (Mtx*)reinterpret_cast<const TLiveActor*>(this)
 	    ->getModel()
 	    ->getBaseTRMtx();
+}
+
+void MsMtxSetRotRPH(MtxPtr mtx, f32 x, f32 y, f32 z);
+
+void TBathtubGrip::calcRootMatrix()
+{
+	TPosition3f* dst
+	    = (TPosition3f*)reinterpret_cast<TLiveActor*>(this)
+	          ->getModel()
+	          ->getBaseTRMtx();
+
+	TPosition3f rot;
+	MsMtxSetRotRPH((MtxPtr)rot, 0.0f, unk24C, 0.0f);
+	rot.ref(0, 3) = 0.0f;
+	rot.ref(1, 3) = 0.0f;
+	rot.ref(2, 3) = 0.0f;
+
+	TPosition3f* src = (TPosition3f*)unk244->getRootJointMtx();
+	dst->concat(*src, rot);
 }
 
 void TBathtubGrip::removeCollisions_()
