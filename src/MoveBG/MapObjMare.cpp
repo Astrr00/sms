@@ -1,3 +1,4 @@
+#include <MoveBG/MapObjMareVec3.hpp>
 #include <MoveBG/MapObjMare.hpp>
 #include <MoveBG/MapObjWave.hpp>
 #include <MoveBG/MapObjManager.hpp>
@@ -557,7 +558,39 @@ TWireBell::TWireBell(const char* name)
 	unk14C.zero();
 }
 
-void TMapObjPuncher::touchPlayer(THitActor*) { }
+void TMapObjPuncher::touchPlayer(THitActor*)
+{
+	// gap sits between kick and scaled; tail holds frame -0x68.
+	JGeometry::TVec3<f32> dir;
+	JGeometry::TVec3<f32> mario;
+	JGeometry::TVec3<f32> emit;
+	JGeometry::TVec3<f32> kick;
+	char gap[4];
+	JGeometry::TVec3<f32> scaled;
+	char tail[8];
+	gap[0] = 0;
+	tail[0] = 0;
+
+	awake();
+	startAnim(1);
+	makeVecToLocalZ(1.0f, &dir);
+	mario = *gpMarioPos;
+	scaled = dir;
+	scaled.scale(100.0f);
+	kick = scaled;
+	mario.add(kick);
+	SMS_MarioMoveRequest(mario);
+	SMS_SendMessageToMario(this, HIT_MESSAGE_THROWN);
+	SMS_ThrowMario(dir, unk138);
+	onHitFlag(HIT_FLAG_NO_COLLISION);
+	emit.setAll(2.0f);
+	emitAndScale(PARTICLE_MS_ENM_DISAP_A_W, 0, &mPosition, emit);
+	emitAndScale(PARTICLE_MS_ENM_DISAP_B, 0, &mPosition, emit);
+	if (gpMSound->gateCheck(MSD_SE_SMOKE_EFFECT))
+		MSoundSESystem::MSoundSE::startSoundActor(
+		    MSD_SE_SMOKE_EFFECT, &mPosition, 0, nullptr, 0, 4);
+	mState = 2;
+}
 
 void TMapObjPuncher::control()
 {
