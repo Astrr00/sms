@@ -17296,3 +17296,27 @@ Nur `MarioParticle` hat sich geändert.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R500A (`TBEelTearsDrop::perform`)
+
+**Vollmatch, strikt.**
+
+- `char trash[0x10]` hinter der `Mtx` legt die Matrix auf `r1+0x6c`.
+  Der Rahmen ist `-0xc8`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 336 Bytes, 84 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bosseel`: PASS
+(ererbte schwache Ordnung, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `c5237f1e`: fuzzy 81.12425 % -> 81.12427 %,
+matched code 52.407074 % -> 52.41643 % (1881460 -> 1881796, +336).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9835 -> 9836.
+`bosseel` 22256 -> 22592 (+336), Funktionen 118 -> 119.
+Fuzzy der Unit 99.17166 % -> 99.17324 %.
+Complete units bleiben 416.
+Nur `bosseel` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
