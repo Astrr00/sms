@@ -16529,5 +16529,39 @@ Funktionen matched 9770 -> 9771.
 Complete units bleiben 416.
 Nur `MapObjBall` hat sich geändert.
 
+### R436 (`TMapObjFlagManager::registerObj`)
+
+**Vollmatch, strikt.**
+
+- Fünfzehn `strcmp`-Zweige, von `flagSun` bis `flagMare`.
+- Ist `unk54` null, baut `snprintf` `/scene/mapObj/%s.bti` und `JKRFileLoader::getGlbResource` lädt die Textur.
+- Danach landet der Flag-Pointer in `unk4[unk0]`, und `unk0` wird um eins erhöht.
+- `TMapObjFlagInfo` ist Count bei +0, zwanzig Pointer, Textur bei +0x54.
+  Stride `0x58`, fünfzehn Einträge ab `this+0x10`.
+- `DummyStrings.hpp` setzt die Rodata-Basis auf zwölf Nullbytes.
+  Der Formatstring liegt bei +0x20.
+- `flagSun` (8 Bytes) steht in `.sdata2`.
+- Jedes `if` hat sein eigenes `char buf[0x40]`.
+  Frame `-0x3e8`, erster Puffer bei `r1+0x394`.
+- `MapObjFlag.cpp` bleibt `NonMatching` (`perform`, `draw`).
+
+0 Abweichungen, 1576 Bytes, 394 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/MapObjFlag`: PASS
+(4 bekannte UNUSED-Stub-Größen).
+
+`TMapObjFlag::init` und `TAmiKing::moveObject` bleiben 100 %.
+`TViking::roll`, `TPinnaShell::control`, `TMapObjGrowTree::control`,
+`TMapObjGrowTree::touchWater` und `TRevolvingFenceInner::controlWall` unberührt.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+
+`ninja changes_all` gegen `86f67909`: fuzzy 80.45174 % -> 80.495514 %,
+matched code 51.539906 % -> 51.5838 % (1850328 -> 1851904, +1576).
+Matched data 66.774055 % -> 66.815285 % (427575 -> 427839, +264).
+Funktionen matched 9771 -> 9772.
+`MapObjFlag` 3156 -> 4732 (+1576), Funktionen 12 -> 13.
+`.rodata` 264 Bytes jetzt 100 %.
+Complete units bleiben 416.
+Nur `MapObjFlag` hat sich geändert.
+
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 

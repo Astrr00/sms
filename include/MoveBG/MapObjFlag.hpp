@@ -13,13 +13,14 @@ public:
 	public:
 		TMapObjFlagInfo()
 		{
-			unk0  = nullptr;
-			unk54 = 0;
+			unk0  = 0;
+			unk54 = nullptr;
 		}
 
-		/* 0x0 */ TMapObjFlag* unk0;
-		/* 0x4 */ char unk4[0x50];
-		/* 0x54 */ u32 unk54;
+		// Retail stores: count at +0, flag pointers at +4, texture at +0x54.
+		/* 0x0 */ u32 unk0;
+		/* 0x4 */ TMapObjFlag* unk4[20];
+		/* 0x54 */ void* unk54;
 	};
 
 	TMapObjFlagManager(const char* name);

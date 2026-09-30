@@ -1,9 +1,13 @@
 #include <MoveBG/MapObjFlag.hpp>
+#include <System/DummyStrings.hpp>
 #include <System/MarDirector.hpp>
 #include <MarioUtil/MathUtil.hpp>
 #include <MarioUtil/RandomUtil.hpp>
+#include <JSystem/JKernel/JKRFileLoader.hpp>
 #include <JSystem/JKernel/JKRHeap.hpp>
+#include <PowerPC_EABI_Support/Msl/MSL_C/MSL_Common/string.h>
 #include <dolphin/gx.h>
+#include <stdio.h>
 
 // rogue includes needed for matching sinit & bss
 #include <MSound/MSSetSound.hpp>
@@ -151,7 +155,130 @@ void TMapObjFlagManager::loadFlag(TMapObjFlagInfo*, TMapObjFlag*, const char*)
 }
 
 #pragma dont_inline on
-void TMapObjFlagManager::registerObj(TMapObjFlag*, const char*) { }
+void TMapObjFlagManager::registerObj(TMapObjFlag* flag, const char* name)
+{
+	if (strcmp(name, "flagSun") == 0) {
+		if (mInfos[0].unk54 == nullptr) {
+			char buf[0x40];
+			snprintf(buf, 0x40, "/scene/mapObj/%s.bti", name);
+			mInfos[0].unk54 = JKRFileLoader::getGlbResource(buf);
+		}
+		mInfos[0].unk4[mInfos[0].unk0] = flag;
+		mInfos[0].unk0 += 1;
+	} else if (strcmp(name, "flagWhite") == 0) {
+		if (mInfos[1].unk54 == nullptr) {
+			char buf[0x40];
+			snprintf(buf, 0x40, "/scene/mapObj/%s.bti", name);
+			mInfos[1].unk54 = JKRFileLoader::getGlbResource(buf);
+		}
+		mInfos[1].unk4[mInfos[1].unk0] = flag;
+		mInfos[1].unk0 += 1;
+	} else if (strcmp(name, "flagRedsun") == 0) {
+		if (mInfos[2].unk54 == nullptr) {
+			char buf[0x40];
+			snprintf(buf, 0x40, "/scene/mapObj/%s.bti", name);
+			mInfos[2].unk54 = JKRFileLoader::getGlbResource(buf);
+		}
+		mInfos[2].unk4[mInfos[2].unk0] = flag;
+		mInfos[2].unk0 += 1;
+	} else if (strcmp(name, "flagMonte") == 0) {
+		if (mInfos[3].unk54 == nullptr) {
+			char buf[0x40];
+			snprintf(buf, 0x40, "/scene/mapObj/%s.bti", name);
+			mInfos[3].unk54 = JKRFileLoader::getGlbResource(buf);
+		}
+		mInfos[3].unk4[mInfos[3].unk0] = flag;
+		mInfos[3].unk0 += 1;
+	} else if (strcmp(name, "flagBird") == 0) {
+		if (mInfos[4].unk54 == nullptr) {
+			char buf[0x40];
+			snprintf(buf, 0x40, "/scene/mapObj/%s.bti", name);
+			mInfos[4].unk54 = JKRFileLoader::getGlbResource(buf);
+		}
+		mInfos[4].unk4[mInfos[4].unk0] = flag;
+		mInfos[4].unk0 += 1;
+	} else if (strcmp(name, "flagHigekuri") == 0) {
+		if (mInfos[5].unk54 == nullptr) {
+			char buf[0x40];
+			snprintf(buf, 0x40, "/scene/mapObj/%s.bti", name);
+			mInfos[5].unk54 = JKRFileLoader::getGlbResource(buf);
+		}
+		mInfos[5].unk4[mInfos[5].unk0] = flag;
+		mInfos[5].unk0 += 1;
+	} else if (strcmp(name, "flagBenvenuto") == 0) {
+		if (mInfos[6].unk54 == nullptr) {
+			char buf[0x40];
+			snprintf(buf, 0x40, "/scene/mapObj/%s.bti", name);
+			mInfos[6].unk54 = JKRFileLoader::getGlbResource(buf);
+		}
+		mInfos[6].unk4[mInfos[6].unk0] = flag;
+		mInfos[6].unk0 += 1;
+	} else if (strcmp(name, "flagDolpicDolphin") == 0) {
+		if (mInfos[7].unk54 == nullptr) {
+			char buf[0x40];
+			snprintf(buf, 0x40, "/scene/mapObj/%s.bti", name);
+			mInfos[7].unk54 = JKRFileLoader::getGlbResource(buf);
+		}
+		mInfos[7].unk4[mInfos[7].unk0] = flag;
+		mInfos[7].unk0 += 1;
+	} else if (strcmp(name, "flagDolSun") == 0) {
+		if (mInfos[8].unk54 == nullptr) {
+			char buf[0x40];
+			snprintf(buf, 0x40, "/scene/mapObj/%s.bti", name);
+			mInfos[8].unk54 = JKRFileLoader::getGlbResource(buf);
+		}
+		mInfos[8].unk4[mInfos[8].unk0] = flag;
+		mInfos[8].unk0 += 1;
+	} else if (strcmp(name, "flagDolSunWelcome") == 0) {
+		if (mInfos[9].unk54 == nullptr) {
+			char buf[0x40];
+			snprintf(buf, 0x40, "/scene/mapObj/%s.bti", name);
+			mInfos[9].unk54 = JKRFileLoader::getGlbResource(buf);
+		}
+		mInfos[9].unk4[mInfos[9].unk0] = flag;
+		mInfos[9].unk0 += 1;
+	} else if (strcmp(name, "flagBianco") == 0) {
+		if (mInfos[10].unk54 == nullptr) {
+			char buf[0x40];
+			snprintf(buf, 0x40, "/scene/mapObj/%s.bti", name);
+			mInfos[10].unk54 = JKRFileLoader::getGlbResource(buf);
+		}
+		mInfos[10].unk4[mInfos[10].unk0] = flag;
+		mInfos[10].unk0 += 1;
+	} else if (strcmp(name, "flagRiccoBuoy") == 0) {
+		if (mInfos[11].unk54 == nullptr) {
+			char buf[0x40];
+			snprintf(buf, 0x40, "/scene/mapObj/%s.bti", name);
+			mInfos[11].unk54 = JKRFileLoader::getGlbResource(buf);
+		}
+		mInfos[11].unk4[mInfos[11].unk0] = flag;
+		mInfos[11].unk0 += 1;
+	} else if (strcmp(name, "flagSailMonte") == 0) {
+		if (mInfos[12].unk54 == nullptr) {
+			char buf[0x40];
+			snprintf(buf, 0x40, "/scene/mapObj/%s.bti", name);
+			mInfos[12].unk54 = JKRFileLoader::getGlbResource(buf);
+		}
+		mInfos[12].unk4[mInfos[12].unk0] = flag;
+		mInfos[12].unk0 += 1;
+	} else if (strcmp(name, "MammaYacht00") == 0) {
+		if (mInfos[13].unk54 == nullptr) {
+			char buf[0x40];
+			snprintf(buf, 0x40, "/scene/mapObj/%s.bti", name);
+			mInfos[13].unk54 = JKRFileLoader::getGlbResource(buf);
+		}
+		mInfos[13].unk4[mInfos[13].unk0] = flag;
+		mInfos[13].unk0 += 1;
+	} else if (strcmp(name, "flagMare") == 0) {
+		if (mInfos[14].unk54 == nullptr) {
+			char buf[0x40];
+			snprintf(buf, 0x40, "/scene/mapObj/%s.bti", name);
+			mInfos[14].unk54 = JKRFileLoader::getGlbResource(buf);
+		}
+		mInfos[14].unk4[mInfos[14].unk0] = flag;
+		mInfos[14].unk0 += 1;
+	}
+}
 #pragma dont_inline off
 
 void TMapObjFlagManager::load(JSUMemoryInputStream& stream)
