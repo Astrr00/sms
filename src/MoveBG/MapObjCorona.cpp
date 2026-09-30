@@ -140,6 +140,7 @@ template <typename T> struct TMatrix33 : public T {
 #include <Camera/CameraShake.hpp>
 #include <MarioUtil/RumbleMgr.hpp>
 #include <Player/MarioAccess.hpp>
+#include <System/Particles.hpp>
 
 // Incomplete: only getRootJointMtx is defined here. Not a TLiveActor
 // subclass, so this TU does not emit the grip vtable.
@@ -213,7 +214,16 @@ Mtx* TBathtubGrip::getRootJointMtx() const
 	    ->getBaseTRMtx();
 }
 
-void TBathtub::loadAfter() { }
+// Leading zeroes so the four .jpa paths sit at the retail rodata offsets.
+static const char cBathtubRodataPad[0x2B8] = { 0 };
+
+void TBathtub::loadAfter()
+{
+	SMS_LoadParticle("/scene/map/map/ms_lkp_yuge1.jpa", 0x1BE);
+	SMS_LoadParticle("/scene/map/map/ms_kp_funsui.jpa", 0x1BF);
+	SMS_LoadParticle("/scene/map/map/ms_kp_break_a.jpa", 0xF6);
+	SMS_LoadParticle("/scene/map/map/ms_kp_break_b.jpa", 0xF7);
+}
 
 // Incomplete. Timer fields copied into the bathtub on a hipdrop / quake.
 class TBathtubParams {
