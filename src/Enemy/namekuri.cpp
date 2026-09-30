@@ -794,8 +794,11 @@ DEFINE_NERVE(TNerveNKFollowMario, TLiveActor)
 {
 	TNameKuri* self = (TNameKuri*)spine->getBody();
 
-	if (spine->getTime() == 0)
-		self->setGoalPath(SMS_GetMarioHitActor());
+	if (spine->getTime() == 0) {
+		TPathNode marioNode(SMS_GetMarioHitActor());
+		char trash[0x10];
+		self->setGoalPath(marioNode);
+	}
 
 	self->walkToCurPathNode(self->getMarchSpeed(), 3.0f, 0.0f);
 

@@ -17491,3 +17491,27 @@ Nur `namekuri` hat sich geändert.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R505A (`TNerveNKFollowMario::execute`)
+
+**Vollmatch, strikt.**
+
+- `char trash[0x10]` hinter dem benannten `TPathNode` legt den Knoten auf `r1+0x3c`.
+  Der Rahmen ist `-0x58`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 396 Bytes, 99 Instruktionen.
+`validate-symbol-order` `mario/Enemy/namekuri`: PASS gegen die Basis
+(ererbte Linkage von `NameKuriScaleCallback` und `NameKuriAttackCallback`, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `e59556f4`: fuzzy 81.125854 % -> 81.125890 %,
+matched code 52.45164 % -> 52.462666 % (1883060 -> 1883456, +396).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9843 -> 9844.
+`namekuri` 8724 -> 9120 (+396), Funktionen 56 -> 57.
+Fuzzy der Unit 97.56901 % -> 97.575226 %.
+Complete units bleiben 416.
+Nur `namekuri` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
