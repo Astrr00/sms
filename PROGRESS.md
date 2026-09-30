@@ -17173,3 +17173,30 @@ Nur `bosseel` hat sich geändert.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R510B (`TBubbleCallBack::execute`)
+
+**Vollmatch, strikt.**
+
+- `char trash[4]` vor dem `TVec3` und `char trash2[4]` dahinter legen die Position auf `r1+0x30`.
+  Der Rahmen ist `-0x48`.
+- `f32 zero` vor `f32 ripple` hält die Konstante in `f0` und den Parameter in `f1`.
+- Acht fehlende UNUSED-Rümpfe sind leer und als fabricated markiert.
+  `validate-symbol-order` warnt nur bei der Größe.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 164 Bytes, 41 Instruktionen.
+`validate-symbol-order` `mario/Player/MarioParticle`: PASS
+(8 UNUSED-Größen, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `ab6d1d13`: fuzzy 81.12393 % -> 81.12395 %,
+matched code 52.388687 % -> 52.393257 % (1880800 -> 1880964, +164).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9830 -> 9831.
+`MarioParticle` 7040 -> 7204 (+164), Funktionen 41 -> 42.
+Fuzzy der Unit 97.01684 % -> 97.02503 %.
+Complete units bleiben 416.
+Nur `MarioParticle` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
