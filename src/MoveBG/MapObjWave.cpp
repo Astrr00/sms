@@ -7,6 +7,7 @@
 #include <Player/MarioAccess.hpp>
 #include <Camera/CubeManagerBase.hpp>
 #include <math.h>
+#include <stdlib.h>
 
 TMapObjWave* gpMapObjWave;
 
@@ -233,4 +234,46 @@ void TMapObjWave::load(JSUMemoryInputStream&) { }
 TMapObjWave::TMapObjWave(const char* name)
     : JDrama::TViewObj(name)
 {
+	unk10 = 0.0f;
+	unk14 = 0.0f;
+	unk18 = 0.0f;
+	unk20 = 0;
+	unk24 = 0.0f;
+	unk28 = 0.0f;
+	unk2C = 0.0f;
+	unk30 = 0.0f;
+	unk34 = 0.0f;
+	unk38 = 0.0f;
+	unk3C = 0.0f;
+	unk40 = 0.0f;
+	unk44 = 0.0f;
+	unk48 = 0.1f;
+	unk4C = 0.0f;
+	unk50 = 0.0f;
+	unk54 = 255.0f;
+	unk58 = 255.0f;
+	unk5C = 0.0f;
+	unk60 = 0.0f;
+	unk64 = 360.0f * ((f32)rand() * 0.000030517578f);
+	unk68 = 360.0f * ((f32)rand() * 0.000030517578f);
+	unk6C = (f32)rand() * 0.000030517578f;
+	unk70 = (f32)rand() * 0.000030517578f;
+	unk74 = 0.0f;
+	unk78 = 0.0f;
+	unk94 = nullptr;
+	unk98 = 0;
+	sColor.set(0xC8, 0xC8, 0xFF, 0);
+	unk7C = 0xC2;
+	unk7E = 0xF2;
+	unk80 = 0xBE;
+	unk82 = 0;
+	unk84 = 0;
+	unk86 = 0;
+	unk88 = 0;
+	unk8A = 0x48;
+	unk8C = 0;
+	unk8E = 0;
+	unk90 = 0;
+	unk92 = 0x90;
+	gpMapObjWave = this;
 }
