@@ -17048,3 +17048,28 @@ Nur `EmitterViewObj` hat sich geändert.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R507B (`TMarioParticleManager::emitAndBindToMtx`)
+
+**Vollmatch, strikt.**
+
+- `char trash[4]` hinter dem `TVec3` legt die Translation auf `r1+0x34`.
+  Der Rahmen bleibt `-0x58`.
+- `u8 kind = param_3` hält den Modus in `r31`.
+  Der Emitter der ersten Abfrage bleibt in `r30`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 260 Bytes, 65 Instruktionen.
+`validate-symbol-order` `mario/System/EmitterViewObj`: PASS.
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `68e09c29`: fuzzy 81.12363 % -> 81.12368 %,
+matched code 52.35404 % -> 52.36128 % (1879556 -> 1879816, +260).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9825 -> 9826.
+`EmitterViewObj` 5940 -> 6200 (+260), Funktionen 25 -> 26.
+Fuzzy der Unit 99.93218 % -> 99.95684 %.
+Complete units bleiben 416.
+Nur `EmitterViewObj` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
