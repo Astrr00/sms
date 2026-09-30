@@ -15,6 +15,11 @@
 #include <MarioUtil/MathUtil.hpp>
 #include <Player/MarioAccess.hpp>
 #include <Player/Yoshi.hpp>
+#include <Enemy/Conductor.hpp>
+#include <Enemy/EffectObj.hpp>
+#include <Map/MapData.hpp>
+#include <JSystem/JDrama/JDRNameRefGen.hpp>
+#include <M3DUtil/InfectiousStrings.hpp>
 #include <string.h>
 #include <stdlib.h>
 
@@ -25,6 +30,16 @@
 #include <Map/Map.hpp>
 
 // -inline deferred: source order is the reverse of mario.MAP emission order.
+
+extern "C" s32 becomeCalmlyCallback__12TFerrisWheelFUlUl(u32, u32);
+
+// Inlined trash lands under the flags. With the 4-byte pad in the else,
+// moveObject's frame is -0xd8 and the spilled vec/flags sit at 0xac/0xa4/0xa0.
+static inline void amiKingMovePad()
+{
+	char trash[0x48];
+	(void)&trash;
+}
 
 f32 TShellCup::mOpenRotMax      = 90.0f;
 f32 TShellCup::mShellDamageRot = 45.0f;
@@ -665,7 +680,75 @@ void TAmiKing::initMapObj()
 		;
 }
 
-void TAmiKing::moveObject() { }
+void TAmiKing::moveObject()
+{
+	amiKingMovePad();
+	TLiveActor::moveObject();
+	if (unk138 != 0) {
+		if (getMActor()->checkCurAnm("amiking_flying1_start", ANM_TYPE_BCK)) {
+			if (getMActor()->curAnmEndsNext())
+				getMActor()->setBck("amiking_flying1_loop");
+		} else if (mGroundPlane->isWaterSurface()) {
+			if (!isAirborne()) {
+				if (gpMSound->gateCheck(MSD_SE_EN_AMIKING_DIVE))
+					MSoundSESystem::MSoundSE::startSoundActor(
+					    MSD_SE_EN_AMIKING_DIVE, &mPosition, 0, nullptr, 0, 4);
+
+				JPABaseEmitter* emitter
+				    = gpMarioParticleManager->emitAndBindToMtxPtr(
+				        0xCA, getMActor()->getModel()->getAnmMtx(0), 0,
+				        nullptr);
+				if (emitter != nullptr) {
+					JGeometry::TVec3<f32> scale(4.0f, 4.0f, 4.0f);
+					emitter->setGlobalScale(scale);
+				}
+
+				TEffectColumWater* column
+				    = (TEffectColumWater*)gpConductor->makeOneEnemyAppear(
+				        mPosition, "エフェクト水柱マネージャー", 1);
+				if (column != nullptr) {
+					JGeometry::TVec3<f32> scale(4.0f, 4.0f, 4.0f);
+					column->generate(mPosition, scale);
+				}
+
+				gpItemManager->makeShineAppearWithDemo(
+				    "シャイン（観覧車シャイン用）", "観覧車シャインカメラ",
+				    mPosition.x, mPosition.y, mPosition.z);
+
+				TFerrisWheel* wheel = (TFerrisWheel*)JDrama::TNameRefGen::search(
+				    "FerrisWheel");
+				SMSGetMarDirector()->fireStartDemoCamera(
+				    "観覧車正常化カメラ", &wheel->mPosition, -1, 0.0f, true,
+				    becomeCalmlyCallback__12TFerrisWheelFUlUl, (u32)wheel,
+				    nullptr, JDrama::TFlagT<u16>(0));
+				kill();
+			}
+		}
+	} else {
+		TMapObjBase* actor = (TMapObjBase*)mGroundPlane->mActor;
+		if (actor != nullptr && actor->mActorType == 0x4000006A) {
+			bool wake;
+			// Volatile load: keeps the first compare from being reused, so
+			// isState(5) reloads mState.
+			if ((*(volatile u16*)&actor->mState == 3 ? true : false)
+			    || actor->isState(5) || actor->isState(4)
+			    || actor->isState(6))
+				wake = true;
+			else
+				wake = false;
+			if (wake) {
+				unk138 = 1;
+				setVelocityAndFlag10(5.0f, 10.0f, -10.0f);
+				getMActor()->setBck("amiking_flying1_start");
+				setAnmSound(nullptr);
+				SMSGetMarDirector()->fireStartDemoCamera(
+				    "観覧車ボス撃沈カメラ", &mPosition, -1, 0.0f, true, nullptr,
+				    0, nullptr, JDrama::TFlagT<u16>(0));
+			}
+		}
+		char pad[4];
+	}
+}
 
 void TAmiKing::calcRootMatrix()
 {

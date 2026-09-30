@@ -16464,3 +16464,37 @@ Nur `MapObjPinna` hat sich geändert.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R435 (`TAmiKing::moveObject`)
+
+**Vollmatch, strikt.**
+
+- `TLiveActor::moveObject` zuerst.
+- `unk138 != 0`: bei `amiking_flying1_start` und `curAnmEndsNext` folgt `amiking_flying1_loop`.
+- Sonst, auf Wasser und nicht airborne: `MSD_SE_EN_AMIKING_DIVE`, Partikel `0xCA` mit Scale 4, Wassersäule `エフェクト水柱マネージャー` mit Scale 4, Shine-Demo, dann `FerrisWheel` über `TNameRefGen::search`.
+- `fireStartDemoCamera` bekommt `観覧車正常化カメラ`, `becomeCalmlyCallback` und das Rad als `u32` (das `this` des Callbacks).
+  Danach virtuelles `kill`.
+- Sonst, Boden-Actor `0x4000006A` und Zustand 3, 5, 4 oder 6: `unk138 = 1`, Velocity `(5, 10, -10)`, `amiking_flying1_start`, `setAnmSound(nullptr)`, Kamera `観覧車ボス撃沈カメラ`.
+- Der erste Zustandsvergleich ist ein volatile `lhz`, damit `mState` nicht in den folgenden `isState`-Aufruf durchgereicht wird.
+- `amiKingMovePad` (`char trash[0x48]`) plus `char pad[4]` halten das Frame bei `-0xd8`.
+  Vec bei `r1+0xac`, Flags bei `0xa4` und `0xa0`.
+- `MapObjPinna.cpp` bleibt `NonMatching`.
+
+0 Abweichungen, 872 Bytes, 218 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/MapObjPinna`: PASS
+(6 bekannte UNUSED-Stub-Größen).
+
+`TViking::roll`, `TPinnaShell::control`, `TMapObjFlag::init`,
+`TMapObjGrowTree::control`, `TMapObjGrowTree::touchWater` und
+`TRevolvingFenceInner::controlWall` unberührt.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+
+`ninja changes_all`: fuzzy 80.383545 % -> 80.407715 %,
+matched code 51.471497 % -> 51.495785 % (1847872 -> 1848744, +872).
+Matched data bleibt 66.399254 % (425175).
+Funktionen matched 9769 -> 9770.
+`MapObjPinna` 9508 -> 10380 (+872), Funktionen 61 -> 62.
+Complete units bleiben 416.
+Nur `MapObjPinna` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
