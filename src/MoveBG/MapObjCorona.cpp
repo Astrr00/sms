@@ -141,6 +141,8 @@ template <typename T> struct TMatrix33 : public T {
 #include <MarioUtil/RumbleMgr.hpp>
 #include <Player/MarioAccess.hpp>
 #include <System/Particles.hpp>
+#include <System/ParamInst.hpp>
+#include <System/Params.hpp>
 
 // Slot 0x20 of TMapCollisionBase. No body, so the call stays virtual.
 class TGripCollision {
@@ -297,6 +299,70 @@ void TBathtubGrip::removeCollisions_()
 		unk150[i]->remove();
 }
 
+class TBathtubParams : public TParams {
+public:
+	TBathtubParams();
+
+	/* 0x008 */ TParamRT<u8> resetGrip;
+	/* 0x01C */ TParamRT<long> trampleRelease;
+	/* 0x030 */ TParamRT<long> trampleRecover;
+	/* 0x044 */ TParamRT<long> quakeRelease;
+	/* 0x058 */ TParamRT<long> quakeRecover;
+	/* 0x06C */ TParamRT<long> hipdropRelease;
+	/* 0x080 */ TParamRT<long> hipdropRecover;
+	/* 0x094 */ TParamRT<long> breakCount0;
+	/* 0x0A8 */ TParamRT<long> breakCount1;
+	/* 0x0BC */ TParamRT<long> breakCount2;
+	/* 0x0D0 */ TParamRT<long> breakCount3;
+	/* 0x0E4 */ TParamRT<long> launchStopCount;
+	/* 0x0F8 */ TParamRT<f32> animSpeed0;
+	/* 0x10C */ TParamRT<f32> animSpeed1;
+	/* 0x120 */ TParamRT<f32> animSpeed2;
+	/* 0x134 */ TParamRT<f32> animSpeed3;
+	/* 0x148 */ TParamRT<f32> animSpeed4;
+	/* 0x15C */ TParamRT<f32> shake;
+	/* 0x170 */ TParamRT<f32> watermark;
+	/* 0x184 */ TParamRT<f32> maxAngle;
+	/* 0x198 */ TParamRT<f32> angleVelDamp;
+	/* 0x1AC */ TParamRT<f32> rebound;
+	/* 0x1C0 */ TParamRT<f32> shakeDamp;
+	/* 0x1D4 */ TParamRT<f32> marioWeight;
+	/* 0x1E8 */ TParamRT<f32> marioDropWeight;
+	/* 0x1FC */ TParamRT<f32> outerHeight;
+};
+
+TBathtubParams::TBathtubParams()
+    : TParams("/MapObj/bathtub.prm")
+    , PARAM_INIT(resetGrip, 0)
+    , PARAM_INIT(trampleRelease, 10)
+    , PARAM_INIT(trampleRecover, 10)
+    , PARAM_INIT(quakeRelease, 500)
+    , PARAM_INIT(quakeRecover, 500)
+    , PARAM_INIT(hipdropRelease, 35)
+    , PARAM_INIT(hipdropRecover, 35)
+    , PARAM_INIT(breakCount0, 750)
+    , PARAM_INIT(breakCount1, 710)
+    , PARAM_INIT(breakCount2, 685)
+    , PARAM_INIT(breakCount3, 655)
+    , PARAM_INIT(launchStopCount, 1000)
+    , PARAM_INIT(animSpeed0, 0.15f)
+    , PARAM_INIT(animSpeed1, 0.15f)
+    , PARAM_INIT(animSpeed2, 0.15f)
+    , PARAM_INIT(animSpeed3, 0.15f)
+    , PARAM_INIT(animSpeed4, 0.22f)
+    , PARAM_INIT(shake, 0.0f)
+    , PARAM_INIT(watermark, 0.3f)
+    , PARAM_INIT(maxAngle, 35.0f)
+    , PARAM_INIT(angleVelDamp, 0.93f)
+    , PARAM_INIT(rebound, 0.0005f)
+    , PARAM_INIT(shakeDamp, 0.93f)
+    , PARAM_INIT(marioWeight, 0.01f)
+    , PARAM_INIT(marioDropWeight, 5.0f)
+    , PARAM_INIT(outerHeight, 20.0f)
+{
+	TParams::load(mPrmPath);
+}
+
 // Leading zeroes so the four .jpa paths sit at the retail rodata offsets.
 static const char cBathtubRodataPad[0x2B8] = { 0 };
 
@@ -306,25 +372,12 @@ void TBathtub::loadAfter()
 	SMS_LoadParticle("/scene/map/map/ms_kp_funsui.jpa", 0x1BF);
 	SMS_LoadParticle("/scene/map/map/ms_kp_break_a.jpa", 0xF6);
 	SMS_LoadParticle("/scene/map/map/ms_kp_break_b.jpa", 0xF7);
+	// 0xA4 (with NUL) so /MapObj/bathtub.prm stays at rodata 0x3E4.
+	// A named array is emitted before these paths; a literal here is not.
+	const char* gap =
+	    "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
+	(void)gap;
 }
-
-// Incomplete. Timer fields copied into the bathtub on a hipdrop / quake.
-class TBathtubParams {
-public:
-	TBathtubParams();
-
-	/* 0x0 */ u8 pad[0x54];
-	/* 0x54 */ s32 unk54;
-	/* 0x58 */ u8 pad58[0x10];
-	/* 0x68 */ u32 unk68;
-	/* 0x6C */ u8 pad6C[0x10];
-	/* 0x7C */ s32 unk7C;
-	/* 0x80 */ u8 pad80[0x10];
-	/* 0x90 */ u32 unk90;
-	/* 0x94 */ u8 pad94[0x60];
-	/* 0xF4 */ int unkF4;
-	/* 0xF8 */ u8 padF8[0x118];
-};
 
 class TKoopa {
 public:
@@ -338,7 +391,7 @@ void TBathtub::hipdrop(const JGeometry::TVec3<f32>& pos)
 	if (unk29A != 0)
 		return;
 
-	if (unk250 > unk16C->unk7C)
+	if (unk250 > unk16C->hipdropRelease.value)
 		return;
 
 	// Refs keep init.z loaded after the x subtract.
@@ -352,10 +405,10 @@ void TBathtub::hipdrop(const JGeometry::TVec3<f32>& pos)
 	if (!(lsq <= JGeometry::TUtil<f32>::epsilon()))
 		JGeometry::TUtil<f32>::inv_sqrt(lsq);
 
-	unk250 = unk16C->unk7C;
-	unk258 = unk16C->unk90;
-	unk25C = unk16C->unk90;
-	unk254 = unk16C->unk7C;
+	unk250 = unk16C->hipdropRelease.value;
+	unk258 = unk16C->hipdropRecover.value;
+	unk25C = unk16C->hipdropRecover.value;
+	unk254 = unk16C->hipdropRelease.value;
 
 	((TKoopa*)JDrama::TNameRefGen::search("クッパ"))->stagger(false);
 
@@ -382,11 +435,11 @@ void TBathtub::quake(const JGeometry::TVec3<f32>& pos)
 		JGeometry::TUtil<f32>::inv_sqrt(lsq);
 
 	unk24C = 300;
-	unk250 = unk16C->unk54;
-	unk258 = unk16C->unk68;
-	unk25C = unk16C->unk68;
-	unk254 = unk16C->unk7C;
-	unk248 = unk16C->unkF4;
+	unk250 = unk16C->quakeRelease.value;
+	unk258 = unk16C->quakeRecover.value;
+	unk25C = unk16C->quakeRecover.value;
+	unk254 = unk16C->hipdropRelease.value;
+	unk248 = unk16C->launchStopCount.value;
 
 	TKoopa* koopa = (TKoopa*)JDrama::TNameRefGen::search("クッパ");
 	gpCameraShake->startShake((EnumCamShakeMode)0x25, 1.0f);
