@@ -818,7 +818,65 @@ void TAmiKing::bind()
 
 void TAmiKing::touchPlayer(THitActor*) { SMS_SendMessageToMario(this, 9); }
 
-void TPinnaCoaster::control() { }
+// One inline deep so TUtil::sqrt stays a call. length() expands to frsqrte.
+static inline f32 coasterSqrt(f32 lenSq)
+{
+	return JGeometry::TUtil<f32>::sqrt(lenSq);
+}
+
+static s32 switchSnd;
+
+void TPinnaCoaster::control()
+{
+	// self is declared before the rail pointer so it stays in r31.
+	TPinnaCoaster* self = this;
+	self->TMapObjBase::control();
+	self->unk138->frameUpdate();
+	self->unk138->calc();
+	MtxPtr rail = self->unk138->getModel()->getAnmMtx(0);
+	// Base TR mtx is model+0x20. A folded getBaseTRMtx() is one addi;
+	// adding after the pointer copy keeps the retail split.
+	J3DModel* model = self->getModel();
+	char* base      = (char*)model;
+	base += 0x20;
+	MTXCopy(rail, (MtxPtr)base);
+	self->mMActor->frameUpdate();
+	self->mMActor->calc();
+
+	// Load z, y, x so the translation column lands in f2, f1, f0.
+	MtxPtr mtx = self->getModel()->getAnmMtx(0);
+	f32 y;
+	f32 z;
+	f32 x;
+	z                 = mtx[2][3];
+	y                 = mtx[1][3];
+	x                 = mtx[0][3];
+	self->mPosition.x = x;
+	self->mPosition.y = y;
+	self->mPosition.z = z;
+
+	// gap is the 4 bytes between the vecs. tail holds frame -0x88.
+	JGeometry::TVec3<f32> delta;
+	char gap[4];
+	JGeometry::TVec3<f32> pos;
+	char tail[0x20];
+	gap[0]  = 0;
+	tail[0] = 0;
+	pos = self->mPosition;
+	pos.sub(self->unk140);
+	delta    = pos;
+	f32 dist = coasterSqrt(delta.squared());
+	if (switchSnd != 0) {
+		if (gpMSound->gateCheck(MSD_SE_OBJ_JET_COASTER))
+			MSoundSESystem::MSoundSE::startSoundActorWithInfo(
+			    MSD_SE_OBJ_JET_COASTER, &self->mPosition, nullptr, dist, 0, 0,
+			    nullptr, 0, 4);
+	}
+	switchSnd ^= 1;
+	self->unk140.x = self->mPosition.x;
+	self->unk140.y = self->mPosition.y;
+	self->unk140.z = self->mPosition.z;
+}
 
 void TPinnaCoaster::initMapObj()
 {
