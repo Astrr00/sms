@@ -161,6 +161,7 @@ public:
 class TBathtubGrip {
 public:
 	void kill();
+	void perform(u32 cue, JDrama::TGraphics* graphics);
 	void removeCollisions_();
 	Mtx* getRootJointMtx() const;
 
@@ -169,8 +170,15 @@ public:
 	/* 0x164 */ TGripCollision* unk164[17];
 	/* 0x1A8 */ u8 pad1A8[0x58];
 	/* 0x200 */ s32 unk200[1];
-	/* 0x204 */ u8 pad204[0x46];
+	/* 0x204 */ u8 pad204[0x44];
+	/* 0x248 */ u8 unk248;
+	/* 0x249 */ u8 pad249;
 	/* 0x24A */ u8 unk24A;
+	/* 0x24B */ u8 pad24B[0x9];
+	/* 0x254 */ s32 unk254;
+	/* 0x258 */ u8 pad258[4];
+	/* 0x25C */ MActor* unk25C;
+	/* 0x260 */ u8 unk260;
 };
 
 // Incomplete. Joint index lives on the grip at unk200[unkF8]. Not a
@@ -233,6 +241,22 @@ void TBathtubGrip::kill()
 	unk24A = 1;
 	reinterpret_cast<TMapObjBase*>(this)->makeObjDead();
 	removeCollisions_();
+}
+
+void TBathtubGrip::perform(u32 cue, JDrama::TGraphics* graphics)
+{
+	reinterpret_cast<TMapObjBase*>(this)->TMapObjBase::perform(cue, graphics);
+	if (unk260 == 0) {
+		if (cue & CUE_MOVE) {
+			PSMTXCopy(
+			    (MtxPtr)reinterpret_cast<TMapObjBase*>(this)->getRootJointMtx(),
+			    unk25C->getModel()->getBaseTRMtx());
+			if (unk254 > 0 || unk248 != 0)
+				if (unk25C->curAnmEndsNext(ANM_TYPE_BCK, nullptr))
+					unk260 = 1;
+		}
+		unk25C->perform(cue, graphics);
+	}
 }
 
 Mtx* TBathtubGrip::getRootJointMtx() const
