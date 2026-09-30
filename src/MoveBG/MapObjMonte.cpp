@@ -481,7 +481,49 @@ u32 TFluff::touchWater(THitActor* actor)
 	return 1;
 }
 
-void TFluff::move() { }
+// Dead slot under the velocity copy so the frame lands at -0x70.
+static inline void fluffMovePad()
+{
+	char trash[0x40];
+	trash[0] = 0;
+}
+
+void TFluff::move()
+{
+	mPosition.y -= unk13C;
+	if (mPosition.y < 0.0f)
+		mPosition.y = 5000.0f;
+
+	unk154.x += unk150 * gpMapObjManager->unkD0.x;
+	unk154.z += unk150 * gpMapObjManager->unkD0.z;
+
+	Vec vel = mVelocity;
+	unk154.x += vel.x;
+	unk154.y += vel.y;
+	unk154.z += vel.z;
+
+	f32 drag = unk164;
+	mVelocity.x *= drag;
+	mVelocity.y *= drag;
+	mVelocity.z *= drag;
+
+	f32 s   = sinf(3.14f * unk148 / 180.0f);
+	f32 amp = unk138 * s;
+	mPosition.x = unk154.x + (amp * (unk144 + unk140) + mInitialPosition.x);
+	mPosition.y += unk150 * gpMapObjManager->unkD0.y;
+	mPosition.z = unk154.z + (amp * (unk140 - unk144) + mInitialPosition.z);
+
+	if (reinterpret_cast<JGeometry::TVec3<f32>&>(gpMapObjManager->unkD0)
+	        .isZero()) {
+		unk148 += unk14C;
+		if (unk148 > 360.0f)
+			unk148 -= 360.0f;
+	}
+
+	if (mHeldObject != nullptr && mHeldObject->isActorType(0x80000001))
+		gpMarioPos->y -= unk13C;
+	fluffMovePad();
+}
 
 void TFluff::kill()
 {
