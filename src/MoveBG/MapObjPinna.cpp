@@ -33,6 +33,29 @@
 
 extern "C" s32 becomeCalmlyCallback__12TFerrisWheelFUlUl(u32, u32);
 
+// Scheduling off keeps the unk140 load between getFrameCtrl's arg setup
+// and the call, in source order.
+static inline void stepWheel(TFerrisWheel* self)
+{
+#pragma scheduling off
+	MActor* actor      = self->mMActor;
+	f32 speed          = self->unk140;
+	J3DFrameCtrl* ctrl = actor->getFrameCtrl(ANM_TYPE_BCK);
+	f32 cur            = ctrl->getFrame();
+	actor              = self->mMActor;
+	actor->getFrameCtrl(ANM_TYPE_BCK)->setFrame(speed + cur);
+#pragma scheduling on
+}
+
+static inline void wheelSound(TFerrisWheel* self)
+{
+	MSound* sound = gpMSound;
+	if (sound->gateCheck(MSD_SE_OBJ_MAHRE_GATE_LIGHT))
+		MSoundSESystem::MSoundSE::startSoundActor(
+		    MSD_SE_OBJ_MAHRE_GATE_LIGHT, &self->mPosition, 0, &sound->unk80, 0,
+		    4);
+}
+
 // Inlined trash lands under the flags. With the 4-byte pad in the else,
 // moveObject's frame is -0xd8 and the spilled vec/flags sit at 0xac/0xa4/0xa0.
 static inline void amiKingMovePad()
@@ -60,7 +83,43 @@ s32 TFerrisWheel::becomeCalmlyCallback(u32 param_1, u32)
 	return 0;
 }
 
-void TFerrisWheel::control() { }
+void TFerrisWheel::control()
+{
+	// Holds the frame at -0x60. The store is dropped.
+	char tail[0x8];
+	tail[0] = 0;
+
+	TMapObjBase::control();
+	if (isState(2)) {
+		if (!isStateTimerEngaged()) {
+			f32 rate = SMSGetAnmFrameRate();
+			rate *= 0.25f;
+			if (unk140 > rate)
+				unk140 -= 0.015f;
+			else
+				mState = STATE_NORMAL;
+		}
+	}
+
+	f32 step = SMSGetAnmFrameRate();
+	step *= 0.25f;
+	if (unk140 > step)
+		wheelSound(this);
+
+	stepWheel(this);
+
+	for (s32 i = 0; i < unk138; ++i) {
+		TMapObjBase* car = unk13C[i];
+		MtxPtr src      = getModel()->getAnmMtx(i + 1);
+		MTXCopy(src, car->getModel()->getAnmMtx(0));
+		f32 y = src[1][3] + car->mYOffset;
+		f32 z = src[2][3];
+		f32 x = src[0][3];
+		car->mPosition.x = x;
+		car->mPosition.y = y;
+		car->mPosition.z = z;
+	}
+}
 
 void TFerrisWheel::initMapObj()
 {
