@@ -145,6 +145,7 @@ public:
 	// Fabricated
 	inline u32 resetMeaning()
 	{
+		int i;
 		u16 dc = _DC;
 		_DC    = 0;
 
@@ -163,7 +164,7 @@ public:
 		_DE = _DC & ~dc;
 		_E0 = dc & ~_DC;
 
-		for (int i = 0; i < 10; i++)
+		for (i = 0; i < 10; i++)
 			mCompSPos[i] = 0.0f;
 
 		u32 prevMeaning = mMeaning;

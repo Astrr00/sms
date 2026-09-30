@@ -16992,3 +16992,35 @@ Nur `EventWatcher` hat sich geändert.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R505B (`TMarioGamePad::updateMeaning`)
+
+**Vollmatch, strikt.**
+
+- `char trash[0x150]` am Anfang hält den Rahmen bei `-0x190`.
+  Ohne das Pad bleibt er `-0x40`.
+  Alle Stackslots rutschen um genau `0x150`.
+  Der Pad emittiert kein Store.
+- `int i;` steht vor `u16 dc = _DC`.
+  Die Schleife ist `for (i = 0; i < 10; i++)`.
+  `dc` bleibt in `r4`, der Restindex in `r5` (`li r5, 8`, `bdnz`).
+  `int i = 0` davor materialisiert `li r0, 0` und rollt die Schleife voll aus.
+- `resetMeaning` bleibt das Header-Inline und steht nicht in der Map.
+- Header sonst unverändert.
+  `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 2204 Bytes, 551 Instruktionen.
+`validate-symbol-order` `mario/System/MarioGamePad`: PASS.
+Drei UNUSED-Größen waren schon vorher falsch (`keepRumble`, `rumble`, `considerMarioStick`).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `e07b8227`: fuzzy 81.12352 % -> 81.12359 %,
+matched code 52.284737 % -> 52.346127 % (1877068 -> 1879272, +2204).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9823 -> 9824.
+`MarioGamePad` 376 -> 2580 (+2204), Funktionen 5 -> 6.
+Fuzzy der Unit 99.896126 % -> 100.0 %.
+Complete units bleiben 416.
+Nur `MarioGamePad` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
