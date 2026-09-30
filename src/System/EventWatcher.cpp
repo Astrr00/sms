@@ -531,7 +531,11 @@ static void evLaunchEventClearDemo(TSpcTypedInterp<TEventWatcher>* interp,
 	TGCConsole2* console = SMSGetMarDirector()->getConsole();
 	console->unk94->startAppearShineGet();
 	console->unk47 = 1;
-	interp->push();
+	struct Slot {
+		char pad[4];
+		TSpcSlice slice;
+	} slot;
+	interp->push(slot.slice);
 }
 
 static void evIsEMarioReachedToGoal(TSpcTypedInterp<TEventWatcher>* interp,

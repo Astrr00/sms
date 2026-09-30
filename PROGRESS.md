@@ -16963,3 +16963,32 @@ Nur `MarDirectorEvent` hat sich geändert.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R504B (`evLaunchEventClearDemo`)
+
+**Vollmatch, strikt.**
+
+- `interp->push()` legt das `TSpcSlice`-Temporary auf `r1+0x18`.
+- Retail steht auf `r1+0x20` und `r1+0x24`.
+- Ein benanntes `TSpcSlice` allein landet auf `r1+0x1c`.
+- `char trash[4]` davor wird gelöscht.
+- `struct Slot { char pad[4]; TSpcSlice slice; }` schiebt das Slice auf `0x20`.
+- Der Rahmen bleibt `-0x30`.
+- `r30` und `r31` bleiben auf `0x28` und `0x2c`.
+
+0 Abweichungen, 176 Bytes, 44 Instruktionen.
+`validate-symbol-order` `mario/System/EventWatcher` scheitert schon vorher.
+Es fehlt `TVec3<f>::set(const Vec&)`.
+Zwei UNUSED-Größen leerer Stubs waren schon vorher da.
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `e741b470`: fuzzy 81.123505 % -> 81.12352 %.
+matched code 52.27983 % -> 52.284737 % (1876892 -> 1877068, +176).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9822 -> 9823.
+`EventWatcher` 23992 -> 24168 (+176), Funktionen 63 -> 64.
+Fuzzy der Unit 98.88399 % -> 98.88436 %.
+Complete units bleiben 416.
+Nur `EventWatcher` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
