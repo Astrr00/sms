@@ -17708,3 +17708,28 @@ Nur `hamukuri` hat sich geändert.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R521B (`TGraphWeb::getRandomNextIndex`)
+
+**Vollmatch, strikt.**
+
+- `TRailNode` steht vor `getGraphNode`.
+  `int index = param_1` legt den Knoten auf `r1+0x24`.
+  Der Rahmen bleibt `-0x90`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 344 Bytes, 86 Instruktionen.
+`validate-symbol-order` `mario/Enemy/graph`: PASS
+(ererbte UNUSED-Größen, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `73dbcc65`: fuzzy bleibt 81.126785 %,
+matched code 52.56584 % -> 52.575428 % (1887160 -> 1887504, +344).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9852 -> 9853.
+`graph` 4880 -> 5224 (+344), Funktionen 21 -> 22.
+Fuzzy der Unit 95.17197 % -> 95.1726 %.
+Complete units bleiben 416.
+Nur `graph` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+

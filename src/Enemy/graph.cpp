@@ -264,9 +264,9 @@ int TGraphWeb::getShortestNextIndex(int param_1, int param_2, u32 param_3) const
 
 int TGraphWeb::getRandomNextIndex(int param_1, int param_2, u32 param_3) const
 {
-	const TGraphNode* graphNode = &getGraphNode(param_1);
-
 	TRailNode tmp;
+	int index = param_1;
+	const TGraphNode* graphNode = &getGraphNode(index);
 	const TRailNode* railNode;
 	if (param_3 == 0xffffffff) {
 		railNode = graphNode->getRailNode();
