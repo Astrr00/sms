@@ -494,6 +494,7 @@ public:
 #include <Camera/Camera.hpp>
 #include <Player/MarioAccess.hpp>
 #include <GC2D/GCConsole2.hpp>
+#include <Map/MapStaticObject.hpp>
 
 // -inline deferred: source order is the reverse of mario.MAP emission order.
 
@@ -927,9 +928,9 @@ void TSandBombBase::initMapObj()
 }
 #pragma dont_inline off
 
-// Retail rodata has 0x328 bytes between the leading pool and
-// "SandBombBasePyramid". This keeps initMapObj's addi offsets.
-static const char cSandBombRodataPad[0x328] = { 0 };
+// Leading pool plus this pad plus "鏡内地形" (0xC) keep
+// TSandBombBase::initMapObj's addi offsets.
+static const char cSandBombRodataPad[0x31C] = { 0 };
 
 TSandBombBase::TSandBombBase(const char* name)
     : TSandBase(name)
@@ -1519,7 +1520,63 @@ void TMammaMirrorMapOperator::hide(int) { }
 
 void TMammaMirrorMapOperator::perform(u32, JDrama::TGraphics*) { }
 
-void TMammaMirrorMapOperator::loadAfter() { }
+static inline void storeMirrorCenter(JGeometry::TVec3<f32>& dst, f32 x, f32 y,
+                                      f32 z)
+{
+	dst.x = x;
+	dst.y = y;
+	dst.z = z;
+}
+
+static inline void mirrorMapLoadAfterPad()
+{
+	char trash[4];
+	trash[0] = 0;
+}
+
+void TMammaMirrorMapOperator::loadAfter()
+{
+	{
+		JDrama::TActor* actor
+		    = (JDrama::TActor*)JDrama::TNameRefGen::search("mirrorS");
+		unkB8[0].x = actor->mPosition.x;
+		unkB8[0].y = actor->mPosition.y;
+		unkB8[0].z = actor->mPosition.z;
+
+		actor = (JDrama::TActor*)JDrama::TNameRefGen::search("mirrorM");
+		unkB8[1].x = actor->mPosition.x;
+		unkB8[1].y = actor->mPosition.y;
+		unkB8[1].z = actor->mPosition.z;
+
+		actor = (JDrama::TActor*)JDrama::TNameRefGen::search("mirrorL");
+		unkB8[2].x = actor->mPosition.x;
+		unkB8[2].y = actor->mPosition.y;
+		unkB8[2].z = actor->mPosition.z;
+	}
+
+	J3DJoint* joint
+	    = ((TMapStaticObj*)JDrama::TNameRefGen::search("鏡内地形"))
+	          ->getModelData()
+	          ->getJointNodePointer(2);
+	for (int i = 0; i < 8; ++i) {
+		unk10[i] = (JDrama::TNameRef*)joint;
+		storeMirrorCenter(
+		    unk30[i], 0.5f * (joint->getMax().x + joint->getMin().x),
+		    0.5f * (joint->getMax().y + joint->getMin().y),
+		    0.5f * (joint->getMax().z + joint->getMin().z));
+		f32 dx = 0.5f * (joint->getMax().x - joint->getMin().x);
+		f32 dz = 0.5f * (joint->getMax().z - joint->getMin().z);
+		if (dx > dz)
+			unk90[i] = dx;
+		else
+			unk90[i] = dz;
+		unk90[i] += 2000.0f;
+		if (unk90[i] > 3000.0f)
+			unk90[i] = 3000.0f;
+		joint = (J3DJoint*)joint->getYounger();
+	}
+	mirrorMapLoadAfterPad();
+}
 
 TMammaMirrorMapOperator::TMammaMirrorMapOperator(const char* name)
     : JDrama::TViewObj(name)
