@@ -17467,3 +17467,27 @@ Nur `WaterGun` hat sich geändert.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R504A (`TNerveNameKuriLand::execute`)
+
+**Vollmatch, strikt.**
+
+- Läuft die Landeanimation, endet der Nerve bei Animationsende.
+  Sonst setzt er die Landeanimation nur in der Luft nicht.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 144 Bytes, 36 Instruktionen.
+`validate-symbol-order` `mario/Enemy/namekuri`: PASS gegen die Basis
+(ererbte Linkage von `NameKuriScaleCallback` und `NameKuriAttackCallback`, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `ea037d6a`: fuzzy 81.12521 % -> 81.125854 %,
+matched code 52.447628 % -> 52.45164 % (1882916 -> 1883060, +144).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9842 -> 9843.
+`namekuri` 8580 -> 8724 (+144), Funktionen 55 -> 56.
+Fuzzy der Unit 97.40554 % -> 97.56901 %.
+Complete units bleiben 416.
+Nur `namekuri` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
