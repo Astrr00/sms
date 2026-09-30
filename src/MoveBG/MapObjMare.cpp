@@ -73,7 +73,31 @@ BOOL TCogwheelScale::receiveMessage(THitActor* sender, u32 message)
 	return TMapObjBase::receiveMessage(sender, message);
 }
 
-void TCogwheelScale::touchPlayer(THitActor*) { }
+void TCogwheelScale::touchPlayer(THitActor*)
+{
+	// Dead ints so MWCC keeps frame -0x58. The stores are eliminated.
+	int pad0, pad1, pad2, pad3, pad4, pad5, pad6, pad7;
+	pad0 = pad1 = pad2 = pad3 = pad4 = pad5 = pad6 = pad7 = 0;
+	if (marioIsOn())
+		unk148 = unk13C;
+
+	const JGeometry::TVec3<f32>& mario = SMS_GetMarioPos();
+	if (mPosition.y - mYOffset > 150.0f + mario.y) {
+		if ((unk154 != 0 && unk158->unk138 > 0.0f)
+		    || (unk154 == 0 && unk158->unk138 < 0.0f)) {
+			TCogwheel* cog = unk158;
+			cog->unk138 *= -cog->unk148;
+			if (fabsf(cog->unk138) < TCogwheel::mMinSpeed)
+				cog->unk138 = 0.0f;
+			if (marioHeadAttack()) {
+				f32* sy = gpMarioSpeedY;
+				f32 s   = takeScale(unk158->unk138);
+				unk158->unk138 = unk14C * (s * *sy);
+			}
+		}
+	}
+	unk140 = 0.0f;
+}
 
 void TCogwheelScale::control()
 {
