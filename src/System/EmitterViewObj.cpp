@@ -243,17 +243,19 @@ JPABaseEmitter* TMarioParticleManager::emitWithRotate(
     s32 param_1, const JGeometry::TVec3<f32>* param_2, s16 param_3, s16 param_4,
     s16 param_5, u8 param_6, const void* param_7)
 {
+	u8 kind = param_6;
+	char trash[0x20];
 
-	if (param_6 == 0)
+	if (kind == 0)
 		if (JPABaseEmitter* emitter = unk3B8->createSimpleEmitterID(
-		        *param_2, param_1, param_6, 0, nullptr, nullptr)) {
+		        *param_2, param_1, kind, 0, nullptr, nullptr)) {
 			emitter->setRotation(param_3, param_4, param_5);
 			return emitter;
 		}
 
-	if (param_6 == 2)
+	if (kind == 2)
 		if (JPABaseEmitter* emitter = unk3B8->createSimpleEmitterID(
-		        *param_2, param_1, param_6, 0, nullptr, nullptr)) {
+		        *param_2, param_1, kind, 0, nullptr, nullptr)) {
 			emitter->setRotation(param_3, param_4, param_5);
 			emitter->mDraw.swapImage(
 			    gpScreenTexture->getTexture()->getTexInfo(),
