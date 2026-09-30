@@ -16660,3 +16660,36 @@ Complete units bleiben 416.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R492B (`TSwingBoard::control`)
+
+**Vollmatch, strikt.**
+
+- `s32 emitting` aus `mIsEmitWater`, dann noch einmal `getEmitMtx(0)`.
+- Spalten-Dot über `TVec3::dot` mit `(dx, 0, dz)`.
+  Das hält das `fmuls` mit Null.
+- Feder, Clamp, dann `playSwingSE` zweimal inlined.
+  `fabs` landet in `f31`.
+- X-Rotation aus `sinf`/`cosf` von `3.14f * (mRotation.x / 180.0f)`, `MTXConcat` auf `unk14C`.
+- Totes `cosf`/`sinf` von `unk13C` bleibt.
+- `char pad[0x68]` hält den Rahmen bei `-0x118` (Mtx bei `r1+0xd0`).
+- `mBoardWidth` bis `mSpeedDownRate` machen `.sdata` vollständig.
+
+0 Abweichungen, 756 Bytes, 189 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/MapObjMonte`: PASS
+(11 bekannte UNUSED-Stub-Größen, darunter `swing`).
+
+`drawOneRope`, `initDraw` und der Konstruktor bleiben 100 %.
+`load` und `draw` bleiben Stubs.
+`MapObjBase.hpp` unverändert.
+
+`ninja changes_all` gegen `8458b8cc`: fuzzy 81.039024 % -> 81.05997 %,
+matched code 52.16006 % -> 52.181118 % (1872592 -> 1873348, +756).
+Matched data 67.05891 % -> 67.07141 % (429399 -> 429479, +80).
+Funktionen matched 9813 -> 9814.
+`MapObjMonte` 14248 -> 15004 (+756), Funktionen 50 -> 51.
+`.sdata` der Unit jetzt 100 %.
+Complete units bleiben 416.
+Nur `MapObjMonte` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+

@@ -1,7 +1,9 @@
 #include <MoveBG/MapObjMonte.hpp>
 #include <Map/MapCollisionManager.hpp>
 #include <Player/MarioAccess.hpp>
+#include <Player/WaterGun.hpp>
 #include <Player/Yoshi.hpp>
+#include <JSystem/JAudio/JAInterface/JAISound.hpp>
 #include <System/FlagManager.hpp>
 #include <JSystem/J3D/J3DGraphBase/J3DSys.hpp>
 #include <JSystem/JUtility/JUTTexture.hpp>
@@ -447,9 +449,12 @@ f32 THangingBridgeBoard::mRopeWidthX         = 10.0f;
 f32 THangingBridgeBoard::mRopeWidthZ = 7.0f;
 f32 THangingBridgeBoard::mTexPosRate = 0.01f;
 
-f32 TSwingBoard::mRopeWidthX = 10.0f;
-f32 TSwingBoard::mRopeWidthZ = 7.0f;
-f32 TSwingBoard::mTexPosRate = 0.01f;
+f32 TSwingBoard::mBoardWidth       = 315.0f;
+f32 TSwingBoard::mRopeWidthX       = 10.0f;
+f32 TSwingBoard::mRopeWidthZ       = 7.0f;
+f32 TSwingBoard::mTexPosRate       = 0.01f;
+f32 TSwingBoard::mReturnAccelRate  = 0.0001f;
+f32 TSwingBoard::mSpeedDownRate    = 0.998f;
 
 f32 THangingBridge::mRopeWidthBetweenBoards = 10.0f;
 f32 THangingBridge::mRopeWidthBetweenBoardsY = 10.0f;
@@ -555,7 +560,82 @@ void TSwingBoard::draw() const { }
 
 void TSwingBoard::swing() { }
 
-void TSwingBoard::control() { }
+static inline void playSwingSE(TSwingBoard* board, u32 id)
+{
+	f32 vol = fabsf(board->unk13C);
+	if (gpMSound->gateCheck(id))
+		MSoundSESystem::MSoundSE::startSoundActorWithInfo(
+		    id, &board->mPosition, nullptr, vol, 0, 0,
+		    (JAISound**)&board->unk188, 0, 4);
+}
+
+void TSwingBoard::control()
+{
+	Mtx rot;
+	// Dead slot so MWCC keeps frame -0x118 (mtx at r1+0xd0).
+	char pad[0x68];
+	(void)pad;
+
+	TMapObjBase::control();
+
+	if (marioIsOn() && marioIsOn()) {
+		s32 emitting = SMS_GetMarioWaterGun()->mIsEmitWater;
+		if (emitting) {
+			MtxPtr emit = SMS_GetMarioWaterGun()->getEmitMtx(0);
+			f32 dx      = -emit[0][0];
+			f32 dz      = -emit[2][0];
+			MtxPtr jnt  = getModel()->getAnmMtx(0);
+			JGeometry::TVec3<f32> col(jnt[0][2], jnt[1][2], jnt[2][2]);
+			JGeometry::TVec3<f32> dir(dx, 0.0f, dz);
+			unk144 += unk140 * col.dot(dir);
+		}
+	}
+
+	unk13C += unk144;
+	f32 prev = unk144;
+	unk144   = prev - unk13C * mReturnAccelRate;
+	if (fabsf(unk144) > unk148)
+		unk144 *= mSpeedDownRate;
+
+	if (prev * unk144 <= 0.0f) {
+		if (unk188 != 0)
+			reinterpret_cast<JAISound*>(unk188)->stop(1);
+		if (unk144 > 0.0f)
+			playSwingSE(this, MSD_SE_OBJ_SWING1);
+		else
+			playSwingSE(this, MSD_SE_OBJ_SWING2);
+	}
+
+	mRotation.x = -unk13C;
+	f32 s = sinf(3.14f * (mRotation.x / 180.0f));
+	f32 c = cosf(3.14f * (mRotation.x / 180.0f));
+	rot[0][0] = 1.0f;
+	rot[0][1] = 0.0f;
+	rot[0][2] = 0.0f;
+	rot[0][3] = 0.0f;
+	rot[1][0] = 0.0f;
+	rot[1][1] = c;
+	rot[1][2] = -s;
+	rot[1][3] = 0.0f;
+	rot[2][0] = 0.0f;
+	rot[2][1] = s;
+	rot[2][2] = c;
+	rot[2][3] = 0.0f;
+
+	MtxPtr anm = getModel()->getAnmMtx(0);
+	MTXConcat((MtxPtr)&unk14C, rot, anm);
+
+	cosf(3.14f * (unk13C / 180.0f));
+	sinf(3.14f * (unk13C / 180.0f));
+
+	mPosition.x = mInitialPosition.x - anm[0][1] * unk138;
+	f32 y       = unk138 + mInitialPosition.y;
+	mPosition.y = y - anm[1][1] * unk138;
+	mPosition.z = mInitialPosition.z - anm[2][1] * unk138;
+	anm[0][3]   = mPosition.x;
+	anm[1][3]   = mPosition.y;
+	anm[2][3]   = mPosition.z;
+}
 
 void TSwingBoard::load(JSUMemoryInputStream&) { }
 
