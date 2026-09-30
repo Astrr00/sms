@@ -8,6 +8,7 @@
 #include <MSound/SoundEffects.hpp>
 #include <Map/Map.hpp>
 #include <Map/MapCollisionData.hpp>
+#include <Map/PollutionManager.hpp>
 #include <string.h>
 
 // rogue includes needed for matching sinit & bss
@@ -72,8 +73,68 @@ void TMapObjBall::rebound(JGeometry::TVec3<f32>* param_1)
 	trash[47] = 0;
 }
 
+// One inline deep so sqrt stays a call. length() would expand it to frsqrte.
+inline f32 doSqrt(f32 lenSq) { return JGeometry::TUtil<f32>::sqrt(lenSq); }
+
 #pragma dont_inline on
-void TMapObjBall::touchGround(JGeometry::TVec3<f32>*) { }
+void TMapObjBall::touchGround(JGeometry::TVec3<f32>* param_1)
+{
+	int gap;
+	gap = 0;
+	JGeometry::TVec3<f32> velocity = mVelocity;
+	char trash[0x4c];
+	trash[0] = 0;
+	f32 speed = fabsf(doSqrt(velocity.squared()));
+	if (speed > 0.05f && isActorType(0x400000D0)) {
+		if (mScaling.y >= 5.0f)
+			gpMSound->startSoundActorWithInfo(MSD_SE_OBJ_WATERMELON_BROLL,
+			                                  &mPosition, nullptr, speed, 0, 0,
+			                                  nullptr, 0, 4);
+		else
+			gpMSound->startSoundActorWithInfo(MSD_SE_OBJ_WATERMELON_SROLL,
+			                                  &mPosition, nullptr, speed, 0, 0,
+			                                  nullptr, 0, 4);
+	}
+
+	if (mGroundPlane->isWaterSurface()) {
+		touchWaterSurface();
+		param_1->x = mPosition.x;
+		param_1->y = mPosition.y;
+		param_1->z = mPosition.z;
+		return;
+	}
+
+	if (gpPollution->isPolluted(param_1->x, param_1->y, param_1->z)) {
+		touchPollution();
+		param_1->x = mPosition.x;
+		param_1->y = mPosition.y;
+		param_1->z = mPosition.z;
+		return;
+	}
+
+	if (mVelocity.y > -unk188) {
+		offLiveFlag(LIVE_FLAG_AIRBORNE);
+		mVelocity.y = 0.0f;
+		param_1->y  = mGroundHeight;
+	} else {
+		rebound(param_1);
+	}
+
+	if (!isAirborne()) {
+		mVelocity.x += unk180 * mGroundPlane->mNormal.x;
+		mVelocity.z += unk180 * mGroundPlane->mNormal.z;
+	}
+
+	mVelocity.x *= mMapObjData->mPhysical->unk4->unk10;
+	mVelocity.z *= mMapObjData->mPhysical->unk4->unk10;
+
+	if (isActorType(0x400000D0)) {
+		f32 limit = mMapObjData->mPhysical->unk4->unkC;
+		if (fabsf(mVelocity.x) > limit || fabsf(mVelocity.z) > limit)
+			gpMSound->startSoundActor(MSD_SE_MA_SLIP, &mPosition, 0, nullptr, 0,
+			                          4);
+	}
+}
 #pragma dont_inline off
 
 void TMapObjBall::put()
@@ -81,9 +142,6 @@ void TMapObjBall::put()
 	TMapObjGeneral::put();
 	calcCurrentMtx();
 }
-
-// One inline deep so sqrt stays a call. length() would expand it to frsqrte.
-inline f32 doSqrt(f32 lenSq) { return JGeometry::TUtil<f32>::sqrt(lenSq); }
 
 // The extra inline leaves a dead 4-byte slot so the frame stays at -0x38.
 static inline const JGeometry::TVec3<f32>& ballVelocity(const TMapObjBall* self)

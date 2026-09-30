@@ -16130,3 +16130,26 @@ R147 `TMapObjSwitch::receiveMessage`, R146 `joinToGroup`, R145 `drawLogic`, R138
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R426 (`TMapObjBall::touchGround`)
+
+**Vollmatch, strikt.**
+
+- `TMapObjBall::touchGround`: `int gap; gap = 0;` vor
+  `JGeometry::TVec3<f32> velocity = mVelocity`, danach `char trash[0x4c];
+  trash[0] = 0;`.
+  Stores fallen weg, Frame bleibt `-0x98`, Velocity-Spill @ `0x78`.
+- `doSqrt` sitzt direkt darüber, damit `sqrt` ein `bl` bleibt.
+- `#pragma dont_inline` hält den qualifizierten `bl` in
+  `TBigWatermelon::touchGround` und `TResetFruit::touchGround`.
+
+0 Abweichungen, 856 Bytes, 214 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS
+(Weak-Order und die bekannten UNUSED-Größen).
+
+`TMapObjBall::hold`, `TMapObjBall::rebound`, `TResetFruit::touchGround`,
+`TBigWatermelon::touchGround` unverändert @ 100 %.
+R424 `TMammaMirrorMapOperator::loadAfter` unberührt.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
