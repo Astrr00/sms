@@ -16424,3 +16424,43 @@ Nur `MapObjPinna` hat sich geändert.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R434 (`TViking::roll`)
+
+**Vollmatch, strikt.**
+
+- Zustand 1 skaliert `unk144` mit `unk154`, zieht `unk13C` ab und addiert auf `unk148`.
+  Unter 0 spielt `MSD_SE_OBJ_PIN_BIKING_WING` mit `fabsf(unk144)` und setzt Zustand 2.
+  Über 180 wird 360 abgezogen, derselbe Sound gespielt und Zustand 4 gesetzt.
+- Zustand 2 skaliert mit `unk154` und addiert `unk13C`.
+  Über 0 kommt der Sound und Zustand 1.
+  Unter -180 wird 360 addiert, der Sound gespielt und Zustand 3 gesetzt.
+- Zustand 3 skaliert mit `unk158` und zieht `unk13C` ab.
+  Unter 0 kommt der Sound.
+  Liegt `unk144` über `-unk150`, wird Zustand 2, sonst 4.
+- Zustand 4 skaliert mit `unk158` und addiert `unk13C`.
+  Über 0 kommt der Sound.
+  Liegt `unk144` unter `unk150`, wird Zustand 1, sonst 3.
+- `char trash[0x30]` hält das Frame bei `-0x68`.
+  Der Store fällt weg.
+- `#pragma dont_inline` bleibt, damit `TViking::control` den Aufruf behält.
+- `MapObjPinna.cpp` bleibt `NonMatching`.
+
+0 Abweichungen, 932 Bytes, 233 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/MapObjPinna`: PASS
+(6 bekannte UNUSED-Stub-Größen).
+
+`TPinnaShell::control`, `TViking::control`, `TMapObjFlag::init`,
+`TMapObjGrowTree::control`, `TMapObjGrowTree::touchWater` und
+`TRevolvingFenceInner::controlWall` unberührt.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+
+`ninja changes_all`: fuzzy 80.3577 % -> 80.383545 %,
+matched code 51.445538 % -> 51.471497 % (1846940 -> 1847872, +932).
+Matched data bleibt 66.399254 % (425175).
+Funktionen matched 9768 -> 9769.
+`MapObjPinna` 8576 -> 9508 (+932), Funktionen 60 -> 61.
+Complete units bleiben 416.
+Nur `MapObjPinna` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
