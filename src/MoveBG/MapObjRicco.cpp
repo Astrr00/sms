@@ -1,4 +1,5 @@
 #include <MoveBG/MapObjRicco.hpp>
+#include <MoveBG/MapObjBall.hpp>
 #include <MoveBG/MapObjManager.hpp>
 #include <M3DUtil/MActor.hpp>
 #include <M3DUtil/MActorUtil.hpp>
@@ -153,9 +154,8 @@ void TRiccoWatermill::control() { }
 
 void TRiccoWatermill::calc() { setRootMtxRotZ(); }
 
-// Leading zeroes so the SurfGeso names and "submarine" keep retail offsets.
-// "riccoswitch" is emitted just after this pad.
-static const char cRiccoWatermillRodataPad[0x164] = { 0 };
+// Leading zeroes so fruit names start at rodata 0xF8 and SurfGeso stays at 0x188.
+static const char cRiccoWatermillRodataPad[0xE0] = { 0 };
 
 void TRiccoWatermill::loadAfter()
 {
@@ -240,7 +240,63 @@ void TFruitLauncher::fireObj()
 	// -inline deferred would otherwise inline the call away.
 	volatile MActor* (TLiveActor::*p)() const = &TLiveActor::getMActor;
 	(void)p;
+	// Keeps the retail camera name between riccoswitch and SurfGesoRed.
+	// fireObj itself is still unmatched.
+	volatile const char* cameraName = "フルーツタンクカメラカメラ";
+	(void)cameraName;
 }
 #pragma dont_inline off
 
-void TFruitLauncher::loadAfter() { }
+// Inlined pad. MWCC keeps it in the caller's frame (retail -0x108).
+static inline void fruitLauncherFramePad()
+{
+	char trash[4];
+	trash[0] = 0;
+}
+
+static inline void beginFruitSwitch(TFruitSwitch* sw)
+{
+	sw->startBck("riccoswitch");
+	sw->onHitFlag(HIT_FLAG_NO_COLLISION);
+	if (sw->mMapCollisionManager->unk8 != nullptr)
+		sw->mMapCollisionManager->unk8->remove();
+}
+
+void TFruitLauncher::loadAfter()
+{
+	fruitLauncherFramePad();
+	TMapObjBase::loadAfter();
+
+	TResetFruit* fruit = (TResetFruit*)TMapObjBaseManager::newAndRegisterObj(
+	    "FruitCoconut", JGeometry::TVec3<f32>(0.0f, 0.0f, 0.0f),
+	    JGeometry::TVec3<f32>(0.0f, 0.0f, 0.0f),
+	    JGeometry::TVec3<f32>(1.0f, 1.0f, 1.0f));
+	fruit->unk1A4 = 1;
+	fruit = (TResetFruit*)TMapObjBaseManager::newAndRegisterObj(
+	    "FruitDurian", JGeometry::TVec3<f32>(0.0f, 0.0f, 0.0f),
+	    JGeometry::TVec3<f32>(0.0f, 0.0f, 0.0f),
+	    JGeometry::TVec3<f32>(1.0f, 1.0f, 1.0f));
+	fruit->unk1A4 = 1;
+	fruit = (TResetFruit*)TMapObjBaseManager::newAndRegisterObj(
+	    "FruitPapaya", JGeometry::TVec3<f32>(0.0f, 0.0f, 0.0f),
+	    JGeometry::TVec3<f32>(0.0f, 0.0f, 0.0f),
+	    JGeometry::TVec3<f32>(1.0f, 1.0f, 1.0f));
+	fruit->unk1A4 = 1;
+	fruit = (TResetFruit*)TMapObjBaseManager::newAndRegisterObj(
+	    "FruitPine", JGeometry::TVec3<f32>(0.0f, 0.0f, 0.0f),
+	    JGeometry::TVec3<f32>(0.0f, 0.0f, 0.0f),
+	    JGeometry::TVec3<f32>(1.0f, 1.0f, 1.0f));
+	fruit->unk1A4 = 1;
+	fruit = (TResetFruit*)TMapObjBaseManager::newAndRegisterObj(
+	    "FruitBanana", JGeometry::TVec3<f32>(0.0f, 0.0f, 0.0f),
+	    JGeometry::TVec3<f32>(0.0f, 0.0f, 0.0f),
+	    JGeometry::TVec3<f32>(1.0f, 1.0f, 1.0f));
+	fruit->unk1A4 = 1;
+
+	unk138 = (TFruitSwitch*)JDrama::TNameRefGen::search("タンクスイッチＡ");
+	unk138->unk138 = this;
+	unk13C = (TFruitSwitch*)JDrama::TNameRefGen::search("タンクスイッチＢ");
+	unk13C->unk138 = this;
+	unk140         = 1;
+	beginFruitSwitch(unk138);
+}

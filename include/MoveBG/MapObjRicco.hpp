@@ -102,6 +102,11 @@ public:
 	void fireObj();
 	void loadAfter();
 	TFruitLauncher(const char* name = "フルーツ発射口");
+
+public:
+	/* 0x138 */ TFruitSwitch* unk138;
+	/* 0x13C */ TFruitSwitch* unk13C;
+	/* 0x140 */ u32 unk140;
 };
 
 #endif
