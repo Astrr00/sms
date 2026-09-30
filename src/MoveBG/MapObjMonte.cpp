@@ -324,9 +324,73 @@ static inline THangDrawHigh hangDrawPad()
 	return *(THangDrawHigh*)(void*)&low;
 }
 
-// dont_inline: empty stubs would otherwise fold into THangingBridge::perform.
+// Args are evaluated before the stores, so x/y/z stay in f0/f1/f2.
+static inline void storeRopePos(JGeometry::TVec3<f32>& dst, f32 x, f32 y,
+                                 f32 z)
+{
+	dst.x = x;
+	dst.y = y;
+	dst.z = z;
+}
+
+// dont_inline: perform must keep the out-of-line call.
 #pragma dont_inline on
-void THangingBridge::drawRopeBetweenBoards(f32, int) const { }
+void THangingBridge::drawRopeBetweenBoards(f32 height, int count) const
+{
+	// latX stays in f31 with unk30 still live in f1. latZ is loaded
+	// straight into f30 and multiplied in place, so width.y reloads unk34.
+	f32 latX = unk30 * unk3C.x;
+	f32 latZ = unk34;
+	latZ *= unk3C.x;
+
+	// top keeps 8 bytes between width and the saved GPRs (frame 0x108).
+	char top[8];
+	JGeometry::TVec2<f32> width;
+	width.x = unk30;
+	width.y = unk34;
+	width.scale(mRopeWidthBetweenBoards);
+	top[0] = 0;
+
+	// (boards + the two end calls) * 2 verts. Kept as u16 so each
+	// GXBegin is a move from r31, not a second mask.
+	u16 vtxCount = (u16)((unk10 + 2) * count) * 2;
+
+	// Dead slot under the vecs. end r1+0xAC, start r1+0xB8, width r1+0xC4.
+	JGeometry::TVec3<f32> start;
+	JGeometry::TVec3<f32> end;
+	char pad[0x48];
+	pad[0] = 0;
+
+	// Six strips. The second end call is a zero-length segment; the
+	// vertex count includes it. The last strip's index lands in r31.
+#define DRAW_PASS(op, point, drawFn)                                           \
+	do {                                                                       \
+		GXBegin(GX_TRIANGLESTRIP, GX_VTXFMT0, vtxCount);                       \
+		storeRopePos(start, unk18.x op latX, unk18.y + height,                 \
+		             unk18.z op latZ);                                         \
+		for (int i = 0; i < (int)unk10; ++i) {                                 \
+			THangingBridgeBoard* board                                         \
+			    = ((THangingBridgeBoard**)unk14)[i];                           \
+			*(Vec*)&end = *(Vec*)&board->unk1A4[point];                        \
+			end.y += height;                                                   \
+			drawFn(start, end, width, count);                                  \
+			*(Vec*)&start = *(Vec*)&end;                                       \
+		}                                                                      \
+		storeRopePos(end, unk24.x op latX, unk24.y + height,                   \
+		             unk24.z op latZ);                                         \
+		drawFn(start, end, width, count);                                      \
+		*(Vec*)&start = *(Vec*)&end;                                           \
+		drawFn(start, end, width, count);                                      \
+	} while (0)
+
+	DRAW_PASS(+, 0, drawLowerMinus);
+	DRAW_PASS(+, 0, drawLowerPlus);
+	DRAW_PASS(+, 0, drawUpper);
+	DRAW_PASS(-, 1, drawLowerMinus);
+	DRAW_PASS(-, 1, drawLowerPlus);
+	DRAW_PASS(-, 1, drawUpper);
+#undef DRAW_PASS
+}
 #pragma dont_inline off
 
 void THangingBridge::initDraw() const

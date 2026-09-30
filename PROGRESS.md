@@ -16565,3 +16565,37 @@ Nur `MapObjFlag` hat sich geändert.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R435 (`THangingBridge::drawRopeBetweenBoards`)
+
+**Vollmatch, strikt.**
+
+- Sechs Triangle-Strips.
+  `drawLowerMinus`, `drawLowerPlus`, `drawUpper`, jeweils plus und minus.
+- `unk30`/`unk34` sind die Brückenrichtung, `unk3C.x` die halbe Breite.
+  `latZ` wird in-place multipliziert, damit `width.y` `unk34` neu lädt.
+- Vertexzahl `(u16)((unk10 + 2) * count) * 2` bleibt in r31.
+- Das zweite Ende jedes Strips ist ein Segment der Länge null.
+  Die Vertexzahl zählt es mit.
+- `char top[8]` und `char pad[0x48]`.
+  Frame `-0x108`, Ende bei `r1+0xAC`, Start bei `r1+0xB8`, Breite bei `r1+0xC4`.
+- `unk18`/`unk24`/`unk30`/`unk34` ersetzen das Byte-Array bei +0x18.
+  Der Konstruktor bleibt 100 %.
+
+0 Abweichungen, 1852 Bytes, 463 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/MapObjMonte`: PASS
+(11 bekannte UNUSED-Stub-Größen).
+
+`perform`, `initDraw`, `drawLowerMinus`, `drawLowerPlus` und `drawUpper` bleiben 100 %.
+Soft-park (`loadAfter`, SwingBoard, Fluff) unberührt.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+
+`ninja changes_all` gegen `0d9fad00`: fuzzy 80.495514 % -> 80.547 %,
+matched code 51.5838 % -> 51.63539 % (1851904 -> 1853756, +1852).
+Matched data unverändert 66.815285 % (427839).
+Funktionen matched 9772 -> 9773.
+`MapObjMonte` 11080 -> 12932 (+1852), Funktionen 47 -> 48.
+Complete units bleiben 416.
+Nur `MapObjMonte` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+

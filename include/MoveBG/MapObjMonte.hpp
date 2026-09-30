@@ -77,7 +77,10 @@ public:
 
 	/* 0x10 */ u32 unk10;
 	/* 0x14 */ u32 unk14;
-	/* 0x18 */ u8 unk18[0x20];
+	/* 0x18 */ JGeometry::TVec3<f32> unk18;
+	/* 0x24 */ JGeometry::TVec3<f32> unk24;
+	/* 0x30 */ f32 unk30;
+	/* 0x34 */ f32 unk34;
 	/* 0x38 */ u32 unk38;
 	/* 0x3C */ JGeometry::TVec3<f32> unk3C;
 };
