@@ -17320,3 +17320,27 @@ Nur `bosseel` hat sich geändert.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R501A (`TNerveBossEelWaitAppear::execute`)
+
+**Vollmatch, strikt.**
+
+- `char trash[0x14]` hinter dem `TVec3` legt die Position auf `r1+0x4c`.
+  Der Rahmen ist `-0x68`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 496 Bytes, 124 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bosseel`: PASS
+(ererbte schwache Ordnung, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `564b4921`: fuzzy 81.12427 % -> 81.12428 %,
+matched code 52.41643 % -> 52.43025 % (1881796 -> 1882292, +496).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9836 -> 9837.
+`bosseel` 22592 -> 23088 (+496), Funktionen 119 -> 120.
+Fuzzy der Unit 99.17324 % -> 99.17455 %.
+Complete units bleiben 416.
+Nur `bosseel` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+

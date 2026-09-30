@@ -2035,6 +2035,7 @@ DEFINE_NERVE(TNerveBossEelWaitAppear, TLiveActor)
 		gpMarDirector->getConsole()->startAppearBalloon(0xE0012, true);
 
 	JGeometry::TVec3<f32> marioPosition = *gpMarioPos;
+	char trash[0x14];
 	marioPosition.y += 75.0f;
 	if (eel->mMouthCubeManager->isInCube(marioPosition, (s32)0)) {
 		spine->pushAfterCurrent(&TNerveBossEelFirstSpin::theNerve());
