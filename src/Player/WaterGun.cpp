@@ -151,8 +151,7 @@ static BOOL RotateCtrl(J3DNode* node, BOOL param_2)
 	if (!param_2 && gpMarioForCallBack != nullptr) {
 		s16 local1cd0 = gpMarioForCallBack->mWaterGun->unk1CD0;
 		Mtx mtx;
-		// Unused stack space
-		// volatile u32 unused2[7];
+		char trash[0x1c];
 		MsMtxSetRotRPH(mtx, 0.005493164f * local1cd0, 0.0f, 0.0f);
 		MTXConcat(J3DSys::mCurrentMtx, mtx, J3DSys::mCurrentMtx);
 	}
