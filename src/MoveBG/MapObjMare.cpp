@@ -13,6 +13,9 @@
 #include <Player/ModelWaterManager.hpp>
 #include <Map/MapData.hpp>
 #include <Map/MapEventMare.hpp>
+#include <Player/MarioAccess.hpp>
+#include <Player/WaterGun.hpp>
+#include <MarioUtil/MathUtil.hpp>
 #include <dolphin/gx.h>
 #include <JSystem/J3D/J3DGraphBase/J3DSys.hpp>
 
@@ -407,7 +410,49 @@ void TMapObjPuncher::load(JSUMemoryInputStream& stream)
 	offHitFlag(HIT_FLAG_NO_COLLISION);
 }
 
-void TMuddyBoat::moveByWater() { }
+void TMuddyBoat::moveByWater()
+{
+	if ((int)SMS_GetMarioWaterGun()->mIsEmitWater != 0) {
+		MtxPtr emitMtx = SMS_GetMarioWaterGun()->getEmitMtx(0);
+		f32 emitX = emitMtx[0][0];
+		f32 emitZ = emitMtx[2][0];
+		JGeometry::TVec3<f32> dir;
+		dir.x = -emitX;
+		dir.y = 0.0f;
+		// In-place so the z negate reuses f2 (fneg f2, f2).
+		emitZ = -emitZ;
+		dir.z = emitZ;
+		MsVECNormalize(&dir, &dir);
+
+		MtxPtr jointMtx = getModel()->getAnmMtx(0);
+		JGeometry::TVec3<f32> fwd;
+		fwd.x = jointMtx[0][2];
+		fwd.y = 0.0f;
+		fwd.z = jointMtx[2][2];
+		f32 dot = dir.dot(fwd);
+
+		JGeometry::TVec3<f32> toMario;
+		getNormalVecFromTargetXZ(gpMarioPos->x, gpMarioPos->z, &toMario);
+		if (toMario.x != 0.0f || toMario.z != 0.0f)
+			MsVECNormalize(&toMario, &toMario);
+
+		f32 side = fwd.z * (dir.x - fwd.x) - fwd.x * (dir.z - fwd.z);
+		if (side * fwd.dot(toMario) > 0.0f)
+			unk14C += unk148 * (1.0f - fabsf(dot));
+		else
+			unk14C -= unk148 * (1.0f - fabsf(dot));
+
+		if (dot > 0.0f)
+			unk140 += dot * unk138;
+		else
+			unk140 += dot * unk13C;
+
+		offLiveFlag(LIVE_FLAG_UNK10);
+		// Retail frame is -0x80; the live vecs only fill -0x68.
+		char trash[0x14];
+		(void)trash;
+	}
+}
 
 void TMuddyBoat::calcRootMatrix() { }
 
