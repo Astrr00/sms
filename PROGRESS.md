@@ -17272,3 +17272,27 @@ Nur `bosseel` hat sich geändert.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R512B (`TMario::emitGetWaterEffect`)
+
+**Vollmatch, strikt.**
+
+- Ein benannter `const TVec3*` auf `&unk160` setzt `addi r5, r3, 0x160` vor dem Rahmen.
+  `li r4` und `li r6` liegen vor `stwu`, `li r7` danach.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 52 Bytes, 13 Instruktionen.
+`validate-symbol-order` `mario/Player/MarioParticle`: PASS
+(ererbte UNUSED-Größen, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `09a24b66`: fuzzy 81.123985 % -> 81.12425 %,
+matched code 52.405624 % -> 52.407074 % (1881408 -> 1881460, +52).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9834 -> 9835.
+`MarioParticle` 7416 -> 7468 (+52), Funktionen 43 -> 44.
+Fuzzy der Unit 97.030045 % -> 97.135185 %.
+Complete units bleiben 416.
+Nur `MarioParticle` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
