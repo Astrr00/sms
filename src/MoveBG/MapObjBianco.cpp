@@ -11,6 +11,8 @@
 #include <MSound/SoundEffects.hpp>
 #include <JSystem/J3D/J3DGraphAnimator/J3DModel.hpp>
 #include <Player/MarioAccess.hpp>
+#include <Player/WaterGun.hpp>
+#include <Camera/CubeManagerBase.hpp>
 #include <System/Application.hpp>
 #include <System/Particles.hpp>
 #include <stdlib.h>
@@ -262,7 +264,44 @@ void TLeafBoat::touchWall(JGeometry::TVec3<f32>*, TBGWallCheckRecord*) { }
 
 void TLeafBoat::bind() { }
 
-void TLeafBoat::control() { }
+void TLeafBoat::control()
+{
+	TMapObjBase::control();
+	if (marioHipAttack())
+		mVelocity.y -= unk154;
+	if (marioIsOn()) {
+		mVelocity.y -= unk150;
+		s32 emitting = SMS_GetMarioWaterGun()->mIsEmitWater;
+		if (emitting > 0) {
+			MtxPtr emitMtx = SMS_GetMarioWaterGun()->getEmitMtx(0);
+			mVelocity.x -= emitMtx[0][0] * unk144;
+			mVelocity.z -= emitMtx[2][0] * unk144;
+		}
+	}
+
+	int cube = gpCubeStream->getInCubeNo(mPosition);
+	if (cube != -1) {
+		TCubeStreamInfo& info
+		    = (TCubeStreamInfo&)*gpCubeStream->unk14->begin()[cube];
+		Mtx mtx;
+		MsMtxSetXYZRPH(mtx, 0.0f, 0.0f, 0.0f, info.unk18.x, info.unk18.y,
+		               info.unk18.z);
+		f32 scale = 0.0001f * info.unk40;
+		mVelocity.x += mtx[0][2] * scale;
+		mVelocity.z += mtx[2][2] * scale;
+	}
+
+	mPosition.y += mVelocity.y;
+	mVelocity.y
+	    += unk158 * (mInitialPosition.y - (mPosition.y - mYOffset));
+	mVelocity.y *= unk15C;
+	mVelocity.x *= unk148;
+	mVelocity.z *= unk148;
+
+	// Dead slot so MWCC keeps frame -0xa0 (mtx at r1+0x4c).
+	char trash[0x2c];
+	trash[0] = 0;
+}
 
 void TLeafBoat::calc()
 {
