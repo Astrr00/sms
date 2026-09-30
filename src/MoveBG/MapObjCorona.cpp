@@ -78,6 +78,60 @@ f32 JGeometry::TUtil<f32>::inv_sqrt(f32 mag)
 }
 #pragma dont_inline off
 
+// This TU calls SMatrix33R's ctor out of line. Other TUs keep the inline
+// body in JGMatrix33.hpp, so that header stays unchanged.
+#define JG_MATRIX33_HPP
+#include <JSystem/JGeometry/JGVec3.hpp>
+#include <dolphin/types.h>
+namespace JGeometry {
+template <typename T> struct SMatrix33C {
+	T mMtx[3][3];
+};
+template <> struct SMatrix33C<f32> {
+	SMatrix33C() { }
+#pragma dont_inline on
+	f32 at(u32 i, u32 j) const { return mMtx[i][j]; }
+#pragma dont_inline off
+	f32& ref(u32 i, u32 j) { return mMtx[i][j]; }
+	f32 mMtx[3][3];
+};
+template <typename T> struct SMatrix33R {
+	T mMtx[3][3];
+};
+template <> struct SMatrix33R<f32> {
+	SMatrix33R();
+	f32 at(u32 i, u32 j) const { return mMtx[j][i]; }
+	f32& ref(u32 i, u32 j) { return mMtx[j][i]; }
+	f32 mMtx[3][3];
+};
+template <typename T> struct TMatrix33 : public T {
+	TMatrix33() { }
+	void mult(const TVec3<f32>& src, TVec3<f32>& dst) const
+	{
+		f32 x = this->at(0, 0) * src.x + this->at(0, 1) * src.y
+		        + this->at(0, 2) * src.z;
+		f32 y = this->at(1, 0) * src.x + this->at(1, 1) * src.y
+		        + this->at(1, 2) * src.z;
+		f32 z = this->at(2, 0) * src.x + this->at(2, 1) * src.y
+		        + this->at(2, 2) * src.z;
+		dst.set(x, y, z);
+	}
+	void mult(TVec3<f32>& v) const
+	{
+		v.set(
+		    this->at(0, 0) * v.x + this->at(0, 1) * v.y + this->at(0, 2) * v.z,
+		    this->at(1, 0) * v.x + this->at(1, 1) * v.y + this->at(1, 2) * v.z,
+		    this->at(2, 0) * v.x + this->at(2, 1) * v.y + this->at(2, 2) * v.z);
+	}
+	void identity()
+	{
+		this->ref(0, 2) = this->ref(1, 2) = 0.0f;
+		this->ref(0, 1) = this->ref(2, 1) = 0.0f;
+		this->ref(1, 0) = this->ref(2, 0) = 0.0f;
+		this->ref(0, 0) = this->ref(1, 1) = this->ref(2, 2) = 1.0f;
+	}
+};
+}
 #include "MoveBG/MapObjCorona.hpp"
 #include "MoveBG/MapObjBase.hpp"
 #include <M3DUtil/MActor.hpp>
@@ -164,6 +218,8 @@ void TBathtub::loadAfter() { }
 // Incomplete. Timer fields copied into the bathtub on a hipdrop / quake.
 class TBathtubParams {
 public:
+	TBathtubParams();
+
 	/* 0x0 */ u8 pad[0x54];
 	/* 0x54 */ s32 unk54;
 	/* 0x58 */ u8 pad58[0x10];
@@ -174,6 +230,7 @@ public:
 	/* 0x90 */ u32 unk90;
 	/* 0x94 */ u8 pad94[0x60];
 	/* 0xF4 */ int unkF4;
+	/* 0xF8 */ u8 padF8[0x118];
 };
 
 class TKoopa {
@@ -367,9 +424,37 @@ u8 TBathtub::getNextGrip(const JGeometry::TVec3<f32>&,
 
 void TBathtub::updatePosture_() { }
 
+#pragma dont_inline on
+__declspec(weak) JGeometry::SMatrix33R<f32>::SMatrix33R() { }
+#pragma dont_inline off
+
 TBathtub::TBathtub(const char* name)
     : TMapObjBase(name)
+    , unk164(nullptr)
+    , unk290(0)
 {
+	unk16C = new TBathtubParams;
+
+	unk1D8 = 0.0f;
+	unk1DC = 0.0f;
+	unk1E0 = 0.0f;
+	unk1E4 = 1.0f;
+	mPosition.x = mPosition.y = mPosition.z = 0.0f;
+	unk1E8 = unk1EC = unk1F0 = 0.0f;
+	unk250 = 0;
+	unk254 = 1;
+	unk258 = 0;
+	unk25C = 1;
+	unk248 = 0;
+	unk298 = 0;
+	unk23C = unk240 = unk244 = 0.0f;
+	unk299 = 0;
+	unk29A = 0;
+	unk2A0 = 0;
+	unk294 = 0;
+
+	volatile char trash[8];
+	(void)trash;
 }
 
 void TBathtub::load(JSUMemoryInputStream&) { }

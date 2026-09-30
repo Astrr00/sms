@@ -1719,7 +1719,7 @@ void TBathWaterManager::throwMario(f32 param_1)
 	diff.sub(SMS_GetMarioPos(), data.mPos);
 
 	JGeometry::TVec3<f32> local;
-	data.unk18.mult33(diff, local);
+	data.unk18.mult(diff, local);
 
 	JGeometry::TVec3<f32> horiz;
 	horiz   = local;
@@ -1730,7 +1730,7 @@ void TBathWaterManager::throwMario(f32 param_1)
 		horiz.setLength(4150.0f);
 
 		JGeometry::TVec3<f32> w;
-		data.unk18.mult33(horiz, w);
+		data.unk18.mult(horiz, w);
 		w += data.mPos;
 		w.y += 120.0f;
 
