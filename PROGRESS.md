@@ -16936,3 +16936,30 @@ Nur `MapObjFence` hat sich geändert.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R503B (`TMarDirector::movement`)
+
+**Vollmatch, strikt.**
+
+- `switch ((int)mState)` mit einem `case STATE_UNK4`.
+- Das ergibt `cmpwi r0, 4`, `beq` auf den Call, dann `b` zur Epilog.
+- Ein `if (mState == STATE_UNK4)` fällt durch und wird `bne`.
+- `else` nach einem frühen `return` ändert daran nichts.
+- `movement_game()` bleibt ein `bl`.
+
+0 Abweichungen, 48 Bytes, 12 Instruktionen.
+`validate-symbol-order` `mario/System/MarDirectorEvent`: PASS.
+Sechs UNUSED-Größen leerer Stubs waren schon vorher da.
+Die TU bleibt `NonMatching`.
+`setNextStage` bleibt der leere Stub.
+
+`ninja changes_all` gegen `e6bbe98f`: fuzzy 81.123375 % -> 81.123505 %.
+matched code 52.278496 % -> 52.27983 % (1876844 -> 1876892, +48).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9821 -> 9822.
+`MarDirectorEvent` 1740 -> 1788 (+48), Funktionen 8 -> 9.
+Fuzzy der Unit 83.28795 % -> 83.426506 %.
+Complete units bleiben 416.
+Nur `MarDirectorEvent` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
