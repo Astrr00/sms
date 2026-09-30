@@ -10,6 +10,10 @@
 #include <MSound/MSound.hpp>
 #include <MSound/SoundEffects.hpp>
 #include <MarioUtil/RandomUtil.hpp>
+#include <Map/Map.hpp>
+#include <System/EmitterViewObj.hpp>
+#include <System/Particles.hpp>
+#include <MSound/MSoundSE.hpp>
 
 // rogue includes needed for matching sinit & bss
 #include <MSound/MSSetSound.hpp>
@@ -665,7 +669,76 @@ void TFluff::kill()
 	mState = 3;
 }
 
-void TFluff::control() { }
+void TFluff::control()
+{
+	// Declared before the dead slot so the copy lands at r1+0x24.
+	JGeometry::TVec3<f32> vel;
+	// Dead slot so the MsRandF spill stays at r1+0x30 and the frame stays 0x40.
+	char trash[20];
+
+	TMapObjBase::control();
+	move();
+
+	switch (mState) {
+	case 2:
+		mScaling.x += mScaleUpSpeed;
+		mScaling.y += mScaleUpSpeed;
+		mScaling.z += mScaleUpSpeed;
+		if (mScaling.x > 1.0f) {
+			mScaling.x = 1.0f;
+			mScaling.y = 1.0f;
+			mScaling.z = 1.0f;
+			setObjHitData(0);
+			mState = 1;
+		}
+		break;
+	case 1:
+		mGroundHeight = gpMap->checkGround(mPosition, &mGroundPlane);
+		vel = mVelocity;
+		if (vel.y < 0.0f
+		    && (mGroundHeight > mPosition.y - unk13C
+		        || mPosition.y < -1000.0f))
+			kill();
+		if (gpMap->isTouchedOneWall(mPosition.x, mPosition.y, mPosition.z,
+		                            100.0f))
+			kill();
+		if (mPosition.x < -14848.0f || 14848.0f < mPosition.x
+		    || mPosition.z < -19968.0f || 19968.0f < mPosition.z)
+			kill();
+		break;
+	case 3:
+		mScaling.x -= mScaleDownSpeed;
+		mScaling.y -= mScaleDownSpeed;
+		mScaling.z -= mScaleDownSpeed;
+		if (mScaling.x < 0.1f) {
+			gpMarioParticleManager->emitAndBindToPosPtr(
+			    PARTICLE_MS_ENM_DISAP_A_W, &mPosition, 0, nullptr);
+			if (gpMSound->gateCheck(MSD_SE_SMOKE_EFFECT))
+				MSoundSESystem::MSoundSE::startSoundActor(
+				    MSD_SE_SMOKE_EFFECT, &mPosition, 0, nullptr, 0, 4);
+			mScaling.x = 0.0001f;
+			mScaling.y = 0.0001f;
+			mScaling.z = 0.0001f;
+			mStateTimer = 0xF0;
+			mState = 4;
+		}
+		break;
+	case 4:
+		if (!isStateTimerEngaged()) {
+			appear();
+			// set() sinks the x/z zeros into the inlined MsRandF.
+			mRotation.set(0.0f, 360.0f * MsRandF(), 0.0f);
+			mInitialRotation = mRotation;
+			unk16C = 0;
+			TFluffManager* mgr = (TFluffManager*)unk168;
+			if (mgr->unk15C == nullptr) {
+				mgr->unk15C = this;
+				mgr->unk15C->makeObjDead();
+			}
+		}
+		break;
+	}
+}
 
 void TFluff::appear()
 {
@@ -742,6 +815,8 @@ static inline f32 distSq(const JGeometry::TVec3<f32>& a,
 
 static inline f32 doSqrt(f32 lenSq) { return JGeometry::TUtil<f32>::sqrt(lenSq); }
 
+f32 TFluff::mScaleUpSpeed   = 0.05f;
+f32 TFluff::mScaleDownSpeed = 0.01f;
 f32 TFluffManager::mWindMin = 1.0f;
 
 void TFluffManager::control()

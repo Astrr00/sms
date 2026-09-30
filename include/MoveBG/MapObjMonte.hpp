@@ -143,6 +143,9 @@ public:
 	void initMapObj();
 	TFluff(const char*);
 
+	static f32 mScaleUpSpeed;
+	static f32 mScaleDownSpeed;
+
 public:
 	/* 0x138 */ f32 unk138;
 	/* 0x13C */ f32 unk13C;
