@@ -17200,3 +17200,27 @@ Nur `MarioParticle` hat sich geändert.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R511A (`TBossEelBarrierCollision::behaveToMario`)
+
+**Vollmatch, strikt.**
+
+- `char trash[4]` hinter dem `TVec3` hebt den Rahmen von `-0x20` auf `-0x28`.
+  Die Position liegt auf `r1+0x18`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 108 Bytes, 27 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bosseel`: PASS
+(ererbte schwache Ordnung, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `5181d064`: fuzzy 81.12395 % -> 81.12396 %,
+matched code 52.393257 % -> 52.396263 % (1880964 -> 1881072, +108).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9831 -> 9832.
+`bosseel` 22024 -> 22132 (+108), Funktionen 116 -> 117.
+Fuzzy der Unit 99.169556 % -> 99.1707 %.
+Complete units bleiben 416.
+Nur `bosseel` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
