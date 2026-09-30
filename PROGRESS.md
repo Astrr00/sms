@@ -17418,3 +17418,28 @@ Nur `WaterGun` hat sich geändert.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R503A (`SetupThreadFuncLogo`)
+
+**Vollmatch, strikt.**
+
+- `#pragma dont_inline` auf `TApplication::setupThreadFuncLogo` hält den Rumpf aus dem statischen Wrapper.
+  Der Wrapper ist ein Aufruf.
+  Der Rahmen ist `-0x8`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 32 Bytes, 8 Instruktionen.
+`validate-symbol-order` `mario/System/Application`: PASS gegen die Basis
+(ererbtes fehlendes `crTimeAry`, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `206b019d`: fuzzy 81.12432 % -> 81.12521 %,
+matched code 52.442722 % -> 52.44362 % (1882740 -> 1882772, +32).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9840 -> 9841.
+`Application` 3024 -> 3056 (+32), Funktionen 10 -> 11.
+Fuzzy der Unit 96.653534 % -> 96.97847 %.
+Complete units bleiben 416.
+Nur `Application` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
