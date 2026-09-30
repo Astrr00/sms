@@ -139,6 +139,8 @@ template <typename T> struct TMatrix33 : public T {
 #include <JSystem/JDrama/JDRNameRefGen.hpp>
 #include <Camera/CameraShake.hpp>
 #include <MarioUtil/RumbleMgr.hpp>
+#include <MSound/MSound.hpp>
+#include <MSound/SoundEffects.hpp>
 #include <Player/MarioAccess.hpp>
 #include <System/Particles.hpp>
 #include <System/ParamInst.hpp>
@@ -152,11 +154,13 @@ public:
 	                     const JGeometry::TVec3<f32>&,
 	                     const JGeometry::TVec3<f32>&);
 	virtual void moveTrans(const JGeometry::TVec3<f32>&);
-	virtual void moveMtx(MtxPtr);
+	virtual void moveMtx(Mtx*);
 	virtual void setUp();
 	virtual void setUpTrans(const JGeometry::TVec3<f32>&);
 	virtual void remove();
 };
+
+class TBathtubGripParts;
 
 // Incomplete. Not a TLiveActor subclass, so this TU does not emit the
 // grip vtable.
@@ -164,25 +168,30 @@ class TBathtubGrip {
 public:
 	void kill();
 	void perform(u32 cue, JDrama::TGraphics* graphics);
+	void control();
 	void removeCollisions_();
+	void setupCollisions_();
 	Mtx* getRootJointMtx() const;
 	void calcRootMatrix();
 
-	/* 0x0 */ u8 pad0[0x150];
+	/* 0x0 */ u8 pad0[0x138];
+	/* 0x138 */ JGeometry::TVec3<f32> unk138;
+	/* 0x144 */ JGeometry::TVec3<f32> unk144;
 	/* 0x150 */ TGripCollision* unk150[5];
 	/* 0x164 */ TGripCollision* unk164[17];
-	/* 0x1A8 */ u8 pad1A8[0x58];
+	/* 0x1A8 */ TBathtubGripParts* unk1A8[5];
+	/* 0x1BC */ TBathtubGripParts* unk1BC[17];
 	/* 0x200 */ s32 unk200[1];
 	/* 0x204 */ u8 pad204[0x40];
 	/* 0x244 */ TBathtub* unk244;
 	/* 0x248 */ u8 unk248;
-	/* 0x249 */ u8 pad249;
+	/* 0x249 */ u8 unk249;
 	/* 0x24A */ u8 unk24A;
-	/* 0x24B */ u8 pad24B;
+	/* 0x24B */ u8 unk24B;
 	/* 0x24C */ f32 unk24C;
-	/* 0x250 */ u8 pad250[4];
+	/* 0x250 */ f32 unk250;
 	/* 0x254 */ s32 unk254;
-	/* 0x258 */ u8 pad258[4];
+	/* 0x258 */ s32 unk258;
 	/* 0x25C */ MActor* unk25C;
 	/* 0x260 */ u8 unk260;
 };
@@ -299,6 +308,20 @@ void TBathtubGrip::removeCollisions_()
 		unk150[i]->remove();
 }
 
+void TBathtubGrip::setupCollisions_()
+{
+	for (int i = 0; i < 17; ++i) {
+		unk164[i]->moveMtx(reinterpret_cast<TMapObjBase*>(unk1BC[i])
+		                       ->getRootJointMtx());
+		unk164[i]->setUp();
+	}
+	for (int i = 0; i < 5; ++i) {
+		unk150[i]->moveMtx(reinterpret_cast<TMapObjBase*>(unk1A8[i])
+		                       ->getRootJointMtx());
+		unk150[i]->setUp();
+	}
+}
+
 class TBathtubParams : public TParams {
 public:
 	TBathtubParams();
@@ -361,6 +384,91 @@ TBathtubParams::TBathtubParams()
     , PARAM_INIT(outerHeight, 20.0f)
 {
 	TParams::load(mPrmPath);
+}
+
+void TBathtubGrip::control()
+{
+	TMapObjBase* self = reinterpret_cast<TMapObjBase*>(this);
+	TLiveActor* live  = reinterpret_cast<TLiveActor*>(this);
+	// Dead slot so the frame stays at -0x50 (r31 at r1+0x4c).
+	char trash[0x28];
+	trash[0] = 0;
+
+	self->calcRootMatrix();
+	self->TMapObjBase::control();
+
+	if (unk24A != 0) {
+#pragma inline on
+		removeCollisions_();
+#pragma inline off
+		return;
+	}
+
+	live->mMActor->calcAnm();
+
+	if (unk24B != 0) {
+#pragma inline on
+		setupCollisions_();
+#pragma inline off
+	}
+
+	if (unk248 != 0) {
+		if (self->animIsFinished()) {
+			if (unk244->unk16C->resetGrip.value != 0) {
+				live->offLiveFlag(LIVE_FLAG_DEAD);
+				unk248 = 0;
+				unk24A = 0;
+				unk249 = 1;
+				unk24B = 0;
+				self->startAnim(0);
+				J3DFrameCtrl* ctrl = live->mMActor->getFrameCtrl(0);
+				if (ctrl != nullptr) {
+					ctrl->setFrame(0.0f);
+					ctrl->setRate(0.0f);
+				}
+				unk250 = 1.0f;
+				unk258 = 100;
+				unk260 = 0;
+			} else {
+				self->kill();
+			}
+		} else {
+			J3DFrameCtrl* ctrl = live->mMActor->getFrameCtrl(0);
+			if (ctrl != nullptr)
+				ctrl->setRate(0.5f * (unk250 * SMSGetAnmFrameRate()));
+			MtxPtr mtx = (MtxPtr)reinterpret_cast<TMapObjBase*>(unk1A8[0])
+			                 ->getRootJointMtx();
+			f32 z    = mtx[2][3];
+			f32 y    = mtx[1][3];
+			f32 x    = mtx[0][3];
+			unk144.x = x;
+			unk144.y = y;
+			unk144.z = z;
+			if (gpMSound->gateCheck(MSD_SE_OBJ_STAND_BREAK))
+				MSoundSESystem::MSoundSE::startSoundActor(
+				    MSD_SE_OBJ_STAND_BREAK, (const Vec*)&unk144, 0, nullptr, 0,
+				    4);
+			SMSRumbleMgr->start(8, (Vec*)&unk138);
+		}
+	} else {
+		J3DFrameCtrl* ctrl = live->mMActor->getFrameCtrl(0);
+		ctrl->setRate(0.0f);
+		if (unk254 > 0) {
+			ctrl->setFrame(1.0f);
+			s32 next = unk254 + 1;
+			unk254   = next;
+			if (next > unk258) {
+				unk248 = 1;
+				unk254 = 0;
+				gpMarioParticleManager->emitAndBindToMtxPtr(
+				    0xF6, (MtxPtr)self->getRootJointMtx(), 0, this);
+				gpMarioParticleManager->emitAndBindToMtxPtr(
+				    0xF7, (MtxPtr)self->getRootJointMtx(), 0, this);
+			}
+		} else {
+			ctrl->setFrame(0.0f);
+		}
+	}
 }
 
 // Leading zeroes so the four .jpa paths sit at the retail rodata offsets.
