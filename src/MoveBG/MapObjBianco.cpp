@@ -11,6 +11,7 @@
 #include <JSystem/J3D/J3DGraphAnimator/J3DModel.hpp>
 #include <Player/MarioAccess.hpp>
 #include <System/Application.hpp>
+#include <System/Particles.hpp>
 #include <stdlib.h>
 #include <string.h>
 
@@ -251,7 +252,31 @@ void TLeafBoat::bind() { }
 
 void TLeafBoat::control() { }
 
-void TLeafBoat::calc() { }
+void TLeafBoat::calc()
+{
+	if (unk144 != 0.0f) {
+		if (unk160 > 8) {
+			if (fabsf(mVelocity.x) + fabsf(mVelocity.z) > 0.1f) {
+				f32 py   = mPosition.y - mYOffset;
+				f32 pz   = mPosition.z;
+				f32 px   = mPosition.x;
+				unk164.x = px;
+				unk164.y = py;
+				unk164.z = pz;
+				JGeometry::TVec3<f32> scale;
+				scale.setAll(2.0f);
+				emitAndBindScale(PARTICLE_MS_M_HAMON_B, 3, &unk164, scale);
+				emitAndBindScale(PARTICLE_MS_M_HAMON_A, 1, &unk164, scale);
+				// Dead slot so MWCC keeps frame -0x38 (scale at r1+0x20).
+				char trash[8];
+				trash[0] = 0;
+			}
+			unk160 = 0;
+		} else {
+			unk160 += 1;
+		}
+	}
+}
 
 void TLeafBoat::initMapObj()
 {

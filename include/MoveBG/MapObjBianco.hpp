@@ -109,7 +109,7 @@ public:
 	/* 0x154 */ f32 unk154;
 	/* 0x158 */ f32 unk158;
 	/* 0x15C */ f32 unk15C;
-	/* 0x160 */ u32 unk160;
+	/* 0x160 */ s32 unk160;
 	/* 0x164 */ JGeometry::TVec3<f32> unk164;
 };
 
