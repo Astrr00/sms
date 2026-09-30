@@ -88,13 +88,17 @@ void TMapObjWave::initDraw()
 }
 #pragma dont_inline off
 
-void TMapObjWave::getMoveTexPos1(float) const { }
+f32 TMapObjWave::getMoveTexPos1(float z) const
+{
+	f32 scaled = z * unk78;
+	return unk70 + scaled;
+}
 
-void TMapObjWave::getMoveTexPos0(float) const { }
+f32 TMapObjWave::getMoveTexPos0(float x) const { return x * unk78 * 0.8f; }
 
-void TMapObjWave::getStaticTexPos1(float) const { }
+f32 TMapObjWave::getStaticTexPos1(float z) const { return z * unk74; }
 
-void TMapObjWave::getStaticTexPos0(float) const { }
+f32 TMapObjWave::getStaticTexPos0(float x) const { return x * unk74; }
 
 f32 TMapObjWave::getWaveHeight(float x, float z) const
 {
@@ -173,12 +177,43 @@ void TMapObjWave::noWave()
 	unk40 = 0.0f;
 }
 
-void TMapObjWave::getAlpha(float, float) const { }
+int TMapObjWave::getAlpha(float x, float z) const
+{
+	if (fabsf(x) > fabsf(z))
+		return (int)(unk54 * (1.0f - unk18 * fabsf(x)));
+	return (int)(unk54 * (1.0f - unk18 * fabsf(z)));
+}
 
-// dont_inline: draw is still a stub. updateHeightAndAlpha and updateTime
-// must stay out of line so perform keeps its bls.
+// dont_inline: updateHeightAndAlpha and updateTime must stay out of line
+// so perform keeps its bls. draw is large enough to stay out of line too.
 #pragma dont_inline on
-void TMapObjWave::draw() { }
+void TMapObjWave::draw()
+{
+	for (f32 z = -unk14; z <= unk14 - unk1C; z += unk1C) {
+		f32 z0 = z + gpMarioPos->z;
+		f32 z1 = z0 + unk1C;
+		GXBegin(GX_TRIANGLESTRIP, GX_VTXFMT0, unk20 * 2);
+		for (f32 x = -unk14; x <= unk14 - unk1C; x += unk1C) {
+			f32 wx = x + gpMarioPos->x;
+			int a0 = getAlpha(x, z);
+			int a1 = getAlpha(x, z + unk1C);
+			f32 y0 = getWaveHeight(wx, z0);
+			GXPosition3f32(wx, y0, z0);
+			GXColor4u8(sColor.r, sColor.g, sColor.b, a0);
+			GXTexCoord2f32(unk6C + getStaticTexPos0(wx), getStaticTexPos1(z0));
+			GXTexCoord2f32(getMoveTexPos0(wx), getMoveTexPos1(z0));
+			f32 y1 = getWaveHeight(wx, z1);
+			GXPosition3f32(wx, y1, z1);
+			GXColor4u8(sColor.r, sColor.g, sColor.b, a1);
+			GXTexCoord2f32(unk6C + getStaticTexPos0(wx),
+			               getStaticTexPos1(z1));
+			GXTexCoord2f32(getMoveTexPos0(wx), getMoveTexPos1(z1));
+		}
+		GXEnd();
+	}
+	char trash[0x8];
+	trash[0] = 0;
+}
 
 void TMapObjWave::updateHeightAndAlpha()
 {

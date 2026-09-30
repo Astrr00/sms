@@ -18,14 +18,14 @@ public:
 	void updateTime();
 	void updateHeightAndAlpha();
 	void draw();
-	void getAlpha(float, float) const;
+	int getAlpha(float, float) const;
 	void noWave();
 	f32 getHeight(float, float, float) const;
 	f32 getWaveHeight(float, float) const;
-	void getStaticTexPos0(float) const;
-	void getStaticTexPos1(float) const;
-	void getMoveTexPos0(float) const;
-	void getMoveTexPos1(float) const;
+	f32 getStaticTexPos0(float) const;
+	f32 getStaticTexPos1(float) const;
+	f32 getMoveTexPos0(float) const;
+	f32 getMoveTexPos1(float) const;
 	void initDraw();
 
 public:
