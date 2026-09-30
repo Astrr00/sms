@@ -16,6 +16,7 @@
 #include <Player/MarioAccess.hpp>
 #include <Player/Yoshi.hpp>
 #include <string.h>
+#include <stdlib.h>
 
 // rogue includes needed for matching sinit & bss
 #include <MSound/MSSetSound.hpp>
@@ -265,10 +266,91 @@ __declspec(weak) void TMapCollisionMove::moveMtx(MtxPtr mtx)
 	move();
 }
 
-// dont_inline: the retail body is large. The empty stub must stay a call
-// so TShellCup::control can match.
 #pragma dont_inline on
-void TPinnaShell::control() { }
+void TPinnaShell::control()
+{
+	char gap[8];
+	(void)gap;
+	Mtx rot;
+
+	if ((s32)unk7C > 0)
+		--unk7C;
+
+	switch (unk68) {
+	case 0:
+		if (unk6C < 0.0f) {
+			f32 unit = (f32)rand() * 0.000030517578f;
+			unk6C += TShellCup::mCloseAccel * (0.5f + 0.5f * unit);
+		} else {
+			unk6C = 0.0f;
+		}
+		break;
+	case 1:
+		unk6C -= 0.8f;
+		if (unk6C < -TShellCup::mOpenRotMax) {
+			unk6C = -TShellCup::mOpenRotMax;
+			unk7C = 360;
+			TLiveActor* coin = (TLiveActor*)unk80;
+			if (coin != nullptr && !coin->checkLiveFlag(LIVE_FLAG_DEAD)) {
+				if (coin->isActorType(0x20000010))
+					gpMSound->startSoundSystemSE(MSD_SE_SY_COLLECT_PRETTY, 0,
+					                             nullptr, 0);
+				else
+					gpMSound->startSoundSystemSE(MSD_SE_SY_COIN_APPEAR, 0,
+					                             nullptr, 0);
+			} else {
+				gpMSound->startSoundSystemSE(MSD_SE_SY_NOT_COLLECT, 0, nullptr,
+				                             0);
+			}
+			unk68 = 2;
+		}
+		break;
+	case 2:
+		if ((s32)unk7C <= 0) {
+			unk68 = 3;
+			gpMSound->startSoundActor(MSD_SE_OBJ_PIN_SHELL_CLOSE, &mPosition,
+			                          0, nullptr, 0, 4);
+		}
+		break;
+	case 3:
+		unk6C += unk70;
+		if (unk6C >= -TShellCup::mShellDamageRot)
+			((THitActor*)unk88)->offHitFlag(HIT_FLAG_NO_COLLISION);
+		if (unk6C >= 0.0f) {
+			unk6C = 0.0f;
+			unk68 = 0;
+			((THitActor*)unk88)->onHitFlag(HIT_FLAG_NO_COLLISION);
+		}
+		break;
+	default:
+		break;
+	}
+
+	MtxPtr shellMtx = (MtxPtr)unk74;
+	THitActor* base = (THitActor*)unk8C;
+	f32 mtxX  = shellMtx[0][3];
+	f32 baseZ = base->mPosition.z;
+	f32 baseX = base->mPosition.x;
+	f32 mtxZ  = shellMtx[2][3];
+	f32 mtxY  = shellMtx[1][3];
+	f32 outX  = baseX + 0.7f * (mtxX - baseX);
+	f32 outZ  = baseZ + 0.7f * (mtxZ - baseZ);
+	f32 outY  = mtxY - 100.0f;
+	mPosition.x     = outX;
+	mPosition.y     = outY;
+	mPosition.z     = outZ;
+
+	((THitActor*)unk88)->mPosition.set(mPosition);
+
+	if (mColCount != 0) {
+		MsMtxSetRotX(rot, unk6C);
+		TMapObjBase::concatOnlyRotFromRight((MtxPtr)unk74, rot, rot);
+		((TMapCollisionMove*)unk84)->moveMtx(rot);
+	}
+
+	char trash[0x34];
+	(void)trash;
+}
 #pragma dont_inline off
 
 TPinnaShell::TPinnaShell(const char* name)

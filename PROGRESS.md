@@ -16386,3 +16386,41 @@ Nur `MapObjBall` hat sich geändert.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R433 (`TPinnaShell::control`)
+
+**Vollmatch, strikt.**
+
+- `unk7C` zählt herunter, solange es größer als 0 ist.
+- Zustand 0: unter 0 wächst `unk6C` um `mCloseAccel * (0.5 + 0.5 * rand / 32768)`, sonst wird es 0.
+- Zustand 1 zieht 0.8 ab.
+  Unter `-mOpenRotMax` wird geklemmt, `unk7C` auf 360 gesetzt und Zustand 2 betreten.
+  Eine lebende blaue Münze spielt `MSD_SE_SY_COLLECT_PRETTY`, eine andere lebende Münze `MSD_SE_SY_COIN_APPEAR`, sonst `MSD_SE_SY_NOT_COLLECT`.
+- Zustand 2: ist der Timer abgelaufen, wird Zustand 3 und `MSD_SE_OBJ_PIN_SHELL_CLOSE` an der Position gestartet.
+- Zustand 3 addiert `unk70`.
+  Ab `-mShellDamageRot` fällt `HIT_FLAG_NO_COLLISION` an `unk88`.
+  Ab 0 wird `unk6C` 0, Zustand 0, und das Flag wieder gesetzt.
+- x/z sind `0.7 * Gelenktranslation + 0.3 * unk8C`.
+  y ist die Gelenk-Y-Translation minus 100.
+  Die Position wird nach `unk88` kopiert.
+- Bei Kollisionen baut `MsMtxSetRotX` die X-Drehung aus `unk6C`.
+  `concatOnlyRotFromRight(unk74, rot, rot)` und das virtuelle `moveMtx` folgen.
+- `char gap[8]` und `char trash[0x34]` halten das Frame bei `-0xb0` und die Matrix bei `r1+0x64`.
+- `MapObjPinna.cpp` bleibt `NonMatching`.
+
+0 Abweichungen, 884 Bytes, 221 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/MapObjPinna`: PASS
+(6 bekannte UNUSED-Stub-Größen).
+
+`TMapObjFlag::init`, `TMapObjGrowTree::control`, `TMapObjGrowTree::touchWater` und
+`TRevolvingFenceInner::controlWall` unberührt.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+
+`ninja changes_all`: fuzzy 80.33318 % -> 80.3577 %,
+matched code 51.420914 % -> 51.445538 % (1846056 -> 1846940, +884).
+Matched data bleibt 66.399254 % (425175).
+Funktionen matched 9767 -> 9768.
+`MapObjPinna` 7692 -> 8576 (+884).
+Nur `MapObjPinna` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
