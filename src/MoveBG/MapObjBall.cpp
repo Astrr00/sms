@@ -273,6 +273,9 @@ void TMapObjBall::makeObjAppeared()
 	trash[0] = 0;
 }
 
+// Out of line in TResetFruit::control (states 6 and 0xB). States 2/3
+// duplicate this body instead, so the call must not be inlined.
+#pragma dont_inline on
 void TMapObjBall::control()
 {
 	TMapObjGeneral::control();
@@ -293,6 +296,7 @@ void TMapObjBall::control()
 	char trash[0x14];
 	trash[0] = 0;
 }
+#pragma dont_inline off
 
 BOOL TMapObjBall::receiveMessage(THitActor* sender, u32 message)
 {
@@ -658,7 +662,142 @@ void TResetFruit::appearing()
 	}
 }
 
-void TResetFruit::control() { }
+void TResetFruit::control()
+{
+	// Dead slots so the matrix lands at r1+0x90, the velocity at r1+0xC0,
+	// and the frame stays 0xF8.
+	char gap[0x14];
+	JGeometry::TVec3<f32> vel;
+	Mtx mtx;
+	char pad[0x54];
+	gap[0] = 0;
+	pad[0] = 0;
+
+	switch (mState) {
+	case TMapObjBase::STATE_NORMAL:
+		offHitFlag(HIT_FLAG_NO_COLLISION);
+		for (int i = 0; i < mColCount; ++i) {
+			THitActor* col = mCollisions[i];
+			if (isState(TMapObjGeneral::STATE_APPEARING))
+				continue;
+			if (isState(TMapObjGeneral::STATE_BREAKING))
+				continue;
+			if (isState(0xC))
+				continue;
+			if (isState(TMapObjGeneral::STATE_WAITING_TO_APPEAR))
+				continue;
+			TMapObjBall::touchActor(col);
+			if (checkMapObjFlag(MAP_OBJ_FLAG_UNK4000000))
+				continue;
+			if (!isState(1))
+				continue;
+			if (checkLiveFlag(LIVE_FLAG_UNK10))
+				continue;
+			if (!isStateTimerEngaged()) {
+				onMapObjFlag(MAP_OBJ_FLAG_DISAPPEARING);
+				mStateTimer = getLivingTime();
+			}
+			offLiveFlag(LIVE_FLAG_UNK10);
+			mState = 11;
+		}
+		if (mGroundPlane->getActor() != nullptr)
+			calcCurrentMtx();
+		break;
+	case 0xB:
+		offHitFlag(HIT_FLAG_NO_COLLISION);
+		if (gpMarDirector->mMap == 4 && checkLiveFlag(LIVE_FLAG_UNK10))
+			offLiveFlag(LIVE_FLAG_UNK10);
+		if (mGroundPlane->getActor() != nullptr) {
+			if (checkLiveFlag(LIVE_FLAG_UNK10))
+				offLiveFlag(LIVE_FLAG_UNK10);
+			const TLiveActor* actor = mGroundPlane->getActor();
+			if (mPosition.y < 200.0f + mGroundHeight
+			    && (actor->isActorType(0x400000CD)
+			        || actor->isActorType(0x400000CD))) {
+				f32 prev = unk198;
+				unk198   = SMS_GetSandRiseUpRatio(actor);
+				if (unk198 > 0.05f && unk198 > prev)
+					mVelocity.y += 20.0f;
+			}
+		} else {
+			unk198 = 0.0f;
+		}
+		TMapObjBall::control();
+		if (!checkMapObjFlag(MAP_OBJ_FLAG_UNK4000000)
+		    && !isStateTimerEngaged()) {
+			if (mHolder != nullptr) {
+				mHolder->receiveMessage(this, HIT_MESSAGE_UNK8);
+				mHolder->mHeldObject = nullptr;
+				mHolder               = nullptr;
+			}
+			mVelocity.set(0.0f, 0.0f, 0.0f);
+			mState = 0xC;
+		}
+		break;
+	case TMapObjGeneral::STATE_HOLDING:
+		TMapObjBall::control();
+		if (!checkMapObjFlag(MAP_OBJ_FLAG_UNK4000000)
+		    && !isStateTimerEngaged()) {
+			if (mHolder != nullptr) {
+				mHolder->receiveMessage(this, HIT_MESSAGE_UNK8);
+				mHolder->mHeldObject = nullptr;
+				mHolder               = nullptr;
+			}
+			mVelocity.set(0.0f, 0.0f, 0.0f);
+			mState = 0xC;
+		}
+		break;
+	case TMapObjGeneral::STATE_APPEARING:
+	case TMapObjGeneral::STATE_BREAKING:
+		TMapObjGeneral::control();
+		if ((s32)unk194 != 0)
+			unk194 -= 1;
+		if (isState(TMapObjGeneral::STATE_HOLDING)) {
+			MTXCopy(mHolder->getTakingMtx(), mtx);
+			mtx[1][3] += unk190;
+			MTXCopy(mtx, getModel()->getAnmMtx(0));
+		} else {
+			vel = mVelocity;
+			if (!(vel.squared() <= JGeometry::TUtil<f32>::epsilon()
+			      && mGroundPlane->mActor == nullptr))
+				calcCurrentMtx();
+		}
+		break;
+	case 0xC: {
+		f32 half = 0.5f;
+		mPosition.y += mBodyRadius * half;
+		mScaling.x = mInitialScaling.x;
+		mScaling.y = mInitialScaling.y;
+		mScaling.z = mInitialScaling.z;
+		emitAndScale(PARTICLE_MS_ENM_DISAP_A_W, 0, &mPosition);
+		if (gpMSound->gateCheck(MSD_SE_SMOKE_EFFECT))
+			MSoundSESystem::MSoundSE::startSoundActor(
+			    MSD_SE_SMOKE_EFFECT, &mPosition, 0, nullptr, 0, 4);
+		mStateTimer = 0xF0;
+		sleep();
+		mState = 0xD;
+		break;
+	}
+	case 0xD:
+		if (!isStateTimerEngaged()) {
+			unk19C.r = 0xFF;
+			unk19C.g = 0xFF;
+			unk19C.b = 0xFF;
+			awake();
+			mState = 0xB;
+			makeObjDefault();
+			makeObjDead();
+			calcRootMatrix();
+			getModel()->calc();
+			mStateTimer = mFruitWaitTimeToAppear;
+			offMapObjFlag(MAP_OBJ_FLAG_DISAPPEARING);
+			mState = TMapObjGeneral::STATE_WAITING_TO_APPEAR;
+			if (gpMarDirector->mMap == 3 && unk1A4 != 0)
+				makeObjDead();
+		}
+		break;
+	}
+}
 
 void TResetFruit::perform(u32, JDrama::TGraphics*) { }
 

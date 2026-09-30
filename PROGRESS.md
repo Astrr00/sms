@@ -16498,3 +16498,36 @@ Nur `MapObjPinna` hat sich geändert.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R434 (`TResetFruit::control`)
+
+**Vollmatch, strikt.**
+
+- Switch über `mState` 0..0xD.
+  Zustand 1 läuft die Kollisionen und ruft `TMapObjBall::touchActor`.
+- Zustand 0xB macht den Sand-Auftrieb (`0x400000CD`, zweimal) und ruft danach `TMapObjBall::control`.
+- Zustand 6 ruft `TMapObjBall::control` ebenfalls out-of-line.
+  Beide setzen danach Velocity 0 und Zustand 0xC, wenn der Timer aus ist.
+- Zustände 2 und 3 teilen sich die duplizierte Ball-Control-Body.
+- Zustand 0xC spielt das Verschwinden (Partikel `0xE5`, `MSD_SE_SMOKE_EFFECT`) und schläft nach 0xD.
+- Zustand 0xD setzt die Farbe auf weiß, weckt auf und geht nach Waiting.
+- `char gap[0x14]` und `char pad[0x54]` halten das Frame bei `-0xf8`.
+  Matrix bei `r1+0x90`, Velocity bei `r1+0xC0`.
+- `MapObjBall.cpp` bleibt `NonMatching`.
+
+0 Abweichungen, 1584 Bytes, 396 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS
+(4 bekannte UNUSED-Stub-Größen).
+
+`TMapObjBall::control` unberührt (weiter 100 %).
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+
+`ninja changes_all`: fuzzy 80.407715 % -> 80.451740 %,
+matched code 51.495785 % -> 51.539906 % (1848744 -> 1850328, +1584).
+Matched data 66.399254 % -> 66.774055 % (425175 -> 427575, +2400).
+Funktionen matched 9770 -> 9771.
+`MapObjBall` 13848 -> 15432 (+1584), Funktionen 62 -> 63.
+Complete units bleiben 416.
+Nur `MapObjBall` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
