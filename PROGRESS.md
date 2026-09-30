@@ -16732,3 +16732,32 @@ Nur `MapObjBall` hat sich geändert.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R487A (`TMapObjBase::calcReflectingVelocity`)
+
+**Vollmatch, strikt.**
+
+- `onePlus = 1.0f + param_2` liegt in `f6`, vor dem Punktprodukt.
+- `TVec3::dot` bleibt inline (`fmuls` plus zwei `fmadds`).
+- Danach pro Achse `fmuls` von `dot * n`, dann `fnmsubs` gegen `onePlus`.
+- `TReflectVel::apply` ist eine Klassenmethode.
+  Ein `void*`-Cast der Normale verhindert, dass `normal.x` nach `dot` CSE'd wird.
+  Ohne den Cast bleibt `nx` in `f4` und `onePlus` rutscht nach `f5`.
+- Blattfunktion, kein Rahmen.
+
+0 Abweichungen, 108 Bytes, 27 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/MapObjLib`: FAIL, schon vor diesem Match.
+MISSING `at__Q29JGeometry13SMatrix33C<f>CFUlUl`.
+ORDER: `getVerticalVecToTargetXZ` steht vor dem schwachen `TVec3::set`.
+31 UNUSED-Größenwarnungen unverändert.
+`MapObjBase.hpp` unverändert.
+
+`ninja changes_all` gegen `1ffde475`: fuzzy 81.08104 % -> 81.081894 %,
+matched code 52.202286 % -> 52.205296 % (1874108 -> 1874216, +108).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9815 -> 9816.
+`MapObjLib` 10228 -> 10336 (+108), Funktionen 79 -> 80.
+Complete units bleiben 416.
+Nur `MapObjLib` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+

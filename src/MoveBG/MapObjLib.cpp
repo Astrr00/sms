@@ -554,15 +554,27 @@ void TMapObjBase::makeObjMtxRotByAxis(const JGeometry::TVec3<f32>& param_1,
 	param_3[2][3] = mPosition.z;
 }
 
+// fabricated: class method keeps onePlus in f6; void* blocks CSE of normal.x
+struct TReflectVel {
+	static void apply(JGeometry::TVec3<f32>* velocity,
+	                  const JGeometry::TVec3<f32>& normal, f32 onePlus)
+	{
+		f32 dot = velocity->dot(normal);
+		// void* so the post-dot normal loads are not CSEd with dot().
+		void* np = (void*)&normal;
+		f32 px   = dot * ((JGeometry::TVec3<f32>*)np)->x;
+		velocity->x -= onePlus * px;
+		f32 py = dot * ((JGeometry::TVec3<f32>*)np)->y;
+		velocity->y -= onePlus * py;
+		f32 pz = dot * ((JGeometry::TVec3<f32>*)np)->z;
+		velocity->z -= onePlus * pz;
+	}
+};
+
 void TMapObjBase::calcReflectingVelocity(const TBGCheckData* wall, f32 param_2,
                                          JGeometry::TVec3<f32>* velocity) const
 {
-	const JGeometry::TVec3<f32>& normal = wall->getNormal();
-	f32 onePlus                         = 1.0f + param_2;
-	f32 dot                             = velocity->dot(normal);
-	velocity->x -= onePlus * dot * normal.x;
-	velocity->y -= onePlus * dot * normal.y;
-	velocity->z -= onePlus * dot * normal.z;
+	TReflectVel::apply(velocity, wall->getNormal(), 1.0f + param_2);
 }
 
 // TODO: fabricated hack
