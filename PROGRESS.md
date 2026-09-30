@@ -17224,3 +17224,27 @@ Nur `bosseel` hat sich geändert.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R511B (`TMario::emitSweat`)
+
+**Vollmatch, strikt.**
+
+- `TVec3` vor `char trash[4]` legt die Position auf `r1+0x30`.
+  Der Rahmen ist `-0x48`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 212 Bytes, 53 Instruktionen.
+`validate-symbol-order` `mario/Player/MarioParticle`: PASS
+(ererbte UNUSED-Größen, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `5bbe85e6`: fuzzy unverändert 81.12396 %,
+matched code 52.396263 % -> 52.40217 % (1881072 -> 1881284, +212).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9832 -> 9833.
+`MarioParticle` 7204 -> 7416 (+212), Funktionen 42 -> 43.
+Fuzzy der Unit 97.02503 % -> 97.030045 %.
+Complete units bleiben 416.
+Nur `MarioParticle` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
