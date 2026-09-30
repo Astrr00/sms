@@ -19,6 +19,8 @@ public:
 	TJumpMushroom(const char* name = "ジャンプきのこ");
 };
 
+class THangingBridge;
+
 class THangingBridgeBoard : public TLeanBlock {
 public:
 	void drawOneRope(const JGeometry::TVec3<f32>&) const;
@@ -31,17 +33,21 @@ public:
 	void initMapObj();
 	THangingBridgeBoard(const char*);
 
+	static f32 mMarioAccelY;
+	static f32 mMarioHipDropAccelY;
+	static f32 mReturnAccelRate;
+	static f32 mSpeedDownRate;
 	static f32 mRopeWidthX;
 	static f32 mRopeWidthZ;
 	static f32 mTexPosRate;
 
 public:
-	/* 0x194 */ u32 unk194;
-	/* 0x198 */ u32 unk198;
-	/* 0x19C */ u32 unk19C;
-	/* 0x1A0 */ u32 unk1A0;
+	/* 0x194 */ THangingBridgeBoard* unk194;
+	/* 0x198 */ THangingBridgeBoard* unk198;
+	/* 0x19C */ THangingBridgeBoard* unk19C;
+	/* 0x1A0 */ THangingBridgeBoard* unk1A0;
 	/* 0x1A4 */ JGeometry::TVec3<f32> unk1A4[2];
-	/* 0x1BC */ u32 unk1BC;
+	/* 0x1BC */ THangingBridge* unk1BC;
 };
 
 class THangingBridge : public JDrama::TViewObj {

@@ -101,7 +101,67 @@ void THangingBridgeBoard::push(f32) { }
 
 void THangingBridgeBoard::pushNeighbor(f32) { }
 
-void THangingBridgeBoard::control() { }
+// Dead slot so the frame lands at -0x118.
+static inline void hangingBoardControlPad()
+{
+	char trash[0x78];
+	trash[0] = 0;
+}
+
+static inline void pullBoard(THangingBridgeBoard* board, f32 accel, f32 scale)
+{
+	f32 vel  = board->mVelocity.y;
+	f32 kick = accel * scale;
+	board->mVelocity.y = vel - kick;
+}
+
+void THangingBridgeBoard::control()
+{
+	TLeanBlock::control();
+
+	if (marioIsOn()) {
+		mVelocity.y -= mMarioAccelY;
+		f32 accel = mMarioAccelY;
+		if (unk194 != nullptr) {
+			pullBoard(unk194, accel, unk1BC->unk3C.y);
+			if (unk19C != nullptr)
+				pullBoard(unk19C, accel, unk1BC->unk3C.z);
+		}
+		if (unk198 != nullptr) {
+			pullBoard(unk198, accel, unk1BC->unk3C.y);
+			if (unk1A0 != nullptr)
+				pullBoard(unk1A0, accel, unk1BC->unk3C.z);
+		}
+	}
+
+	if (marioHipAttack()) {
+		mVelocity.y -= mMarioHipDropAccelY;
+		f32 accel = mMarioHipDropAccelY;
+		if (unk194 != nullptr) {
+			pullBoard(unk194, accel, unk1BC->unk3C.y);
+			if (unk19C != nullptr)
+				pullBoard(unk19C, accel, unk1BC->unk3C.z);
+		}
+		if (unk198 != nullptr) {
+			pullBoard(unk198, accel, unk1BC->unk3C.y);
+			if (unk1A0 != nullptr)
+				pullBoard(unk1A0, accel, unk1BC->unk3C.z);
+		}
+	}
+
+	mPosition.y += mVelocity.y;
+	mVelocity.y += mReturnAccelRate * (mInitialPosition.y - mPosition.y);
+	mVelocity.y *= mSpeedDownRate;
+
+	MtxPtr mtx = getModel()->getAnmMtx(0);
+	unk1A4[0].x = mPosition.x - mtx[0][0] * unk1BC->unk3C.x;
+	unk1A4[0].y = mPosition.y - mtx[1][0] * unk1BC->unk3C.x + 70.0f;
+	unk1A4[0].z = mPosition.z - mtx[2][0] * unk1BC->unk3C.x;
+	unk1A4[1].x = mPosition.x + mtx[0][0] * unk1BC->unk3C.x;
+	unk1A4[1].y = mPosition.y + mtx[1][0] * unk1BC->unk3C.x + 70.0f;
+	unk1A4[1].z = mPosition.z + mtx[2][0] * unk1BC->unk3C.x;
+	hangingBoardControlPad();
+}
 
 void THangingBridgeBoard::calcDefaultMtx()
 {
@@ -308,7 +368,11 @@ void THangingBridge::initDraw() const
 	GXSetCullMode(GX_CULL_BACK);
 }
 
-f32 THangingBridgeBoard::mRopeWidthX = 10.0f;
+f32 THangingBridgeBoard::mMarioAccelY        = 0.15f;
+f32 THangingBridgeBoard::mMarioHipDropAccelY = 2.0f;
+f32 THangingBridgeBoard::mReturnAccelRate    = 0.005f;
+f32 THangingBridgeBoard::mSpeedDownRate      = 0.98f;
+f32 THangingBridgeBoard::mRopeWidthX         = 10.0f;
 f32 THangingBridgeBoard::mRopeWidthZ = 7.0f;
 f32 THangingBridgeBoard::mTexPosRate = 0.01f;
 
