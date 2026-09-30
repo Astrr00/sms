@@ -861,18 +861,25 @@ void TDonchou::loadAfter()
 	}
 }
 
+static inline void startDonchouCamera(TDonchou* self)
+{
+	char pad[0xC];
+	pad[0] = 0;
+	SMSGetMarDirector()->fireStartDemoCamera(
+	    "どん帳カメラ", &self->mPosition, -1, 0.0f, true, nullptr, 0, nullptr,
+	    JDrama::TFlagT<u16>(0));
+}
+
 void TDonchou::calcRootMatrix()
 {
 	J3DModel* model = getModel();
-	struct {
-		char pad[0x10];
-		Mtx mtx;
-	} local;
-	MsMtxSetXYZRPH(local.mtx, mPosition.x, mPosition.y + unk140, mPosition.z,
+	Mtx mtx;
+	MtxPtr mtxPtr = mtx;
+	MsMtxSetXYZRPH(mtxPtr, mPosition.x, mPosition.y + unk140, mPosition.z,
 	               mRotation.x, mRotation.y, mRotation.z);
-	model->setBaseTRMtx(local.mtx);
+	model->setBaseTRMtx(mtxPtr);
 	model->setBaseScale(mScaling);
-	local.mtx[1][3] += unk140;
+	mtxPtr[1][3] += unk140;
 	if (unk144 != nullptr && unk144->unk194 && unk148->unk194)
 		unk13C = 1;
 	if (unk13C != 0) {
@@ -885,9 +892,7 @@ void TDonchou::calcRootMatrix()
 				SMSGetMSound()->startSoundActor(MSD_SE_SY_DONCHO_OPEN,
 				                                &mPosition, 0, nullptr, 0, 4);
 				mMActor->setBck("donchou");
-				SMSGetMarDirector()->fireStartDemoCamera(
-				    "どん帳カメラ", &mPosition, -1, 0.0f, true, nullptr, 0,
-				    nullptr, JDrama::TFlagT<u16>(0));
+				startDonchouCamera(this);
 				J3DFrameCtrl* fc = mMActor->getFrameCtrl(ANM_TYPE_BCK);
 				fc->setRate(0.5f * fc->getRate());
 			}

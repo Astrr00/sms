@@ -16761,3 +16761,31 @@ Nur `MapObjLib` hat sich geändert.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R495B (`TDonchou::calcRootMatrix`)
+
+**Vollmatch, strikt.**
+
+- `Mtx mtx` plus `MtxPtr mtxPtr = mtx` hält `r29 = r1+0x34` über die Aufrufe.
+- Ohne den Zeiger fällt der Rahmen auf `-0x88` und `r29` wird nicht gesichert.
+- `startDonchouCamera` ist `static inline` und wird nicht emittiert.
+- Darin liegt `char pad[0xC]; pad[0] = 0;` direkt vor `fireStartDemoCamera`.
+- Das tote Slot setzt das `TFlagT<u16>(0)`-Temp auf `r1+0x30` (`sth` / `addi`).
+- Ohne `pad[0] = 0` streicht DCE das Array, Rahmen `-0x80`.
+- Header unverändert.
+
+0 Abweichungen, 516 Bytes, 129 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/MapObjSirena`: PASS.
+Eine UNUSED-Größenwarnung schon vorher: `getSlotResult__13TItemSlotDrumFv` (Map `0x8c`, Objekt `0xe4`).
+
+`ninja changes_all` gegen `95048251`: fuzzy bleibt 81.081894 %
+(die Funktion war schon 99.9845 % fuzzy).
+matched code 52.205296 % -> 52.219666 % (1874216 -> 1874732, +516).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9816 -> 9817.
+`MapObjSirena` 14908 -> 15424 (+516), Funktionen 86 -> 87.
+Fuzzy der Unit 99.09931 % -> 99.09972 %.
+Complete units bleiben 416.
+Nur `MapObjSirena` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
