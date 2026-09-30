@@ -667,7 +667,38 @@ void TFluff::kill()
 
 void TFluff::control() { }
 
-void TFluff::appear() { }
+void TFluff::appear()
+{
+	// Dead slot so the MsRandF spills sit 0x18 higher and the frame stays 0x70.
+	char trash[24];
+
+	makeObjAppeared();
+
+	TFluffManager* mgr = (TFluffManager*)unk168;
+	// Declared y-then-z so the first scatter keeps Z in f30 and Y in f31.
+	f32 y;
+	f32 z;
+	z = mgr->unk138.y * (MsRandF() * 2.0f - 1.0f);
+	y = MsRandF() * (mgr = (TFluffManager*)unk168)->mPosition.y;
+	f32 x = mgr->unk138.x * (MsRandF() * 2.0f - 1.0f);
+	mPosition.x = x;
+	mPosition.y = y;
+	mPosition.z = z;
+	mInitialPosition = mPosition;
+	mScaling.x = 0.0001f;
+	mScaling.y = 0.0001f;
+	mScaling.z = 0.0001f;
+	unk154.z = 0.0f;
+	unk154.y = 0.0f;
+	unk154.x = 0.0f;
+	unk148 = 0.0f;
+	unk150 = 0.8f * MsRandF() + 0.2f;
+	unk140 = sinf(3.14f * mRotation.y / 180.0f);
+	unk144 = cosf(3.14f * mRotation.y / 180.0f);
+	unk148 = 360.0f * MsRandF();
+	unk14C = 0.3f;
+	mState = 2;
+}
 
 void TFluff::initMapObj()
 {
