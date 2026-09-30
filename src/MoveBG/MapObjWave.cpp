@@ -229,7 +229,63 @@ void TMapObjWave::perform(u32 cue, JDrama::TGraphics*)
 	trash[0] = 0;
 }
 
-void TMapObjWave::load(JSUMemoryInputStream&) { }
+void TMapObjWave::load(JSUMemoryInputStream& stream)
+{
+	JDrama::TNameRef::load(stream);
+	unk10 = 5200.0f;
+	unk1C = 200.0f;
+	f32 half = 0.5f;
+	unk14 = unk10 * half;
+	unk18 = 1.0f / unk14;
+	unk20 = static_cast<int>(unk10 / unk1C);
+	unk94 = JKRFileLoader::getGlbResource("/scene/map/map/wave.bti");
+	unk60 = 0.0015f;
+	unk74 = 0.0012f;
+	unk78 = 0.0015f;
+	unk4C = 400.0f;
+	unk50 = 150.0f;
+	unk24 = 0.02f;
+	unk28 = 0.03f;
+
+	switch (gpMarDirector->getCurrentMap()) {
+	case 3:
+	case 0x1E:
+		unk2C = 25.0f;
+		unk30 = 20.0f;
+		unk34 = 0.0f;
+		unk38 = 0.0f;
+		unk3C = unk2C;
+		unk40 = unk30;
+		break;
+	case 4:
+		unk2C = 40.0f;
+		unk30 = 30.0f;
+		unk34 = 5.0f;
+		unk38 = 0.0f;
+		break;
+	case 0xD:
+		unk2C = 30.0f;
+		unk30 = 25.0f;
+		unk34 = 5.0f;
+		unk38 = 0.0f;
+		break;
+	case 9:
+	case 0x34:
+		unk2C = 10.0f;
+		unk30 = 15.0f;
+		unk34 = 0.0f;
+		unk38 = 0.0f;
+		break;
+	default:
+		unk2C = 30.0f;
+		unk30 = 25.0f;
+		unk34 = 0.0f;
+		unk38 = 0.0f;
+		break;
+	}
+	unk3C = unk2C;
+	unk40 = unk30;
+}
 
 TMapObjWave::TMapObjWave(const char* name)
     : JDrama::TViewObj(name)

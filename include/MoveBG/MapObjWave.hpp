@@ -32,7 +32,7 @@ public:
 	/* 0x10 */ f32 unk10;
 	/* 0x14 */ f32 unk14;
 	/* 0x18 */ f32 unk18;
-	/* 0x1C */ u32 unk1C;
+	/* 0x1C */ f32 unk1C;
 	/* 0x20 */ u32 unk20;
 	/* 0x24 */ f32 unk24;
 	/* 0x28 */ f32 unk28;
