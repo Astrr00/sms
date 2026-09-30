@@ -617,7 +617,47 @@ void TShellCup::loadAfter()
 	unk138[4].unk80 = (u32)unk4A0;
 }
 
-void TShellCup::initMapObj() { }
+// Groups the three stores so MWCC emits stfsu.
+static inline void setShellCupDamageScale(JGeometry::TVec3<f32>& v)
+{
+	v.x = 2.0f;
+	v.y = 1.2f;
+	v.z = 2.0f;
+}
+
+void TShellCup::initMapObj()
+{
+	char trash[0x10];
+	TMapObjBase::initMapObj();
+	for (int i = 0; i < 6; ++i) {
+		unk138[i].unk68 = 0;
+		unk138[i].unk6C = 0.0f;
+		unk138[i].unk70 = 8.0f;
+		unk138[i].unk74 = (u32)getModel()->getAnmMtx(i + 1);
+		unk138[i].unk78 = (u32)getModel()->getModelData()->getJointNodePointer(
+		    (u16)(i + 1));
+		unk138[i].unk7C = (int)((f32)rand() * 0.000030517578f * 1200.0f);
+		unk138[i].unk8C = (u32)this;
+		TMapObjBase::joinToGroup("オブジェクトグループ", &unk138[i]);
+
+		unk138[i].unk84 = (u32) new TMapCollisionMove;
+		((TMapCollisionMove*)unk138[i].unk84)
+		    ->init("/mapObj/ShellCup", 0, this);
+		((TMapCollisionMove*)unk138[i].unk84)->setUp();
+
+		unk138[i].unk88 = (u32)new TDamageObj("ダメージオブジェ");
+		setShellCupDamageScale(
+		    ((TDamageObj*)unk138[i].unk88)->mScaling);
+		((TDamageObj*)unk138[i].unk88)->init(0x10000036);
+		((TDamageObj*)unk138[i].unk88)
+		    ->onHitFlag(HIT_FLAG_NO_COLLISION);
+	}
+
+	TMapCollisionStatic* col = new TMapCollisionStatic;
+	col->init("/mapObj/ShellCup_rink", 2, this);
+	MTXCopy(getModel()->getAnmMtx(0), col->unk20);
+	col->setUp();
+}
 
 TShellCup::TShellCup(const char* name)
     : TMapObjBase(name)
@@ -631,7 +671,66 @@ void TMerrygoround::control() { }
 
 void TMerrygoround::draw() const { }
 
-void TMerrygoround::initMapObj() { }
+void TMerrygoround::initMapObj()
+{
+	TMapObjBase::initMapObj();
+
+	{
+		int eggOff   = 0;
+		int otherOff = 0;
+		for (u16 i = 1; i < getModel()->getModelData()->getJointNum();
+		     ++i) {
+			const char* name
+			    = getModel()->getModelData()->getJointName()->getName(i);
+			if (strstr(name, "egg") != nullptr) {
+				u16& slot = *(u16*)((u8*)this + eggOff + 0x140);
+				slot      = i;
+				eggOff += 2;
+			} else if (strcmp(name, "yoshi_warp") == 0) {
+				unk1A4 = i;
+			} else if (strcmp(name, "up") == 0) {
+			} else if (strcmp(name, "down") == 0) {
+			} else if (strcmp(name, "KAGE_2") == 0) {
+			} else {
+				u16& slot = *(u16*)((u8*)this + otherOff + 0x18C);
+				slot      = i;
+				otherOff += 2;
+			}
+		}
+	}
+
+	for (int n = 0; n < 2; ++n) {
+		TMapObjBase* egg = TMapObjBaseManager::newAndRegisterObj(
+		    "merry_egg", JGeometry::TVec3<f32>(0.0f, 0.0f, 0.0f),
+		    JGeometry::TVec3<f32>(0.0f, 0.0f, 0.0f),
+		    JGeometry::TVec3<f32>(1.0f, 1.0f, 1.0f));
+		(&unk138)[n] = (u32)egg;
+		((TMapObjBase*)(&unk138)[n])->appear();
+	}
+
+	for (int n = 0; n < 9; ++n) {
+		TMapObjBase* pole = TMapObjBaseManager::newAndRegisterObj(
+		    "merry_pole", JGeometry::TVec3<f32>(0.0f, 0.0f, 0.0f),
+		    JGeometry::TVec3<f32>(0.0f, 0.0f, 0.0f),
+		    JGeometry::TVec3<f32>(1.0f, 1.0f, 1.0f));
+		unk144[n] = (u32)pole;
+		((TMapObjBase*)unk144[n])->appear();
+		unk168[n] = (u32) new TMapCollisionMove;
+		((TMapCollisionMove*)unk168[n])
+		    ->init("/scene/mapObj/merry_yoshi.col", 0, this);
+		((TMapCollisionMove*)unk168[n])->setUp();
+	}
+
+	TMapObjBase* stage = TMapObjBaseManager::newAndRegisterObj(
+	    "ChangeStageMerrygoround", JGeometry::TVec3<f32>(0.0f, 0.0f, 0.0f),
+	    JGeometry::TVec3<f32>(0.0f, 0.0f, 0.0f),
+	    JGeometry::TVec3<f32>(1.0f, 1.0f, 1.0f));
+	unk1A0                                   = (u32)stage;
+	((TMapObjChangeStage*)unk1A0)->unk138    = 0x29;
+	((TMapObjBase*)unk1A0)->mScaling.y      *= 1.5f;
+	((TMapObjBase*)unk1A0)->makeObjAppeared();
+	TMapObjBase::joinToGroup("マップグループ", (TMapObjBase*)unk1A0);
+}
 
 TMerrygoround::TMerrygoround(const char* name)
     : TMapObjBase(name)

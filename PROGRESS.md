@@ -16628,3 +16628,35 @@ Nur `MapObjRailBlock` hat sich geändert.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R490B (`TShellCup::initMapObj`)
+
+**Vollmatch, strikt.**
+
+- Sechs Schalen.
+  `unk68`/`unk6C`/`unk70`, dann Anm-Mtx und Joint von `i + 1`.
+- `rand` skaliert mit `1/32768 * 1200`.
+  `joinToGroup("オブジェクトグループ")`.
+- `TMapCollisionMove` auf `/mapObj/ShellCup`, danach `TDamageObj`.
+  `setShellCupDamageScale` erzeugt `stfsu` auf `mScaling` (2, 1.2, 2), dann `init(0x10000036)` und `HIT_FLAG_NO_COLLISION`.
+- Rink ist `TMapCollisionStatic` mit `MTXCopy` von Anm-Mtx 0.
+- `char trash[0x10]` hält den Rahmen bei `-0xb8`.
+- `TMerrygoround::initMapObj` legt die sechs Strings davor in `.rodata`.
+  Die Funktion selbst ist 99.2 % (nur GPR und Stack-Slots), kein Vollmatch.
+
+0 Abweichungen, 592 Bytes, 148 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/MapObjPinna`: PASS
+(6 bekannte UNUSED-Stub-Größen).
+
+`TPinnaShell::TPinnaShell` und `TMerrygoround::control` unberührt.
+`MapObjBase.hpp` unverändert.
+
+`ninja changes_all` gegen `f0ae6102`: fuzzy 81.00208 % -> 81.039024 %,
+matched code 52.143566 % -> 52.16006 % (1872000 -> 1872592, +592).
+Matched data 66.91524 % -> 67.05891 % (428479 -> 429399, +920).
+Funktionen matched 9812 -> 9813.
+`MapObjPinna` 11484 -> 12076 (+592), Funktionen 65 -> 66.
+`.rodata` der Unit jetzt 100 %.
+Complete units bleiben 416.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
