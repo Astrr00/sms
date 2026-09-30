@@ -1,8 +1,11 @@
+#include <MoveBG/LeafBoatVec3.hpp>
 #include <MoveBG/MapObjBianco.hpp>
 #include <MoveBG/MapObjManager.hpp>
 #include <JSystem/JDrama/JDRNameRefGen.hpp>
 #include <MoveBG/MapObjMessenger.hpp>
 #include <Map/MapCollisionManager.hpp>
+#include <Map/Map.hpp>
+#include <Map/MapCollisionData.hpp>
 #include <MarioUtil/MathUtil.hpp>
 #include <MarioUtil/DrawUtil.hpp>
 #include <MarioUtil/PacketUtil.hpp>
@@ -295,9 +298,75 @@ TBiancoMiniWindmill::TBiancoMiniWindmill(const char* name)
 
 void TLeafBoat::touchActor(THitActor*) { }
 
+#pragma dont_inline on
 void TLeafBoat::touchWall(JGeometry::TVec3<f32>*, TBGWallCheckRecord*) { }
+#pragma dont_inline off
 
-void TLeafBoat::bind() { }
+static f32 leafBoatSurfaceY(TLeafBoat* self)
+{
+	return self->mPosition.y - self->mYOffset;
+}
+
+static f32 leafBoatRadius(TLeafBoat* self) { return self->mBodyRadius; }
+
+static void leafBoatAttackMario(TLeafBoat* self)
+{
+	const JGeometry::TVec3<f32>& mario = SMS_GetMarioPos();
+	f32 marioY                         = mario.y;
+	f32 boatY                          = leafBoatSurfaceY(self);
+	f32 dx                             = mario.x - self->mPosition.x;
+	f32 dz                             = mario.z - self->mPosition.z;
+	f32 radius                         = leafBoatRadius(self);
+	if (marioY <= boatY && (boatY - 100.0f) < marioY
+	    && dx * dx + dz * dz < radius * radius)
+		SMS_SendMessageToMario(self, HIT_MESSAGE_ATTACK);
+}
+
+void TLeafBoat::bind()
+{
+	JGeometry::TVec3<f32> pos = mPosition;
+	const TBGCheckData* ground;
+	JGeometry::TVec3<f32> vel;
+	JGeometry::TVec3<f32> center;
+	TBGWallCheckRecord rec;
+	JGeometry::TVec3<f32> velX = mVelocity;
+	pos.x += velX.x;
+	JGeometry::TVec3<f32> velZ = mVelocity;
+	pos.z += velZ.z;
+	char gap[0x18];
+	JGeometry::TVec3<f32> delta;
+	char tail[0x30];
+	{
+		f32 groundH = gpMap->checkGroundIgnoreWaterSurface(
+		    pos.x, mPosition.y - mYOffset, pos.z, &ground);
+		if (groundH > (mPosition.y - mYOffset) - 50.0f) {
+			vel = mVelocity;
+			calcReflectingVelocity(ground, 1.0f, &vel);
+			mVelocity.x *= -1.0f;
+			mVelocity.z *= -1.0f;
+			pos = mPosition;
+		}
+
+		center.x = pos.x;
+		center.y = pos.y - mYOffset;
+		center.z = pos.z;
+		groundH  = mBodyRadius;
+		rec.mCenter     = center;
+		rec.mRadius     = groundH;
+		rec.mMaxResults = 4;
+		rec.mFlags      = TBGWallCheckRecord::DONT_MOVE_XZ;
+		if (gpMap->isTouchedWallsAndMoveXZ(&rec))
+			touchWall(&pos, &rec);
+	}
+
+	delta = pos;
+	delta.sub(mPosition);
+	mLinearVelocity = delta;
+	gap[0]          = 0;
+	tail[0]         = 0;
+
+	leafBoatAttackMario(this);
+}
 
 void TLeafBoat::control()
 {
