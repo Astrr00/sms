@@ -17539,3 +17539,27 @@ Nur `WaterGun` hat sich geändert.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R518B (`TNozzleBase::emitCommon`)
+
+**Vollmatch, strikt.**
+
+- `char trash[8]` vor den drei `TVec3` und `char trash2[0x10]` dahinter.
+  `pos` liegt auf `r1+0x50`, der Rahmen ist `-0x78`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 408 Bytes, 102 Instruktionen.
+`validate-symbol-order` `mario/Player/WaterGun`: PASS
+(ererbte schwache Ordnung, UNUSED-Größen, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `bc14127d`: fuzzy 81.12591 % -> 81.125946 %,
+matched code 52.47125 % -> 52.482613 % (1883764 -> 1884172, +408).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9845 -> 9846.
+`WaterGun` 5944 -> 6352 (+408), Funktionen 31 -> 32.
+Fuzzy der Unit 97.8787 % -> 97.88284 %.
+Complete units bleiben 416.
+Nur `WaterGun` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+

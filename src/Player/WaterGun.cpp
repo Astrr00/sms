@@ -273,13 +273,13 @@ void TNozzleBase::emitCommon(int param_1, TWaterEmitInfo* param_2)
 	    gpModelWaterManager->mWaterParticleTypes[mEmitParams.mType.get()]
 	        ->mAlive.get());
 
+	char trash[8];
 	JGeometry::TVec3<f32> pos;
 	JGeometry::TVec3<f32> dir;
 	JGeometry::TVec3<f32> speed;
+	char trash2[0x10];
 	mFludd->getEmitPosDirSpeed(param_1, &pos, &dir, &speed);
 
-	// TODO: This feels wrong
-	// TODO: Fix asm
 	param_2->mPos.value = pos;
 	param_2->mV.value   = speed;
 	param_2->mDir.value = dir;
