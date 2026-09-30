@@ -142,14 +142,35 @@ template <typename T> struct TMatrix33 : public T {
 #include <Player/MarioAccess.hpp>
 #include <System/Particles.hpp>
 
-// Incomplete: only getRootJointMtx is defined here. Not a TLiveActor
-// subclass, so this TU does not emit the grip vtable.
+// Slot 0x20 of TMapCollisionBase. No body, so the call stays virtual.
+class TGripCollision {
+public:
+	virtual void init(const char*, u16, const TLiveActor*);
+	virtual void moveSRT(const JGeometry::TVec3<f32>&,
+	                     const JGeometry::TVec3<f32>&,
+	                     const JGeometry::TVec3<f32>&);
+	virtual void moveTrans(const JGeometry::TVec3<f32>&);
+	virtual void moveMtx(MtxPtr);
+	virtual void setUp();
+	virtual void setUpTrans(const JGeometry::TVec3<f32>&);
+	virtual void remove();
+};
+
+// Incomplete. Not a TLiveActor subclass, so this TU does not emit the
+// grip vtable.
 class TBathtubGrip {
 public:
+	void kill();
+	void removeCollisions_();
 	Mtx* getRootJointMtx() const;
 
-	/* 0x0 */ u8 pad[0x200];
+	/* 0x0 */ u8 pad0[0x150];
+	/* 0x150 */ TGripCollision* unk150[5];
+	/* 0x164 */ TGripCollision* unk164[17];
+	/* 0x1A8 */ u8 pad1A8[0x58];
 	/* 0x200 */ s32 unk200[1];
+	/* 0x204 */ u8 pad204[0x46];
+	/* 0x24A */ u8 unk24A;
 };
 
 // Incomplete. Joint index lives on the grip at unk200[unkF8]. Not a
@@ -207,11 +228,26 @@ BOOL TBathtubGripPartsHard::receiveMessage(THitActor* sender, u32 message)
 	return unkF4->receiveMessage(sender, message);
 }
 
+void TBathtubGrip::kill()
+{
+	unk24A = 1;
+	reinterpret_cast<TMapObjBase*>(this)->makeObjDead();
+	removeCollisions_();
+}
+
 Mtx* TBathtubGrip::getRootJointMtx() const
 {
 	return (Mtx*)reinterpret_cast<const TLiveActor*>(this)
 	    ->getModel()
 	    ->getBaseTRMtx();
+}
+
+void TBathtubGrip::removeCollisions_()
+{
+	for (int i = 0; i < 17; ++i)
+		unk164[i]->remove();
+	for (int i = 0; i < 5; ++i)
+		unk150[i]->remove();
 }
 
 // Leading zeroes so the four .jpa paths sit at the retail rodata offsets.
