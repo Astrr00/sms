@@ -99,15 +99,17 @@ public:
 	{
 		TTimeRec* inst = _instance;
 
-		// TODO: there must be some kind of a trick to unify
-		// this with the overload above that does 4 separate byte
-		// writes....
-		volatile u32 tmp = param_1;
+		// Dead copies keep the -0x50 frame; col is the volatile reload.
+		u32 a = param_1;
+		u32 b = a;
+		u32 c = b;
+		u32 d = c;
+		volatile u32 tmp = d;
 		u32 col          = tmp;
 		if (!inst)
 			return;
 		OSTick tick = OSGetTick();
-		inst->crTimeAry()[0].append(tick, param_1);
+		inst->crTimeAry()[0].append(tick, col);
 	}
 
 	static void startTimerTwice(u32 tick, u32 param_1)

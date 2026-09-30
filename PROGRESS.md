@@ -16868,3 +16868,31 @@ Die Baseline-Datei liegt noch vor `putOnLight`, deshalb listet `report_changes.j
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R501B (`TSnapTimeObj::perform`)
+
+**Vollmatch, strikt.**
+
+- `startTimer(u32)` bleibt `static inline` und wird nicht emittiert.
+- `append` bekommt `col`, das volatile Reload, nicht `param_1`.
+- Sonst landet der Wert in `r30` und das Reload in totem `r0`.
+- Vier tote `u32`-Kopien vor `volatile u32 tmp`.
+- Das hält den Rahmen bei `-0x50` und das Spill bei `r1+0x38`.
+- Ohne die Kopien bleibt das Spill auf `r1+0x28` und der Rahmen auf `-0x40`.
+- `char trash[]` schiebt nur die gesicherten Register, nicht das Spill.
+
+0 Abweichungen, 228 Bytes, 57 Instruktionen.
+`validate-symbol-order` `mario/System/SnapTimeObj`: PASS.
+Ein objekt-only Weak (`TViewObj::~TViewObj`) ist schon vorher da.
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `9dc4d867`: fuzzy 81.11332 % -> 81.11336 %.
+matched code 52.25354 % -> 52.259888 % (1875948 -> 1876176, +228).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9819 -> 9820.
+`SnapTimeObj` 116 -> 344 (+228), Funktionen 1 -> 2.
+Fuzzy der Unit 99.69768 % -> 100.0 %.
+Complete units bleiben 416.
+Nur `SnapTimeObj` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
