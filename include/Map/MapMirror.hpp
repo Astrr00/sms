@@ -67,6 +67,11 @@ public:
 
 class TMirrorModelObj : public TMirrorModel {
 public:
+	TMirrorModelObj()
+	    : unk28(nullptr)
+	{
+	}
+
 	virtual void init(const char*);
 	virtual void calc();
 	virtual void setPlane();

@@ -499,6 +499,8 @@ public:
 #include <Player/MarioAccess.hpp>
 #include <GC2D/GCConsole2.hpp>
 #include <Map/MapStaticObject.hpp>
+#include <Map/MapMirror.hpp>
+#include <printf.h>
 
 // -inline deferred: source order is the reverse of mario.MAP emission order.
 
@@ -1177,7 +1179,35 @@ void TLeanMirror::initMapObj()
 	}
 }
 
-void TLeanMirror::load(JSUMemoryInputStream&) { }
+void TLeanMirror::load(JSUMemoryInputStream& stream)
+{
+	TMapObjBase::load(stream);
+
+	f32 angle;
+	stream.read(&angle, 4);
+	unk138 = (100.0f * angle) / 2.0f;
+	unk13C = unk138;
+
+	if (gpMarDirector->unk7D == 1) {
+		char name[0x40];
+		stream.readString(name, 0x40);
+		stream.read(&unk1A0.x, 4);
+		stream.read(&unk1A0.y, 4);
+		stream.read(&unk1A0.z, 4);
+	}
+
+	TMirrorModelObj* mirror = new TMirrorModelObj;
+	char path[0x40];
+	snprintf(path, 0x40, "/scene/mapObj/%sTop.bmd", unkF4);
+	mirror->init(path);
+	mirror->unk28 = getModel();
+
+	if (gpMarDirector->unk7D != 1)
+		mState = 4;
+
+	char trash[0x30];
+	(void)trash;
+}
 
 TLeanMirror::TLeanMirror(const char* name)
     : TMapObjBase(name)
@@ -1208,9 +1238,8 @@ void TShiningStone::endDemo() { }
 void TShiningStone::putOnLight(TLiveActor* actor)
 {
 	// fabricated. File-scope pads all land at the front of .rodata.
-	// This literal is the slot after load()'s jpa strings:
-	// 0xDF chars + NUL = 0xE0, so load()'s pooled addends drop onto
-	// the retail offsets while SandBombBasePyramid stays at 0x494.
+	// 0xC7 chars + NUL. TLeanMirror::load's path literal is the other
+	// 0x18, keeping SandBombBasePyramid at 0x494.
 	strcmp((const char*)actor,
 	       "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 	       "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
@@ -1218,7 +1247,7 @@ void TShiningStone::putOnLight(TLiveActor* actor)
 	       "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 	       "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 	       "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-	       "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+	       "XXXXXXX");
 }
 
 void TShiningStone::perform(u32 cue, JDrama::TGraphics* graphics)
