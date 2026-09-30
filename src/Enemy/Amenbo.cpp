@@ -224,6 +224,7 @@ void TAmenbo::calcRootMatrix()
 	}
 
 	TPosition3f mtx;
+	char trash[4];
 	mtx.setQT(mQuat, mPosition);
 	getModel()->setBaseScale(mScaling);
 	getModel()->setBaseTRMtx(mtx);

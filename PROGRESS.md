@@ -17613,3 +17613,27 @@ Nur `WaterGun` hat sich geändert.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R507A (`TAmenbo::calcRootMatrix`)
+
+**Vollmatch, strikt.**
+
+- `char trash[4]` hinter der `TPosition3f` legt die Matrix auf `r1+0x40`.
+  Der Rahmen bleibt `-0x90`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 352 Bytes, 88 Instruktionen.
+`validate-symbol-order` `mario/Enemy/Amenbo`: PASS gegen die Basis
+(schwache Ordnung, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `ec09356d`: fuzzy bleibt 81.12644 %,
+matched code 52.52696 % -> 52.536762 % (1885764 -> 1886116, +352).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9848 -> 9849.
+`Amenbo` 4476 -> 4828 (+352), Funktionen 34 -> 35.
+Fuzzy der Unit 98.8349 % -> 98.83686 %.
+Complete units bleiben 416.
+Nur `Amenbo` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
