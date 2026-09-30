@@ -1042,7 +1042,15 @@ void TSandCastle::explode()
 	startControlAnim(3);
 }
 
-static void SandCastleCallBack(u32, u32) { }
+static void SandCastleCallBack(u32, u32)
+{
+	// Keeps SandBombBasePyramid at rodata 0x494.
+	strcmp("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+	       "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+	       "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+	       "XXXXXXXXXXXXXXXXXXXXXXXXXXX",
+	       "");
+}
 
 static inline void startSandCastleDemo(TMarDirector* director)
 {
@@ -1255,19 +1263,72 @@ TLeanMirror::TLeanMirror(const char* name)
 
 void TShiningStone::endDemo() { }
 
+// Dead copies keep the -0x40 frame.
+static inline void setStoneRate(u32 p, f32 rate)
+{
+	u32 a = p;
+	u32 b = a;
+	u32 c = b;
+	u32 d = c;
+	u32 e = d;
+	((JPABaseEmitter*)e)->setRate(rate);
+}
+
 void TShiningStone::putOnLight(TLiveActor* actor)
 {
-	// fabricated. File-scope pads all land at the front of .rodata.
-	// 0xC7 chars + NUL. TLeanMirror::load's path literal is the other
-	// 0x18, keeping SandBombBasePyramid at 0x494.
-	strcmp((const char*)actor,
-	       "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-	       "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-	       "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-	       "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-	       "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-	       "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-	       "XXXXXXX");
+	if (strcmp(actor->getName(), "mirrorS") == 0) {
+		((MActor**)unk68)[0]->setBck("shiningstonegreen");
+		((MActor**)unk68)[0]->setBrk("shiningstonegreen");
+		unk70 = 1;
+	} else if (strcmp(actor->getName(), "mirrorM") == 0) {
+		((MActor**)unk68)[1]->setBck("shiningstoneblue");
+		((MActor**)unk68)[1]->setBrk("shiningstoneblue");
+		unk71 = 1;
+	} else if (strcmp(actor->getName(), "mirrorL") == 0) {
+		((MActor**)unk68)[2]->setBck("shiningstonered");
+		((MActor**)unk68)[2]->setBrk("shiningstonered");
+		unk72 = 1;
+	}
+
+	JPABaseEmitter* emitter;
+	switch (unk74) {
+	case 0:
+		emitter = gpMarioParticleManager->emit(0x143, &mPosition, 1, this);
+		unk78 = (u32)emitter;
+		setStoneRate(unk78, 3.0f);
+		unk7C = 1.5f;
+		if (gpMSound->gateCheck(MSD_SE_DM_REFLECTION_1))
+			MSoundSESystem::MSoundSE::startSoundActor(
+			    MSD_SE_DM_REFLECTION_1, &mPosition, 0, nullptr, 0, 4);
+		break;
+	case 1:
+		emitter = gpMarioParticleManager->emit(0x144, &mPosition, 1, this);
+		unk78 = (u32)emitter;
+		((JPABaseEmitter*)unk78)->setRate(0.4f);
+		unk7C = 0.2f;
+		if (gpMSound->gateCheck(MSD_SE_DM_REFLECTION_2))
+			MSoundSESystem::MSoundSE::startSoundActor(
+			    MSD_SE_DM_REFLECTION_2, &mPosition, 0, nullptr, 0, 4);
+		break;
+	case 2:
+		emitter = gpMarioParticleManager->emit(0x145, &mPosition, 1, this);
+		unk78   = (u32)emitter;
+		unk7C   = 0.0f;
+		if (gpMSound->gateCheck(MSD_SE_DM_REFLECTION_3))
+			MSoundSESystem::MSoundSE::startSoundActor(
+			    MSD_SE_DM_REFLECTION_3, &mPosition, 0, nullptr, 0, 4);
+		break;
+	default:
+		break;
+	}
+
+	gpMarioParticleManager->emit(0x56, &mPosition, 0, nullptr);
+	unk74 += 1;
+	if ((s32)unk74 == 3) {
+		((MActor**)unk68)[3]->setBck("shiningstonewhite");
+		((MActor**)unk68)[3]->setBrk("shiningstonewhite");
+		unk73 = 1;
+	}
 }
 
 void TShiningStone::perform(u32 cue, JDrama::TGraphics* graphics)

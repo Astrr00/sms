@@ -16789,3 +16789,40 @@ Nur `MapObjSirena` hat sich geändert.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R490A (`TShiningStone::putOnLight`)
+
+**Vollmatch, strikt.**
+
+- `strcmp` auf `getName()` gegen `mirrorS`, `mirrorM` und `mirrorL`.
+- Treffer setzt `setBck` und `setBrk` auf `shiningstonegreen`, `shiningstoneblue` oder `shiningstonered`.
+- Dazu `unk70`, `unk71` oder `unk72`.
+- `switch (unk74)`: Fall 0 emittiert `0x143`, `setRate(3.0f)`, `unk7C = 1.5f`, Sound `MSD_SE_DM_REFLECTION_1`.
+- Fall 1 emittiert `0x144`, `setRate(0.4f)`, `unk7C = 0.2f`, Sound `MSD_SE_DM_REFLECTION_2`.
+- Fall 2 emittiert `0x145`, kein `setRate`, `unk7C = 0.0f`, Sound `MSD_SE_DM_REFLECTION_3`.
+- Danach immer `emit(0x56)` mit Count 0 und `nullptr`, dann `unk74 += 1`.
+- Bei `(s32)unk74 == 3` kommen `shiningstonewhite` und `unk73`.
+- `setStoneRate` ist `static inline` und wird nicht emittiert.
+- Fünf tote `u32`-Kopien darin, nur im Fall 0 aufgerufen.
+- Ohne die Kopien bleibt der Rahmen bei `-0x28` oder `-0x38`.
+- Mit ihnen ist der Rahmen `-0x40`, ohne Extra-Instruktion.
+- `SandCastleCallBack` behält ein `0x7C`-Stringliteral.
+- Damit bleibt `SandBombBasePyramid` bei rodata `0x494`.
+- Die Callback-Funktion selbst bleibt nonmatching.
+- Ohne das Literal rutschen die SandBomb-`addi`-Offsets um `-0x7C`.
+- Header unverändert.
+
+0 Abweichungen, 672 Bytes, 168 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/MapObjMamma`: PASS.
+Acht UNUSED-Größenwarnungen schon vorher, darunter `endDemo__13TShiningStoneFv`.
+
+`ninja changes_all` gegen `a145e0ae`: fuzzy 81.081894 % -> 81.100555 %,
+matched code 52.219666 % -> 52.238388 % (1874732 -> 1875404, +672).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9817 -> 9818.
+`MapObjMamma` 15416 -> 16088 (+672), Funktionen 89 -> 90.
+Fuzzy der Unit 76.43904 % -> 79.75064 %.
+Complete units bleiben 416.
+Nur `MapObjMamma` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
