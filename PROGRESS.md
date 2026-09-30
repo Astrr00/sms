@@ -17637,3 +17637,26 @@ Nur `Amenbo` hat sich geändert.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R508A (`TDangoHamuKuri::receiveMessage`)
+
+**Vollmatch, strikt.**
+
+- `char trash[0x28]` am Funktionsanfang legt den Rahmen auf `-0x48`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 512 Bytes, 128 Instruktionen.
+`validate-symbol-order` `mario/Enemy/hamukuri`: PASS gegen die Basis
+(ererbte Linkage von `onHaveCap__13TDoroHamuKuriFv`, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `44fd2a38`: fuzzy bleibt 81.12644 %,
+matched code 52.536762 % -> 52.551025 % (1886116 -> 1886628, +512).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9849 -> 9850.
+`hamukuri` 27012 -> 27524 (+512), Funktionen 189 -> 190.
+Fuzzy der Unit 92.82021 % -> 92.82082 %.
+Complete units bleiben 416.
+Nur `hamukuri` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
