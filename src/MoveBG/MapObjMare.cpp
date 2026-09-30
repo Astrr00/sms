@@ -270,9 +270,86 @@ void TMapObjGrowTree::getGrowHeightFromRate(float) const { }
 
 void TMapObjGrowTree::updateHeight() { }
 
-u32 TMapObjGrowTree::touchWater(THitActor*) { return 0; }
-
 extern "C" MActor* getMActor__10TLiveActorCFv(const TLiveActor*);
+
+static inline void advanceGrowFrame(TMapObjGrowTree* self)
+{
+	f32 span  = self->unk13C;
+	f32 frame = self->getMActor()->getFrameCtrl(0)->getFrame();
+	self->getMActor()->getFrameCtrl(0)->setFrame(span + frame);
+}
+
+static inline f32 heldRise(TMapObjGrowTree* self)
+{
+	f32 span      = self->unk13C;
+	MActor* actor = self->mMActor;
+	f32 frame     = actor->getFrameCtrl(0)->getFrame();
+	f32 dy;
+	if (mGrowStartFrame < frame) {
+		if (self->mMActor->getFrameCtrl(0)->getFrame() < mGrowEndFrame) {
+			dy = span * self->unk138 / (mGrowEndFrame - mGrowStartFrame);
+			goto apply;
+		}
+	}
+	dy = 0.0f;
+apply:
+	return dy;
+}
+
+u32 TMapObjGrowTree::touchWater(THitActor* actor)
+{
+	JGeometry::TVec3<f32> pos;
+	char trash[0x48];
+	if (actor->mPosition.y > mPosition.y + unk148)
+		return 0;
+	if (isState(1)) {
+		startAnim(1);
+		mMActor->getFrameCtrl(0)->setRate(0.0f);
+		mState = 2;
+	}
+
+	s16 end   = getMActor()->getFrameCtrl(0)->getEnd();
+	f32 frame = getMActor()->getFrameCtrl(0)->getFrame();
+	if (frame < (f32)end) {
+		soundBas(MSD_SE_OBJ_SANDBOMB_WATER_1, 3.0f, unk13C);
+		soundBas(MSD_SE_OBJ_SANDBOMB_WATER_2, 67.0f, unk13C);
+		soundBas(MSD_SE_OBJ_SANDBOMB_WATER_3, 103.0f, unk13C);
+		soundBas(MSD_SE_OBJ_SANDBOMB_WATER_4, 137.0f, unk13C);
+		advanceGrowFrame(this);
+
+		if (mMActor->getFrameCtrl(0)->getFrame() > mGrowStartFrame) {
+			if (mMActor->getFrameCtrl(0)->getFrame() > mGrowEndFrame) {
+				mDamageHeight = unk138;
+				calcEntryRadius();
+			} else {
+				f32 cur = getMActor__10TLiveActorCFv(this)
+				              ->getFrameCtrl(0)
+				              ->getFrame();
+				mDamageHeight
+				    = unk148
+				      + (unk138 - unk148) * (cur - mGrowStartFrame)
+				            / (mGrowEndFrame - mGrowStartFrame);
+				calcEntryRadius();
+			}
+		} else {
+			mDamageHeight = unk148;
+			calcEntryRadius();
+		}
+
+		if (mHeldObject != nullptr) {
+			pos = mHeldObject->mPosition;
+			pos.y += heldRise(this);
+			mHeldObject->moveRequest(pos);
+		}
+	}
+
+	if (mMActor->getFrameCtrl(0)->getFrame() > mGrowEndFrame) {
+		setUpMapCollision(0);
+		mStateTimer = unk144;
+	}
+	(void)trash;
+	return 1;
+}
 
 static inline void rewindGrowFrame(TMapObjGrowTree* self, int idx)
 {

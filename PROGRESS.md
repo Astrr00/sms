@@ -16272,3 +16272,38 @@ Complete units bleiben 416.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R430 (`TMapObjGrowTree::touchWater`)
+
+**Vollmatch, strikt.**
+
+- `TMapObjGrowTree::touchWater` gibt 0 zurück, wenn das Wasser über
+  `mPosition.y + unk148` liegt.
+- In Zustand 1: `startAnim(1)`, Rate 0, Zustand 2.
+- Liegt der Frame vor `getEnd`, spielen die vier
+  `MSD_SE_OBJ_SANDBOMB_WATER_*` über `soundBas` mit `unk13C`.
+  `advanceGrowFrame` addiert `unk13C` auf den Frame.
+- `mDamageHeight` ist `unk138`, `unk148` oder die Lerp dazwischen.
+  Die Lerp geht über `getMActor`.
+- Hält das Objekt etwas, addiert `heldRise` die Höhe und ruft `moveRequest`.
+- Über `mGrowEndFrame`: `setUpMapCollision(0)`, `mStateTimer = unk144`.
+  Rückgabe ist 1.
+- `char trash[0x48]` hält das Frame bei `-0xe8` und den Vec bei `r1+0xb8`.
+- `MapObjMare.cpp` bleibt `NonMatching`.
+
+0 Abweichungen, 744 Bytes, 186 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/MapObjMare`: PASS
+(5 bekannte UNUSED-Stub-Größen).
+
+Übrige `MapObjMare`-Funktionen unverändert.
+`TMapObjGrowTree::control` und `TRevolvingFenceInner::controlWall` unberührt.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+
+`ninja changes_all`: fuzzy 80.264854 % -> 80.28542 %,
+matched code 51.352165 % -> 51.37289 % (1843588 -> 1844332, +744).
+Matched data bleibt 66.39675 % (425159).
+Funktionen matched 9764 -> 9765.
+`MapObjMare` 9212 -> 9956 (+744).
+Nur `MapObjMare` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
