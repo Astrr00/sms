@@ -1239,7 +1239,76 @@ void TBigWatermelon::touchGround(JGeometry::TVec3<f32>* param_1)
 	TMapObjBall::touchGround(param_1);
 }
 
-void TBigWatermelon::touchActor(THitActor*) { }
+class TPoiHana {
+public:
+	bool isMoving();
+};
+
+// Separate squares so fp_contract does not fuse the adds into fmadds.
+// A class-method inline schedules the subs; a cpp static does not.
+struct TMelonSum {
+	static f32 calc(const JGeometry::TVec3<f32>& a,
+	                const JGeometry::TVec3<f32>& b)
+	{
+		f32 x2  = (a.x - b.x) * (a.x - b.x);
+		f32 y2  = (a.y - b.y) * (a.y - b.y);
+		f32 z2  = (a.z - b.z) * (a.z - b.z);
+		f32 sum = x2 + y2;
+		return z2 + sum;
+	}
+};
+
+void TBigWatermelon::touchActor(THitActor* actor)
+{
+	if (isState(TMapObjGeneral::STATE_APPEARING))
+		return;
+
+	if (!isState(TMapObjBase::STATE_NORMAL)) {
+		// Word copy, same as a Vec assign. The y compare reads the copy.
+		Vec vel = *(Vec*)&mVelocity;
+		if (vel.y < 0.0f) {
+			kill();
+			return;
+		}
+	}
+
+	if (actor->isActorType(0x80000001)) {
+		f32 dist = JGeometry::TUtil<f32>::sqrt(
+		    TMelonSum::calc(mPosition, actor->mPosition));
+		if (dist < 0.6f * mBodyRadius) {
+			kill();
+			return;
+		}
+	}
+
+	if (actor->isActorType(0x10000015)
+	    && ((TPoiHana*)actor)->isMoving()) {
+		if (fabsf(mVelocity.y) < mMapObjData->mPhysical->unk4->unkC) {
+			mVelocity.y += 30.0f;
+			mState = 0xB;
+		}
+		return;
+	}
+
+	if ((s32)unk194 != 0)
+		return;
+	if (isState(TMapObjGeneral::STATE_HOLDING))
+		return;
+	if (isHideObj(actor))
+		return;
+	if (actor->isActorType(0x08000083))
+		return;
+	if (actor->isActorType(0x400000CA))
+		return;
+	if (actor->isActorType(0x400000CC))
+		return;
+	if (actor->isActorType(0x80000001) && !isActorType(0x400000D0)
+	    && SMS_GetMarioSpeedY() != 0.0f) {
+		kicked();
+		return;
+	}
+	boundByActor(actor);
+}
 
 class TItemManager;
 extern TItemManager* gpItemManager;

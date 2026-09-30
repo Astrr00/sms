@@ -16693,3 +16693,42 @@ Nur `MapObjMonte` hat sich geändert.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R493A (`TBigWatermelon::touchActor`)
+
+**Vollmatch, strikt.**
+
+- `STATE_APPEARING` kehrt sofort zurück.
+  Sonst, wenn nicht `STATE_NORMAL`, Wortkopie von `mVelocity`.
+  `vel.y < 0` ruft virtuelles `kill` (vtable `0xe4`).
+- Mario (`0x80000001`): Abstand über getrennte Quadrate, dann `sqrt`.
+  Unter `0.6f * mBodyRadius` ebenfalls `kill`.
+- `TMelonSum::calc` ist eine Klassenmethode.
+  So bleiben die Adds `fadds` und die Subs in `f2`/`f1`/`f3`.
+  Ein cpp-`static` trifft die Register nicht.
+- PoiHana (`0x10000015`) und `isMoving`: `fabsf(mVelocity.y)` gegen `unkC`.
+  Darunter `mVelocity.y += 30` und `mState = 0xB`.
+  Danach immer Return.
+- `unk194`, `STATE_HOLDING`, `isHideObj`, drei Aktortypen als eigene `if`s.
+- Mario, nicht `0x400000D0`, `SMS_GetMarioSpeedY() != 0`: virtuelles `kicked` (`0x1e8`).
+  Sonst `boundByActor`.
+- Rahmen `-0x48`, Velocity-Kopie bei `r1+0x30`.
+  Kein `gap`.
+
+0 Abweichungen, 760 Bytes, 190 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS
+(4 bekannte UNUSED-Stub-Größen von `TResetFruit`).
+
+`startEvent`, `kicked`, `touchWall`, `calcCurrentMtx` und `boundByActor` bleiben nonmatching.
+`MapObjBase.hpp` unverändert.
+
+`ninja changes_all` gegen `8ff14619`: fuzzy 81.05997 % -> 81.08104 %,
+matched code 52.181118 % -> 52.202286 % (1873348 -> 1874108, +760).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9814 -> 9815.
+`MapObjBall` 17184 -> 17944 (+760), Funktionen 65 -> 66.
+`.sdata2` fuzzy 89.13043 % -> 91.304344 %.
+Complete units bleiben 416.
+Nur `MapObjBall` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
