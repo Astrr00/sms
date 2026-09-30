@@ -340,7 +340,14 @@ void TMapObjBase::makeObjDead()
 		SMS_HideAllShapePacket(getModel());
 }
 
-extern "C" void setMtx__17TMapCollisionBaseFPA4_f(TMapCollisionBase*, MtxPtr);
+// Retail inlines the first setMtx site and keeps this weak out-of-line copy.
+#pragma dont_inline on
+extern "C" __declspec(weak) void
+setMtx__17TMapCollisionBaseFPA4_f(TMapCollisionBase* self, MtxPtr mtx)
+{
+	MTXCopy(mtx, self->unk20);
+}
+#pragma dont_inline off
 
 void TMapObjBase::makeObjAppeared()
 {
