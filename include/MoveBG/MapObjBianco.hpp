@@ -206,6 +206,9 @@ class TBigWindmill : public TMapObjBase {
 public:
 	virtual void load(JSUMemoryInputStream&);
 	virtual void control();
+
+public:
+	/* 0x138 */ TMapObjBase* unk138[4];
 };
 
 #endif

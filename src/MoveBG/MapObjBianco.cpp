@@ -1,4 +1,5 @@
 #include <MoveBG/MapObjBianco.hpp>
+#include <MoveBG/MapObjManager.hpp>
 #include <JSystem/JDrama/JDRNameRefGen.hpp>
 #include <MoveBG/MapObjMessenger.hpp>
 #include <Map/MapCollisionManager.hpp>
@@ -24,7 +25,18 @@
 
 void TBigWindmill::control() { }
 
-void TBigWindmill::load(JSUMemoryInputStream&) { }
+void TBigWindmill::load(JSUMemoryInputStream& stream)
+{
+	TMapObjBase::load(stream);
+	for (int i = 0; i < 4; ++i) {
+		unk138[i] = TMapObjBaseManager::newAndRegisterObj(
+		    "bigWindmillBlock", JGeometry::TVec3<f32>(0.0f, 0.0f, 0.0f),
+		    JGeometry::TVec3<f32>(0.0f, 0.0f, 0.0f),
+		    JGeometry::TVec3<f32>(1.0f, 1.0f, 1.0f));
+		unk138[i]->appear();
+		unk138[i]->getModel()->calc();
+	}
+}
 
 void TMapObjRootPakkun::drawObject(JDrama::TGraphics* graphics)
 {
