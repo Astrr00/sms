@@ -46,6 +46,8 @@ public:
 	void initMapCollisionData();
 	void initMapObj();
 
+	static f32 mSpeed;
+
 	TRevolvingFenceInner(const char* name = "フェンス内側")
 	    : TFence(name)
 	    , unk13C(0.0f)

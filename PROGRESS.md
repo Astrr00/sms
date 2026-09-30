@@ -16153,3 +16153,25 @@ R424 `TMammaMirrorMapOperator::loadAfter` unberührt.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R427 (`TRevolvingFenceInner::controlWall`)
+
+**Vollmatch, strikt.**
+
+- `TRevolvingFenceInner::controlWall`: Zustände 3–6, Winkel
+  `unk13C` gegen `mSpeed` (4.0f), Rotation `MsWrap` auf `[0,360)`,
+  dann `MsMtxSetRotY` auf `getModel()->getAnmMtx(0)` und Translation
+  `mPosition` minus `mYOffset`.
+- `char trash[0x50]` hält das Frame bei `-0x78`.
+- `fenceWrap` bleibt ein `bl MsWrap`.
+  `keepRotY` hält die weak Kopie von `MsMtxSetRotY`.
+- `MapObjFence.cpp` bleibt `NonMatching`.
+
+0 Abweichungen, 704 Bytes, 176 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/MapObjFence`: PASS
+(Weak-Order und die bekannte UNUSED-Größe von `calcCurrentMtx`).
+
+Übrige `MapObjFence`-Funktionen unverändert.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+

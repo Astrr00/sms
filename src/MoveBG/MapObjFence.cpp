@@ -25,6 +25,7 @@ static const char cDirtyTexName[]  = "H_ma_rak_dummy";
 static const char cMessengerName[] = "地形オブジェメッセンジャー";
 static const char cObjGroupName[]  = "オブジェクトグループ";
 
+f32 TRevolvingFenceInner::mSpeed = 4.0f;
 f32 TFenceWater::mWaterAccel     = 2.1f;
 f32 TFenceWater::mBackSpeed      = 3.0f;
 int TFenceWater::mTurnedWaitTime = 600;
@@ -146,15 +147,105 @@ BOOL TRevolvingFenceInner::receiveMessage(THitActor*, u32 message)
 
 void TRevolvingFenceInner::calcCurrentMtx() { }
 
+extern "C" void MsMtxSetRotY__FPA4_ff(MtxPtr, f32);
+
+// Address keeps the weak out-of-line copy. Calls use the extern "C" name.
+static void (*const keepRotY)(MtxPtr, f32) = &MsMtxSetRotY;
+
+// Inlines down to bl MsWrap. A direct call inlines the loops.
+static f32 fenceWrap(f32 v, f32 lo, f32 hi)
+{
+	return MsWrap<f32>(v, lo, hi);
+}
+
 #pragma dont_inline on
 void TRevolvingFenceInner::controlWall()
 {
-	// Address-of keeps the out-of-line copies.
-	// -inline deferred would otherwise inline both calls away.
-	void (*volatile rot)(MtxPtr, f32)   = &MsMtxSetRotY;
-	f32 (*volatile wrap)(f32, f32, f32) = &MsWrap<f32>;
-	(void)rot;
-	(void)wrap;
+	// Dead slot so the frame stays at -0x78.
+	char trash[0x50];
+	int state = mState;
+	if (state == 4)
+		goto case4;
+	if (state >= 4)
+		goto high;
+	if (state >= 3)
+		goto case3;
+	return;
+high:
+	if (state == 6)
+		goto case6;
+	if (state >= 6)
+		goto done;
+	goto case5;
+case3:
+	unk13C += mSpeed;
+	if (unk13C > 180.0f) {
+		unk13C      = 180.0f;
+		mRotation.y = unk13C + mInitialRotation.y;
+		mState      = 2;
+	}
+	mRotation.y = unk13C + mInitialRotation.y;
+	fenceWrap(mRotation.y, 0.0f, 360.0f);
+	{
+		MtxPtr mtx = getModel()->getAnmMtx(0);
+		MsMtxSetRotY__FPA4_ff(mtx, mRotation.y);
+		mtx[0][3] = mPosition.x;
+		mtx[1][3] = mPosition.y - mYOffset;
+		mtx[2][3] = mPosition.z;
+	}
+	return;
+case4:
+	unk13C += mSpeed;
+	if (unk13C > 360.0f) {
+		unk13C      = 0.0f;
+		mRotation.y = unk13C + mInitialRotation.y;
+		mState      = 1;
+	}
+	mRotation.y = unk13C + mInitialRotation.y;
+	fenceWrap(mRotation.y, 0.0f, 360.0f);
+	{
+		MtxPtr mtx = getModel()->getAnmMtx(0);
+		MsMtxSetRotY__FPA4_ff(mtx, mRotation.y);
+		mtx[0][3] = mPosition.x;
+		mtx[1][3] = mPosition.y - mYOffset;
+		mtx[2][3] = mPosition.z;
+	}
+	return;
+case5:
+	unk13C -= mSpeed;
+	if (unk13C < -180.0f) {
+		unk13C      = 180.0f;
+		mRotation.y = unk13C + mInitialRotation.y;
+		mState      = 2;
+	}
+	mRotation.y = unk13C + mInitialRotation.y;
+	fenceWrap(mRotation.y, 0.0f, 360.0f);
+	{
+		MtxPtr mtx = getModel()->getAnmMtx(0);
+		MsMtxSetRotY__FPA4_ff(mtx, mRotation.y);
+		mtx[0][3] = mPosition.x;
+		mtx[1][3] = mPosition.y - mYOffset;
+		mtx[2][3] = mPosition.z;
+	}
+	return;
+case6:
+	unk13C -= mSpeed;
+	if (unk13C < 0.0f) {
+		unk13C      = 0.0f;
+		mRotation.y = unk13C + mInitialRotation.y;
+		mState      = 1;
+	}
+	mRotation.y = unk13C + mInitialRotation.y;
+	fenceWrap(mRotation.y, 0.0f, 360.0f);
+	{
+		MtxPtr mtx = getModel()->getAnmMtx(0);
+		MsMtxSetRotY__FPA4_ff(mtx, mRotation.y);
+		mtx[0][3] = mPosition.x;
+		mtx[1][3] = mPosition.y - mYOffset;
+		mtx[2][3] = mPosition.z;
+	}
+done:
+	(void)trash;
 }
 #pragma dont_inline off
 
