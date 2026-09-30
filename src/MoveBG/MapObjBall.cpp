@@ -9,6 +9,7 @@
 #include <Map/Map.hpp>
 #include <Map/MapCollisionData.hpp>
 #include <Map/PollutionManager.hpp>
+#include <Camera/CubeManagerBase.hpp>
 #include <string.h>
 
 // rogue includes needed for matching sinit & bss
@@ -799,7 +800,36 @@ void TResetFruit::control()
 	}
 }
 
-void TResetFruit::perform(u32, JDrama::TGraphics*) { }
+void TResetFruit::perform(u32 cue, JDrama::TGraphics* graphics)
+{
+	// Dead slot so the velocity copy lands at r1+0x54 and the frame stays 0x70.
+	JGeometry::TVec3<f32> vel;
+	char pad[0x34];
+
+	if (gpMarDirector->mMap == 7) {
+		if (isState(TMapObjGeneral::STATE_HOLDING)
+		    || !((vel = mVelocity).isZero())) {
+			if (checkLiveFlag(LIVE_FLAG_UNK200))
+				offLiveFlag(LIVE_FLAG_UNK200);
+		} else if (!gpCubeArea->isInAreaCube(mPosition) && isState(0xB)
+		           && (mPosition.x != mInitialPosition.x
+		               || mPosition.z != mInitialPosition.z)) {
+			mState = 0xB;
+			makeObjDefault();
+			makeObjDead();
+			calcRootMatrix();
+			getModel()->calc();
+			mStateTimer = mFruitWaitTimeToAppear;
+			offMapObjFlag(MAP_OBJ_FLAG_DISAPPEARING);
+			mState = TMapObjGeneral::STATE_WAITING_TO_APPEAR;
+			if (gpMarDirector->mMap == 3 && unk1A4 != 0)
+				makeObjDead();
+			return;
+		}
+	}
+
+	TMapObjGeneral::perform(cue, graphics);
+}
 
 void TResetFruit::killByTimer(int param_1)
 {
