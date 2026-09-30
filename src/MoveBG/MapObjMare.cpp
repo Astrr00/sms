@@ -1,4 +1,5 @@
 #include <MoveBG/MapObjMare.hpp>
+#include <MoveBG/MapObjWave.hpp>
 #include <MoveBG/MapObjManager.hpp>
 #include <JSystem/JUtility/JUTTexture.hpp>
 #include <JSystem/JDrama/JDRNameRefGen.hpp>
@@ -478,7 +479,64 @@ void TMuddyBoat::bind()
 
 void TMuddyBoat::control() { }
 
-void TMuddyBoat::calc() { }
+void TMuddyBoat::calc()
+{
+	// Declared in this order so callee-saved floats color as
+	// f31=x, f30=waveY, f29=rotY, f28=z.
+	f32 x;
+	f32 waveY;
+	f32 rotY;
+	f32 z;
+
+	// Retail frame is -0xd0. hi sits between the fctiwz spill and the
+	// scale matrix; lo fills the unused area under the scale vec.
+	char hi[8];
+	(void)hi;
+	TMtx34f scaleMtx;
+	JGeometry::TVec3<f32> scale;
+
+	z         = mPosition.z;
+	f32 baseY = mPosition.y - mYOffset;
+	waveY     = baseY + gpMapObjWave->getWaveHeight(mPosition.x, z);
+	rotY      = mRotation.y;
+	x         = mPosition.x;
+
+	// 182.04445 is 65536/360, written out so the f32 MsMtxSetXYZRPH
+	// overload (which converts every angle) does not apply.
+	J3DModel* model = getModel();
+	MsMtxSetXYZRPH(model->getAnmMtx(0), x, waveY, z, 0, (s16)(182.04445f * rotY),
+	               0);
+
+	scaleMtx.identity();
+	MTXScale(scaleMtx, mInitialScaling.x, mInitialScaling.y,
+	         mInitialScaling.z);
+
+	MtxPtr modelMtx = getModel()->getAnmMtx(0);
+	MTXConcat(getModel()->getAnmMtx(0), scaleMtx, modelMtx);
+
+	if (unk140 != 0.0f) {
+		f32 py   = mPosition.y - mYOffset;
+		f32 pz   = mPosition.z;
+		f32 px   = mPosition.x;
+		unk170.x = px;
+		unk170.y = py;
+		unk170.z = pz;
+
+		// z before y so 3.0f stays live in f4 across both products.
+		f32 sx  = 3.0f * mScaling.x;
+		f32 sz  = 3.0f * mScaling.z;
+		f32 sy  = 2.0f * mScaling.y;
+		scale.x = sx;
+		scale.y = sy;
+		scale.z = sz;
+		emitAndBindScale(PARTICLE_MS_M_HAMON_B, 3, &unk170, scale);
+		emitAndBindScale(PARTICLE_MS_M_HAMON_A, 1, &unk170, scale);
+		unk16C = 0;
+	}
+
+	char lo[0x38];
+	(void)lo;
+}
 
 u32 TMuddyBoat::getSDLModelFlag() const { return 0; }
 
