@@ -17124,3 +17124,28 @@ Nur `bossManta` hat sich geändert.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R509B (`TEffectObjBase::moveObject`)
+
+**Vollmatch, strikt.**
+
+- `Vec local_1c` vor `char trash[0x24]` legt die Skalierung auf `r1+0x3c`.
+  Der Rahmen bleibt `-0x58`.
+- Benannte `f32 x, y, z` halten die drei Komponenten in `f0`, `f1`, `f2`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 464 Bytes, 116 Instruktionen.
+`validate-symbol-order` `mario/Enemy/effectObj`: PASS
+(ererbte schwache Ordnung, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `d6708c7c`: fuzzy 81.12377 % -> 81.12393 %,
+matched code 52.372753 % -> 52.38568 % (1880228 -> 1880692, +464).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9828 -> 9829.
+`effectObj` 10196 -> 10660 (+464), Funktionen 77 -> 78.
+Fuzzy der Unit 99.618576 % -> 99.66608 %.
+Complete units bleiben 416.
+Nur `effectObj` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
