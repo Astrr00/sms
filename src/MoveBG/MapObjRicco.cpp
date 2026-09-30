@@ -1,5 +1,7 @@
 #include <MoveBG/MapObjRicco.hpp>
 #include <MoveBG/MapObjManager.hpp>
+#include <M3DUtil/MActor.hpp>
+#include <M3DUtil/MActorUtil.hpp>
 #include <JSystem/JDrama/JDRNameRefGen.hpp>
 #include <JSystem/J3D/J3DGraphAnimator/J3DModel.hpp>
 #include <Map/MapCollisionManager.hpp>
@@ -151,8 +153,9 @@ void TRiccoWatermill::control() { }
 
 void TRiccoWatermill::calc() { setRootMtxRotZ(); }
 
-// Leading zeroes so "submarine" sits at the retail rodata offset 0x1C4.
-static const char cRiccoWatermillRodataPad[0x1A0] = { 0 };
+// Leading zeroes so the SurfGeso names and "submarine" keep retail offsets.
+// "riccoswitch" is emitted just after this pad.
+static const char cRiccoWatermillRodataPad[0x164] = { 0 };
 
 void TRiccoWatermill::loadAfter()
 {
@@ -181,7 +184,35 @@ TRiccoWatermill::TRiccoWatermill(const char* name)
 	trash[0] = 0;
 }
 
-void TSurfGesoObj::initMapObj() { }
+void TSurfGesoObj::initMapObj()
+{
+	TMapObjBase::initMapObj();
+	if (strcmp(unkF4, "SurfGesoRed") == 0) {
+		unk154.r = 0xFF;
+		unk154.g = 0xB4;
+		unk154.b = 0xFF;
+		unk154.a = 0xFF;
+	} else if (strcmp(unkF4, "SurfGesoYellow") == 0) {
+		unk154.r = 0xFF;
+		unk154.g = 0xFF;
+		unk154.b = 0x7D;
+		unk154.a = 0xFF;
+	} else if (strcmp(unkF4, "SurfGesoGreen") == 0) {
+		unk154.r = 0xB4;
+		unk154.g = 0xFF;
+		unk154.b = 0xB4;
+		unk154.a = 0xFF;
+	}
+
+	TMapObjManager* mgr = gpMapObjManager;
+	SDLModelData* data  = mgr->mSurfGessoModelData;
+	MActorAnmData* anm  = mgr->getMActorAnmData();
+	mMActor             = SMS_MakeMActorFromSDLModelData(data, anm, 3);
+	initPacketMatColor(getModel(), GX_TEVREG1, &unk154);
+	mMActor->setBck("surfgeso_run1");
+	char trash[8];
+	trash[0] = 0;
+}
 
 void TFruitSwitch::pullUp() { }
 

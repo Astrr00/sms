@@ -78,6 +78,9 @@ class TSurfGesoObj : public TItem {
 public:
 	void initMapObj();
 	TSurfGesoObj(const char* name = "イカサーフィン");
+
+public:
+	/* 0x154 */ GXColorS10 unk154;
 };
 
 class TFruitLauncher;
