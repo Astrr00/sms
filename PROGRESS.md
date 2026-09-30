@@ -17660,3 +17660,27 @@ Nur `hamukuri` hat sich geändert.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R520B (`TWaterGun::perform`)
+
+**Vollmatch, strikt.**
+
+- `setEmitPt` ist der Calc-Anim-Block und wird in `perform` geinlined.
+  `char trash[0x50]` am Funktionsanfang legt den Rahmen auf `-0xb0`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 332 Bytes, 83 Instruktionen.
+`validate-symbol-order` `mario/Player/WaterGun`: PASS
+(ererbte schwache Ordnung, UNUSED-Größen, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `570ee1fe`: fuzzy 81.12644 % -> 81.12676 %,
+matched code 52.551025 % -> 52.56027 % (1886628 -> 1886960, +332).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9850 -> 9851.
+`WaterGun` 7700 -> 8032 (+332), Funktionen 33 -> 34.
+Fuzzy der Unit 97.970215 % -> 98.02643 %.
+Complete units bleiben 416.
+Nur `WaterGun` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
