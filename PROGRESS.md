@@ -16826,3 +16826,45 @@ Nur `MapObjMamma` hat sich geändert.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R491A (`TBigWatermelon::startEvent`)
+
+**Vollmatch, strikt.**
+
+- `strcmp(getName(), "スイカ（大）")`.
+  `getName()` ergibt `mr r31, r3`.
+  Direktes `mName` wird `addi r31, r3, 0`.
+- Position `(-4660, 1300, 13600)`, dann `offMapObjFlag(MAP_OBJ_FLAG_UNK100)`.
+- `onLiveFlag(LIVE_FLAG_UNK10)`, Velocity z, y, x auf 0, dasselbe Flag noch einmal.
+- Danach `startAnim(7)`.
+- `fireMelonCam` ist `static inline` und wird nicht emittiert.
+- Vier tote `u32`-Kopien plus `TMarDirector* director = gpMarDirector`.
+- Das hält den Rahmen bei `-0x88` und `TFlagT<u16>(0)` bei `r1+0x24`.
+- Kamera `スイカゴールカメラ`.
+- Shine `シャイン（お化けスイカ用）` mit `スイカシャインカメラ` und Offsets 0.
+- `startStateTimer(0x17C)`, dann `setState(0xD)`.
+- Sonst zehn gelbe Münzen `0x2000000E` an `gpMarioPos`.
+- `x` und `z` sind `20 * (rand * 1/32768 - 0.5)`.
+- `y` ist `20 * rand * 1/32768 + 20`.
+- `offLiveFlag(LIVE_FLAG_UNK10)`, dann `TItem::unk14C = 0x3C0`.
+- Danach virtuelles `makeObjDead`.
+- Header unverändert.
+
+0 Abweichungen, 544 Bytes, 136 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS.
+Vier bekannte UNUSED-Größen von `TResetFruit` unverändert.
+
+`kicked`, `touchWall`, `calcCurrentMtx`, `boundByActor` und `TResetFruit::kicked` bleiben nonmatching.
+
+`ninja changes_all` gegen `958b379f`: fuzzy 81.100555 % -> 81.11332 %,
+matched code 52.238388 % -> 52.25354 % (1875404 -> 1875948, +544).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9818 -> 9819.
+`MapObjBall` 17944 -> 18488 (+544), Funktionen 66 -> 67.
+Fuzzy der Unit 78.44889 % -> 80.44158 %.
+`.sdata2` fuzzy 91.304344 % -> 97.82609 %.
+Complete units bleiben 416.
+Nur `MapObjBall` hat sich geändert.
+Die Baseline-Datei liegt noch vor `putOnLight`, deshalb listet `report_changes.json` zusätzlich `MapObjMamma`.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+

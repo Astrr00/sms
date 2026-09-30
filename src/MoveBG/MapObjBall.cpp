@@ -23,6 +23,8 @@
 #include <Map/MapData.hpp>
 #include <stdio.h>
 #include <stdlib.h>
+#include <MoveBG/Item.hpp>
+#include <MoveBG/ItemManager.hpp>
 
 // -inline deferred: source order is the reverse of mario.MAP emission order.
 
@@ -1431,16 +1433,57 @@ void TBigWatermelon::control()
 	}
 }
 
+static inline void fireMelonCam(const JGeometry::TVec3<f32>* pos)
+{
+	// Dead copies keep the -0x88 frame and the flag at r1+0x24.
+	u32 a = 0;
+	u32 b = a;
+	u32 c = b;
+	u32 d = c;
+	(void)d;
+	TMarDirector* director = gpMarDirector;
+	director->fireStartDemoCamera("スイカゴールカメラ", pos, -1, 0.0f, true,
+	                              nullptr, 0, nullptr,
+	                              JDrama::TFlagT<u16>(0));
+}
+
 void TBigWatermelon::startEvent()
 {
-	// TODO: real body is 0x220. These names have to be referenced so they
-	// land between the shine literal and the random-fruit formats.
-	if (strcmp(mName, "スイカ（大）") == 0)
-		return;
-	if (strcmp(mName, "スイカゴールカメラ") == 0)
-		return;
-	if (strcmp(mName, "スイカシャインカメラ") == 0)
-		return;
+	if (strcmp(getName(), "スイカ（大）") == 0) {
+		mPosition.x = -4660.0f;
+		mPosition.y = 1300.0f;
+		mPosition.z = 13600.0f;
+		offMapObjFlag(MAP_OBJ_FLAG_UNK100);
+		onLiveFlag(LIVE_FLAG_UNK10);
+		mVelocity.z = 0.0f;
+		mVelocity.y = 0.0f;
+		mVelocity.x = 0.0f;
+		onLiveFlag(LIVE_FLAG_UNK10);
+		startAnim(7);
+		fireMelonCam(&mPosition);
+		gpItemManager->makeShineAppearWithDemoOffset(
+		    "シャイン（お化けスイカ用）", "スイカシャインカメラ", 0.0f, 0.0f,
+		    0.0f);
+		startStateTimer(0x17C);
+		setState(0xD);
+	} else {
+		for (int i = 0; i < 10; ++i) {
+			TMapObjBase* obj = makeObjAppear__18TMapObjBaseManagerFfffUlb(
+			    gpItemManager, gpMarioPos->x, gpMarioPos->y, gpMarioPos->z,
+			    0x2000000E, true);
+			if (obj != nullptr) {
+				f32 rz = (f32)rand() * 0.000030517578f;
+				f32 ry = (f32)rand() * 0.000030517578f;
+				f32 rx = (f32)rand() * 0.000030517578f;
+				obj->mVelocity.x = 20.0f * (rx - 0.5f);
+				obj->mVelocity.y = 20.0f * ry + 20.0f;
+				obj->mVelocity.z = 20.0f * (rz - 0.5f);
+				obj->offLiveFlag(LIVE_FLAG_UNK10);
+				((TItem*)obj)->unk14C = 0x3C0;
+			}
+		}
+		makeObjDead();
+	}
 }
 
 void TBigWatermelon::checkWallCollision(JGeometry::TVec3<f32>* param_1)
