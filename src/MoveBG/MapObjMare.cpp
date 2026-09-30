@@ -272,7 +272,94 @@ void TMapObjGrowTree::updateHeight() { }
 
 u32 TMapObjGrowTree::touchWater(THitActor*) { return 0; }
 
-void TMapObjGrowTree::control() { }
+extern "C" MActor* getMActor__10TLiveActorCFv(const TLiveActor*);
+
+static inline void rewindGrowFrame(TMapObjGrowTree* self, int idx)
+{
+	f32 span  = -self->unk140;
+	f32 frame = self->getMActor()->getFrameCtrl(idx)->getFrame();
+	self->getMActor()->getFrameCtrl(idx)->setFrame(span + frame);
+}
+
+static inline f32 heldDrop(TMapObjGrowTree* self)
+{
+	f32 span      = self->unk140;
+	MActor* actor = self->mMActor;
+	f32 frame     = actor->getFrameCtrl(0)->getFrame();
+	f32 dy;
+	if (mGrowStartFrame < frame) {
+		if (self->mMActor->getFrameCtrl(0)->getFrame() < mGrowEndFrame) {
+			dy = span * self->unk138 / (mGrowEndFrame - mGrowStartFrame);
+			goto apply;
+		}
+	}
+	dy = 0.0f;
+apply:
+	return dy;
+}
+
+void TMapObjGrowTree::control()
+{
+	char gap[8];
+	JGeometry::TVec3<f32> pos;
+	char trash[0x5C];
+	TMapObjBase::control();
+	if (!isState(2))
+		return;
+	if (mColCount != 0)
+		return;
+	if (isStateTimerEngaged())
+		return;
+	if (!(mMActor->getFrameCtrl(0)->getFrame() > 0.0f))
+		return;
+	if (mMActor->getFrameCtrl(0)->getFrame() < mGrowEndFrame)
+		removeMapCollision();
+
+	rewindGrowFrame(this, 0);
+
+	if (mMActor->getFrameCtrl(0)->getFrame() < 0.0f) {
+		startAnim(0);
+		mState = 1;
+		return;
+	}
+
+	{
+		f32 frame = mMActor->getFrameCtrl(0)->getFrame();
+		if (67.0f <= frame && frame <= 240.0f) {
+			if (gpMSound->gateCheck(MSD_SE_OBJ_SAMDBOMB_REVERSE))
+				MSoundSESystem::MSoundSE::startSoundActor(
+				    MSD_SE_OBJ_SAMDBOMB_REVERSE, &mPosition, 0, nullptr, 0,
+				    4);
+		}
+	}
+
+	if (mMActor->getFrameCtrl(0)->getFrame() > mGrowStartFrame) {
+		if (mMActor->getFrameCtrl(0)->getFrame() > mGrowEndFrame) {
+			mDamageHeight = unk138;
+			calcEntryRadius();
+		} else {
+			f32 frame = getMActor__10TLiveActorCFv(this)
+			                ->getFrameCtrl(0)
+			                ->getFrame();
+			mDamageHeight
+			    = unk148
+			      + (unk138 - unk148) * (frame - mGrowStartFrame)
+			            / (mGrowEndFrame - mGrowStartFrame);
+			calcEntryRadius();
+		}
+	} else {
+		mDamageHeight = unk148;
+		calcEntryRadius();
+	}
+
+	if (mHeldObject != nullptr) {
+		pos = mHeldObject->mPosition;
+		pos.y -= heldDrop(this);
+		mHeldObject->moveRequest(pos);
+	}
+	(void)trash;
+	(void)gap;
+}
 
 void TMapObjGrowTree::loadAfter()
 {

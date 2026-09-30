@@ -16203,3 +16203,39 @@ DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R429 (`TMapObjGrowTree::control`)
+
+**Vollmatch, strikt.**
+
+- `TMapObjGrowTree::control` wickelt in Zustand 2 die Animation zurück,
+  solange `mColCount` leer ist und der State-Timer nicht läuft.
+- `rewindGrowFrame` negiert `unk140` und schreibt `span + frame`
+  über zwei `getFrameCtrl`-Aufrufe.
+- Unter Frame 0: `startAnim(0)`, Zustand 1.
+- Zwischen 67 und 240 spielt `MSD_SE_OBJ_SAMDBOMB_REVERSE`.
+- `mDamageHeight` ist `unk138`, `unk148` oder die Lerp dazwischen.
+  Die Lerp geht über `getMActor`.
+- Hält das Objekt etwas, zieht `heldDrop` `unk140 * unk138 / (end - start)`
+  von `mPosition.y` ab und ruft `moveRequest`.
+- `char gap[8]` und `char trash[0x5C]` halten das Frame bei `-0xf8`
+  und den Vec bei `r1+0xcc`.
+- `MapObjMare.cpp` bleibt `NonMatching`.
+
+0 Abweichungen, 724 Bytes, 181 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/MapObjMare`: PASS
+(5 bekannte UNUSED-Stub-Größen).
+
+Übrige `MapObjMare`-Funktionen unverändert.
+`TRevolvingFenceInner::controlWall`, `TMapObjBall::touchGround` und
+`TFluffManager::control` unberührt.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+
+`ninja changes_all`: fuzzy 80.218056 % -> 80.23811 %,
+matched code 51.305153 % -> 51.325314 % (1841900 -> 1842624, +724).
+Matched data bleibt 66.39675 % (425159).
+Funktionen matched 9762 -> 9763.
+`MapObjMare` 8488 -> 9212 (+724).
+Nur `MapObjMare` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
