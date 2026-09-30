@@ -2,6 +2,7 @@
 #include <System/MarDirector.hpp>
 #include <MarioUtil/MathUtil.hpp>
 #include <MarioUtil/RandomUtil.hpp>
+#include <JSystem/JKernel/JKRHeap.hpp>
 #include <dolphin/gx.h>
 
 // rogue includes needed for matching sinit & bss
@@ -38,7 +39,49 @@ void TMapObjFlag::updateVertex()
 void TMapObjFlag::update() { }
 
 #pragma dont_inline on
-void TMapObjFlag::init(const char*) { }
+void TMapObjFlag::init(const char* name)
+{
+	char trash[8];
+	(void)trash;
+
+	unk68 = 100.0f * mScaling.z;
+	unk6C = 100.0f * mScaling.y;
+	unk7C /= mScaling.z;
+	unk80 /= mScaling.y;
+	unk84 *= mScaling.z;
+
+	unk70 = (s32)(unk68 / 50.0f);
+	unk74 = (s32)(unk6C / 100.0f);
+	if (unk70 < 2)
+		unk70 = 3;
+	if (unk74 < 2)
+		unk74 = 3;
+
+	MsMtxSetXYZRPH(unk8C, mPosition.x, mPosition.y, mPosition.z, mRotation.x,
+	               mRotation.y, mRotation.z);
+
+	f32 stepZ = unk68 / (f32)unk70;
+	f32 stepY = unk6C / (f32)unk74;
+	JKRHeap::getCurrentHeap()->getTotalFreeSize();
+
+	unk78 = (f32**)new JGeometry::TVec3<f32>*[unk74];
+	for (s32 i = 0; i < unk74; ++i) {
+		unk78[i] = (f32*)new JGeometry::TVec3<f32>[unk70];
+		f32 y    = (f32)i * stepY;
+		for (s32 j = 0; j < unk70; ++j) {
+			JGeometry::TVec3<f32>* vtx
+			    = &((JGeometry::TVec3<f32>*)unk78[i])[j];
+			vtx->x = 0.0f;
+			vtx->y = y;
+			vtx->z = (f32)j * stepZ;
+		}
+	}
+
+	static u32 total_use_size = 0;
+	JKRHeap::getCurrentHeap()->getTotalFreeSize();
+	gpMapObjFlagManager->registerObj(this, name);
+	initHitActor(0x4000000D, 1, 0, 0.0f, 0.0f, 0.0f, 0.0f);
+}
 #pragma dont_inline off
 
 void TMapObjFlag::load(JSUMemoryInputStream& stream)
@@ -107,7 +150,9 @@ void TMapObjFlagManager::loadFlag(TMapObjFlagInfo*, TMapObjFlag*, const char*)
 {
 }
 
+#pragma dont_inline on
 void TMapObjFlagManager::registerObj(TMapObjFlag*, const char*) { }
+#pragma dont_inline off
 
 void TMapObjFlagManager::load(JSUMemoryInputStream& stream)
 {

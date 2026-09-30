@@ -16307,3 +16307,38 @@ Nur `MapObjMare` hat sich geändert.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R431 (`TMapObjFlag::init`)
+
+**Vollmatch, strikt.**
+
+- `TMapObjFlag::init` setzt `unk68`/`unk6C` auf `100 * mScaling.z/y`.
+  `unk7C` und `unk80` werden durch die Skalierung geteilt, `unk84` mit `mScaling.z` multipliziert.
+- `unk70` ist `(s32)(unk68 / 50)`, `unk74` ist `(s32)(unk6C / 100)`.
+  Liegt ein Wert unter 2, wird er 3.
+- `MsMtxSetXYZRPH` schreibt `unk8C` aus Position und Rotation.
+- Die Schrittweiten sind `unk68 / (f32)unk70` und `unk6C / (f32)unk74`.
+  Davor und danach verwirft der Code `getCurrentHeap()->getTotalFreeSize()`.
+- `unk78` ist `new TVec3<f32>*[unk74]`.
+  Jede Zeile ist `new TVec3<f32>[unk70]`: x 0, y `i * stepY`, z `j * stepZ`.
+- `static u32 total_use_size = 0` sitzt zwischen den Schleifen und dem zweiten Heap-Call.
+- Danach `registerObj(this, name)` und `initHitActor(0x4000000D, 1, 0, 0, 0, 0, 0)`.
+- `char trash[8]` hält das Frame bei `-0x90`.
+- `MapObjFlag.cpp` bleibt `NonMatching`.
+
+0 Abweichungen, 736 Bytes, 184 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/MapObjFlag`: PASS
+(4 bekannte UNUSED-Stub-Größen).
+
+`TMapObjGrowTree::control`, `TMapObjGrowTree::touchWater` und
+`TRevolvingFenceInner::controlWall` unberührt.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+
+`ninja changes_all`: fuzzy 80.28542 % -> 80.30582 %,
+matched code 51.37289 % -> 51.39339 % (1844332 -> 1845068, +736).
+Matched data 66.39675 % -> 66.399254 % (425159 -> 425175, +16).
+Funktionen matched 9765 -> 9766.
+`MapObjFlag` 2420 -> 3156 (+736).
+Nur `MapObjFlag` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
