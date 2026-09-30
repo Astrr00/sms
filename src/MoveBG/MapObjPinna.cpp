@@ -644,7 +644,27 @@ void TBalloonKoopaJr::kill()
 	trash[0] = 0;
 }
 
-void TBalloonKoopaJr::load(JSUMemoryInputStream&) { }
+void TBalloonKoopaJr::load(JSUMemoryInputStream& stream)
+{
+	TMapObjBase::load(stream);
+	SMS_LoadParticle("/scene/mapObj/balloonKoopaJr.jpa", 0x5A);
+	SMS_LoadParticle("/scene/mapObj/balloonKoopaJrA.jpa", 0x5B);
+	SMS_LoadParticle("/scene/mapObj/balloonKoopaJrB.jpa", 0x5C);
+
+	s32 idx = getModel()->getModelData()->getJointName()->getIndex("center");
+	MtxPtr mtx = getModel()->getAnmMtx((u16)idx);
+	// Declare y,z,x but assign z,y,x so MWCC loads 0x2c into f2
+	// before 0x1c into f1.
+	f32 y;
+	f32 z;
+	f32 x;
+	z        = mtx[2][3];
+	y        = mtx[1][3];
+	x        = mtx[0][3];
+	unk148.x = x;
+	unk148.y = y;
+	unk148.z = z;
+}
 
 void TPinnaEntrance::loadAfter()
 {
