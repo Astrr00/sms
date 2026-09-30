@@ -17149,3 +17149,27 @@ Nur `effectObj` hat sich geändert.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R498A (`TNerveBEelTearsMoveUp::execute`)
+
+**Vollmatch, strikt.**
+
+- `char trash[0x10]` hebt den Rahmen von `-0x30` auf `-0x40`.
+  `stw r31` rückt von `0x2c` auf `0x3c`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 108 Bytes, 27 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bosseel`: PASS
+(ererbte schwache Ordnung, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `9716b8b6`: fuzzy unverändert 81.12393 %,
+matched code 52.38568 % -> 52.388687 % (1880692 -> 1880800, +108).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9829 -> 9830.
+`bosseel` 21916 -> 22024 (+108), Funktionen 115 -> 116.
+Fuzzy der Unit 99.16912 % -> 99.169556 %.
+Complete units bleiben 416.
+Nur `bosseel` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
