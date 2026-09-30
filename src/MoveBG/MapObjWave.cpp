@@ -4,14 +4,19 @@
 #include <Map/Map.hpp>
 #include <Map/MapData.hpp>
 #include <JSystem/JUtility/JUTColor.hpp>
+#include <JSystem/JUtility/JUTTexture.hpp>
+#include <JSystem/J3D/J3DGraphBase/J3DSys.hpp>
 #include <Player/MarioAccess.hpp>
 #include <Camera/CubeManagerBase.hpp>
+#include <dolphin/gx.h>
 #include <math.h>
 #include <stdlib.h>
 
 TMapObjWave* gpMapObjWave;
 
 static JUtility::TColor sColor;
+static u8 sAlphaCompLarge = 0x55;
+static u8 sAlphaCompSmall = 0x23;
 
 // rogue includes needed for matching sinit & bss
 #include <MSound/MSSetSound.hpp>
@@ -19,9 +24,68 @@ static JUtility::TColor sColor;
 
 // -inline deferred: source order is the reverse of mario.MAP emission order.
 
-// dont_inline: stub body. Without the pragma, MWCC inlines it into perform.
+// dont_inline: perform must keep the out-of-line bl.
 #pragma dont_inline on
-void TMapObjWave::initDraw() { }
+void TMapObjWave::initDraw()
+{
+	GXSetVtxAttrFmt(GX_VTXFMT0, GX_VA_POS, GX_POS_XYZ, GX_F32, 0);
+	GXSetVtxAttrFmt(GX_VTXFMT0, GX_VA_CLR0, GX_CLR_RGBA, GX_RGBA8, 0);
+	GXSetVtxAttrFmt(GX_VTXFMT0, GX_VA_TEX0, GX_TEX_ST, GX_F32, 0);
+	GXSetVtxAttrFmt(GX_VTXFMT0, GX_VA_TEX1, GX_TEX_ST, GX_F32, 0);
+
+	GXClearVtxDesc();
+	GXSetVtxDesc(GX_VA_POS, GX_DIRECT);
+	GXSetVtxDesc(GX_VA_CLR0, GX_DIRECT);
+	GXSetVtxDesc(GX_VA_TEX0, GX_DIRECT);
+	GXSetVtxDesc(GX_VA_TEX1, GX_DIRECT);
+
+	GXLoadPosMtxImm(j3dSys.getViewMtx(), GX_PNMTX0);
+	GXSetCurrentMtx(GX_PNMTX0);
+
+	GXSetNumChans(1);
+	GXSetChanCtrl(GX_COLOR0A0, GX_FALSE, GX_SRC_VTX, GX_SRC_VTX, 0, GX_DF_NONE,
+	              GX_AF_NONE);
+	GXSetChanCtrl(GX_COLOR1A1, GX_FALSE, GX_SRC_REG, GX_SRC_REG, 0, GX_DF_NONE,
+	              GX_AF_NONE);
+
+	GXSetNumTexGens(2);
+	GXSetTexCoordGen(GX_TEXCOORD0, GX_TG_MTX2x4, GX_TG_TEX0, GX_IDENTITY);
+	GXSetTexCoordGen(GX_TEXCOORD1, GX_TG_MTX2x4, GX_TG_TEX1, GX_IDENTITY);
+
+	JUTTexture tex(static_cast<const ResTIMG*>(unk94));
+	tex.load(GX_TEXMAP0);
+
+	GXSetTevColorS10(GX_TEVREG0, *(GXColorS10*)&unk7C);
+	GXSetTevColorS10(GX_TEVREG1, *(GXColorS10*)&unk84);
+	GXSetTevColorS10(GX_TEVREG2, *(GXColorS10*)&unk8C);
+
+	GXSetNumTevStages(2);
+	GXSetTevOrder(GX_TEVSTAGE0, GX_TEXCOORD0, GX_TEXMAP0, GX_COLOR0A0);
+	GXSetTevColorIn(GX_TEVSTAGE0, GX_CC_ZERO, GX_CC_ZERO, GX_CC_ZERO,
+	                GX_CC_ZERO);
+	GXSetTevColorOp(GX_TEVSTAGE0, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE,
+	                GX_TEVPREV);
+	GXSetTevAlphaIn(GX_TEVSTAGE0, GX_CA_ZERO, GX_CA_TEXA, GX_CA_RASA,
+	                GX_CA_ZERO);
+	GXSetTevAlphaOp(GX_TEVSTAGE0, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE,
+	                GX_TEVPREV);
+
+	GXSetTevOrder(GX_TEVSTAGE1, GX_TEXCOORD1, GX_TEXMAP0, GX_COLOR0A0);
+	GXSetTevColorIn(GX_TEVSTAGE1, GX_CC_RASC, GX_CC_ZERO, GX_CC_ZERO,
+	                GX_CC_ZERO);
+	GXSetTevColorOp(GX_TEVSTAGE1, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_2, GX_TRUE,
+	                GX_TEVPREV);
+	GXSetTevAlphaIn(GX_TEVSTAGE1, GX_CA_ZERO, GX_CA_TEXA, GX_CA_APREV,
+	                GX_CA_ZERO);
+	GXSetTevAlphaOp(GX_TEVSTAGE1, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_2, GX_TRUE,
+	                GX_TEVPREV);
+
+	GXSetBlendMode(GX_BM_BLEND, GX_BL_SRCALPHA, GX_BL_SRCCLR, GX_LO_NOOP);
+	GXSetAlphaCompare(GX_GEQUAL, sAlphaCompLarge, GX_AOP_OR, GX_LEQUAL,
+	                  sAlphaCompSmall);
+	GXSetZMode(GX_TRUE, GX_LEQUAL, GX_FALSE);
+	GXSetCullMode(GX_CULL_NONE);
+}
 #pragma dont_inline off
 
 void TMapObjWave::getMoveTexPos1(float) const { }
