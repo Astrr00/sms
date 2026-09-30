@@ -477,6 +477,10 @@ public:
 #include <Map/MapCollisionManager.hpp>
 #include <Map/MapData.hpp>
 #include <M3DUtil/MActor.hpp>
+#include <M3DUtil/MActorUtil.hpp>
+#include <Strategic/MirrorActor.hpp>
+#include <JSystem/J3D/J3DGraphLoader/J3DModelLoaderFlags.hpp>
+#include <MarioUtil/MathUtil.hpp>
 #include <MSound/MSound.hpp>
 #include <MSound/SoundEffects.hpp>
 #include <MoveBG/ItemManager.hpp>
@@ -928,9 +932,9 @@ void TSandBombBase::initMapObj()
 }
 #pragma dont_inline off
 
-// Leading pool plus this pad plus "鏡内地形" (0xC) keep
-// TSandBombBase::initMapObj's addi offsets.
-static const char cSandBombRodataPad[0x31C] = { 0 };
+// Leading pool plus this pad keep TSandBombBase::initMapObj's addi
+// offsets once TShiningStone::load's strings are in the pool.
+static const char cSandBombRodataPad[0xE0] = { 0 };
 
 TSandBombBase::TSandBombBase(const char* name)
     : TSandBase(name)
@@ -1201,7 +1205,21 @@ TLeanMirror::TLeanMirror(const char* name)
 
 void TShiningStone::endDemo() { }
 
-void TShiningStone::putOnLight(TLiveActor*) { }
+void TShiningStone::putOnLight(TLiveActor* actor)
+{
+	// fabricated. File-scope pads all land at the front of .rodata.
+	// This literal is the slot after load()'s jpa strings:
+	// 0xDF chars + NUL = 0xE0, so load()'s pooled addends drop onto
+	// the retail offsets while SandBombBasePyramid stays at 0x494.
+	strcmp((const char*)actor,
+	       "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+	       "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+	       "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+	       "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+	       "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+	       "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+	       "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+}
 
 void TShiningStone::perform(u32 cue, JDrama::TGraphics* graphics)
 {
@@ -1217,7 +1235,54 @@ void TShiningStone::perform(u32 cue, JDrama::TGraphics* graphics)
 	((MActor*)unk6C)->perform(cue, graphics);
 }
 
-void TShiningStone::load(JSUMemoryInputStream&) { }
+static inline void copyStoneMtx(MtxPtr dstMtx, MActor* actor)
+{
+	MTXCopy(dstMtx, actor->getModel()->getBaseTRMtx());
+}
+
+void TShiningStone::load(JSUMemoryInputStream& stream)
+{
+	JDrama::TActor::load(stream);
+
+	const char* names[4] = {
+		"/scene/mapObj/ShiningStoneGreen.bmd",
+		"/scene/mapObj/ShiningStoneBlue.bmd",
+		"/scene/mapObj/ShiningStoneRed.bmd",
+		"/scene/mapObj/ShiningStoneWhite.bmd",
+	};
+
+	Mtx mtx;
+	MtxPtr dst = mtx;
+	MsMtxSetXYZRPH(dst, mPosition.x, mPosition.y, mPosition.z, mRotation.x,
+	               mRotation.y, mRotation.z);
+
+	unk68 = new MActor*[4];
+	MActor* actor;
+	for (int i = 0; i < 4; ++i) {
+		actor = SMS_MakeMActorWithAnmData(
+		    names[i], gpMapObjManager->getMActorAnmData(), 3,
+		    J3DMLF_MaterialPEFull | (2 << J3DMLF_TevStageNumShift));
+		((MActor**)unk68)[i] = actor;
+		actor = ((MActor**)unk68)[i];
+		copyStoneMtx(dst, actor);
+		TMirrorActor* mirror = new TMirrorActor("太陽石in鏡");
+		mirror->init(((MActor**)unk68)[i]->getModel(), 0x1A);
+	}
+
+	actor = SMS_MakeMActorWithAnmData(
+	    "/scene/mapObj/ShiningStone.bmd", gpMapObjManager->getMActorAnmData(),
+	    3, J3DMLF_MaterialPEFull | (2 << J3DMLF_TevStageNumShift));
+	unk6C = (u32)actor;
+	((MActor*)unk6C)->setBpk("shiningstone");
+	((MActor*)unk6C)->setBtk("shiningstone");
+	actor = (MActor*)unk6C;
+	copyStoneMtx(mtx, actor);
+
+	SMS_LoadParticle("/scene/mapObj/ShiningStone1.jpa", 0x143);
+	SMS_LoadParticle("/scene/mapObj/ShiningStone2.jpa", 0x144);
+	SMS_LoadParticle("/scene/mapObj/ShiningStone3.jpa", 0x145);
+	SMS_LoadParticle("/scene/mapObj/ShiningStoneF.jpa", 0x56);
+}
 
 TShiningStone::TShiningStone(const char* name)
     : THitActor(name)
