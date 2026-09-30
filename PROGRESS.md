@@ -17684,3 +17684,27 @@ Nur `WaterGun` hat sich geändert.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R509A (`TDoroHaneKuri::isCollidMove`)
+
+**Vollmatch, strikt.**
+
+- `char trash[8]` hinter der `TVec3` legt den Vektor auf `r1+0x24`.
+  Der Rahmen wird `-0x38`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 200 Bytes, 50 Instruktionen.
+`validate-symbol-order` `mario/Enemy/hamukuri`: PASS gegen die Basis
+(ererbte Linkage von `onHaveCap__13TDoroHamuKuriFv`, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `9a61f00f`: fuzzy 81.12676 % -> 81.126785 %,
+matched code 52.56027 % -> 52.56584 % (1886960 -> 1887160, +200).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9851 -> 9852.
+`hamukuri` 27524 -> 27724 (+200), Funktionen 190 -> 191.
+Fuzzy der Unit 92.82082 % -> 92.822235 %.
+Complete units bleiben 416.
+Nur `hamukuri` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
