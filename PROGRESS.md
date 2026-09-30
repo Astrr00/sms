@@ -16896,3 +16896,43 @@ Nur `SnapTimeObj` hat sich geändert.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R502B (`TRevolvingFenceInner::receiveMessage`)
+
+**Vollmatch, strikt.**
+
+- `char trash[0x38]` hält den Rahmen bei `-0x58` und `r31` bei `0x54`.
+- `unk140 == 0` bleibt der schon passende Pfad.
+  Zustand 1 spielt `MSD_SE_OBJ_FENCE_REVERSE1`, setzt Zustand 3 und `fence_revolve_inner_roll_down`.
+  Zustand 2 spielt `MSD_SE_OBJ_FENCE_REVERSE2`, setzt Zustand 4 und `fence_revolve_inner_roll_up`.
+  Beide rufen `offMapObjFlag(MAP_OBJ_FLAG_UNK100)` und geben `TRUE` zurück.
+- Hip-Drop (`message == 3` und `unk140 != 0`) nimmt `gpMarioPos` in einen Zeiger.
+  Sonst kommt `mr r3` vor dem `lwz`.
+- `angle` ist ein Ausdruck: `mInitialRotation.y + 180.0f * (getRotYFromAxisZ(*marioPos) / 3.14f)`.
+  Das hält `f2` auf 180, `f3` auf den Quotienten, dann `fmadds` und `fmr f3, f1`.
+- `MsWrap(angle, -180, 180)` steht direkt und inlined die beiden Schleifen.
+  `fenceWrap` wäre ein `bl` und darf hier nicht stehen.
+- Die Vergleiche sind `!(a < b)`.
+  Das ergibt `fcmpo; bge`.
+  Ein `>=` in `||` oder `if` würde `cror` plus `beq`.
+- `REVERSE1`, wenn `-180 < angle < -90` oder `0 < angle < 90`.
+  Sonst `REVERSE2` (Winkel `-180`, `-90 <= angle <= 0` oder `angle >= 90`).
+- Beide Arme springen auf ein gemeinsames `return TRUE`.
+  Sonst emittiert der erste Arm ein extra `li r3, 1`.
+- Zustand 1 setzt 3 bzw. 5, sonst 4 bzw. 6.
+
+0 Abweichungen, 668 Bytes, 167 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/MapObjFence`: PASS.
+Die schwache Reihenfolge und die UNUSED-Größe von `calcCurrentMtx` (`0x10c` gegen `0x4`) waren schon vorher da.
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `3ed82bfb`: fuzzy 81.11336 % -> 81.123375 %.
+matched code 52.259888 % -> 52.278496 % (1876176 -> 1876844, +668).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9820 -> 9821.
+`MapObjFence` 6784 -> 7452 (+668), Funktionen 39 -> 40.
+Fuzzy der Unit 83.44852 % -> 87.68218 %.
+Complete units bleiben 416.
+Nur `MapObjFence` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+

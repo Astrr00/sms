@@ -121,7 +121,7 @@ void TRevolvingFenceOuter::initMapCollisionData()
 
 BOOL TRevolvingFenceInner::receiveMessage(THitActor*, u32 message)
 {
-	// TODO: unk140 != 0 still has the hip-drop angle path.
+	char trash[0x38];
 	if (message == 3 && unk140 == 0) {
 		if (isState(1)) {
 			if (gpMSound->gateCheck(MSD_SE_OBJ_FENCE_REVERSE1))
@@ -141,6 +141,40 @@ BOOL TRevolvingFenceInner::receiveMessage(THitActor*, u32 message)
 			offMapObjFlag(MAP_OBJ_FLAG_UNK100);
 			return TRUE;
 		}
+	}
+	if (message == 3 && unk140 != 0) {
+		const JGeometry::TVec3<f32>* marioPos = gpMarioPos;
+		f32 angle = mInitialRotation.y
+		            + 180.0f * (getRotYFromAxisZ(*marioPos) / 3.14f);
+		angle = MsWrap(angle, -180.0f, 180.0f);
+		if (!(-180.0f < angle))
+			goto wide;
+		if (angle < -90.0f)
+			goto rev1;
+	wide:
+		if (!(0.0f < angle))
+			goto rev2;
+		if (!(angle < 90.0f))
+			goto rev2;
+	rev1:
+		if (gpMSound->gateCheck(MSD_SE_OBJ_FENCE_REVERSE1))
+			MSoundSESystem::MSoundSE::startSoundActor(
+			    MSD_SE_OBJ_FENCE_REVERSE1, &mPosition, 0, nullptr, 0, 4);
+		if (isState(1))
+			setState(3);
+		else
+			setState(4);
+		goto done;
+	rev2:
+		if (gpMSound->gateCheck(MSD_SE_OBJ_FENCE_REVERSE2))
+			MSoundSESystem::MSoundSE::startSoundActor(
+			    MSD_SE_OBJ_FENCE_REVERSE2, &mPosition, 0, nullptr, 0, 4);
+		if (isState(1))
+			setState(5);
+		else
+			setState(6);
+	done:
+		return TRUE;
 	}
 	return FALSE;
 }
