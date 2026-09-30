@@ -16239,3 +16239,36 @@ Nur `MapObjMare` hat sich geändert.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R429B (`TFluffManager::loadAfter`)
+
+**Vollmatch, strikt.**
+
+- `TFluffManager::loadAfter`: `unk164` ist 32, `unk168` ist `new TFluff*[unk164]`.
+  Die ersten beiden heißen `１つ目のわた毛` und `２つ目のわた毛`, der Rest `わた毛`, Modell `Fluff`.
+- Die erste setzt `unk16C` und ruft `appear` (Slot `0xfc`).
+  Die zweite ruft `makeObjDead` (Slot `0x104`).
+  Ab Index 2 ruft jede `appear`.
+- Startposition und Rotation kommen vom Manager.
+  `mInitialPosition` ist `unk138.x/y * (2*MsRandF()-1)` auf X/Z und `mPosition.y * MsRandF()` auf Y, als `Vec`-Kopie.
+- `y` vor `z` hält im ersten Scatter Z in `f30` und Y in `f31`.
+- `char trash[24]` hält das Frame bei `-0x78` und den Vec bei `r1+0x30`.
+  Der Store fällt weg.
+- `MapObjMonte.cpp` bleibt `NonMatching`.
+
+0 Abweichungen, 964 Bytes, 241 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/MapObjMonte`: PASS
+(11 bekannte UNUSED-Stub-Größen).
+
+`TFluffManager::control`, `TMapObjBall::touchGround` und
+`TMammaMirrorMapOperator::loadAfter` unverändert @ 100 %.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+
+`ninja changes_all` gegen `6df4104a`: fuzzy 80.23811 % -> 80.264854 %,
+matched code 51.325314 % -> 51.352165 % (1842624 -> 1843588, +964).
+Matched data bleibt 66.39675 % (425159).
+Funktionen matched 9763 -> 9764.
+`MapObjMonte` 10116 -> 11080 (+964), Funktionen 46 -> 47.
+Complete units bleiben 416.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+

@@ -9,6 +9,7 @@
 #include <System/MarDirector.hpp>
 #include <MSound/MSound.hpp>
 #include <MSound/SoundEffects.hpp>
+#include <MarioUtil/RandomUtil.hpp>
 
 // rogue includes needed for matching sinit & bss
 #include <MSound/MSSetSound.hpp>
@@ -766,7 +767,85 @@ void TFluffManager::getRandomX() const { }
 
 void TFluffManager::getRandomZ() const { }
 
-void TFluffManager::loadAfter() { }
+void TFluffManager::loadAfter()
+{
+	JGeometry::TVec3<f32> initial;
+	// Dead slot so MWCC keeps frame -0x78 and the vec at r1+0x30.
+	char trash[24];
+	trash[0] = 0;
+	unk160 = 0;
+	unk164 = 32;
+	unk168 = new TFluff*[unk164];
+
+	{
+		TFluff* fluff = new TFluff("１つ目のわた毛");
+		fluff->initAndRegister("Fluff");
+		fluff->unk168  = (u32)this;
+		unk158         = fluff;
+		unk158->unk16C = 1;
+		unk158->appear();
+		{
+			JGeometry::TVec3<f32>& pos = unk158->mPosition;
+			pos.x                      = mPosition.x;
+			pos.y                      = mPosition.y;
+			pos.z                      = mPosition.z;
+		}
+		{
+			JGeometry::TVec3<f32>& rot = unk158->mRotation;
+			rot.x                      = mRotation.x;
+			rot.y                      = mRotation.y;
+			rot.z                      = mRotation.z;
+		}
+		// Declared y-then-z so the first scatter keeps Z in f30 and Y in f31.
+		f32 y;
+		f32 z;
+		z = unk138.y * (MsRandF() * 2.0f - 1.0f);
+		y = mPosition.y * MsRandF();
+		f32 x = unk138.x * (MsRandF() * 2.0f - 1.0f);
+		initial.x                        = x;
+		initial.y                        = y;
+		initial.z                        = z;
+		*(Vec*)&unk158->mInitialPosition = *(Vec*)&initial;
+		unk168[unk160]                   = unk158;
+		unk160 += 1;
+	}
+	{
+		TFluff* fluff = new TFluff("２つ目のわた毛");
+		fluff->initAndRegister("Fluff");
+		fluff->unk168 = (u32)this;
+		unk15C        = fluff;
+		{
+			JGeometry::TVec3<f32>& pos = unk15C->mPosition;
+			pos.x                      = mPosition.x;
+			pos.y                      = mPosition.y;
+			pos.z                      = mPosition.z;
+		}
+		{
+			JGeometry::TVec3<f32>& rot = unk15C->mRotation;
+			rot.x                      = mRotation.x;
+			rot.y                      = mRotation.y;
+			rot.z                      = mRotation.z;
+		}
+		f32 z = unk138.y * (MsRandF() * 2.0f - 1.0f);
+		f32 y = mPosition.y * MsRandF();
+		f32 x = unk138.x * (MsRandF() * 2.0f - 1.0f);
+		initial.x                        = x;
+		initial.y                        = y;
+		initial.z                        = z;
+		*(Vec*)&unk15C->mInitialPosition = *(Vec*)&initial;
+		unk15C->makeObjDead();
+		unk168[unk160] = unk15C;
+		unk160 += 1;
+	}
+	for (int i = 2; i < (int)unk164; ++i) {
+		TFluff* fluff = new TFluff("わた毛");
+		fluff->initAndRegister("Fluff");
+		fluff->unk168  = (u32)this;
+		unk168[unk160] = fluff;
+		unk168[unk160]->appear();
+		unk160 += 1;
+	}
+}
 
 void TFluffManager::load(JSUMemoryInputStream& stream)
 {
