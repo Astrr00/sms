@@ -17563,3 +17563,27 @@ Nur `WaterGun` hat sich geändert.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R506A (`TNameKuriLauncher::stateLaunch`)
+
+**Vollmatch, strikt.**
+
+- `char trash[4]` hinter der `Mtx` legt die Matrix auf `r1+0x10`.
+  Der Geschwindigkeitsvektor liegt auf `r1+0x40`, der Rahmen bleibt `-0x60`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 244 Bytes, 61 Instruktionen.
+`validate-symbol-order` `mario/Enemy/namekuri`: PASS gegen die Basis
+(ererbte Linkage von `NameKuriScaleCallback` und `NameKuriAttackCallback`, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `0ff4b2cc`: fuzzy bleibt 81.125946 %,
+matched code 52.482613 % -> 52.48941 % (1884172 -> 1884416, +244).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9846 -> 9847.
+`namekuri` 9120 -> 9364 (+244), Funktionen 57 -> 58.
+Fuzzy der Unit 97.575226 % -> 97.57834 %.
+Complete units bleiben 416.
+Nur `namekuri` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
