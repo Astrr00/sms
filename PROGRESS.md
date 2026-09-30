@@ -16322,6 +16322,7 @@ DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
   Jede Zeile ist `new TVec3<f32>[unk70]`: x 0, y `i * stepY`, z `j * stepZ`.
 - `static u32 total_use_size = 0` sitzt zwischen den Schleifen und dem zweiten Heap-Call.
 - Danach `registerObj(this, name)` und `initHitActor(0x4000000D, 1, 0, 0, 0, 0, 0)`.
+  `registerObj` bleibt ein Stub, mit `dont_inline`, sonst fällt der `bl` weg.
 - `char trash[8]` hält das Frame bei `-0x90`.
 - `MapObjFlag.cpp` bleibt `NonMatching`.
 
