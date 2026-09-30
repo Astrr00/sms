@@ -490,9 +490,44 @@ TMapObjGrowTree::TMapObjGrowTree(const char* name)
 {
 }
 
-// Retail body is large; the stub must stay a call from draw.
+// Retail body is large; dont_inline keeps draw's call.
 #pragma dont_inline on
-void TWireBell::initDraw() const { }
+void TWireBell::initDraw() const
+{
+	elasticPad();
+	GXSetVtxAttrFmt(GX_VTXFMT0, GX_VA_POS, GX_POS_XYZ, GX_F32, 0);
+	GXSetVtxAttrFmt(GX_VTXFMT0, GX_VA_TEX0, GX_TEX_ST, GX_F32, 0);
+	GXClearVtxDesc();
+	GXSetVtxDesc(GX_VA_POS, GX_DIRECT);
+	GXSetVtxDesc(GX_VA_TEX0, GX_DIRECT);
+	GXLoadPosMtxImm(j3dSys.getViewMtx(), GX_PNMTX0);
+	GXSetCurrentMtx(GX_PNMTX0);
+	GXSetNumChans(1);
+	GXSetChanCtrl(GX_COLOR0A0, GX_FALSE, GX_SRC_REG, GX_SRC_REG, 0, GX_DF_NONE,
+	              GX_AF_NONE);
+	GXSetChanCtrl(GX_COLOR1A1, GX_FALSE, GX_SRC_REG, GX_SRC_REG, 0, GX_DF_NONE,
+	              GX_AF_NONE);
+	GXSetChanMatColor(GX_COLOR0A0, (GXColor) { 0x00, 0x00, 0x64, 0xff });
+	GXSetNumTexGens(1);
+	GXSetTexCoordGen2(GX_TEXCOORD0, GX_TG_MTX2x4, GX_TG_TEX0, 0x3c, GX_FALSE,
+	                  0x7d);
+	JUTTexture texture(gpMapObjManager->unkC8);
+	texture.load(GX_TEXMAP0);
+	GXSetNumTevStages(1);
+	GXSetTevOrder(GX_TEVSTAGE0, GX_TEXCOORD0, GX_TEXMAP0, GX_COLOR_NULL);
+	GXSetTevColorIn(GX_TEVSTAGE0, GX_CC_TEXC, GX_CC_ZERO, GX_CC_ZERO,
+	                GX_CC_ZERO);
+	GXSetTevColorOp(GX_TEVSTAGE0, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE,
+	                GX_TEVPREV);
+	GXSetTevAlphaIn(GX_TEVSTAGE0, GX_CA_TEXA, GX_CA_ZERO, GX_CA_ZERO,
+	                GX_CA_ZERO);
+	GXSetTevAlphaOp(GX_TEVSTAGE0, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE,
+	                GX_TEVPREV);
+	GXSetBlendMode(GX_BM_BLEND, GX_BL_ONE, GX_BL_ZERO, GX_LO_NOOP);
+	GXSetAlphaCompare(GX_ALWAYS, 0, GX_AOP_OR, GX_ALWAYS, 0);
+	GXSetZMode(GX_TRUE, GX_LEQUAL, GX_TRUE);
+	GXSetCullMode(GX_CULL_BACK);
+}
 #pragma dont_inline off
 
 void TWireBell::draw() const
