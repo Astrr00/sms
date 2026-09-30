@@ -17515,3 +17515,27 @@ Nur `namekuri` hat sich geändert.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R517B (`TNozzleBase::calcGunAngle`)
+
+**Vollmatch, strikt.**
+
+- `char trash[0x48]` am Funktionsanfang legt den Rahmen auf `-0x98`.
+  Die Hock-Stick-Addition bleibt eine zusammengesetzte Zuweisung, damit `unk36E` in `r4` liegt.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 308 Bytes, 77 Instruktionen.
+`validate-symbol-order` `mario/Player/WaterGun`: PASS
+(ererbte schwache Ordnung, UNUSED-Größen, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `b3ff9f5e`: fuzzy 81.12589 % -> 81.12591 %,
+matched code 52.462666 % -> 52.47125 % (1883456 -> 1883764, +308).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9844 -> 9845.
+`WaterGun` 5636 -> 5944 (+308), Funktionen 30 -> 31.
+Fuzzy der Unit 97.873764 % -> 97.8787 %.
+Complete units bleiben 416.
+Nur `WaterGun` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+

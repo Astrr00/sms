@@ -216,7 +216,7 @@ void TNozzleBase::init()
 
 void TNozzleBase::calcGunAngle(const TMarioControllerWork& work)
 {
-	// volatile u32 unused1[17];
+	char trash[0x48];
 	if (mFludd->mMario == gpMarioAddress
 	    && (gpCamera->isLButtonCamera() || gpCamera->isJetCoaster1stCamera())) {
 		unk36E = gpCamera->mCurrentTarget.mPitch;
@@ -225,10 +225,9 @@ void TNozzleBase::calcGunAngle(const TMarioControllerWork& work)
 
 	s16 angle;
 	if (mFludd->mMario->mStatus == MARIO_STATUS_SQUAT) {
-		// TODO: Wrong reguster used, using r3 instead of r4
-		angle = unk36E
-		        + (s16)(mFludd->mMario->mGamePad->mCompSPos[0 * 2 + 1]
-		                * mEmitParams.mRButtonMult.get());
+		angle = unk36E;
+		angle += (s16)(mFludd->mMario->mGamePad->mCompSPos[0 * 2 + 1]
+		               * mEmitParams.mRButtonMult.get());
 	} else {
 		angle = -mEmitParams.mLAngleBase.get();
 	}
