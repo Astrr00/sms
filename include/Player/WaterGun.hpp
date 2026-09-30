@@ -143,7 +143,21 @@ public:
 	BOOL suck();
 	void triggerPressureMovement(const TMarioControllerWork&);
 
-	J3DModel* getModel() { return mFluddModel->mModel; }
+	J3DModel* getModel();
+	void endDashEffect();
+	void startDashEffect();
+	void getMarioUpperStatus();
+	void getWillBeEmitted();
+	void getWaterGunAnmID(int);
+	void setEmitPt();
+	void finalDrawInitialize();
+	void entryAll();
+	void createGunBody();
+
+	class TDeParams {
+	public:
+		TDeParams();
+	};
 
 	// Fabricated
 	inline bool hasFlag(u16 flag)

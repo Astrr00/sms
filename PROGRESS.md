@@ -17344,3 +17344,29 @@ Nur `bosseel` hat sich geändert.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R513B (`NozzleCtrl`)
+
+**Vollmatch, strikt.**
+
+- `char trash[0x14]` hinter der `Mtx` legt die Matrix auf `r1+0x28`.
+  Der Rahmen ist `-0x60`.
+- Fehlende UNUSED-Rümpfe sind leer und als fabricated markiert.
+  `validate-symbol-order` warnt nur bei der Größe und der ererbten schwachen Ordnung.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 172 Bytes, 43 Instruktionen.
+`validate-symbol-order` `mario/Player/WaterGun`: PASS
+(ererbte schwache Ordnung, UNUSED-Größen, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `1c1d3afe`: fuzzy unverändert 81.12428 %,
+matched code 52.43025 % -> 52.43504 % (1882292 -> 1882464, +172).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9837 -> 9838.
+`WaterGun` 5044 -> 5216 (+172), Funktionen 26 -> 27.
+Fuzzy der Unit 97.86667 % -> 97.86825 %.
+Complete units bleiben 416.
+Nur `WaterGun` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+

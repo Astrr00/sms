@@ -5,16 +5,7 @@
 
 class TNozzleTrigger : public TNozzleBase {
 public:
-	TNozzleTrigger(const char* name, const char* prm, TWaterGun* fludd)
-	    : TNozzleBase(name, prm, fludd)
-	{
-		unk38C = 0xffffffff;
-		unk384 = false;
-		unk385 = INACTIVE;
-		unk36C = 0;
-		unk386 = 0;
-		unk388 = 0.0f;
-	}
+	TNozzleTrigger(const char* name, const char* prm, TWaterGun* fludd);
 
 	virtual void init();
 	virtual s32 getNozzleKind() const { return 1; };
@@ -31,6 +22,24 @@ public:
 	/* 0x386 */ s16 unk386;  // Quarter frames left of spray (i think)
 	/* 0x388 */ f32 unk388;  // mTriggerFill - How far the trigger has gotten
 	/* 0x38C */ u32 unk38C;  // mSoundID - The sound to play when triggering
+};
+
+class TNozzleButton {
+public:
+	TNozzleButton(const char*, const char*, TWaterGun*);
+	void init();
+	void movement(const TMarioControllerWork&);
+	void emit(int);
+	void animation(int);
+	s32 getNozzleKind() const;
+};
+
+class TNozzleTurbo {
+public:
+	TNozzleTurbo(const char*, const char*, TWaterGun*);
+	void animation(int);
+	void movement(const TMarioControllerWork&);
+	s32 getNozzleKind() const;
 };
 
 #endif

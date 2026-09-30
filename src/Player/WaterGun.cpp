@@ -125,6 +125,9 @@ TNozzleBmdData nozzleBmdData = {
 	},
 };
 
+s32 TNozzleButton::getNozzleKind() const { return 0; } // fabricated
+s32 TNozzleTurbo::getNozzleKind() const { return 0; }  // fabricated
+
 static BOOL NozzleCtrl(J3DNode* node, BOOL param_2)
 {
 	// TODO: Inlined stack space
@@ -134,8 +137,7 @@ static BOOL NozzleCtrl(J3DNode* node, BOOL param_2)
 			                   ->getGunAngle();
 			if (gunAngle < 0) {
 				Mtx mtx;
-				// Unused stack space
-				// volatile u32 unused2[6];
+				char trash[0x14];
 				MsMtxSetRotRPH(mtx, 0.0f, 0.0f, SHORTANGLE2DEG(gunAngle));
 				MTXConcat(J3DSys::mCurrentMtx, mtx, J3DSys::mCurrentMtx);
 			}
@@ -360,6 +362,8 @@ void TNozzleBase::emit(int param_1)
 	}
 }
 
+bool TNozzleBase::isAnmEnd() const { return false; } // fabricated
+
 // TODO: This has a lot of inline functions, find them and update them
 // properly
 void TNozzleBase::animation(int param_1)
@@ -497,6 +501,18 @@ void TNozzleBase::animation(int param_1)
 
 		break;
 	}
+}
+
+TNozzleTrigger::TNozzleTrigger(const char* name, const char* prm,
+                               TWaterGun* fludd)
+    : TNozzleBase(name, prm, fludd)
+{
+	unk38C = 0xffffffff;
+	unk384 = false;
+	unk385 = INACTIVE;
+	unk36C = 0;
+	unk386 = 0;
+	unk388 = 0.0f;
 }
 
 void TNozzleTrigger::init()
@@ -865,6 +881,19 @@ void TNozzleTrigger::animation(int param_1)
 	}
 }
 
+TNozzleButton::TNozzleButton(const char*, const char*, TWaterGun*) { } // fabricated
+void TNozzleButton::init() { }                                         // fabricated
+void TNozzleButton::movement(const TMarioControllerWork&) { }          // fabricated
+void TNozzleButton::animation(int) { }                                 // fabricated
+void TNozzleButton::emit(int) { } // fabricated
+
+TNozzleDeform::TNozzleDeform(const char* name, const char* prm, TWaterGun* fludd)
+    : TNozzleBase(name, prm, fludd)
+    , mBomb(name, "/Mario/WaterGun/NozzleDeformBomb.prm", fludd)
+{
+	init();
+}
+
 void TNozzleDeform::movement(const TMarioControllerWork& controllerWork)
 {
 	char trash[0x10];
@@ -1195,6 +1224,10 @@ void TNozzleDeform::animation(int param)
 	}
 }
 
+TNozzleTurbo::TNozzleTurbo(const char*, const char*, TWaterGun*) { } // fabricated
+void TNozzleTurbo::movement(const TMarioControllerWork&) { }         // fabricated
+void TNozzleTurbo::animation(int) { }                                // fabricated
+
 TWaterGun::TWaterGun(TMario* mario)
     : mNozzleDeform("normal_wg", "/Mario/WaterGun/NozzleDeform.prm", this)
     , mNozzleRocket(nullptr, "/Mario/WaterGun/NozzleTrgRocket.prm", this)
@@ -1420,7 +1453,13 @@ void TWaterGun::init()
 	}
 }
 
+void TWaterGun::createGunBody() { } // fabricated
+
 void TWaterGun::initInLoadAfter() { }
+
+void TWaterGun::entryAll() { }              // fabricated
+void TWaterGun::finalDrawInitialize() { }   // fabricated
+TWaterGun::TDeParams::TDeParams() { }       // fabricated
 
 // TODO: Do i really need to explcitly say this?
 #pragma dont_inline on
@@ -1456,6 +1495,10 @@ MtxPtr TWaterGun::getNozzleMtx()
 {
 	return mFluddModel->mModel->getAnmMtx(unk1CD8);
 }
+
+void TWaterGun::setEmitPt() { }          // fabricated
+J3DModel* TWaterGun::getModel() { return mFluddModel->mModel; }
+void TWaterGun::getWaterGunAnmID(int) { } // fabricated
 
 void TWaterGun::changeNozzle(TNozzleType nozzleType, bool animate)
 {
@@ -1733,6 +1776,8 @@ f32 TWaterGun::getPressureMax()
 	return 0.0f;
 }
 
+void TWaterGun::getWillBeEmitted() { } // fabricated
+
 // TODO: Figure out why inline happens
 #pragma dont_inline on
 void TWaterGun::getEmitPosDirSpeed(int index, JGeometry::TVec3<f32>* pos,
@@ -1774,6 +1819,8 @@ void TWaterGun::rotateProp(f32 rotation)
 		unk1CD0 = 0;
 	}
 }
+
+void TWaterGun::getMarioUpperStatus() { } // fabricated
 
 void TWaterGun::triggerPressureMovement(
     const TMarioControllerWork& controllerWork)
@@ -1919,3 +1966,6 @@ void TWaterGun::changeBackup()
 		mSwitchToSecondNozzleSpeed = -mWatergunParams.mChangeSpeed.get();
 	}
 }
+
+void TWaterGun::startDashEffect() { } // fabricated
+void TWaterGun::endDashEffect() { }   // fabricated
