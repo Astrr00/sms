@@ -262,6 +262,10 @@ f32 TBiancoMiniWindmill::mRotWaterAccel = 0.01f;
 f32 TBiancoMiniWindmill::mFriction      = 0.01f;
 f32 TBiancoMiniWindmill::mRotSpeedMax   = 10.0f;
 
+f32 TLeafBoatRotten::mAlphaDownSpeed       = 0.5f;
+f32 TLeafBoatRotten::mCollisionRemoveAlpha = 100.0f;
+GXColorS10 TLeafBoatRotten::mRottenColor   = { 100, 100, 180, 255 };
+
 void TBiancoMiniWindmill::control()
 {
 	if (unk154 > unk158)
@@ -459,7 +463,56 @@ TLeafBoat::TLeafBoat(const char* name)
 	unk164.zero();
 }
 
-void TLeafBoatRotten::control() { }
+void TLeafBoatRotten::control()
+{
+	TLeafBoat::control();
+	if (marioIsOn()) {
+		if (isState(1)) {
+			startStateTimer(unk170);
+			setState(2);
+		}
+	}
+
+	switch (mState) {
+	case 2: {
+		f32 t  = (f32)mStateTimer / (f32)unk170;
+		unk178 = (u8)((f32)(0xFF - mRottenColor.r) * t + (f32)mRottenColor.r);
+		unk17A = (u8)((f32)(0xFF - mRottenColor.g) * t + (f32)mRottenColor.g);
+		unk17C = (u8)((f32)(0xFF - mRottenColor.b) * t + (f32)mRottenColor.b);
+		if (isStateTimerEngaged())
+			break;
+		unk174 = 255.0f;
+		setState(3);
+		break;
+	}
+	case 3:
+		unk174 -= mAlphaDownSpeed;
+		unk17E = (u8)unk174;
+		if (unk174 < mCollisionRemoveAlpha) {
+			if (mMapCollisionManager->unk8->isSetUp())
+				removeMapCollision();
+		}
+		if (unk174 <= 0.0f) {
+			mScaling.setAll(1.0f);
+			makeObjDefault();
+			makeObjAppeared();
+			unk178 = 0xFF;
+			unk17A = 0xFF;
+			unk17C = 0xFF;
+			unk17E = 0xFF;
+			setState(1);
+		}
+		break;
+	// States 0 and 1 are empty so the switch pivots on 2.
+	case 0:
+	case 1:
+		break;
+	}
+
+	// Dead slot so MWCC keeps frame -0x88.
+	char trash[0x10];
+	trash[0] = 0;
+}
 
 void TLeafBoatRotten::perform(u32 cue, JDrama::TGraphics* graphics)
 {

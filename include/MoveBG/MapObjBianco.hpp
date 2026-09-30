@@ -120,9 +120,13 @@ public:
 	virtual void control();
 	TLeafBoatRotten(const char* name = "腐ったリーフボート");
 
+	static f32 mAlphaDownSpeed;
+	static f32 mCollisionRemoveAlpha;
+	static GXColorS10 mRottenColor;
+
 public:
-	/* 0x170 */ u32 unk170;
-	/* 0x174 */ u32 unk174;
+	/* 0x170 */ s32 unk170;
+	/* 0x174 */ f32 unk174;
 	/* 0x178 */ u16 unk178;
 	/* 0x17A */ u16 unk17A;
 	/* 0x17C */ u16 unk17C;
