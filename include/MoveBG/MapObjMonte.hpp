@@ -168,15 +168,18 @@ public:
 	void load(JSUMemoryInputStream&);
 	TFluffManager(const char* name = "特別な綿毛");
 
+	static f32 mWindMin;
+
 public:
 	/* 0x138 */ JGeometry::TVec3<f32> unk138;
 	/* 0x144 */ u32 unk144;
 	/* 0x148 */ JGeometry::TVec3<f32> unk148;
 	/* 0x154 */ f32 unk154;
-	/* 0x158 */ u32 unk158;
-	/* 0x15C */ u32 unk15C;
+	/* 0x158 */ TFluff* unk158;
+	/* 0x15C */ TFluff* unk15C;
 	/* 0x160 */ u32 unk160;
 	/* 0x164 */ u32 unk164;
+	/* 0x168 */ TFluff** unk168;
 };
 
 #endif

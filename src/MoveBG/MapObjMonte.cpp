@@ -7,6 +7,8 @@
 #include <JSystem/JUtility/JUTTexture.hpp>
 #include <MoveBG/MapObjManager.hpp>
 #include <System/MarDirector.hpp>
+#include <MSound/MSound.hpp>
+#include <MSound/SoundEffects.hpp>
 
 // rogue includes needed for matching sinit & bss
 #include <MSound/MSSetSound.hpp>
@@ -628,7 +630,131 @@ TFluff::TFluff(const char* name)
 
 void TFluffManager::findNextFluff() { }
 
-void TFluffManager::control() { }
+static inline f32 loadVol(volatile f32& slot) { return slot; }
+
+static inline f32 distSq(const JGeometry::TVec3<f32>& a,
+                         const JGeometry::TVec3<f32>& b)
+{
+	f32 dx = a.x - b.x;
+	f32 dy = a.y - b.y;
+	f32 dz = a.z - b.z;
+	f32 xx = dx * dx;
+	f32 yy = dy * dy;
+	f32 zz = dz * dz;
+	return zz + (xx + yy);
+}
+
+static inline f32 doSqrt(f32 lenSq) { return JGeometry::TUtil<f32>::sqrt(lenSq); }
+
+f32 TFluffManager::mWindMin = 1.0f;
+
+void TFluffManager::control()
+{
+	char trash[0x38];
+	trash[0] = 0;
+	switch (mState) {
+	case 1:
+		if (unk15C == nullptr
+		    && unk158->mPosition.y - 100.0f < mPosition.y - unk138.z) {
+			{
+				for (int i = 3; i < (int)unk164; ++i) {
+					TFluff* fluff = unk168[i];
+					if (fluff->unk16C != 0)
+						continue;
+					if (fluff->mHeldObject != nullptr)
+						continue;
+					const JGeometry::TVec3<f32>& pos = fluff->mPosition;
+					const JGeometry::TVec3<f32>& mario = *gpMarioPos;
+					if (!(doSqrt(distSq(pos, mario)) > 3000.0f))
+						continue;
+					unk15C = unk168[i];
+					unk168[i]->kill();
+					break;
+				}
+			}
+		}
+		if (unk158->mPosition.y < mPosition.y - unk138.z) {
+			const JGeometry::TVec3<f32>& soundPos = unk158->mPosition;
+			gpMSound->startSoundActor(MSD_SE_OBJ_WATAGE_WIND, &soundPos, 0,
+			                          nullptr, 0, 4);
+			startStateTimer(unk144);
+			mState = 2;
+		}
+		break;
+	case 2: {
+		TMapObjManager* mgr = gpMapObjManager;
+		f32 x               = mgr->unkD0.x;
+		f32 ax              = unk148.x;
+		f32 ay              = loadVol(unk148.y);
+		f32 y               = mgr->unkD0.y;
+		x += ax;
+		y += ay;
+		f32 z  = mgr->unkD0.z;
+		f32 az = unk148.z;
+		z += az;
+		mgr->unkD0.x = x;
+		mgr->unkD0.y = y;
+		mgr->unkD0.z = z;
+		if (!isStateTimerEngaged())
+			mState = 3;
+		break;
+	}
+	case 3: {
+		Vec& wind = gpMapObjManager->unkD0;
+		f32 wx    = wind.x;
+		f32 s     = unk154;
+		f32 wy    = wind.y;
+		f32 wz    = wind.z;
+		wx *= s;
+		wy *= s;
+		wz *= s;
+		if (fabsf(wx) < mWindMin && fabsf(wy) < mWindMin
+		    && fabsf(wz) < mWindMin) {
+			wx     = 0.0f;
+			wy     = wx;
+			wz     = wx;
+			unk158 = unk15C;
+			{
+				JGeometry::TVec3<f32>& rot = unk158->mRotation;
+				rot.x                      = mRotation.x;
+				rot.y                      = mRotation.y;
+				rot.z                      = mRotation.z;
+			}
+			*(Vec*)&unk158->mInitialRotation = *(Vec*)&mRotation;
+			unk158->appear();
+			{
+				JGeometry::TVec3<f32>& pos = unk158->mPosition;
+				pos.x                      = mPosition.x;
+				pos.y                      = mPosition.y;
+				pos.z                      = mPosition.z;
+			}
+			*(Vec*)&unk158->mInitialPosition = *(Vec*)&mPosition;
+			{
+				f32 zero                       = 0.0f;
+				JGeometry::TVec3<f32>& rot = unk158->mRotation;
+				rot.x                      = zero;
+				rot.y                      = zero;
+				rot.z                      = zero;
+			}
+			*(Vec*)&unk158->mInitialRotation = *(Vec*)&unk158->mRotation;
+			unk158->unk148                   = 0.0f;
+			unk158->unk150                   = 1.0f;
+			unk158->unk16C                   = 1;
+			unk15C                           = nullptr;
+			mState                           = 1;
+		}
+		{
+			TMapObjManager* mgr = gpMapObjManager;
+			mgr->unkD0.x        = wx;
+			mgr->unkD0.y        = wy;
+			mgr->unkD0.z        = wz;
+		}
+		break;
+	}
+	default:
+		break;
+	}
+}
 
 void TFluffManager::registerNextFluff(TFluff*) { }
 

@@ -16175,3 +16175,31 @@ DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R428 (`TFluffManager::control`)
+
+**Vollmatch, strikt.**
+
+- `TFluffManager::control`: Zustände 1–3.
+  Zustand 1 sucht ab Index 3 eine `TFluff` mit `unk16C == 0`, ohne `mHeldObject`, weiter als 3000 von Mario, ruft `kill` und merkt sie in `unk15C`.
+  Liegt `unk158` unter `mPosition.y - unk138.z`, spielt `MSD_SE_OBJ_WATAGE_WIND` und geht nach Zustand 2.
+- `distSq` plus `doSqrt` halten `bl sqrt` und die drei `fmuls` vor den `fadds`.
+  `soundPos` legt den Positionszeiger in `r29`.
+- Zustand 2 addiert `unk148` auf `gpMapObjManager->unkD0`.
+  `loadVol` hält das `lfs` von `unk148.y` vor `unkD0.y` und in `f1`.
+- Zustand 3 skaliert den Wind mit `unk154`.
+  Unter `mWindMin` wird der Wind genullt, `unk158` übernimmt `unk15C`, Rotation und Position werden kopiert, `appear` trifft Slot `0xfc`.
+- `char trash[0x38]` hält das Frame bei `-0xa0`.
+  Der Store fällt weg.
+- `unk158`/`unk15C` sind `TFluff*`, `unk168` ist `TFluff**`, `mWindMin` ist 1.0f.
+- `MapObjMonte.cpp` bleibt `NonMatching`.
+
+0 Abweichungen, 876 Bytes, 219 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/MapObjMonte`: PASS
+(11 bekannte UNUSED-Stub-Größen).
+
+`TMapObjBall::touchGround`, `TMammaMirrorMapOperator::loadAfter` und
+`TRevolvingFenceInner::controlWall` unverändert @ 100 %.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
