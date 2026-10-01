@@ -19304,3 +19304,30 @@ Complete units bleiben 416.
 Nur `TSpineEnemy::resetToPosition` hat sich geändert.
 
 DOL-SHA1 unverändert: `enemy.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R571A (`evSetTalkMsgID`)
+
+**Vollmatch, strikt.**
+
+Der Rahmen war 8 Bytes zu klein (`-0x80`, Ziel `-0x88`).
+`char pad[4]; pad[0] = 0;` schiebt die Slice-Wörter um 4 und `stfd` plus Saves um 8.
+`setMessageID` kopiert die zweite Id mit `addi` statt `mr`.
+Ein lokales Inline mit `s32` für die Id erzeugt genau dieses `addi`.
+Das Inline wird vollständig eingelegt und nicht emittiert.
+
+`evSetTalkMsgID`: 0 Abweichungen, 512 Bytes, 128 Instruktionen.
+`validate-symbol-order` `mario/System/EventWatcher`: ererbtes MISSING `set__Q29JGeometry8TVec3<f>FRC3Vec`, sonst nur schwache Ordnung.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `e89d651c`: fuzzy 81.12732 % -> 81.127426 %,
+matched code 53.24649 % -> 53.260757 % (1911596 -> 1912108, +512).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9914 -> 9915.
+`EventWatcher` 25908 -> 26420 (+512), Funktionen 68 -> 69.
+Fuzzy der Unit 98.89374 % -> 98.90255 %.
+Matched code der Unit 61.341034 % -> 62.553276 %.
+Complete units bleiben 416.
+Nur `evSetTalkMsgID` hat sich geändert.
+
+DOL-SHA1 unverändert: `EventWatcher.cpp` bleibt `NonMatching` und wird nicht gelinkt.

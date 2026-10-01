@@ -274,12 +274,20 @@ static void evGetTalkNPCName(TSpcTypedInterp<TEventWatcher>* interp,
 // measurement: a named `TSpcSlice` local (fewer temporaries, not more), a
 // popInt() on TSpcInterp, `operator int()`, and an extra copy inside
 // TSpcInterp::pop() itself (that one makes the whole file worse).
+// id is s32 so the copy into setMessageID is addi. The method parameter is u32.
+static inline void setTalkMessage(TTalk2D2* talk, u32 group, s32 id)
+{
+	talk->setMessageID(group, id);
+}
+
 static void evSetTalkMsgID(TSpcTypedInterp<TEventWatcher>* interp, u32 arg_num)
 {
+	char pad[4];
+	pad[0] = 0;
 	interp->verifyArgNum(2, &arg_num);
 	int p1 = TSpcSlice(interp->pop()).getDataInt();
 	int p2 = TSpcSlice(interp->pop()).getDataInt();
-	gpTalk2D->setMessageID(p2, p1);
+	setTalkMessage(gpTalk2D, p2, p1);
 	interp->push();
 }
 
