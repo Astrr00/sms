@@ -20882,3 +20882,33 @@ Complete code und complete data unverändert.
 Nur `loadParticle` hat sich geändert.
 
 DOL-SHA1 unverändert: `MarDirectorLoadResource.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R614B (`evSetTransScale`)
+
+**Vollmatch, strikt.**
+
+Die drei `TVec3` wurden im Aufruf gebaut, rechts nach links, unter den Pop-Slices.
+Ziel legt Scale, Rotation und Translation über die Slices und übergibt sie links nach rechts.
+Sechs `f32` zuerst, dann die Vektoren, dann die Komponenten.
+Das Frame bleibt `-0x1a8`.
+Die Slices bleiben auf `0x11c` bis `0xe4`.
+Scale liegt auf `0x13c`, Rotation auf `0x130`, Translation auf `0x124`.
+
+`evSetTransScale`: 0 Abweichungen, 1652 Bytes, 413 Instruktionen.
+`validate-symbol-order` `mario/System/EventWatcher`: ererbtes MISSING `set__Q29JGeometry8TVec3<f>FRC3Vec`, sonst nur schwache Ordnung.
+2 geerbte UNUSED-Größenwarnungen (`evSetEventEnd`, `evSetEventStart`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `5a3460a8`: fuzzy 81.12878 % -> 81.12903 %,
+matched code 54.114216 % -> 54.160233 % (1942748 -> 1944400, +1652).
+Matched data unverändert 68.45444 % (438335).
+Funktionen matched 9967 -> 9968.
+`EventWatcher` matched code 27284 -> 28936 (+1652), Funktionen 72 -> 73 von 105.
+Fuzzy der Unit 98.906715 % -> 98.928024 %.
+Matched code der Unit 64.598915 % -> 68.51028 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `evSetTransScale` hat sich geändert.
+
+DOL-SHA1 unverändert: `EventWatcher.cpp` bleibt `NonMatching` und wird nicht gelinkt.
