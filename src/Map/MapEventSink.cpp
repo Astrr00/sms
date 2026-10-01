@@ -349,7 +349,7 @@ void TMapEventSinkBianco::startControl()
 		unk50[mRaisingBuildingIdx].set(7170.0f, 3675.0f, -185.0f);
 		SMSGetMarDirector()->fireStartDemoCamera(
 		    "bianco0_event0", nullptr, -1, 0.0f, true, nullptr, 0, nullptr,
-		    JDrama::TFlagT<u16>(0));
+		    JDrama::TFlagT<u16>());
 	}
 }
 

@@ -19617,3 +19617,32 @@ Complete units bleiben 416.
 Nur `TBGTentacleMtxCalc::~TBGTentacleMtxCalc` hat sich geändert.
 
 DOL-SHA1 unverändert: `bgtentacle.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R50C (`TMapEventSinkBianco::startControl`)
+
+**Vollmatch, strikt.**
+
+Das Frame war schon `-0x38`.
+`TVec3` und das `TFlagT` lagen beide 4 Bytes zu tief (`0x20`/`0x1c`, Ziel `0x24`/`0x20`).
+`TFlagT<u16>(0)` übergibt ein `int`.
+Das Conversion-Temporary schiebt beide Slots.
+`TFlagT<u16>()` nimmt das Default-`u16` und das Temporary fällt weg.
+
+`TMapEventSinkBianco::startControl`: 0 Abweichungen, 352 Bytes, 88 Instruktionen.
+`validate-symbol-order` `mario/Map/MapEventSink`: PASS.
+UNUSED-Größen stimmen 1/1.
+Linkage in Ordnung.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `7d693e0c`: fuzzy bleibt 81.12756 %,
+matched code 53.449608 % -> 53.45941 % (1918888 -> 1919240, +352).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9925 -> 9926.
+`MapEventSink` 5460 -> 5812 (+352), Funktionen 30 -> 31.
+Fuzzy der Unit 99.7248 % -> 99.72853 %.
+Matched code der Unit 72.799995 % -> 77.49333 %.
+Complete units bleiben 416.
+Nur `TMapEventSinkBianco::startControl` hat sich geändert.
+
+DOL-SHA1 unverändert: `MapEventSink.cpp` bleibt `NonMatching` und wird nicht gelinkt.
