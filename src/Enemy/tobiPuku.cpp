@@ -645,24 +645,36 @@ void TPukuPuku::reset()
 	mSpine->initWith(&TNerveTobiPukuSwimWander::theNerve());
 }
 
+static void calcMoeRoot(TMoePuku* self)
+{
+	if (self->mRotation.x != 0.0f) {
+		if (self->isEaten())
+			return;
+		MsMtxSetXYZRPH(self->getModel()->getBaseTRMtx(), self->mPosition.x,
+		               self->mPosition.y + 70.0f * self->mRotation.x
+		                   / TTobiPuku::mLandAngle,
+		               self->mPosition.z, self->mRotation.x, self->mRotation.y,
+		               self->mRotation.z);
+	}
+	if (self->isPichiEffect()) {
+		self->unk1A0.set(self->mMActor->getModel()->getAnmMtx(1)[0][3],
+		                 self->mMActor->getModel()->getAnmMtx(1)[1][3],
+		                 self->mMActor->getModel()->getAnmMtx(1)[2][3]);
+		gpMarioParticleManager->emitAndBindToPosPtr(PARTICLE_MS_PUKU_PICHI,
+		                                            &self->unk1A0, 1, self);
+	}
+}
+
 void TMoePuku::calcRootMatrix()
 {
+	struct Pad {
+		~Pad() { }
+		char c[0x20];
+	};
+	Pad();
 	gpCurTobiPuku = this;
 	TSpineEnemy::calcRootMatrix();
-	if (mRotation.x != 0.0f) {
-		if (isEaten())
-			return;
-		MsMtxSetXYZRPH(getModel()->getBaseTRMtx(), mPosition.x,
-		               mPosition.y + 70.0f * mRotation.x / mLandAngle,
-		               mPosition.z, mRotation.x, mRotation.y, mRotation.z);
-	}
-	if (isPichiEffect()) {
-		unk1A0.set(mMActor->getModel()->getAnmMtx(1)[0][3],
-		           mMActor->getModel()->getAnmMtx(1)[1][3],
-		           mMActor->getModel()->getAnmMtx(1)[2][3]);
-		gpMarioParticleManager->emitAndBindToPosPtr(PARTICLE_MS_PUKU_PICHI,
-		                                            &unk1A0, 1, this);
-	}
+	calcMoeRoot(this);
 	if (mSpine->getCurrentNerve() == &TNerveTobiPukuFly::theNerve()) {
 		SMSGetMSound()->startSoundActor(MSD_SE_EN_MOEKURI_FLAME, &mPosition, 0,
 		                                nullptr, 0, 4);

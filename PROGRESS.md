@@ -18083,3 +18083,31 @@ Nur `setGoalPathFromGraph` hat sich geändert.
 
 DOL-SHA1 unverändert: `enemy.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 
+### R519A (`TMoePuku::calcRootMatrix`)
+
+**Vollmatch, strikt.**
+
+- `isEaten()` beendet nur den Matrix- und Pichi-Teil.
+  Der Fly-Check läuft danach weiter.
+  Das ist ein statischer Helfer mit frühem `return`.
+- Nicht-triviales 0x20-Temporary am Anfang.
+  Der Rahmen ist `-0x120`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 584 Bytes, 146 Instruktionen.
+`validate-symbol-order` `mario/Enemy/tobiPuku`: PASS
+(schwache Dtor-Reihenfolge, 5 UNUSED-Größen, ererbt).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `70be2467`: fuzzy 81.12712 % -> 81.12716 %,
+matched code 52.72183 % -> 52.738094 % (1892760 -> 1893344, +584).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9868 -> 9869.
+`tobiPuku` 14812 -> 15396 (+584), Funktionen 106 -> 107.
+Fuzzy der Unit 98.97468 % -> 98.98026 %.
+Matched code der Unit 73.838486 % -> 76.74975 %.
+Complete units bleiben 416.
+Nur `calcRootMatrix` hat sich geändert.
+
+DOL-SHA1 unverändert: `tobiPuku.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
