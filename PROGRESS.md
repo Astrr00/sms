@@ -19777,3 +19777,35 @@ Complete units bleiben 417.
 Complete code und complete data unverändert.
 
 DOL-SHA1 unverändert: `bossgesso.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R592B (`MSHandle::calcPan`)
+
+**Vollmatch, strikt.**
+
+Der Body stimmte schon.
+Das Frame war `-0x38`, Ziel `-0x30`.
+Die Saved-Regs `f29`/`f30`/`f31` lagen je 8 Bytes zu hoch.
+Ein unbenutztes `f32 fVar1` und ein benanntes Clamp-Local `r` halten zusammen das Extra-Slot.
+`fVar1` allein ändert nichts.
+Das Clamp zurück auf `fVar4` allein auch nicht.
+Beides weg: Frame `-0x30`, Instruktionen bleiben.
+`calcDolby` unberührt.
+
+`MSHandle::calcPan`: 0 Abweichungen, 288 Bytes, 72 Instruktionen.
+`validate-symbol-order` `mario/MSound/MSHandle`: PASS.
+Keine UNUSED-Symbole.
+Linkage in Ordnung.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `b2392c0b`: fuzzy 81.126945 % -> 81.12696 %,
+matched code 53.53585 % -> 53.543865 % (1921984 -> 1922272, +288).
+Matched data unverändert 68.287025 % (437263).
+Funktionen matched 9930 -> 9931.
+`MSHandle` 2100 -> 2388 (+288), Funktionen 8 -> 9 von 11.
+Fuzzy der Unit 99.86648 % -> 99.879 %.
+Matched code der Unit 73.01808 % -> 83.03199 %.
+Complete units bleiben 417.
+Nur `MSHandle::calcPan` hat sich geändert.
+
+DOL-SHA1 unverändert: `MSHandle.cpp` bleibt `NonMatching` und wird nicht gelinkt.
