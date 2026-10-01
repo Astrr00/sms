@@ -23797,3 +23797,44 @@ Nur `TStayPakkun::isHitValid` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `pakkun.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R106C (`entryMirrorDrawBufferAlways`)
+
+**Vollmatch, strikt.**
+
+`TMirrorActor::entryMirrorDrawBufferAlways` war 99.81967 %.
+Der Frame war 8 Bytes zu groß (`-0x68` gegen `-0x60`).
+Ein gemeinsames `TDrawBufObj* db` für Opa und Xlu nimmt die 8 Bytes weg.
+Die Suche bleibt zweimal `TNameRefGen::search`.
+0 Abweichungen, 244 Bytes, 61 Instruktionen.
+
+`TMirrorActor::init` inlined denselben Rumpf.
+Ohne Pad schrumpfte sein Frame von `-0xd8` auf `-0xd0`.
+`char trash[4]; trash[0] = 0;` am Anfang setzt es zurück auf `-0xd8`.
+Die Iterator-Spills von `push_back` liegen dann auf den Retail-Offsets.
+`init` war 99.91338 % und ist mit dem Pad ebenfalls strikt.
+0 Abweichungen, 508 Bytes, 127 Instruktionen.
+`perform` bleibt 98.6 %.
+
+`validate-symbol-order` `mario/Strategic/MirrorActor`: PASS mit Warnung.
+Die ererbte UNUSED-Größenwarnung `isInMirror` (`0x4` gegen `0x8`) bleibt.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`evStartTimer` aus R651B bleibt unberührt.
+`TStayPakkun::isHitValid` aus R654A bleibt unberührt.
+
+`ninja changes_all` gegen `1ae60d39`: fuzzy 81.13399 % -> 81.134 %.
+Matched code 55.453014 % -> 55.47396 % (1990812 -> 1991564, +752).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10055 -> 10057.
+`MirrorActor` matched code 1436 -> 2188 (+752), Funktionen 4 -> 6 von 7.
+Fuzzy der Unit 99.78914 % -> 99.82428 %.
+Matched code der Unit 57.348244 % -> 87.380196 %.
+Matched data der Unit unverändert 100 % (524).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Neu strikt matched sind `entryMirrorDrawBufferAlways` und `init`.
+
+DOL-SHA1 unverändert: `MirrorActor.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
