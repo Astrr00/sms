@@ -324,9 +324,9 @@ static void makeWorldToPollutionMtx(f32 scale, f32 x, f32 z, TPosition3f* mtx)
 	mtx->zero();
 
 	mtx->mMtx[0][0] = scale;
-	mtx->mMtx[0][3] = -z * scale;
+	mtx->mMtx[0][3] = -x * scale;
 	mtx->mMtx[1][2] = scale;
-	mtx->mMtx[1][3] = -x * scale;
+	mtx->mMtx[1][3] = -z * scale;
 }
 
 void TPollutionCounterLayer::drawJointObjStamp(int layer_index) const
@@ -689,6 +689,21 @@ void TPollutionCounterLayer::calcViewMtx()
 
 	j3dSys.setDrawBuffer(oldDbOpa, 0);
 	j3dSys.setDrawBuffer(oldDbXlu, 1);
+
+	int padA = 0;
+	int padB = 0;
+	int padC = 0;
+	int padD = 0;
+	int padE = 0;
+	int padF = 0;
+	int padG = 0;
+	(void)padA;
+	(void)padB;
+	(void)padC;
+	(void)padD;
+	(void)padE;
+	(void)padF;
+	(void)padG;
 }
 
 void TPollutionCounterLayer::pushModelStampTask(u8 target_layer,
