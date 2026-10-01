@@ -235,10 +235,11 @@ bool CPolarSubCamera::execGroundCheck_(Vec param_1)
 	}
 
 	const TBGCheckData* ground;
+	const TBGCheckData** out = (const TBGCheckData**)((char*)&ground - 4);
 	f32 groundY = gpMap->checkGroundIgnoreWaterSurface(
-	    param_1.x, mPreviousTarget.mPosition.y + groundChg, param_1.z, &ground);
+	    param_1.x, mPreviousTarget.mPosition.y + groundChg, param_1.z, out);
 
-	if (should_clip_fabricated(ground)) {
+	if (should_clip_fabricated(*out)) {
 		if (mCurrentTarget.mPosition.y < groundY + groundOff) {
 			mCurrentTarget.mPosition.y = groundY + groundOff;
 			moved                      = true;

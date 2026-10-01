@@ -24029,3 +24029,33 @@ Nur `TNerveTobiPukuFly::execute` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `tobiPuku.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R655B (`CPolarSubCamera::execGroundCheck_`)
+
+**Vollmatch, strikt.**
+
+`CPolarSubCamera::execGroundCheck_` war 99.9762 %.
+Das Frame lag schon bei `-0x50`.
+Der Out-Pointer lag auf `0x2c` statt `0x28`.
+`out` zeigt vier Bytes unter `ground`, und beide Zugriffe falten auf `addi`/`lwz` mit `0x28`.
+0 Abweichungen, 336 Bytes, 84 Instruktionen.
+`validate-symbol-order` `mario/Camera/CameraBGCheck`: PASS.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TNerveTobiPukuFly::execute` aus R655A bleibt unberührt.
+
+`ninja changes_all` gegen `ebf560e4`: fuzzy unverändert 81.13416 %.
+Matched code 55.53257 % -> 55.541927 % (1993668 -> 1994004, +336).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10063 -> 10064.
+`CameraBGCheck` matched code 1272 -> 1608 (+336), Funktionen 4 -> 5 von 7.
+Fuzzy der Unit 88.111984 % -> 88.11422 %.
+Matched code der Unit 35.610302 % -> 45.0168 %.
+Matched data der Unit unverändert 100 % (56).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `CPolarSubCamera::execGroundCheck_` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `CameraBGCheck.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
