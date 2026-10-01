@@ -174,7 +174,11 @@ void TMapEventSink::initWithBuildingNum(JSUMemoryInputStream& stream)
 void TMapEventSink::load(JSUMemoryInputStream& stream)
 {
 	TMapEvent::load(stream);
-	mBuildingNum = stream.readU32();
+	u32 num;
+	stream >> num;
+	char trash[25];
+	trash[0] = 0;
+	mBuildingNum = num;
 	initWithBuildingNum(stream);
 	for (int i = 0; i < mBuildingNum; ++i) {
 		mIsBuildingRecovered[i] = false;
