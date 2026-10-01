@@ -20481,3 +20481,30 @@ Complete code und complete data unverändert.
 Nur `MSSetSoundTL<MSSetSound>::MSSetSoundTL` ist neu voll matching.
 
 DOL-SHA1 unverändert: `MSoundStruct.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R593A (`TGenerator::perform`)
+
+**Vollmatch, strikt.**
+
+Die Matrix lag bei `0x20`, Ziel `0x1c`.
+`TGraphTracer* tracer = enemy->getTracer()` nimmt das tote 4-Byte-Temporary weg.
+Die Matrix liegt auf `0x1c`.
+Das Frame bleibt `-0x70`.
+
+`TGenerator::perform`: 0 Abweichungen, 288 Bytes, 72 Instruktionen.
+`validate-symbol-order` `mario/Enemy/generator`: PASS.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `9f4b657e`: fuzzy 81.12753 % -> 81.12755 %,
+matched code 53.860962 % -> 53.868984 % (1933656 -> 1933944, +288).
+Matched data unverändert 68.45444 % (438335).
+Funktionen matched 9953 -> 9954.
+`generator` matched code 872 -> 1160 (+288), Funktionen 7 -> 8 von 10.
+Fuzzy der Unit 99.853714 % -> 99.87773 %.
+Matched code der Unit 47.598255 % -> 63.31878 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TGenerator::perform` hat sich geändert.
+
+DOL-SHA1 unverändert: `generator.cpp` bleibt `NonMatching` und wird nicht gelinkt.
