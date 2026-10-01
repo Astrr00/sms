@@ -18167,3 +18167,29 @@ Nur `getTakingMtx` hat sich geändert.
 
 DOL-SHA1 unverändert: `hamukuri.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 
+### R522A (`TNerveDoroHamuKuriRobCap::execute`)
+
+**Vollmatch, strikt.**
+
+- `TPathNode node(...)` dann `setGoalPath(node)`.
+  Der Knoten liegt auf `r1+0x38`.
+  Der Rahmen bleibt `-0x50`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 420 Bytes, 105 Instruktionen.
+`validate-symbol-order` `mario/Enemy/hamukuri`: dasselbe ererbte
+`onHaveCap` Linkage-FAIL, keine neuen Fehler.
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `b6646d8b`: fuzzy 81.12721 % -> 81.12724 %,
+matched code 52.754475 % -> 52.766174 % (1893932 -> 1894352, +420).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9872 -> 9873.
+`hamukuri` 28312 -> 28732 (+420), Funktionen 194 -> 195.
+Fuzzy der Unit 92.82557 % -> 92.82821 %.
+Matched code der Unit 62.19684 % -> 63.119507 %.
+Complete units bleiben 416.
+Nur `TNerveDoroHamuKuriRobCap::execute` hat sich geändert.
+
+DOL-SHA1 unverändert: `hamukuri.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
