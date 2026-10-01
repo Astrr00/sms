@@ -17758,3 +17758,30 @@ Nur `graph` hat sich geändert.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R524B (`TObjManager::load`)
+
+**Vollmatch, strikt.**
+
+- `operator>>` schreibt die Kapazität, `char trash[4]` liegt davor.
+  Der Stringpuffer liegt auf `r1+0x2c`, die Kapazität auf `r1+0x28`.
+  Der Rahmen bleibt `-0x140`.
+- `initObjArray` ist definiert.
+  Die UNUSED-Größe ist `0x38` statt `0x3c`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 168 Bytes, 42 Instruktionen.
+`validate-symbol-order` `mario/Strategic/objmanager`: PASS
+(UNUSED-Größe von `initObjArray`, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `080fb30f`: fuzzy bleibt 81.1268 %,
+matched code 52.582222 % -> 52.586903 % (1887748 -> 1887916, +168).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9854 -> 9855.
+`objmanager` 1136 -> 1304 (+168), Funktionen 12 -> 13.
+Fuzzy der Unit 99.96623 % -> 99.97403 %.
+Complete units bleiben 416.
+Nur `objmanager` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
