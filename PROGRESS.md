@@ -22020,3 +22020,35 @@ Complete code und complete data unverändert.
 Nur `TBPHeadHit::throwActor` ist neu matched.
 
 DOL-SHA1 unverändert: `bosspakkun.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R617A (`isHitWallInBound`)
+
+**Vollmatch, strikt.**
+
+`TSmallEnemy::isHitWallInBound` war 99.7564 %.
+Das Frame war `-0x80`, Ziel `-0xa8`.
+`TBGWallCheckRecord`, die `TVec3<f32>` und `r31` lagen `0x28` Bytes zu tief.
+`char trash[0x28]` nach `local_3C` hebt alles um `0x28` und das Frame auf `-0xa8`.
+Der Store auf `trash` fällt weg.
+
+`TSmallEnemy::isHitWallInBound`: 0 Abweichungen, 312 Bytes, 78 Instruktionen.
+`validate-symbol-order` `mario/Enemy/smallEnemy`: PASS.
+Alle Map-Symbole vorhanden, Reihenfolge stimmt, Linkage stimmt.
+Keine neuen UNUSED-Größenwarnungen.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `c9eb2192`: fuzzy 81.13095 % -> 81.130974 %,
+matched code 54.871635 % -> 54.880325 % (1969940 -> 1970252, +312).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10004 -> 10005.
+`smallEnemy` matched code 10580 -> 10892 (+312), Funktionen 52 -> 53 von 64.
+Fuzzy der Unit 98.38807 % -> 98.392395 %.
+Matched code der Unit 60.236847 % -> 62.01321 %.
+Matched data der Unit unverändert 66.87631 % (1276).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TSmallEnemy::isHitWallInBound` ist neu matched.
+
+DOL-SHA1 unverändert: `smallEnemy.cpp` bleibt `NonMatching` und wird nicht gelinkt.
