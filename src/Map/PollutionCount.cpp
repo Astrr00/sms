@@ -309,8 +309,9 @@ void TPollutionCounterLayer::drawPollutionLayer(int layer_index) const
 	drawBlack(img->width, img->height);
 	loadPollutionLayer((u8*)img + img->imageDataOffset, img->width, img->height,
 	                   GX_TEXMAP0);
-	initGXforPollutionLayer(layer->mPollutionType, layer->mFlags,
-	                        layer->mPerFrameChangeThreshold,
+	u16 flags = layer->mFlags;
+	u16 type  = layer->mPollutionType;
+	initGXforPollutionLayer(type, flags, layer->mPerFrameChangeThreshold,
 	                        layer->mPerFrameChangeDelta);
 
 	GXClearPixMetric();
@@ -603,8 +604,34 @@ void TPollutionCounterLayer::cleanProhibitArea(int param_1) const
 
 void TPollutionCounterLayer::drawModelStamp(int) { }
 
+class TMarDirector;
+extern TMarDirector* gpMarDirector;
+static inline TMarDirector* countTexPad() { return gpMarDirector; }
+
 void TPollutionCounterLayer::countTexDegree(int layer_index)
 {
+	char trash[4];
+	trash[0] = 0;
+	(void)countTexPad();
+	(void)countTexPad();
+	(void)countTexPad();
+	(void)countTexPad();
+	(void)countTexPad();
+	(void)countTexPad();
+	(void)countTexPad();
+	(void)countTexPad();
+	(void)countTexPad();
+	(void)countTexPad();
+	(void)countTexPad();
+	(void)countTexPad();
+	(void)countTexPad();
+	(void)countTexPad();
+	(void)countTexPad();
+	(void)countTexPad();
+	(void)countTexPad();
+	(void)countTexPad();
+	(void)countTexPad();
+	(void)countTexPad();
 	if (!mIsLayerEnabled[layer_index])
 		return;
 

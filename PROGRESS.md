@@ -24155,3 +24155,36 @@ Nur `TConductor::getManagerByName` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `conductor.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R111C (`TPollutionCounterLayer::countTexDegree`)
+
+**Vollmatch, strikt.**
+
+`TPollutionCounterLayer::countTexDegree` war 99.86577 %.
+Das Frame lag bei `-0x68` statt `-0xc0`.
+Das inlined `GXTexObj` lag bei `r1+0x2c` statt `r1+0x80`.
+`char trash[4]` und zwanzig verworfene `countTexPad()`-Aufrufe setzen Frame und Texobj.
+Zwei lokale `u16` stellen die `lhz`-Reihenfolge von `mFlags` vor `mPollutionType` her.
+0 Abweichungen, 596 Bytes, 149 Instruktionen.
+`countObjDegree` bleibt 100 %.
+`drawJointObjStamp` bleibt nonmatching.
+`validate-symbol-order` `mario/Map/PollutionCount`: derselbe vorbestehende MISSING UNUSED `__ct__21TPollutionCounterBaseFv`.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TConductor::getManagerByName` aus R656A bleibt unberührt.
+
+`ninja changes_all` gegen `147b9a18`: fuzzy 81.134254 % -> 81.13427 %.
+Matched code 55.582928 % -> 55.59953 % (1995476 -> 1996072, +596).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10067 -> 10068.
+`PollutionCount` matched code 9308 -> 9904 (+596), Funktionen 36 -> 37 von 38.
+Fuzzy der Unit 99.951096 % -> 99.95868 %.
+Matched code der Unit 88.21077 % -> 93.85898 %.
+Matched data der Unit unverändert 79.22078 % (244).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TPollutionCounterLayer::countTexDegree` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `PollutionCount.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
