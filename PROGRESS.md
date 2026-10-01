@@ -21549,3 +21549,36 @@ Complete code und complete data unverändert.
 Nur `move` hat sich geändert.
 
 DOL-SHA1 unverändert: `bosspakkun.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R624B (`evStartAppearJetBalloon`)
+
+**Vollmatch, strikt.**
+
+`evStartAppearJetBalloon` schaltet über das zweite Argument auf Jet-Balloon oder Red Coin.
+Das Frame war `-0xa0`, Ziel `-0xa8`.
+Die erste Slice lag auf `0x74`, Ziel `0x80`.
+Der `stfd` lag auf `0x88`, Ziel `0x90`.
+Drei verworfene `SMSGetMarDirector()`-Aufrufe nach `push` heben die Slices um 12 und das Frame um 8.
+Die Loads fallen weg.
+
+`evStartAppearJetBalloon`: 0 Abweichungen, 604 Bytes, 151 Instruktionen.
+`validate-symbol-order` `mario/System/EventWatcher`: dieselbe vorbestehende MISSING-Meldung `set__Q29JGeometry8TVec3<f>FRC3Vec`.
+Ererbte Weak-Order-Warnungen.
+2 ererbte UNUSED-Größenwarnungen (`evSetEventStart`, `evSetEventEnd`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`evSetAttentionTime` und `evSetPollutionIncreaseCount` bleiben 100 %.
+
+`ninja changes_all` gegen `d4c0c010`: fuzzy 81.13052 % -> 81.13056 %,
+matched code 54.687904 % -> 54.70473 % (1963344 -> 1963948, +604).
+Matched data unverändert 69.22779 % (443287).
+Funktionen matched 9990 -> 9991.
+`EventWatcher` matched code 29304 -> 29908 (+604), Funktionen 75 -> 76 von 105.
+Fuzzy der Unit 98.929726 % -> 98.93266 %.
+Matched code der Unit 69.38157 % -> 70.81163 %.
+Matched data der Unit bleibt 100 % (2508).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `evStartAppearJetBalloon` ist neu matched.
+
+DOL-SHA1 unverändert: `EventWatcher.cpp` bleibt `NonMatching` und wird nicht gelinkt.

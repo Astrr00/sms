@@ -1217,6 +1217,9 @@ static void evStartAppearJetBalloon(TSpcTypedInterp<TEventWatcher>* interp,
 	}
 
 	interp->push();
+	(void)SMSGetMarDirector();
+	(void)SMSGetMarDirector();
+	(void)SMSGetMarDirector();
 }
 
 static void evSetEventForWaterMelon(TSpcTypedInterp<TEventWatcher>* interp,
