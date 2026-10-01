@@ -719,6 +719,8 @@ static void evKillMushroom1up(TSpcTypedInterp<TEventWatcher>* interp,
 static void evAppearMushroom1up(TSpcTypedInterp<TEventWatcher>* interp,
                                 u32 arg_num)
 {
+	char pad[4];
+	pad[0] = 0;
 	interp->verifyArgNum(1, &arg_num);
 	TMushroom1up* mushroom = (TMushroom1up*)getNameRefPtr(interp->pop());
 	mushroom->appear();

@@ -18746,3 +18746,32 @@ Complete units bleiben 416.
 Nur `evStartEventSE` hat sich geändert.
 
 DOL-SHA1 unverändert: `EventWatcher.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R583B (`evAppearMushroom1up`)
+
+**Vollmatch, strikt.**
+
+`char pad[4]` mit `pad[0] = 0` vergrößert den Rahmen von `-0x80` auf `-0x88`.
+Der Store wird vom Compiler entfernt.
+Die Slice-Kopien und das Push-Paar rücken um 4 Bytes hoch.
+Der `fctiwz`-Spill und die gesicherten Register rücken um 8 Bytes hoch.
+
+`evAppearMushroom1up`: 0 Abweichungen, 504 Bytes, 126 Instruktionen.
+`validate-symbol-order` `mario/System/EventWatcher`: FAIL.
+Fehlendes `set__Q29JGeometry8TVec3<f>FRC3Vec` bestand schon vorher.
+Ererbte Weak-Order-Warnung und UNUSED-Size-Warnungen.
+Kein neuer Fehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `1859ab73`: fuzzy 81.126960 % -> 81.127000 %,
+matched code 52.955807 % -> 52.969845 % (1901160 -> 1901664, +504).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9894 -> 9895.
+`EventWatcher` 24884 -> 25388 (+504), Funktionen 66 -> 67.
+Fuzzy der Unit 98.888054 % -> 98.890620 %.
+Matched code der Unit 58.91656 % -> 60.109860 %.
+Complete units bleiben 416.
+Nur `evAppearMushroom1up` hat sich geändert.
+
+DOL-SHA1 unverändert: `EventWatcher.cpp` bleibt `NonMatching` und wird nicht gelinkt.
