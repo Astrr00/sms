@@ -22889,3 +22889,39 @@ Complete code und complete data unverändert.
 Nur `TMirrorCamera::drawSetting` ist neu matched.
 
 DOL-SHA1 unverändert: `MapMirror.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R635A (`init`)
+
+**Vollmatch, strikt.**
+
+`TWireBinder::init` war 99.6 %.
+`reset` ist in `init` geinlined.
+Das Frame war `-0x48` statt `-0x50`, die Vektoren lagen 8 Bytes zu tief.
+`char trash[8]` mit `(void)&trash` vor den Vektoren setzt das Frame auf `-0x50`.
+Die Vektoren liegen dann auf `0x24` und `0x30`.
+`*(Vec*)&` statt `operator=` hält das Frame, weil `operator=` `dont_inline` ist.
+`local30 -= local24` und `mDir.normalize(local30)` bleiben.
+
+`TWireBinder::init`: 0 Abweichungen, 268 Bytes, 67 Instruktionen.
+`validate-symbol-order` `mario/Enemy/wireBinder`: PASS.
+4 ererbte UNUSED-Größenwarnungen bleiben.
+`reset` bleibt `0x130` gegen `0x138` in der Map.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TMirrorCamera::drawSetting` unberührt.
+`TConductor::init` unberührt.
+
+`ninja changes_all` gegen `a6fdc05f`: fuzzy 81.132774 % -> 81.13279 %,
+matched code 55.142605 % -> 55.150066 % (1979668 -> 1979936, +268).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10030 -> 10031.
+`wireBinder` matched code 748 -> 1016 (+268), Funktionen 7 -> 8 von 9.
+Fuzzy der Unit 99.76869 % -> 99.82477 %.
+Matched code der Unit 43.69159 % -> 59.345795 %.
+Matched data der Unit unverändert 100 % (48).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TWireBinder::init` ist neu matched.
+
+DOL-SHA1 unverändert: `wireBinder.cpp` bleibt `NonMatching` und wird nicht gelinkt.

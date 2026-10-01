@@ -9,6 +9,11 @@ bool TWireBinder::init(const JGeometry::TVec3<f32>& param_1)
 
 bool TWireBinder::reset(const JGeometry::TVec3<f32>& param_1)
 {
+	// Inlined reset's frame is 8 bytes short unless this is
+	// address-taken. Declared first so it sits under the vecs.
+	char trash[8];
+	(void)&trash;
+
 	JGeometry::TVec3<f32> local24;
 	JGeometry::TVec3<f32> local30;
 
@@ -18,8 +23,9 @@ bool TWireBinder::reset(const JGeometry::TVec3<f32>& param_1)
 
 	TMapWire* wire = gpMapWireManager->getWire(mWireNumber);
 
-	local24 = wire->getStartPoint();
-	local30 = wire->getEndPoint();
+	// operator= is dont_inline and inflates the frame.
+	*(Vec*)&local24 = *(Vec*)&wire->mStartPoint;
+	*(Vec*)&local30 = *(Vec*)&wire->mEndPoint;
 	local30 -= local24;
 
 	mDir.normalize(local30);
