@@ -38,33 +38,32 @@ J3DModel* TMareWallRock::getMapModel() const
 
 void TMareWallRock::depress() { }
 
+#pragma dont_inline on
 void TMareWallRock::appear()
 {
-	// TODO: hack, remove me
-	(void)0;
-	(void)0;
-	(void)0;
-	(void)0;
-
 	unk10C[0]->setUp();
 	unk104->awake();
-	unk10C[0]->moveTrans(JGeometry::TVec3<f32>(0.0f, 0.0f, unkFC));
-	f32 rotY = unk128;
+	JGeometry::TVec3<f32> trans(0.0f, 0.0f, unkFC);
+	unk10C[0]->moveTrans(trans);
+	char gap[9];
+	gap[0] = 0;
+	JGeometry::TVec3<f32> rot(0.0f, unk128, 0.0f);
 
 	if (JPABaseEmitter* em = gpMarioParticleManager->emit(
 	        MAP_MAP_MS_MARE_OBJUP_A, &unk11C, 0, &unk11C)) {
-		em->setRotation(JGeometry::TVec3<f32>(0.0f, rotY, 0.0f));
+		em->setRotation(rot);
 		em->setGlobalDynamicsScale(unk110);
 	}
 
 	if (JPABaseEmitter* em = gpMarioParticleManager->emit(
 	        MAP_MAP_MS_MARE_OBJUP_B, &unk11C, 2, &unk11C)) {
-		em->setRotation(JGeometry::TVec3<f32>(0.0f, rotY, 0.0f));
+		em->setRotation(rot);
 		em->setGlobalDynamicsScale(unk110);
 	}
 
 	unkF4 = 2;
 }
+#pragma dont_inline off
 
 void TMareWallRock::movement()
 {
