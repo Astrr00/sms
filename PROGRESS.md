@@ -21231,3 +21231,34 @@ Complete code und complete data unverändert.
 Nur `TNerveHino2Pollute::execute` hat sich geändert.
 
 DOL-SHA1 unverändert: `hinokuri2.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R620B (`MSSetSoundTL<MSSetSoundGrp>::MSSetSoundTL`)
+
+**Vollmatch, strikt.**
+
+Die String-Immediates lagen alle `0x20` zu tief.
+Vor dem Pool fehlten 12 Nullbytes und `メモリが足りません\n`.
+Zwei file-scope Arrays legen beides an den Anfang von `.rodata`.
+
+`MSSetSoundTL<MSSetSoundGrp>::MSSetSoundTL`: 0 Abweichungen, 600 Bytes, 150 Instruktionen.
+`validate-symbol-order` `mario/MSound/MSoundSE`: PASS.
+Ererbte Weak-Order-Warnungen.
+1 ererbte UNUSED-Größenwarnung (`getRandomVolume`, Map `0x68`, Objekt `0x4`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`startSoundActorInner` und `__sinit_MSoundSE_cpp` bleiben 100 %.
+
+`ninja changes_all` gegen `4545f046`: fuzzy 81.12987 % -> 81.13026 %,
+matched code 54.384624 % -> 54.401337 % (1952456 -> 1953056, +600).
+Matched data 68.96293 % -> 69.16782 % (441591 -> 442903, +1312).
+Funktionen matched 9979 -> 9980.
+`MSoundSE` matched code 5380 -> 5980 (+600), Funktionen 24 -> 25 von 29.
+Matched data der Unit 476 -> 1788.
+Fuzzy der Unit 98.96186 % -> 99.07695 %.
+Matched code der Unit 45.393185 % -> 50.45562 %.
+`.rodata` der Unit 98.76065 % -> 100 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur der Konstruktor ist neu matched.
+
+DOL-SHA1 unverändert: `MSoundSE.cpp` bleibt `NonMatching` und wird nicht gelinkt.
