@@ -158,6 +158,9 @@ static void initStageCommon()
 
 static void initStage()
 {
+	char trash[0x38];
+	trash[0] = 0;
+
 	if (gpMarDirector->getCurrentStage() > 9)
 		return;
 
