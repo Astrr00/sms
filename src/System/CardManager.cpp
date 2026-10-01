@@ -133,6 +133,12 @@ s32 TCardManager::getWriteCount(TCardManager::TCriteria* criteria)
 	return count;
 }
 
+inline char* copyToHole()
+{
+	char pad[0x20];
+	return pad;
+}
+
 void TCardManager::copyTo(TCardManager::TCriteria* param_1,
                           TCardBookmarkInfo* param_2)
 {
@@ -151,10 +157,13 @@ void TCardManager::copyTo(TCardManager::TCriteria* param_1,
 	case 1: {
 		param_2->unk0 = 0;
 		JSUMemoryInputStream stream(param_1[sector].getPreviewBytes(), 0x1C);
-
-		param_2->unk4  = stream.readU32();
-		param_2->unk8  = stream.readU64();
-		param_2->unk10 = stream.readU64();
+		u64 bits;
+		copyToHole();
+		param_2->unk4 = stream.readU32();
+		stream.read(bits);
+		param_2->unk8  = bits;
+		stream.read(bits);
+		param_2->unk10 = bits;
 		param_2->unk18 = stream.readU32();
 		param_2->unk1C = stream.readU16();
 		param_2->unk1E = stream.readU16();

@@ -19410,3 +19410,31 @@ Complete units bleiben 416.
 Nur `TEnemyMario::startMonteReplay` hat sich geändert.
 
 DOL-SHA1 unverändert: `enemyMario.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R588B (`TCardManager::copyTo`)
+
+**Vollmatch, strikt.**
+
+Beide `u64`-Reads teilen sich ein Slot.
+Der Rahmen war ohne Pad 0x20 zu klein (`-0x78`, Ziel `-0x98`).
+`copyToHole` legt `char pad[0x20]` an und gibt die Adresse zurück, damit der Slot stehen bleibt.
+Stream, Spill und die kleinen Read-Puffer rutschen auf `0x68` / `0x5c` / `0x30`.
+Das Pad wird nicht emittiert.
+
+`TCardManager::copyTo`: 0 Abweichungen, 412 Bytes, 103 Instruktionen.
+`validate-symbol-order` `mario/System/CardManager`: PASS.
+Vier ererbte UNUSED-Größenwarnungen.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `78db4376`: fuzzy 81.12746 % -> 81.12748 %,
+matched code 53.29039 % -> 53.301872 % (1913172 -> 1913584, +412).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9918 -> 9919.
+`CardManager` 4420 -> 4832 (+412), Funktionen 26 -> 27.
+Fuzzy der Unit 95.817276 % -> 95.82776 %.
+Matched code der Unit 55.16725 % -> 60.309536 %.
+Complete units bleiben 416.
+Nur `TCardManager::copyTo` hat sich geändert.
+
+DOL-SHA1 unverändert: `CardManager.cpp` bleibt `NonMatching` und wird nicht gelinkt.
