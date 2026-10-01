@@ -72,6 +72,20 @@ JGeometry::TVec3<f32> TSplineRail::getPosition(f32 t)
 	return unk0->getPoint(wrapT(t));
 }
 
+// Dead TVec3-sized local under the getPoint / MsGetRot return temps.
+// The small return keeps that slot and emits no instructions.
+struct TPosRotBig {
+	char c[0xC];
+};
+struct TPosRotSmall {
+	char c[0x4];
+};
+static inline TPosRotSmall posRotPad()
+{
+	TPosRotBig big;
+	return *(TPosRotSmall*)(void*)&big;
+}
+
 void TSplineRail::getPosAndRot(f32 t, JGeometry::TVec3<f32>* out_pos,
                                JGeometry::TVec3<f32>* out_rot)
 {
@@ -81,7 +95,7 @@ void TSplineRail::getPosAndRot(f32 t, JGeometry::TVec3<f32>* out_pos,
 	JGeometry::TVec3<f32> point;
 	JGeometry::TVec3<f32> dir;
 
-	char trash2[0xC];
+	posRotPad();
 
 	for (;;) {
 		if (t + dt > 1.0f)
