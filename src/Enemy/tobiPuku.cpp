@@ -457,8 +457,16 @@ void TTobiPuku::swimEffect()
 
 bool TTobiPuku::isReachedToGoalXZ()
 {
+	struct Pt {
+		static const JGeometry::TVec3<f32>& get(const TPathNode& node)
+		{
+			if (node.unk0 != 0)
+				return node.unk0->mPosition;
+			return node.unk4;
+		}
+	};
 	JGeometry::TVec3<f32> tmp;
-	tmp = getUnk104().getPoint();
+	tmp = Pt::get(getUnk104());
 	tmp -= mPosition;
 	tmp.y = 0.0f;
 

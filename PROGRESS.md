@@ -24293,3 +24293,38 @@ Nur `TWalkerEnemy::isReachedToGoalXZ` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `walkerEnemy.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R660A (`TTobiPuku::isReachedToGoalXZ`)
+
+**Vollmatch, strikt.**
+
+`TTobiPuku::isReachedToGoalXZ` war 99,68 %.
+`getPoint()` zieht das fabrizierte `getPosition()` mit, und das hält ein 8-Byte-Phantom.
+Das Frame lag bei `-0x30` statt `-0x20`, der Ziel-`TVec3` bei `0x20` statt `0x14`.
+Ein lokales `Pt::get` gibt `mPosition` mit derselben Nullprüfung zurück.
+Die Zuweisung bleibt `tmp = Pt::get(...)`.
+Frame und Vektor treffen ohne zusätzliches `trash`.
+0 Abweichungen, 200 Bytes, 50 Instruktionen.
+`validate-symbol-order` `mario/Enemy/tobiPuku`: PASS mit Warnungen.
+Die Weak-Order-Warnung und fünf UNUSED-Größenwarnungen (`fallStart`, `flyStart`, `isRoll`, `canBound`, `bound`) bleiben.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TWalkerEnemy::isReachedToGoalXZ` aus R659A bleibt unberührt.
+`walkBehavior` bleibt unberührt.
+`TPathNode::getPoint` bleibt unverändert.
+
+`ninja changes_all` gegen `dd69394a`: fuzzy 81.13432 % -> 81.13434 %.
+Matched code 55.63162 % -> 55.637188 % (1997224 -> 1997424, +200).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10071 -> 10072.
+`tobiPuku` matched code 16148 -> 16348 (+200), Funktionen 109 -> 110 von 116.
+Fuzzy der Unit 99.05304 % -> 99.05623 %.
+Matched code der Unit 80.498505 % -> 81.495514 %.
+Matched data der Unit unverändert 96.70995 % (4468).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TTobiPuku::isReachedToGoalXZ` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `tobiPuku.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
