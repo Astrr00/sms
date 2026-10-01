@@ -849,6 +849,7 @@ void TBossMantaManager::TMantaBattleState::update()
 
 void TBossMantaManager::TMantaMessageState::update()
 {
+	char trash[0x18];
 	switch (unk4) {
 	case 0:
 		if (((TBossManta*)unk0->getObj(0))->isSpawnState()) {
@@ -857,9 +858,9 @@ void TBossMantaManager::TMantaMessageState::update()
 		}
 		break;
 	case 1: {
-		int i;
+		int i = 0;
 		int aliveCount = 0;
-		for (i = 0; i < unk0->getActiveObjNum(); ++i) {
+		for (; i < unk0->getActiveObjNum(); ++i) {
 			if (!unk0->getObj(i)->checkLiveFlag(LIVE_FLAG_DEAD))
 				aliveCount++;
 		}

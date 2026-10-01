@@ -22525,3 +22525,36 @@ Complete code und complete data unverändert.
 Nur `MSRandVol::getRandVol` ist neu matched.
 
 DOL-SHA1 unverändert: `MSoundSE.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R627A (`TMantaMessageState`)
+
+**Vollmatch, strikt.**
+
+`TBossMantaManager::TMantaMessageState::update` war 99.80357 %.
+Das Frame war `-0x80`, Ziel `-0x98`.
+Jeder Stack-Slot lag `0x18` Bytes zu tief.
+`char trash[0x18]` am Anfang hebt das Frame auf `-0x98`.
+Der Store auf `trash` fällt weg.
+`aliveCount` wurde vor `i` genullt.
+`int i = 0` und `for (; i < ...)` legen `li r8`, `li r3`, den Count-Load und `li r9` in die Zielreihenfolge.
+
+`TBossMantaManager::TMantaMessageState::update`: 0 Abweichungen, 448 Bytes, 112 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bossManta` gegen das Basisobjekt: PASS.
+0 neue Fehler, 10 ererbte.
+Die `theNerve`-Reihenfolge und 6 UNUSED-Größen waren schon vorher offen.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `79f0e560`: fuzzy 81.13215 % -> 81.13219 %,
+matched code 55.04144 % -> 55.053913 % (1976036 -> 1976484, +448).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10019 -> 10020.
+`bossManta` matched code 7276 -> 7724 (+448), Funktionen 29 -> 30 von 49.
+Fuzzy der Unit 98.16056 % -> 98.16459 %.
+Matched code der Unit 33.30282 % -> 35.35335 %.
+Matched data der Unit unverändert 41.944077 % (1260).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TBossMantaManager::TMantaMessageState::update` ist neu matched.
+
+DOL-SHA1 unverändert: `bossManta.cpp` bleibt `NonMatching` und wird nicht gelinkt.
