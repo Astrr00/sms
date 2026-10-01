@@ -23997,3 +23997,35 @@ Nur `MSStageCubeSwitch::proc` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `MSoundMainSide.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R655A (`execute`)
+
+**Vollmatch, strikt.**
+
+`TNerveTobiPukuFly::execute` war 99.762375 %.
+Argument und Rückgabe von `MsGetRotFromZaxis` lagen 12 Bytes zu tief, das Frame war `-0x50` statt `-0x60`.
+`JGeometry::TVec3<f32>(self->mVelocity)` als Argument setzt `addi r4` vor `addi r3`.
+`flyPad()` legt die fehlenden 12 Bytes unter die Temps, ohne eine eigene Instruktion.
+0 Abweichungen, 404 Bytes, 101 Instruktionen.
+`validate-symbol-order` `mario/Enemy/tobiPuku`: PASS mit Warnungen.
+Die ererbte Weak-Order-Warnung bleibt.
+Fünf UNUSED-Größenwarnungen bleiben (`fallStart`, `flyStart`, `isRoll`, `canBound`, `bound`).
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`MSStageCubeSwitch::proc` aus R654B bleibt unberührt.
+
+`ninja changes_all` gegen `40740964`: fuzzy 81.134125 % -> 81.13416 %.
+Matched code 55.521317 % -> 55.53257 % (1993264 -> 1993668, +404).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10062 -> 10063.
+`tobiPuku` matched code 15744 -> 16148 (+404), Funktionen 108 -> 109 von 116.
+Fuzzy der Unit 99.048256 % -> 99.05304 %.
+Matched code der Unit 78.48455 % -> 80.498505 %.
+Matched data der Unit unverändert 96.70995 % (4468).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TNerveTobiPukuFly::execute` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `tobiPuku.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.

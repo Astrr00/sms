@@ -837,6 +837,18 @@ DEFINE_NERVE(TNerveTobiPukuGenerate, TLiveActor)
 	return false;
 }
 
+struct FlyPadBig {
+	char c[0xc];
+};
+struct FlyPadSmall {
+	char c[4];
+};
+static inline FlyPadSmall flyPad()
+{
+	FlyPadBig big;
+	return *(FlyPadSmall*)(void*)&big;
+}
+
 DEFINE_NERVE(TNerveTobiPukuFly, TLiveActor)
 {
 	TTobiPuku* self = (TTobiPuku*)spine->getBody();
@@ -853,10 +865,11 @@ DEFINE_NERVE(TNerveTobiPukuFly, TLiveActor)
 		return true;
 	}
 
-	JGeometry::TVec3<f32> velocity  = self->mVelocity;
-	self->unk1E4                    = velocity.y;
-	JGeometry::TVec3<f32> velocity2 = self->mVelocity;
-	self->mRotation.x               = MsGetRotFromZaxis(velocity2).x;
+	JGeometry::TVec3<f32> velocity = self->mVelocity;
+	self->unk1E4                   = velocity.y;
+	flyPad();
+	self->mRotation.x
+	    = MsGetRotFromZaxis(JGeometry::TVec3<f32>(self->mVelocity)).x;
 	return false;
 }
 
