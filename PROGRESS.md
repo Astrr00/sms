@@ -19646,3 +19646,33 @@ Complete units bleiben 416.
 Nur `TMapEventSinkBianco::startControl` hat sich geändert.
 
 DOL-SHA1 unverändert: `MapEventSink.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R578A (`TNerveBPHover::execute`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0x98`, Ziel `-0xa8`.
+`TPathNode` lag bei `0x64`, Ziel `0x6c`.
+Acht Bytes fehlen unter dem Knoten und acht zwischen Knoten und Saved-Regs.
+`char trash[8]` am Anfang hebt Frame und Regs.
+`hoverPad()` legt die toten 8 Bytes unter den Knoten und schiebt ihn auf `0x6c`.
+Der Helper ist vollständig inlined.
+
+`TNerveBPHover::execute`: 0 Abweichungen, 904 Bytes, 226 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bosspakkun`: PASS.
+Zwei ererbte UNUSED-Größenwarnungen (`ignoreWaterCheck`, `vomitFinished`).
+Linkage in Ordnung.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `2c482cd9`: fuzzy 81.12756 % -> 81.12759 %,
+matched code 53.45941 % -> 53.484596 % (1919240 -> 1920144, +904).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9926 -> 9927.
+`bosspakkun` 16380 -> 17284 (+904), Funktionen 101 -> 102.
+Fuzzy der Unit 99.18138 % -> 99.18289 %.
+Matched code der Unit 41.35528 % -> 43.63765 %.
+Complete units bleiben 416.
+Nur `TNerveBPHover::execute` hat sich geändert.
+
+DOL-SHA1 unverändert: `bosspakkun.cpp` bleibt `NonMatching` und wird nicht gelinkt.

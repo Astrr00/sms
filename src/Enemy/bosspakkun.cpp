@@ -1945,8 +1945,21 @@ DEFINE_NERVE(TNerveBPFlyPivot, TLiveActor)
 	return false;
 }
 
+struct HoverPadBig {
+	char c[8];
+};
+struct HoverPadSmall {
+	char c[4];
+};
+static inline HoverPadSmall hoverPad()
+{
+	HoverPadBig big;
+	return *(HoverPadSmall*)(void*)&big;
+}
+
 DEFINE_NERVE(TNerveBPHover, TLiveActor)
 {
+	char trash[8];
 	TBossPakkun* boss = static_cast<TBossPakkun*>(spine->getBody());
 	if (spine->getTime() == 0) {
 		boss->changeBck(16);
@@ -1959,6 +1972,7 @@ DEFINE_NERVE(TNerveBPHover, TLiveActor)
 		spine->pushAfterCurrent(&TNerveBPHover::theNerve());
 		spine->pushAfterCurrent(&TNerveBPFlyCannon::theNerve());
 
+		hoverPad();
 		TPathNode goal(*gpMarioPos);
 		boss->unk114.push(boss->unkF4);
 		boss->unkF4 = goal;
