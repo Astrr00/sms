@@ -19559,3 +19559,32 @@ Complete units bleiben 416.
 Nur `TNerveBGKAppear::execute` hat sich geändert.
 
 DOL-SHA1 unverändert: `gatekeeper.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R589B (`TMarDirector::TMarDirector`)
+
+**Vollmatch, strikt.**
+
+Eine Abweichung: `addi r4, r1, 0x34` gegen `0x20`.
+Das ist das `TAllocator`-Temporary von `unk88`.
+Der leere `TVector_pointer`-Ctor baut es eine Inline-Ebene zu tief, neben den `this`-Spills.
+Ein Default-Argument am Ctor legt es im Caller ab, in der Reihe der `new`-Results.
+Die Spezialisierung steht nur in dieser TU, vor dem Include.
+`~TMarDirector` und `TConsoleStr::processGo` bleiben unverändert.
+
+`TMarDirector::TMarDirector`: 0 Abweichungen, 892 Bytes, 223 Instruktionen.
+`validate-symbol-order` `mario/System/MarDirector`: PASS.
+Zwei ererbte MISSING-Symbole, keine neuen.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `fc543f42`: fuzzy 81.12756 % bleibt,
+matched code 53.419083 % -> 53.443928 % (1917792 -> 1918684, +892).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9923 -> 9924.
+`MarDirector` 948 -> 1840 (+892), Funktionen 5 -> 6.
+Fuzzy der Unit 99.9838 % -> 99.98583 %.
+Matched code der Unit 47.975708 % -> 93.11741 %.
+Complete units bleiben 416.
+Nur `TMarDirector::TMarDirector` hat sich geändert.
+
+DOL-SHA1 unverändert: `MarDirector.cpp` bleibt `NonMatching` und wird nicht gelinkt.
