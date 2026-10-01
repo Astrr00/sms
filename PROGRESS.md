@@ -20996,3 +20996,34 @@ Complete units bleiben 418.
 Complete code und complete data unverändert.
 
 DOL-SHA1 unverändert: `bossgesso.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R69C (`checkIsInMirror`)
+
+**Vollmatch, strikt.**
+
+`gpMirrorModelManager->unk18` direkt wurde `lwz r4, 0x18(r5)`.
+Ziel ist `addi r4, r5, 0x18` und danach `lwz r4, 0(r4)`.
+`mirrorSlot` gibt eine `int&` auf `unk18` zurück.
+Das Frame war `-0x60`, Ziel `-0x68`.
+Die `TVec3` lag auf `0x48`, Ziel `0x50`.
+`char trash[4]; trash[0] = 0;` nach der `TVec3` hebt beides.
+Der Store fällt weg.
+
+`checkIsInMirror`: 0 Abweichungen, 436 Bytes, 109 Instruktionen.
+`validate-symbol-order` `mario/Strategic/MirrorActor`: PASS.
+1 ererbte UNUSED-Größenwarnung (`isInMirror`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `f3c87757`: fuzzy 81.1294 % -> 81.129524 %,
+matched code 54.236443 % -> 54.24859 % (1947136 -> 1947572, +436).
+Matched data unverändert 68.45444 % (438335).
+Funktionen matched 9971 -> 9972.
+`MirrorActor` matched code 1000 -> 1436 (+436), Funktionen 3 -> 4 von 7.
+Fuzzy der Unit 99.599045 % -> 99.78914 %.
+Matched code der Unit 39.9361 % -> 57.348244 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `checkIsInMirror` hat sich geändert.
+
+DOL-SHA1 unverändert: `MirrorActor.cpp` bleibt `NonMatching` und wird nicht gelinkt.
