@@ -23567,3 +23567,42 @@ Nur `TSunMgr::perform` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `sunmgr.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R650A (`execute`)
+
+**Vollmatch, strikt.**
+
+`TNerveBathtubKillerExplosion::execute` war 99.9500 %.
+`TNerveBathtubKillerBreak::execute` war 99.9437 %.
+Beide Frames waren schon `-0x30`.
+Die `TVec3`-Temporary von `mVelocity = TVec3(0, 0, 0)` lag bei `0x18`, Ziel `0x1c`.
+`getActorKeeper()` ging direkt in den Out-of-line-`getMActor`-Call, ohne 4-Byte-Slot.
+`TMActorKeeper* keeper = getActorKeeper()` legt den Slot unter die Temporary.
+Sie rückt auf `0x1c`.
+Keine zusätzliche Instruktion.
+`setDeadBathtubKillerAnm` bleibt UNUSED mit Map-Größe `0xb8`.
+
+`TNerveBathtubKillerExplosion::execute`: 0 Abweichungen, 320 Bytes, 80 Instruktionen.
+`TNerveBathtubKillerBreak::execute`: 0 Abweichungen, 284 Bytes, 71 Instruktionen.
+`validate-symbol-order` `mario/Enemy/BathtubKiller`: PASS mit Warnungen.
+Alle Map-Symbole vorhanden, Reihenfolge der nicht-weak Symbole stimmt, Linkage stimmt.
+Die ererbten Weak-Order- und UNUSED-Größenwarnungen bleiben.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TSunMgr::perform` unberührt.
+
+`ninja changes_all` gegen `7d003f1a`: fuzzy 81.13379 % -> 81.133804 %.
+Matched code 55.369896 % -> 55.386723 % (1987828 -> 1988432, +604).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10047 -> 10049.
+`BathtubKiller` matched code 6444 -> 7048 (+604), Funktionen 27 -> 29 von 45.
+Fuzzy der Unit 48.139946 % -> 48.14161 %.
+Matched code der Unit 33.499687 % -> 36.639633 %.
+Matched data der Unit unverändert 94.97488 % (2268).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur die beiden Death-Nerves sind neu strikt matched.
+
+DOL-SHA1 unverändert: `BathtubKiller.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.

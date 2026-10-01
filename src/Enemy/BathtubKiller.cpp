@@ -427,12 +427,11 @@ void TBathtubKiller::setStraightBathtubKillerAnm() { }
 
 void TBathtubKiller::setDeadBathtubKillerAnm()
 {
-	mMActor = getActorKeeper()->getMActor("bathtubdownkiller_model1.bmd");
+	TMActorKeeper* keeper = getActorKeeper();
+	mMActor = keeper->getMActor("bathtubdownkiller_model1.bmd");
 	setBckAnm(0);
 	mQuat.set(0.0f, 0.0f, 0.0f, 1.0f);
 	unk1BC.set(0.0f, 0.0f, 0.0f);
-	// TODO: the temporary sits 4 bytes lower than the original in both death
-	// nerves.
 	mVelocity = JGeometry::TVec3<f32>(0, 0, 0);
 	onLiveFlag(LIVE_FLAG_UNK8);
 	mNoseColor = mBodyColor;
