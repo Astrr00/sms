@@ -22856,3 +22856,36 @@ Complete code und complete data unverändert.
 Nur `TCameraBck::updateDemo` ist neu matched.
 
 DOL-SHA1 unverändert: `CameraBck.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R93C (`drawSetting`)
+
+**Vollmatch, strikt.**
+
+`TMirrorCamera::drawSetting` war 99.10256 %.
+Die Skalierung der Lichtmatrix ist `0.5`, `-0.5`, `0.5`, `0.5`.
+`f32 fovy = gpCamera->mFovy` setzt `fmuls f1, f0, f1`.
+`char trash[8]` und `char gap[4]` am Ende setzen das Frame auf `-0xb8`.
+Die Matrizen liegen dann auf `0x80`, `0x50` und `0x20`.
+
+`TMirrorCamera::drawSetting`: 0 Abweichungen, 156 Bytes, 39 Instruktionen.
+`validate-symbol-order` `mario/Map/MapMirror` scheitert vorbestehend.
+`scaleAdd` fehlt und `TVec3::set` steht an der falschen Stelle.
+5 ererbte UNUSED-Größenwarnungen bleiben.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TCameraBck::updateDemo` unberührt.
+
+`ninja changes_all` gegen `28ec6aff`: fuzzy 81.13274 % -> 81.132774 %,
+matched code 55.13826 % -> 55.142605 % (1979512 -> 1979668, +156).
+Matched data 69.31025 % -> 69.31899 % (443815 -> 443871, +56).
+Funktionen matched 10029 -> 10030.
+`MapMirror` matched code 3176 -> 3332 (+156), Funktionen 20 -> 21 von 27.
+Fuzzy der Unit 86.34954 % -> 86.372536 %.
+Matched code der Unit 52.1682 % -> 54.730618 %.
+Matched data der Unit 93.99142 % -> 100 % (876 -> 932).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TMirrorCamera::drawSetting` ist neu matched.
+
+DOL-SHA1 unverändert: `MapMirror.cpp` bleibt `NonMatching` und wird nicht gelinkt.

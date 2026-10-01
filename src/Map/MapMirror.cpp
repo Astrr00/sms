@@ -41,14 +41,20 @@ void TMirrorCamera::drawSetting(MtxPtr param_1)
 {
 	GXLoadTexObj(&unk60, GX_TEXMAP0);
 	Mtx afStack_38;
-	C_MTXLightPerspective(afStack_38, unk80 * gpCamera->mFovy,
-	                      gpCamera->mAspect, 1.0f, -1.0f, 1.0f, 1.0f);
+	f32 fovy = gpCamera->mFovy;
+	C_MTXLightPerspective(afStack_38, unk80 * fovy, gpCamera->mAspect, 0.5f,
+	                      -0.5f, 0.5f, 0.5f);
 
 	Mtx afStack_68;
 	MTXConcat(getUnk30(), param_1, afStack_68);
 	Mtx afStack_98;
 	MTXConcat(afStack_38, afStack_68, afStack_98);
 	GXLoadTexMtxImm(afStack_98, 0x1E, GX_MTX3x4);
+
+	char trash[8];
+	char gap[4];
+	trash[0] = 0;
+	gap[0]   = 0;
 }
 
 void TMirrorCamera::calcEffectMtx(MtxPtr) { }
