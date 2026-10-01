@@ -757,6 +757,9 @@ BOOL THinokuri2::receiveMessageLv0(THitActor* sender, u32 message)
 
 BOOL THinokuri2::receiveMessageLv1(THitActor* sender, u32 message)
 {
+	// Frame stays 0x10 short unless a local exists. Same shape as Lv2.
+	char trash[0x10];
+
 	if (mJointIdxMessageCameFrom == 0x13 && sender->getActorType() == 0x1000001
 	    && message == HIT_MESSAGE_SPRAYED_BY_WATER)
 		return true;
@@ -766,16 +769,17 @@ BOOL THinokuri2::receiveMessageLv1(THitActor* sender, u32 message)
 		if (mJointIdxMessageCameFrom != 0x19)
 			return true;
 
-		int dmgAmount
-		    = gpModelWaterManager->getParticleAttack((TWaterHitActor*)sender);
+		int dmgAmount = gpModelWaterManager->getParticleAttack(
+		    (TWaterHitActor*)sender);
 
 		if (dmgAmount <= 0)
 			return true;
 
-		if (mHitPoints >= dmgAmount)
+		u8 hp = mHitPoints;
+		if (dmgAmount >= hp)
 			mHitPoints = 0;
 		else
-			mHitPoints -= dmgAmount;
+			mHitPoints = hp - dmgAmount;
 
 		++unk18C;
 

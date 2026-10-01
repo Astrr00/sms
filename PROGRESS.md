@@ -22791,3 +22791,35 @@ Complete code und complete data unverändert.
 Nur `TGessoPolluteObj::loadInit` ist neu matched.
 
 DOL-SHA1 unverändert: `gesso.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R633A (`receiveMessageLv1`)
+
+**Vollmatch, strikt.**
+
+`THinokuri2::receiveMessageLv1` war 99.80606 %.
+Das Frame war `-0x68` statt `-0x78`.
+`char trash[0x10]` setzt das Frame auf `-0x78`.
+`getParticleAttack` lag in `r3` und die Trefferpunkte in `r0`.
+Ein `u8 hp` nach der `<= 0`-Prüfung legt den Angriff in `r0` und die Punkte in `r3`.
+`dmgAmount >= hp` nullt die Punkte, sonst `hp - dmgAmount`.
+
+`THinokuri2::receiveMessageLv1`: 0 Abweichungen, 660 Bytes, 165 Instruktionen.
+`validate-symbol-order` `mario/Enemy/hinokuri2`: PASS.
+6 ererbte UNUSED-Größenwarnungen bleiben.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `496273af`: fuzzy 81.13256 % -> 81.13259 %,
+matched code 55.107285 % -> 55.125664 % (1978400 -> 1979060, +660).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10027 -> 10028.
+`hinokuri2` matched code 16352 -> 17012 (+660), Funktionen 60 -> 61 von 70.
+Fuzzy der Unit 99.20297 % -> 99.208305 %.
+Matched code der Unit 68.17879 % -> 70.93062 %.
+Matched data der Unit unverändert 68.008255 % (2636).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `THinokuri2::receiveMessageLv1` ist neu matched.
+
+DOL-SHA1 unverändert: `hinokuri2.cpp` bleibt `NonMatching` und wird nicht gelinkt.
