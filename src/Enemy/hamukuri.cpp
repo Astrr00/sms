@@ -1179,6 +1179,16 @@ static inline f32 dist(const JGeometry::TVec3<f32>& a,
 	return tmp.length();
 }
 
+static inline f32 distF(const JGeometry::TVec3<f32>& a,
+                        const JGeometry::TVec3<f32>& b)
+{
+	JGeometry::TVec3<f32> tmp = a;
+	tmp.x -= b.x;
+	tmp.y -= b.y;
+	tmp.z -= b.z;
+	return tmp.length();
+}
+
 bool THamuKuri::isResignationAttack()
 {
 	if (dist(unk104.getPoint(), mPosition) > unk194) {
@@ -2389,7 +2399,7 @@ DEFINE_NERVE(TNerveHamuKuriGoForSearchActor, TLiveActor)
 		self->setRunAnm();
 
 	if (!self->isAirborne()) {
-		if ((self->unk104.getPoint() - self->mPosition).length() < 200.0f)
+		if (distF(self->unk104.getPoint(), self->mPosition) < 200.0f)
 			self->jumpToSearchActor();
 	}
 
