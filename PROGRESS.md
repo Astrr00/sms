@@ -22591,3 +22591,38 @@ Complete code und complete data unverändert.
 Nur `calcFarthestVertex` ist neu matched.
 
 DOL-SHA1 unverändert: `walker.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R635B (`checkSoundArea`)
+
+**Vollmatch, strikt.**
+
+`MSoundSE::checkSoundArea` war 99.64 %.
+Das Frame war `-0x48`, Ziel `-0x58`.
+Die vier Vecs lagen lückenlos im Abstand `0xC`.
+Retail packt die beiden `getInCubeNo`-Kopien oben.
+Vor jedem Quell-Vec liegen 4 Bytes Luft.
+Unter dem untersten Vec fehlen 8 Bytes.
+`int hole1` zwischen den Kopien und dem ersten Quell-Vec, `int hole2` zwischen den Quell-Vecs und `int bot1`/`bot2` darunter setzen die Slots.
+Die Null-Stores fallen weg.
+Case 8 bleibt unverändert.
+
+`MSoundSE::checkSoundArea`: 0 Abweichungen, 348 Bytes, 87 Instruktionen.
+`validate-symbol-order` `mario/MSound/MSoundSE`: PASS.
+Schwache Reihenfolge bleibt compiler-gesteuert.
+1 ererbte UNUSED-Größenwarnung (`getRandomVolume`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `337ee4c2`: fuzzy 81.1322 % -> 81.13224 %,
+matched code 55.066616 % -> 55.076313 % (1976940 -> 1977288, +348).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10021 -> 10022.
+`MSoundSE` matched code 10880 -> 11228 (+348), Funktionen 27 -> 28 von 29.
+Fuzzy der Unit 99.091125 % -> 99.101585 %.
+Matched code der Unit 91.79885 % -> 94.73507 %.
+Matched data der Unit unverändert 100 % (2172).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `MSoundSE::checkSoundArea` ist neu matched.
+
+DOL-SHA1 unverändert: `MSoundSE.cpp` bleibt `NonMatching` und wird nicht gelinkt.

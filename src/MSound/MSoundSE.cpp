@@ -560,14 +560,26 @@ bool MSoundSE::checkSoundArea(u32 param_1, const Vec& param_2)
 
 	switch (param_1) {
 	case 7: {
-		Vec vec = *MSGMSound->unkAC[0].mPosition;
+		Vec vec1;
+		Vec vec3;
+		int hole1;
+		Vec vec;
+		int hole2;
+		Vec vec2;
+		int bot1;
+		int bot2;
+		hole1 = 0;
+		hole2 = 0;
+		bot1  = 0;
+		bot2  = 0;
+		vec   = *MSGMSound->unkAC[0].mPosition;
 		vec.y += 75.0f;
-		Vec vec1  = vec;
+		vec1      = vec;
 		int iVar2 = gpCubeCamera->getInCubeNo(vec1);
 
-		Vec vec2 = param_2;
+		vec2 = param_2;
 		vec2.y += 75.0f;
-		Vec vec3  = vec2;
+		vec3      = vec2;
 		int iVar3 = gpCubeCamera->getInCubeNo(vec3);
 
 		if (iVar3 != -1) {
