@@ -22661,3 +22661,36 @@ Complete code und complete data unverändert.
 Nur `TBiancoGateKeeper::getRumblePow` ist neu matched.
 
 DOL-SHA1 unverändert: `gatekeeper.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R89C (`getEdgeDegree`)
+
+**Vollmatch, strikt.**
+
+`TPollutionPos::getEdgeDegree` war 97.8353 %.
+Das Frame war `-0x20`, Ziel `-0x38`.
+`index()` im Subskript faltet den gehoisteten `(z & 3) * 8`-Term in die `lbzx`-Basis.
+Der Heightmap-Pointer landet im Offset.
+`u32 idx = index(x + dx, y + dy)` materialisiert den vollen Index.
+`mHeightMap[idx]` nimmt den Pointer als `lbzx`-Basis.
+`char trash[0x18]` setzt das Frame auf `-0x38` und `r31` auf `0x34`.
+Gleiches Padding-Muster wie `isSame` in dieser TU.
+
+`TPollutionPos::getEdgeDegree`: 0 Abweichungen, 340 Bytes, 85 Instruktionen.
+`validate-symbol-order` `mario/Map/PollutionPos`: PASS.
+1 ererbte UNUSED-Größenwarnung (`subtractFromYMap`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `3604ef1b`: fuzzy 81.132256 % -> 81.132454 %,
+matched code 55.08244 % -> 55.09191 % (1977508 -> 1977848, +340).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10023 -> 10024.
+`PollutionPos` matched code 1416 -> 1756 (+340), Funktionen 8 -> 9 von 9.
+Fuzzy der Unit 99.580864 % -> 100 %.
+Matched code der Unit 80.63781 % -> 100 %.
+Matched data der Unit unverändert 100 % (212).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TPollutionPos::getEdgeDegree` ist neu matched.
+
+DOL-SHA1 unverändert: `PollutionPos.cpp` bleibt `NonMatching` und wird nicht gelinkt.
