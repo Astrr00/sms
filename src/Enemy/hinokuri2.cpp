@@ -1230,6 +1230,13 @@ DEFINE_NERVE(TNerveHino2PrePol, TLiveActor)
 
 DEFINE_NERVE(TNerveHino2Pollute, TLiveActor)
 {
+	// Frame is -0xe8 and the joint vector sits at 0xa8. Both stores are eliminated.
+	char pre[8];
+	pre[0] = 0;
+	JGeometry::TVec3<f32> local_40;
+	char trash[0x3c];
+	trash[0] = 0;
+
 	THinokuri2* self = (THinokuri2*)spine->getBody();
 
 	if (spine->getTime() == 0) {
@@ -1252,7 +1259,7 @@ DEFINE_NERVE(TNerveHino2Pollute, TLiveActor)
 			int polWait = self->getSaveParam()->mSLPolWaitCount.get();
 			if (uVar1 > polWait) {
 				self->unk180 = FALSE;
-				self->changeBck(3);
+				self->changeBck(0x10);
 				uVar1 = 0;
 			}
 			self->mWaitTimer = uVar1;
@@ -1262,15 +1269,14 @@ DEFINE_NERVE(TNerveHino2Pollute, TLiveActor)
 
 	if (self->mCurrentBck == 16) {
 		if (self->getMActor()->curAnmEndsNext()) {
-			self->changeBck(3);
+			self->changeBck(0x11);
 			self->unk15C = 0;
 
-			JGeometry::TVec3<f32> local_40;
 			if (self->checkLiveFlag(LIVE_FLAG_CLIPPED_OUT)) {
 				local_40 = self->mPosition;
 				local_40.y += 500.0f;
 			} else {
-				self->getJointTransByIndex(0x14, &local_40);
+				self->getJointTransByIndex(0x18, &local_40);
 			}
 		}
 		return false;

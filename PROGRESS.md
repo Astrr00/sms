@@ -21201,3 +21201,33 @@ Complete code und complete data unverändert.
 Nur `perform` hat sich geändert.
 
 DOL-SHA1 unverändert: `Shimmer.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R604A (`execute`)
+
+**Vollmatch, strikt.**
+
+`changeBck(3)` nach der Wartezeit trifft BCK `0x10`.
+Der nächste `changeBck(3)` trifft BCK `0x11`.
+`getJointTransByIndex` nutzt Joint `0x18`.
+Das Frame war `-0xa0`, Ziel `-0xe8`.
+`char pre[8]` vor der `TVec3` und `char trash[0x3c]` dahinter legen den Vektor auf `0xa8`.
+Beide Stores fallen weg.
+
+`TNerveHino2Pollute::execute`: 0 Abweichungen, 944 Bytes, 236 Instruktionen.
+`validate-symbol-order` `mario/Enemy/hinokuri2`: PASS.
+6 ererbte UNUSED-Größenwarnungen (leere Stubs).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `ff1c3f8c`: fuzzy 81.12985 % -> 81.12987 %,
+matched code 54.358334 % -> 54.384624 % (1951512 -> 1952456, +944).
+Matched data unverändert 68.96293 % (441591).
+Funktionen matched 9978 -> 9979.
+`hinokuri2` matched code 13604 -> 14548 (+944), Funktionen 57 -> 58 von 70.
+Fuzzy der Unit 99.18762 % -> 99.19229 %.
+Matched code der Unit 56.721146 % -> 60.6571 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TNerveHino2Pollute::execute` hat sich geändert.
+
+DOL-SHA1 unverändert: `hinokuri2.cpp` bleibt `NonMatching` und wird nicht gelinkt.
