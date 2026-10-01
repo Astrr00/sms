@@ -17811,3 +17811,29 @@ Nur `objmanager` hat sich geändert.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R526B (`TLiveManager::perform`)
+
+**Vollmatch, strikt.**
+
+- Ein lokales `static inline` kopiert `0xff` über vier `int`.
+  Die Farbe liegt auf `r1+0x34`.
+  Der Rahmen bleibt `-0x50`.
+- Das äußere `char trash[16]` entfällt.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 252 Bytes, 63 Instruktionen.
+`validate-symbol-order` `mario/Strategic/livemanager`: PASS.
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `067baea9`: fuzzy bleibt 81.126816 %,
+matched code 52.593475 % -> 52.60049 % (1888152 -> 1888404, +252).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9856 -> 9857.
+`livemanager` 1236 -> 1488 (+252), Funktionen 11 -> 12.
+Fuzzy der Unit 99.98656 % -> 100 %.
+Matched code der Unit 83.064514 % -> 100 %.
+Complete units bleiben 416.
+Nur `livemanager` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+

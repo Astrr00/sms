@@ -83,13 +83,37 @@ void TLiveManager::setFlagOutOfCube()
 	}
 }
 
+static inline void startLiveTimer()
+{
+	TTimeRec* inst = TTimeRec::_instance;
+	int pad1       = 0xff;
+	int pad2       = pad1;
+	int pad3       = pad2;
+	int pad4       = pad3;
+	union {
+		u8 asAry[4];
+		u32 asUint;
+	} color;
+
+	color.asAry[0] = pad4;
+	color.asAry[1] = pad4;
+	color.asAry[2] = pad4;
+	color.asAry[3] = pad4;
+	u32 col = color.asUint;
+	if (!inst)
+		return;
+	OSTick tick = OSGetTick();
+	inst->crTimeAry()[0].append(tick, col);
+}
+
 void TLiveManager::perform(u32 cue, JDrama::TGraphics* graphics)
 {
-	char trash[16];
-
 	if (cue & CUE_CALC_ANIM) {
-		if (unk30 & 1)
-			TTimeRec::startTimer();
+		if (unk30 & 1) {
+#pragma inline on
+			startLiveTimer();
+#pragma inline off
+		}
 		clipActors(graphics);
 		setFlagOutOfCube();
 		if (unk30 & 1)
