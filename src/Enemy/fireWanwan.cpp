@@ -695,6 +695,16 @@ void TFireWanwanTailHit::offFireEffect()
 	SMS_EasyEmitParticle(PARTICLE_MS_MOE_FIRE_OFF, mtx, this, scale);
 }
 
+// fabricated
+static inline void emitFireOff(TFireWanwanTailHit* self)
+{
+	char trash[0x4c];
+	trash[0] = 0;
+	JGeometry::TVec3<f32> scale(self->mOwner->mBodyScale);
+	MtxPtr mtx = self->unkA8[4]->mMActor->getModel()->getBaseTRMtx();
+	SMS_EasyEmitParticle(PARTICLE_MS_MOE_FIRE_OFF, mtx, self, scale);
+}
+
 void TFireWanwanTailHit::changeBodyToRed(f32 param_1)
 {
 	unkBC->init(cBodyColorOnFire, unkBC->getCurrent(), param_1);
@@ -1011,7 +1021,7 @@ void TFireWanwan::behaveToWater(THitActor* param_1)
 	                                nullptr, 0, 4);
 	mSpine->reset();
 	mSpine->setNext(&TNerveFireWanwanEscape::theNerve());
-	unk194->offFireEffect();
+	emitFireOff(unk194);
 	unk194->mIsOnFire       = false;
 	mSprayedByWaterCooldown = 20;
 }
