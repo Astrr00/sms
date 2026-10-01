@@ -1249,6 +1249,8 @@ void TBossGesso::calcRootMatrix()
 
 void TBossGesso::performInContainer(u32, JDrama::TGraphics*) { }
 
+extern const int bgesoRootJoints[4];
+
 void TBossGesso::perform(u32 cue, JDrama::TGraphics* graphics)
 {
 	if (cue & CUE_CALC_ANIM) {
@@ -1382,14 +1384,12 @@ void TBossGesso::perform(u32 cue, JDrama::TGraphics* graphics)
 					mTentacles[i]->mNodes[0].setPosition(mPosition);
 			}
 		} else {
-			static const int rootJoints[] = { 2, 3, 5, 6 };
-
 			for (int i = 0; i < TENTACLE_NUM; ++i) {
 				if (mTentacles[i]->mState == 4)
 					continue;
 
 				JGeometry::TVec3<f32> trans;
-				if (getJointTransByIndex(rootJoints[i], &trans) >= 0)
+				if (getJointTransByIndex(bgesoRootJoints[i], &trans) >= 0)
 					mTentacles[i]->mNodes[0].setPosition(trans);
 			}
 		}
@@ -1441,7 +1441,7 @@ TBossGessoManager::TBossGessoManager(const char* name)
 
 void TBossGessoManager::createModelData()
 {
-	static TModelDataLoadEntry entry[] = {
+	static const TModelDataLoadEntry entry[] = {
 		{ "bgeso_body.bmd", 0x10300000, 0 },
 		{ "bgeso_hand.bmd", 0x10240000, 0 },
 		{ "bgeso_shand.bmd", 0x200000, 0 },
@@ -1483,6 +1483,9 @@ void TBossGessoManager::initJParticle()
 	SMS_LoadParticle("/scene/bgeso/jpa/ms_boge_kiseki.jpa", 0x13a);
 	SMS_LoadParticle("/scene/bgeso/jpa/ms_boge_wash.jpa", 0x13b);
 }
+
+// File-scope, not a second rodata copy of {2, 3, 5, 6}.
+const int bgesoRootJoints[4] = { 2, 3, 5, 6 };
 
 void TBossGessoManager::load(JSUMemoryInputStream& stream)
 {

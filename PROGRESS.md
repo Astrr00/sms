@@ -19740,3 +19740,40 @@ Complete units bleiben 417.
 Nur `TMapEventSinkInPollutionReset::loadAfter` hat sich geändert.
 
 DOL-SHA1 unverändert: `MapEventSink.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R580A (`TBossGessoManager::initJParticle`)
+
+**Vollmatch, strikt.**
+
+Die JPA-`addi`-Offsets lagen 0x5c zu tief.
+`r31` ist die `.rodata`-Basis.
+`createModelData` hielt `entry` in `.data` statt `.rodata` (`entry$3707`, 0x6c an Offset 0x340).
+`perform` emittierte ein zweites `{2, 3, 5, 6}` in `.rodata` und schob alles dahinter um 0x10.
+`static const TModelDataLoadEntry entry[]` legt die Tabelle nach `.rodata`.
+`const int bgesoRootJoints[4]` liegt in `.data`, damit dieses Array nicht noch einmal in `.rodata` steht.
+`doAttackSingle` behält das rodata-`idxarray`.
+
+`TBossGessoManager::initJParticle`: 0 Abweichungen, 1252 Bytes, 313 Instruktionen.
+`TBossGessoManager::createModelData` bleibt 100 % (52 Bytes).
+Der matched-code-Zähler steigt nur um 1252.
+`.rodata` der Unit 95.88728 % -> 100 % (2776 Bytes).
+`perform` fuzzy 74.601265 % -> 73.6076 % (war schon nonmatching).
+`validate-symbol-order` `mario/Enemy/bossgesso`: FAIL mit denselben 2 MISSING wie am Tip (`getMActorAnmData`, `SMS_GetMarioPos`).
+Order und Linkage der gelinkten Symbole in Ordnung.
+15 geerbte UNUSED-Größenwarnungen.
+`bgesoRootJoints` ist ein zusätzliches `.data`-Objekt und steht nicht in der Map.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `8b054391`: fuzzy 81.1276 % -> 81.126945 %,
+matched code 53.500973 % -> 53.53585 % (1920732 -> 1921984, +1252).
+Matched data 67.8535 % -> 68.287025 % (434487 -> 437263, +2776).
+Funktionen matched 9929 -> 9930.
+`bossgesso` matched code 7608 -> 8860 (+1252), Funktionen 59 -> 60.
+Fuzzy der Unit 90.43904 % -> 90.3802 %.
+Matched code der Unit 19.227657 % -> 22.391832 %.
+Matched data der Unit 7.771136 % -> 67.03672 % (364 -> 3140).
+Complete units bleiben 417.
+Complete code und complete data unverändert.
+
+DOL-SHA1 unverändert: `bossgesso.cpp` bleibt `NonMatching` und wird nicht gelinkt.
