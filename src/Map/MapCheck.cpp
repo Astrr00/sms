@@ -222,12 +222,16 @@ f32 TMapCollisionData::checkRoof(f32 x, f32 y, f32 z, u8 flags,
 
 	int gridX = (x + mGridExtentX) * (1.0f / 1024);
 	int gridZ = (z + mGridExtentY) * (1.0f / 1024);
+	char trash[1];
+	trash[0] = 0;
 
 	const TBGCheckData* local_4c;
 	f32 dVar5 = checkRoofList(
 	    x, y, z, flags, getGridRoot18(gridX, gridZ).getRoofList(), &local_4c);
 
 	const TBGCheckData* local_50;
+	char low[1];
+	low[0] = 0;
 	f32 dVar6 = checkRoofList(
 	    x, y, z, flags, getGridRoot14(gridX, gridZ).getRoofList(), &local_50);
 
