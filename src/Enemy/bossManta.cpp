@@ -198,8 +198,18 @@ DEFINE_NERVE(TNerveMantaMove, TLiveActor)
 	return FALSE;
 }
 
+struct MantaPad4 {
+	char c[4];
+};
+static inline MantaPad4 mantaPad()
+{
+	MantaPad4 p;
+	return *(MantaPad4*)(void*)&p;
+}
+
 DEFINE_NERVE(TNerveMantaHitWater, TLiveActor)
 {
+	mantaPad();
 	TBossManta* self = (TBossManta*)spine->getBody();
 
 	if (spine->getTime() == 0) {
@@ -209,9 +219,8 @@ DEFINE_NERVE(TNerveMantaHitWater, TLiveActor)
 		    = { MSD_SE_BS_MANTA_DAMAGE_1, MSD_SE_BS_MANTA_DAMAGE_2,
 			    MSD_SE_BS_MANTA_DAMAGE_3, MSD_SE_BS_MANTA_DAMAGE_4,
 			    MSD_SE_BS_MANTA_DAMAGE_5, MSD_SE_BS_MANTA_DAMAGE_5 };
-		u32 snd = hitSounds[self->mGeneration];
-		SMSGetMSound()->startSoundActor(snd, &self->mPosition, 0, nullptr, 0,
-		                                4);
+		SMSGetMSound()->startSoundActor(hitSounds[self->mGeneration],
+		                                &self->mPosition, 0, nullptr, 0, 4);
 	}
 
 	int effectCount = self->getSaveParams()->mSLDamageEffectNum.get();

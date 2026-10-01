@@ -23666,3 +23666,32 @@ Nur `TBoxTelesa::load` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `telesa.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R653A (`execute`)
+
+**Vollmatch, strikt.**
+
+`TNerveMantaHitWater::execute` war 99.766 %.
+Der Frame war 8 Bytes zu klein (`-0xa8` gegen `-0xb0`).
+Die Sound- und Partikel-Arrays lagen 4 Bytes zu tief, und die Sound-Id stand in `r26` statt `r27`.
+`mantaPad()` hebt die Arrays um 4 und den Frame um 8, ohne eine eigene Instruktion.
+`startSoundActor(hitSounds[mGeneration], ...)` legt die Id in `r27`.
+0 Abweichungen, 496 Bytes, 124 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bossManta`: dieselbe vorbestehende ORDER-Abweichung und UNUSED-Größenwarnungen.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TBoxTelesa::load` aus R652A bleibt unberührt.
+
+`ninja changes_all` gegen `d8cb52cd`: fuzzy 81.13383 % -> 81.13386 %.
+Matched code 55.401314 % -> 55.41513 % (1988956 -> 1989452, +496).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10051 -> 10052.
+`bossManta` matched code 8136 -> 8632 (+496), Funktionen 31 -> 32 von 49.
+Fuzzy der Unit 98.16807 % -> 98.17338 %.
+Matched code der Unit 37.23911 % -> 39.50934 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TNerveMantaHitWater::execute` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `bossManta.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
