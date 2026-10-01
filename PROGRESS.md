@@ -19224,3 +19224,32 @@ Complete units bleiben 416.
 Nur `execRoofCheck_` hat sich geändert.
 
 DOL-SHA1 unverändert: `CameraBGCheck.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R567A (`TNerveTamaNokoSink::execute`)
+
+**Vollmatch, strikt.**
+
+`getObj(i)` ist dreifach eingezeilt und reservierte unbenutzten Stack (Rahmen `-0x68`, Ziel `-0x60`).
+Die Schleife liest `((TLiveActor*)manager->unk18[i])->checkLiveFlag(LIVE_FLAG_DEAD)`.
+Das ist dasselbe `lwz`/`lwzx` wie `getObj`.
+Die s16-nach-f32-Casts wandern mit dem Rahmen.
+
+`TNerveTamaNokoSink::execute`: 0 Abweichungen, 536 Bytes, 134 Instruktionen.
+`validate-symbol-order` `mario/Enemy/tamaNoko`: PASS.
+Vorbestehende Warnung nur schwache Symbolordnung (`__dt__9TTamaNokoFv`).
+Vorbestehende UNUSED-Size-Warnungen `forceWakeUp__9TTamaNokoFv` (0xf8 vs 0x4) und `setBckAnm__15TTamaNokoFlowerFi` (0xa8 vs 0xac).
+Kein neuer Fehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `8d0c1e3e`: fuzzy 81.127266 % -> 81.12728 %,
+matched code 53.19413 % -> 53.20906 % (1909716 -> 1910252, +536).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9910 -> 9911.
+`tamaNoko` 9564 -> 10100 (+536), Funktionen 48 -> 49.
+Fuzzy der Unit 97.42487 % -> 97.428505 %.
+Matched code der Unit 57.85144 % -> 61.093636 %.
+Complete units bleiben 416.
+Nur `TNerveTamaNokoSink::execute` hat sich geändert.
+
+DOL-SHA1 unverändert: `tamaNoko.cpp` bleibt `NonMatching` und wird nicht gelinkt.
