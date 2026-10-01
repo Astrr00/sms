@@ -617,6 +617,8 @@ JAISound* MSoundSE::startSoundActorInner(u32 id, JAISoundHandle* out_handle,
                                          JAIActor* actor, u32 fade,
                                          u8 camera_idx)
 {
+	char pad[8];
+	pad[0] = 0;
 	u32 uVar2 = MSound::getBstSwitch(id);
 	if (actor != (JAIActor*)0xffffffff) {
 		switch (MSGMSound->unkCD) {
@@ -720,16 +722,17 @@ u32 MSoundSE::getNewIDByGroundCode(u32 id, JAIActor* actor)
 	if (ground & 0xf00)
 		return id;
 
+	u32 result = id;
 	switch (id) {
 	case MSD_SE_MA_WALK_STONE_L_HEEL:
 	case MSD_SE_MA_WALK_STONE_L_TIP:
 	case MSD_SE_MA_WALK_STONE_R_HEEL:
 	case MSD_SE_MA_WALK_STONE_R_TIP:
-		id += ground << 3 & 0x7f8;
+		result += ground << 3 & 0x7f8;
 		break;
 	}
 
-	return id;
+	return result;
 }
 
 u32 MSoundSE::getNewIDBySurfaceCode(u32 id, JAIActor* actor)
