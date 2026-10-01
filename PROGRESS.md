@@ -19252,3 +19252,30 @@ Complete units bleiben 416.
 Nur `preEntry` hat sich geändert.
 
 DOL-SHA1 unverändert: `MarDirectorPreEntry.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R569A (`TBEelTearsManager::createEnemies`)
+
+**Vollmatch, strikt.**
+
+`getObj(0)` lässt den Rahmen 8 Bytes zu groß (`-0x38`, Ziel `-0x30`).
+`unk18[0]` überzieht auf `-0x28`.
+`TLiveManager::getObj(0)` trifft den Rahmen.
+Die Ressource lag dabei in `r31` statt `r30`.
+`SDLModelData* modelData` erst deklarieren und danach zuweisen legt sie auf `r30`.
+
+`TBEelTearsManager::createEnemies`: 0 Abweichungen, 184 Bytes, 46 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bosseel`: PASS (nur schwache Ordnung, vorbestehend).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `ceddf405`: fuzzy 81.1273 % -> 81.12732 %,
+matched code 53.233902 % -> 53.23903 % (1911144 -> 1911328, +184).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9912 -> 9913.
+`bosseel` 23088 -> 23272 (+184), Funktionen 120 -> 121.
+Fuzzy der Unit 99.17455 % -> 99.175865 %.
+Matched code der Unit 50.57834 % -> 50.98142 %.
+Complete units bleiben 416.
+Nur `TBEelTearsManager::createEnemies` hat sich geändert.
+
+DOL-SHA1 unverändert: `bosseel.cpp` bleibt `NonMatching` und wird nicht gelinkt.
