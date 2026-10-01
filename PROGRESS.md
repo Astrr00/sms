@@ -18325,3 +18325,32 @@ Nur `TNerveDangoHamuKuriWait::execute` hat sich geändert.
 
 DOL-SHA1 unverändert: `hamukuri.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 
+### R528A (`TDangoHamuKuri::reset`, `TBossDangoHamuKuri::reset`)
+
+**Vollmatch, strikt.**
+
+- `TMsRange<f32>(0.0f, 1.0f).rand()` schreibt `unk20C`.
+  Der Bereich liegt auf `r1+0x20`.
+  Rahmen `-0x40`.
+- `TBossDangoHamuKuri::reset` inlined denselben Rumpf und setzt danach `mBoss` und `unk238`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`TDangoHamuKuri::reset`: 0 Abweichungen, 196 Bytes, 49 Instruktionen.
+`TBossDangoHamuKuri::reset`: 0 Abweichungen, 212 Bytes, 53 Instruktionen.
+`validate-symbol-order` `mario/Enemy/hamukuri`: ererbter `onHaveCap` Linkage-FAIL,
+dieselben ererbten Weak-Order- und UNUSED-Size-Warnungen.
+Kein neuer Fehler.
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `70cf844d`: fuzzy 81.12851 % -> 81.13179 %,
+matched code 52.816086 % -> 52.827454 % (1896144 -> 1896552, +408).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9878 -> 9880.
+`hamukuri` 30016 -> 30424 (+408), Funktionen 199 -> 201.
+Fuzzy der Unit 92.9268 % -> 93.18568 %.
+Matched code der Unit 65.94025 % -> 66.836555 %.
+Complete units bleiben 416.
+Nur diese beiden Funktionen haben sich geändert.
+
+DOL-SHA1 unverändert: `hamukuri.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
