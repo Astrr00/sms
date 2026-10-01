@@ -589,6 +589,8 @@ void MSMainProc::startStageBGM(u8, u8)
 
 MSStage* MSStage::init(u8 param_1, u8)
 {
+	char pad[0x58];
+	pad[0] = 0;
 	smMSStage = nullptr;
 
 	gpMSound->unk9C->unk0 = 0.0f;

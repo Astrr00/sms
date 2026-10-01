@@ -22284,3 +22284,37 @@ Complete code und complete data unverändert.
 Nur `TSmallEnemy::init` ist neu matched.
 
 DOL-SHA1 unverändert: `smallEnemy.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R631B (`MSStage::init`)
+
+**Vollmatch, strikt.**
+
+`MSStage::init` war 98.878174 %.
+Das Frame war `-0x28`, Ziel `-0x80`.
+Jeder Stack-Slot lag `0x58` Bytes zu tief.
+`char pad[0x58]` am Anfang hebt das Frame auf `-0x80`.
+Der Store auf `pad` fällt weg.
+`smMSStage = nullptr` hält die Null in `r30`.
+`MSStageCubeSwitch` schrieb das Argument nach `unk10`.
+Retail speichert dort 0, dieselbe Null.
+Der Konstruktor initialisiert `unk10` mit 0.
+
+`MSStage::init`: 0 Abweichungen, 788 Bytes, 197 Instruktionen.
+`validate-symbol-order` `mario/System/MSoundMainSide`: die fehlende weak `TVector<void*>::begin` war schon vorher weg.
+Reihenfolge und Linkage der vorhandenen Symbole stimmen.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `24c81e8b`: fuzzy 81.13147 % -> 81.13172 %,
+matched code 54.967342 % -> 54.98929 % (1973376 -> 1974164, +788).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10012 -> 10013.
+`MSoundMainSide` matched code 2132 -> 2920 (+788), Funktionen 19 -> 20 von 27.
+Fuzzy der Unit 96.59545 % -> 96.68858 %.
+Matched code der Unit 22.46102 % -> 30.762747 %.
+Matched data der Unit bleibt 100 % (756).
+Complete code und complete data unverändert.
+Nur `MSStage::init` ist neu matched.
+
+DOL-SHA1 unverändert: `MSoundMainSide.cpp` bleibt `NonMatching` und wird nicht gelinkt.

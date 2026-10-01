@@ -52,8 +52,8 @@ public:
 
 class MSStageCubeSwitch : public MSStageCubeFade {
 public:
-	MSStageCubeSwitch(u8 param_1)
-	    : unk10(param_1)
+	MSStageCubeSwitch(u8)
+	    : unk10(0)
 	{
 	}
 
