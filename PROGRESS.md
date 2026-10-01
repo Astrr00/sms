@@ -20239,3 +20239,31 @@ Complete code und complete data unverändert.
 Nur `exitStage` hat sich geändert.
 
 DOL-SHA1 unverändert: `MSound.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R588A (`TBossPakkun::rumblePad`)
+
+**Vollmatch, strikt.**
+
+Das Frame war schon `-0x40`.
+Der Delta-Vektor lag bei `0x24`, Ziel `0x20`.
+`f32 distance` vor dem `TVec3` legt den Vektor auf `0x20`.
+Das Frame und die gesicherten Register bleiben.
+
+`TBossPakkun::rumblePad`: 0 Abweichungen, 352 Bytes, 88 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bosspakkun`: PASS.
+2 geerbte UNUSED-Größenwarnungen (`ignoreWaterCheck`, `vomitFinished`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `b5146e48`: fuzzy 81.12723 % -> 81.12724 %,
+matched code 53.71222 % -> 53.722023 % (1928316 -> 1928668, +352).
+Matched data unverändert 68.287025 % (437263).
+Funktionen matched 9945 -> 9946.
+`bosspakkun` matched code 17920 -> 18272 (+352), Funktionen 103 -> 104 von 126.
+Fuzzy der Unit 99.18461 % -> 99.18582 %.
+Matched code der Unit 45.243385 % -> 46.132095 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TBossPakkun::rumblePad` hat sich geändert.
+
+DOL-SHA1 unverändert: `bosspakkun.cpp` bleibt `NonMatching` und wird nicht gelinkt.
