@@ -17921,3 +17921,29 @@ Nur `tobiPuku` hat sich geändert.
 
 DOL-SHA1 unverändert: `tobiPuku.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 
+### R514A (`TMameGesso::calcObjCollision`)
+
+**Vollmatch, strikt.**
+
+- `mSLCollisionScale` zuerst in `f0`, dann `mAttackRadius * mBodyScale`.
+  Die Position liegt auf `r1+0x48`.
+  Ein nicht-triviales 0x1c-Temporary am Ende hält den Rahmen auf `-0x58`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 368 Bytes, 92 Instruktionen.
+`validate-symbol-order` `mario/Enemy/mameGesso`: PASS gegen die Basis
+(keine neuen Fehler; weak-Order und UNUSED-Größen ererbt).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `b19a93ed`: fuzzy 81.12691 % -> 81.127 %,
+matched code 52.637817 % -> 52.648067 % (1889744 -> 1890112, +368).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9861 -> 9862.
+`mameGesso` 9580 -> 9948 (+368), Funktionen 51 -> 52.
+Fuzzy der Unit 99.1644 % -> 99.18622 %.
+Matched code der Unit 75.71925 % -> 78.627884 %.
+Complete units bleiben 416.
+Nur `mameGesso` hat sich geändert.
+
+DOL-SHA1 unverändert: `mameGesso.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+

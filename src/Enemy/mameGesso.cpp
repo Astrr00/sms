@@ -285,7 +285,8 @@ void TMameGesso::calcObjCollision()
 {
 	mHeadHeight = 50.0f;
 
-	f32 scale = unk194->mSLCollisionScale.get() * mAttackRadius * mBodyScale;
+	f32 scale = unk194->mSLCollisionScale.get();
+	scale *= mAttackRadius * mBodyScale;
 
 	MtxPtr mtx = mMActor->getModel()->getAnmMtx(1);
 	JGeometry::TVec3<f32> pos;
@@ -316,6 +317,12 @@ void TMameGesso::calcObjCollision()
 	unk19C[3].y += 90.0f;
 	unk19C[3].x += scale * xzTable[6];
 	unk19C[3].z += scale * xzTable[7];
+
+	struct Pad {
+		~Pad() { }
+		char c[0x1c];
+	};
+	Pad();
 }
 
 void TMameGesso::entryObjCollision()
