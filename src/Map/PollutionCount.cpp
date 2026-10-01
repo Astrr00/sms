@@ -500,6 +500,8 @@ void TPollutionCounterLayer::drawTexStamp(int target_layer) const
 
 void TPollutionCounterLayer::drawRevivalTexStamp(int layer_index) const
 {
+	char pad[4];
+	pad[0] = 0;
 	GXSetVtxAttrFmt(GX_VTXFMT0, GX_VA_POS, GX_POS_XY, GX_S16, 0);
 	GXSetVtxAttrFmt(GX_VTXFMT0, GX_VA_TEX0, GX_TEX_ST, GX_U16, 0);
 	GXClearVtxDesc();

@@ -18551,3 +18551,31 @@ Complete units bleiben 416.
 Nur `setCategoryVOLs` hat sich geändert.
 
 DOL-SHA1 unverändert: `MSound.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R16C (`TPollutionCounterLayer::drawRevivalTexStamp`)
+
+**Vollmatch, strikt.**
+
+`char pad[4]` mit `pad[0] = 0` vergrößert den Rahmen von `-0x98` auf `-0xa0`.
+Der Store wird vom Compiler entfernt.
+Die Locals rücken um 4 Bytes hoch.
+
+`TPollutionCounterLayer::drawRevivalTexStamp`: 0 Abweichungen, 748 Bytes, 187 Instruktionen.
+`validate-symbol-order` `mario/Map/PollutionCount`: FAIL.
+Fehlender UNUSED-Konstruktor `__ct__21TPollutionCounterBaseFv` bestand schon vorher.
+Ererbte Weak-Order-Warnung und UNUSED-Size-Warnungen.
+Kein neuer Fehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `e246f57e`: fuzzy 81.126816 % -> 81.126816 %,
+matched code 52.866333 % -> 52.887173 % (1897948 -> 1898696, +748).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9887 -> 9888.
+`PollutionCount` 8176 -> 8924 (+748), Funktionen 34 -> 35.
+Fuzzy der Unit 99.92078 % -> 99.92608 %.
+Matched code der Unit 77.48294 % -> 84.57165 %.
+Complete units bleiben 416.
+Nur `drawRevivalTexStamp` hat sich geändert.
+
+DOL-SHA1 unverändert: `PollutionCount.cpp` bleibt `NonMatching` und wird nicht gelinkt.
