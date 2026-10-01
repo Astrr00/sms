@@ -103,7 +103,9 @@ void TWalkerEnemy::reset()
 	((TWalker*)mBinder)->reset();
 	mSpine->reset();
 	mSpine->setNext(mSpine->getDefault());
-	setGoalPath(TPathNode((THitActor*)gpMarioAddress));
+	TPathNode node((THitActor*)gpMarioAddress);
+	char trash[4];
+	setGoalPath(node);
 }
 
 void TWalkerEnemy::walkBehavior(int param_1, float param_2)

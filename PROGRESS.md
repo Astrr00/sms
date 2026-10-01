@@ -22084,3 +22084,35 @@ Complete code und complete data unverändert.
 Nur `TMapWire::drawLower` ist neu matched.
 
 DOL-SHA1 unverändert: `MapWire.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R618A (`reset`)
+
+**Vollmatch, strikt.**
+
+`TWalkerEnemy::reset` war 99.83146 %.
+Das Frame war schon `-0x60`.
+Das temporäre `TPathNode` lag auf `0x34`, Ziel `0x38`.
+`char trash[4]` nach dem benannten Node schiebt es auf `0x38`.
+Der Store auf `trash` fällt weg.
+Das Frame bleibt `-0x60`.
+
+`TWalkerEnemy::reset`: 0 Abweichungen, 356 Bytes, 89 Instruktionen.
+`validate-symbol-order` `mario/Enemy/walkerEnemy`: PASS.
+Alle Map-Symbole vorhanden, Reihenfolge stimmt, Linkage stimmt.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `dac1ab0b`: fuzzy 81.13104 % -> 81.13106 %,
+matched code 54.894924 % -> 54.904835 % (1970776 -> 1971132, +356).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10006 -> 10007.
+`walkerEnemy` matched code 5892 -> 6248 (+356), Funktionen 28 -> 29 von 33.
+Fuzzy der Unit 99.95608 % -> 99.96411 %.
+Matched code der Unit 78.89662 % -> 83.66363 %.
+Matched data der Unit unverändert 100 % (1204).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TWalkerEnemy::reset` ist neu matched.
+
+DOL-SHA1 unverändert: `walkerEnemy.cpp` bleibt `NonMatching` und wird nicht gelinkt.
