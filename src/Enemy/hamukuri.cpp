@@ -197,8 +197,7 @@ void THamuKuriManager::loadAfter()
 static const char* anmlist[] = {
 	"hamukuri_walk",
 	"hamukuri_run",
-	// TODO: this shouldn't be here but rodata ordering looks like it should?!
-	// "default.bmd",
+	"default.bmd",
 	"hanekuri_wait",
 };
 
@@ -672,6 +671,11 @@ void THamuKuri::init(TLiveManager* param_1)
 
 void THamuKuri::setMActorAndKeeper()
 {
+	struct Pad {
+		~Pad() { }
+		char c[8];
+	};
+	Pad();
 	mMActorKeeper = new TMActorKeeper(mManager, 1);
 	mMActor       = mMActorKeeper->createMActor("default.bmd", 3);
 	int idx       = getModel()->getModelData()->getMaterialName()->getIndex(
@@ -2080,6 +2084,11 @@ void TFireHamuKuri::reset()
 
 void TFireHamuKuri::setMActorAndKeeper()
 {
+	struct Pad {
+		~Pad() { }
+		char c[8];
+	};
+	Pad();
 	mMActorKeeper = new TMActorKeeper(mManager, 1);
 	mMActor       = mMActorKeeper->createMActor("default.bmd", 3);
 	ResTIMG* img

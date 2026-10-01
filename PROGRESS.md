@@ -18111,3 +18111,33 @@ Nur `calcRootMatrix` hat sich geändert.
 
 DOL-SHA1 unverändert: `tobiPuku.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 
+### R520A (`THamuKuri::setMActorAndKeeper`, `TFireHamuKuri::setMActorAndKeeper`)
+
+**Vollmatch, strikt.**
+
+- `anmlist` nennt `default.bmd` vor `hanekuri_wait`.
+  Damit liegt `default.bmd` auf `...rodata.0+0x360`.
+- Nicht-triviales 8-Byte-Temporary am Anfang jeder Funktion.
+  Rahmen `-0x50` bzw. `-0x38`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen.
+`THamuKuri::setMActorAndKeeper` 228 Bytes, 57 Instruktionen.
+`TFireHamuKuri::setMActorAndKeeper` 160 Bytes, 40 Instruktionen.
+`validate-symbol-order` `mario/Enemy/hamukuri`: dasselbe ererbte
+`onHaveCap` Linkage-FAIL, keine neuen Fehler.
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `29f7c590`: fuzzy 81.12716 % -> 81.12719 %,
+matched code 52.738094 % -> 52.7489 % (1893344 -> 1893732, +388).
+Matched data 67.07141 % -> 67.8535 % (429479 -> 434487, +5008).
+Funktionen matched 9869 -> 9871.
+`hamukuri` 27724 -> 28112 (+388), Funktionen 191 -> 193.
+Fuzzy der Unit 92.822235 % -> 92.82399 %.
+Matched code der Unit 60.905098 % -> 61.75747 %.
+Matched data der Unit 31.691986 % -> 97.27606 % (2420 -> 7428).
+Complete units bleiben 416.
+Nur die beiden `setMActorAndKeeper` haben sich als Funktionen geändert.
+
+DOL-SHA1 unverändert: `hamukuri.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
