@@ -709,6 +709,9 @@ void TStayPakkun::setDeadAnm() { setBckAnm(PAKKUN_ANM_DOWN); }
 
 void TStayPakkun::genRandomItem()
 {
+	char trash[0x24];
+	trash[0] = 0;
+
 	TPakkunManager* manager = (TPakkunManager*)mManager;
 	unk1A4                  = mPosition;
 	unk1A4.y += 100.0f;
@@ -727,15 +730,15 @@ void TStayPakkun::genRandomItem()
 	JPABaseEmitter* emitter = gpMarioParticleManager->emit(
 	    PARTICLE_MS_POPO_BOMB_A, &unk1A4, 0, nullptr);
 	if (emitter) {
-		emitter->setGlobalDynamicsScale(JGeometry::TVec3<f32>(1.5f));
-		emitter->setGlobalParticleScale(JGeometry::TVec3<f32>(1.5f));
+		emitter->mGlobalDynamicsScale.setAll(1.5f);
+		emitter->mGlobalParticleScale.setAll(1.5f);
 	}
 
 	emitter = gpMarioParticleManager->emit(PARTICLE_MS_POPO_BOMB_B, &unk1A4, 0,
 	                                       nullptr);
 	if (emitter) {
-		emitter->setGlobalDynamicsScale(JGeometry::TVec3<f32>(1.5f));
-		emitter->setGlobalParticleScale(JGeometry::TVec3<f32>(1.5f));
+		emitter->mGlobalDynamicsScale.setAll(1.5f);
+		emitter->mGlobalParticleScale.setAll(1.5f);
 	}
 }
 
