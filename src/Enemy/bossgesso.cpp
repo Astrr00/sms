@@ -319,7 +319,8 @@ void TBGEyeHit::perform(u32 cue, JDrama::TGraphics* graphics)
 }
 
 TBGBodyHit::TBGBodyHit(TBossGesso* owner, int joint_index, const char* name)
-    : mOwner(owner)
+    : THitActor(name)
+    , mOwner(owner)
     , mJointIndex(joint_index)
 {
 	static_cast<TIdxGroupObj*>(JDrama::TNameRefGen::search("敵グループ"))
