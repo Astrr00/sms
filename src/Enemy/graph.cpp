@@ -682,8 +682,10 @@ void TGraphWeb::attachToGround()
 	for (int j = 0; j < unk8; ++j) {
 		TRailNode* railNode = &unk4[j];
 		if (railNode->mFlags & 0x10) {
-			const TBGCheckData* checkData;
+			char trash[4];
+			(void)&trash;
 			JGeometry::TVec3<f32> pos;
+			const TBGCheckData* checkData;
 			pos.set(railNode->mPosition.x, railNode->mPosition.y,
 			        railNode->mPosition.z);
 			pos.y = gpMap->checkGround(pos, &checkData);
@@ -820,6 +822,7 @@ TGraphGroup::~TGraphGroup() { }
 
 void TGraphGroup::initGraphGroup()
 {
+	char trash[4];
 	for (int i = 0; i < unk4; ++i) {
 		if (unk8[i]->unk10 >= 0)
 			continue;

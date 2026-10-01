@@ -17973,3 +17973,30 @@ Nur `tobiPuku` hat sich geändert.
 
 DOL-SHA1 unverändert: `tobiPuku.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 
+### R528B (`TGraphGroup::initGraphGroup`)
+
+**Vollmatch, strikt.**
+
+- `char trash[4]` im Aufrufer hält den Rahmen auf `-0xc0`.
+  In `attachToGround` steht `pos` vor `checkData`.
+  Ein adressiertes `char trash[4]` legt den Vektor auf `r1+0x44` und `checkData` auf `r1+0x50`.
+  Der Nullvektor liegt auf `r1+0x54`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 484 Bytes, 121 Instruktionen.
+`validate-symbol-order` `mario/Enemy/graph`: PASS
+(8 ererbte UNUSED-Größen; `attachToGround` bleibt `0x10c`).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `e47177c0`: fuzzy 81.127014 % -> 81.12705 %,
+matched code 52.662216 % -> 52.6757 % (1890620 -> 1891104, +484).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9863 -> 9864.
+`graph` 5468 -> 5952 (+484), Funktionen 23 -> 24.
+Fuzzy der Unit 95.17732 % -> 95.18551 %.
+Matched code der Unit 43.05512 % -> 46.866142 %.
+Complete units bleiben 416.
+Nur `graph` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
