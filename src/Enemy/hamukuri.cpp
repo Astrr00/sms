@@ -1153,22 +1153,19 @@ MtxPtr THamuKuri::getTakingMtx()
 	MsMtxSetRotRPH(afStack_84, 0.0f, 0.0f, 0.0f);
 	MTXConcat(mat, afStack_84, mat);
 
-	// TODO: identity33 but order is transposed?!
-	unk1B0[0][0] = 1.0f;
-	unk1B0[0][1] = 0.0f;
-	unk1B0[0][2] = 0.0f;
-
-	unk1B0[1][0] = 0.0f;
-	unk1B0[1][1] = 1.0f;
-	unk1B0[1][2] = 0.0f;
-
-	unk1B0[2][0] = 0.0f;
-	unk1B0[2][1] = 0.0f;
-	unk1B0[2][2] = 1.0f;
-
-	MTXConcat(mat, unk1B0, unk1B0);
-
-	return unk1B0;
+	MtxPtr result = unk1B0;
+	unk1B0[0][0]  = 1.0f;
+	unk1B0[0][1]  = 0.0f;
+	unk1B0[0][2]  = 0.0f;
+	unk1B0[1][0]  = 0.0f;
+	unk1B0[1][1]  = 1.0f;
+	unk1B0[1][2]  = 0.0f;
+	unk1B0[2][0]  = 0.0f;
+	unk1B0[2][1]  = 0.0f;
+	unk1B0[2][2]  = 1.0f;
+	MTXConcat(mat, result, result);
+	char trash[0x4c];
+	return result;
 }
 
 static inline f32 dist(const JGeometry::TVec3<f32>& a,

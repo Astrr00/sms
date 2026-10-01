@@ -18399,3 +18399,35 @@ Die TU bleibt `NonMatching`.
 `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
 DOL-SHA1 unverändert: `tobiPuku.cpp` wird nicht gelinkt.
 
+### R529A (`THamuKuri::getTakingMtx`)
+
+**Vollmatch, strikt.**
+
+`MtxPtr result = unk1B0`, dann Identitäts-Stores über `unk1B0`.
+`MTXConcat(mat, result, result)` gibt `result` zurück.
+`char trash[0x4c]` hält den Rahmen bei `-0xe0`.
+
+`THamuKuri::getTakingMtx`: 0 Abweichungen, 256 Bytes, 64 Instruktionen.
+`validate-symbol-order` `mario/Enemy/hamukuri`: ererbter `onHaveCap` Linkage-FAIL.
+Dieselben ererbten Weak-Order- und UNUSED-Size-Warnungen.
+Kein neuer Fehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+DOL-SHA1 unverändert: `hamukuri.cpp` wird nicht gelinkt.
+
+### R529A (`THamuKuri::getTakingMtx`)
+
+**Vollmatch, strikt.**
+
+`MtxPtr result = unk1B0`, dann Identitäts-Stores über `unk1B0`.
+`MTXConcat(mat, result, result)` gibt `result` zurück.
+`char trash[0x4c]` hält den Rahmen bei `-0xe0`.
+
+`THamuKuri::getTakingMtx`: 0 Abweichungen, 256 Bytes, 64 Instruktionen.
+`validate-symbol-order` `mario/Enemy/hamukuri`: ererbter `onHaveCap` Linkage-FAIL.
+Dieselben ererbten Weak-Order- und UNUSED-Size-Warnungen.
+Kein neuer Fehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+DOL-SHA1 unverändert: `hamukuri.cpp` wird nicht gelinkt.
+
