@@ -19279,3 +19279,28 @@ Complete units bleiben 416.
 Nur `TBEelTearsManager::createEnemies` hat sich geändert.
 
 DOL-SHA1 unverändert: `bosseel.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R570A (`TSpineEnemy::resetToPosition`)
+
+**Vollmatch, strikt.**
+
+Der Rahmen `-0x30` stimmte schon.
+Nur das `TVec3(0, 5, 0)` für `mVelocity` lag 4 Bytes zu tief (`0x18` statt `0x1c`).
+`getMaxHitPoints()` statt der offenen `getSaveParam()`-Abfrage schiebt genau dieses Temporär.
+
+`TSpineEnemy::resetToPosition`: 0 Abweichungen, 268 Bytes, 67 Instruktionen.
+`validate-symbol-order` `mario/Enemy/enemy`: ererbtes MISSING `__as__Q29JGeometry8TVec3<f>`, sonst Ordnung und Linkage OK.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `64b3448a`: fuzzy bleibt 81.12732 %,
+matched code 53.23903 % -> 53.24649 % (1911328 -> 1911596, +268).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9913 -> 9914.
+`enemy` 4012 -> 4280 (+268), Funktionen 24 -> 25.
+Fuzzy der Unit 96.63867 % -> 96.64079 %.
+Matched code der Unit 35.391674 % -> 37.75582 %.
+Complete units bleiben 416.
+Nur `TSpineEnemy::resetToPosition` hat sich geändert.
+
+DOL-SHA1 unverändert: `enemy.cpp` bleibt `NonMatching` und wird nicht gelinkt.
