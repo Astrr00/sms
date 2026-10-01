@@ -22957,3 +22957,40 @@ Complete code und complete data unverändert.
 Nur `TDolpicEventRiccoMammaGate::load` ist neu matched.
 
 DOL-SHA1 unverändert: `MapEventDolpic.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R636A (`load`)
+
+**Vollmatch, strikt.**
+
+`TPoiHanaManager::load` war 99.8 %.
+Die vier Abweichungen waren nur die Relocs von `mSLTrapJumpMaxSpY` und `mSLTrapJumpMinSpY`.
+Beide Namen sind 18 Bytes, deshalb blieben die `addi`-Offsets `0x2f8` und `0x30c`.
+Im Ziel liegt `mSLTrapJumpMaxSpY` auf Member `0x37c` und `mSLTrapJumpMinSpY` auf `0x390`.
+Deklaration und `PARAM_INIT` stehen jetzt in dieser Reihenfolge.
+
+`TPoiHanaManager::load`: 0 Abweichungen, 532 Bytes, 133 Instruktionen.
+`validate-symbol-order` `mario/Enemy/poihana`: PASS.
+1 ererbte UNUSED-Größenwarnung (`isOnTrap`, `0xb4` gegen `0xb0`) bleibt.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TWireBinder::init` unberührt.
+`TDolpicEventRiccoMammaGate::load` unberührt.
+`MarNameRefGen_Enemy` bleibt ohne Regression.
+
+`ninja changes_all` gegen `a94e03cd` bewegt die Totals nicht.
+Der Report hatte `load` schon als fuzzy 100 % gezählt.
+`decomp-diff` mit `functionRelocDiffs=data_value` geht von 99.8 % auf 100 %.
+Fuzzy bleibt 81.132935 %.
+Matched code bleibt 55.167896 % (1980576).
+Matched data bleibt 69.31899 % (443871).
+Funktionen matched bleiben 10032.
+`poihana` matched code bleibt 10012, Funktionen 49 von 54.
+Fuzzy der Unit bleibt 97.89171 %.
+Matched code der Unit bleibt 76.56776 %.
+Matched data der Unit bleibt 96.462585 % (2836).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TPoiHanaManager::load` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `poihana.cpp` bleibt `NonMatching` und wird nicht gelinkt.
