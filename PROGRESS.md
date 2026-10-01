@@ -21027,3 +21027,33 @@ Complete code und complete data unverändert.
 Nur `checkIsInMirror` hat sich geändert.
 
 DOL-SHA1 unverändert: `MirrorActor.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R617B (`MSoundSE::startSoundActorInner`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0x50`, Ziel `-0x58`.
+`char pad[8]; pad[0] = 0;` hebt `stmw r25` von `0x34` auf `0x3c`, der Store fällt weg.
+`getNewIDByGroundCode` setzt `u32 result = id` nach dem frühen Return.
+`addi r4, r26, 0` liegt zwischen `cmplwi r0, 6` und `bgt`.
+Die out-of-line UNUSED-Größe ist `0x3c` und trifft die Map.
+
+`MSoundSE::startSoundActorInner`: 0 Abweichungen, 960 Bytes, 240 Instruktionen.
+`validate-symbol-order` `mario/MSound/MSoundSE`: PASS.
+Ererbte Weak-Order-Warnungen.
+1 ererbte UNUSED-Größenwarnung (`getRandomVolume`, Map `0x68`, Objekt `0x4`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `fb7f5973`: fuzzy 81.129524 % -> 81.12976 %,
+matched code 54.24859 % -> 54.27533 % (1947572 -> 1948532, +960).
+Matched data unverändert 68.45444 % (438335).
+Funktionen matched 9972 -> 9973.
+`MSoundSE` matched code 3564 -> 4524 (+960), Funktionen 22 -> 23 von 29.
+Fuzzy der Unit 98.89031 % -> 98.9595 %.
+Matched code der Unit 30.070873 % -> 38.170773 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `startSoundActorInner` hat sich geändert.
+
+DOL-SHA1 unverändert: `MSoundSE.cpp` bleibt `NonMatching` und wird nicht gelinkt.
