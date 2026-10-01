@@ -8962,5 +8962,131 @@
     "seen": 1790872195.2892346,
     "ast_hash": "cec347120a5a236a26f6fdfa7f2ef492",
     "semantic_hash": "cec347120a5a236a26f6fdfa7f2ef492"
+  },
+  "AGENTS.md": {
+    "mtime": 1790821886.0,
+    "seen": 1790874341.2277942,
+    "ast_hash": "a6180e98ec7e1a2c8ff704a195c7f6ba",
+    "semantic_hash": "a6180e98ec7e1a2c8ff704a195c7f6ba"
+  },
+  "CLAUDE.md": {
+    "mtime": 1790821886.0,
+    "seen": 1790874341.227799,
+    "ast_hash": "a6180e98ec7e1a2c8ff704a195c7f6ba",
+    "semantic_hash": "a6180e98ec7e1a2c8ff704a195c7f6ba"
+  },
+  "GEMINI.md": {
+    "mtime": 1790821886.0,
+    "seen": 1790874341.2278013,
+    "ast_hash": "a6180e98ec7e1a2c8ff704a195c7f6ba",
+    "semantic_hash": "a6180e98ec7e1a2c8ff704a195c7f6ba"
+  },
+  "GOAL.md": {
+    "mtime": 1790821886.0,
+    "seen": 1790874341.2278025,
+    "ast_hash": "e34380cd221b17496c16a2d3b3073952",
+    "semantic_hash": "e34380cd221b17496c16a2d3b3073952"
+  },
+  "GRAPHIFY.md": {
+    "mtime": 1790872478.4678447,
+    "seen": 1790874341.227804,
+    "ast_hash": "c93d7850d2a920d69a43569888ed0599",
+    "semantic_hash": "c93d7850d2a920d69a43569888ed0599"
+  },
+  "PROGRESS.md": {
+    "mtime": 1790821886.0,
+    "seen": 1790874341.227807,
+    "ast_hash": "9c30bbf11e0adff1e89948f320637301",
+    "semantic_hash": "9c30bbf11e0adff1e89948f320637301"
+  },
+  "README.md": {
+    "mtime": 1790821886.0,
+    "seen": 1790874341.227808,
+    "ast_hash": "62628840e7415a9edc80d69997068c59",
+    "semantic_hash": "62628840e7415a9edc80d69997068c59"
+  },
+  "docs/AGENT_MATCHING_TIPS.md": {
+    "mtime": 1790821886.0,
+    "seen": 1790874341.2278972,
+    "ast_hash": "91c2584e256577f6e1e8dbc422e4d5e2",
+    "semantic_hash": "91c2584e256577f6e1e8dbc422e4d5e2"
+  },
+  "docs/PROGRAM_STRUCTURE_REVVING.md": {
+    "mtime": 1790821886.0,
+    "seen": 1790874341.2278986,
+    "ast_hash": "fab6394bc610a1bd4b5df765fdceb749",
+    "semantic_hash": "fab6394bc610a1bd4b5df765fdceb749"
+  },
+  "include/JSystem/JDrama/JDRNameRefPtrList.tpp": {
+    "mtime": 1790821886.0,
+    "seen": 1790874341.2324464,
+    "ast_hash": "db5090194cd778703c1c7b8c3ec93abe",
+    "semantic_hash": "db5090194cd778703c1c7b8c3ec93abe"
+  },
+  "include/JSystem/JDrama/JDRViewObjPtrList.tpp": {
+    "mtime": 1790821886.0,
+    "seen": 1790874341.2326686,
+    "ast_hash": "7986d5f39e723d62ca7b467a3887547e",
+    "semantic_hash": "7986d5f39e723d62ca7b467a3887547e"
+  },
+  "include/PowerPC_EABI_Support/Msl/MSL_C++/MSL_Common/algorithm": {
+    "mtime": 1790821886.0,
+    "seen": 1790874341.237303,
+    "ast_hash": "ef0a2002dfaf629ae0288acfa4a34c2a",
+    "semantic_hash": "ef0a2002dfaf629ae0288acfa4a34c2a"
+  },
+  "include/PowerPC_EABI_Support/Msl/MSL_C++/MSL_Common/cstddef": {
+    "mtime": 1790821886.0,
+    "seen": 1790874341.2373047,
+    "ast_hash": "dd776c091086f67ac5dca55829a410fa",
+    "semantic_hash": "dd776c091086f67ac5dca55829a410fa"
+  },
+  "include/PowerPC_EABI_Support/Msl/MSL_C++/MSL_Common/cstdint": {
+    "mtime": 1790821886.0,
+    "seen": 1790874341.2373064,
+    "ast_hash": "fefd1a2c885031f594e8fcc739e396ee",
+    "semantic_hash": "fefd1a2c885031f594e8fcc739e396ee"
+  },
+  "include/PowerPC_EABI_Support/Msl/MSL_C++/MSL_Common/iterator": {
+    "mtime": 1790821886.0,
+    "seen": 1790874341.2373075,
+    "ast_hash": "628bf0a725bdd76ce39865f50a283c45",
+    "semantic_hash": "628bf0a725bdd76ce39865f50a283c45"
+  },
+  "include/PowerPC_EABI_Support/Msl/MSL_C++/MSL_Common/memory": {
+    "mtime": 1790821886.0,
+    "seen": 1790874341.2373085,
+    "ast_hash": "758aebfdeb1a8362e3874fd9fed65650",
+    "semantic_hash": "758aebfdeb1a8362e3874fd9fed65650"
+  },
+  "include/PowerPC_EABI_Support/Msl/MSL_C++/MSL_Common/msl_utility": {
+    "mtime": 1790821886.0,
+    "seen": 1790874341.2373092,
+    "ast_hash": "4e151d63231164d0f65da5688bab4f59",
+    "semantic_hash": "4e151d63231164d0f65da5688bab4f59"
+  },
+  "include/PowerPC_EABI_Support/Msl/MSL_C++/MSL_Common/new": {
+    "mtime": 1790821886.0,
+    "seen": 1790874341.2373104,
+    "ast_hash": "904a88d620d8af526aa5e7b8b012ee93",
+    "semantic_hash": "904a88d620d8af526aa5e7b8b012ee93"
+  },
+  "include/SMS.pch": {
+    "mtime": 1790821886.0,
+    "seen": 1790874341.2380662,
+    "ast_hash": "9b4a644792eb0cdf3e2a0b353781ab56",
+    "semantic_hash": "9b4a644792eb0cdf3e2a0b353781ab56"
+  },
+  "src/PowerPC_EABI_Support/Runtime/ExceptionPPC.cp": {
+    "mtime": 1790821886.0,
+    "seen": 1790874341.2508945,
+    "ast_hash": "db5cb6e0a91edd7f33d25254222b734e",
+    "semantic_hash": "db5cb6e0a91edd7f33d25254222b734e"
+  },
+  "src/PowerPC_EABI_Support/Runtime/NMWException.cp": {
+    "mtime": 1790821886.0,
+    "seen": 1790874341.2508955,
+    "ast_hash": "e6a54f2a479fe3a66eaba32b5c4976e9",
+    "semantic_hash": "e6a54f2a479fe3a66eaba32b5c4976e9"
   }
 }
