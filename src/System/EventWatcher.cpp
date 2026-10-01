@@ -1024,20 +1024,37 @@ static void evIsInsideFastCube(TSpcTypedInterp<TEventWatcher>* interp,
 
 static void evSetTransScale(TSpcTypedInterp<TEventWatcher>* interp, u32 arg_num)
 {
+	f32 tz;
+	f32 ty;
+	f32 tx;
+	f32 sz;
+	f32 sy;
+	f32 sx;
+	JGeometry::TVec3<f32> scale;
+	JGeometry::TVec3<f32> rot;
+	JGeometry::TVec3<f32> trans;
+
 	interp->verifyArgNum(7, &arg_num);
-	f32 tz = interp->pop().getDataFloat();
-	f32 ty = interp->pop().getDataFloat();
-	f32 tx = interp->pop().getDataFloat();
-	f32 sz = interp->pop().getDataFloat();
-	f32 sy = interp->pop().getDataFloat();
-	f32 sx = interp->pop().getDataFloat();
+	tz = interp->pop().getDataFloat();
+	ty = interp->pop().getDataFloat();
+	tx = interp->pop().getDataFloat();
+	sz = interp->pop().getDataFloat();
+	sy = interp->pop().getDataFloat();
+	sx = interp->pop().getDataFloat();
 
 	TMapObjBase* obj = (TMapObjBase*)getNameRefPtr(interp->pop());
 
 	obj->makeObjAppeared();
-	obj->changeObjSRT(JGeometry::TVec3<f32>(sx, sy, sz),
-	                  JGeometry::TVec3<f32>(0.0f, 0.0f, 0.0f),
-	                  JGeometry::TVec3<f32>(tx, ty, tz));
+	scale.x = sx;
+	scale.y = sy;
+	scale.z = sz;
+	rot.x = 0.0f;
+	rot.y = 0.0f;
+	rot.z = 0.0f;
+	trans.x = tx;
+	trans.y = ty;
+	trans.z = tz;
+	obj->changeObjSRT(scale, rot, trans);
 
 	interp->push();
 }
