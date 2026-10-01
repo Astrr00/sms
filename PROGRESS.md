@@ -18856,3 +18856,30 @@ Complete units bleiben 416.
 Nur `TGesso::pollute` hat sich geändert.
 
 DOL-SHA1 unverändert: `gesso.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R24C (`TMapXlu::changeXluJoint`)
+
+**Vollmatch, strikt.**
+
+Die erste Schleife indexiert `mChildren` direkt, wie das bereits matchende `changeNormalJoint`.
+`getChild(i)` war eine zusätzliche Inline-Stufe und hielt ein totes 4-Byte-Temporary.
+Das Temporary rundete den Rahmen von `-0x88` auf `-0x90`.
+Der Instruktionsrumpf war bereits identisch.
+
+`TMapXlu::changeXluJoint`: 0 Abweichungen, 280 Bytes, 70 Instruktionen.
+`validate-symbol-order` `mario/Map/MapXlu`: PASS.
+Die TU bleibt `NonMatching`.
+Die Extra-Symbole aus den Sound-Includes bestanden schon vorher.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `9ee37436`: fuzzy 81.127070 % -> 81.127080 %,
+matched code 53.010624 % -> 53.018420 % (1903128 -> 1903408, +280).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9898 -> 9899.
+`MapXlu` 1312 -> 1592 (+280), Funktionen 4 -> 5.
+Fuzzy der Unit 99.972360 % -> 100 %.
+Matched code der Unit 82.412056 % -> 100 %.
+Complete units bleiben 416.
+Nur `TMapXlu::changeXluJoint` hat sich geändert.
+
+DOL-SHA1 unverändert: `MapXlu.cpp` bleibt `NonMatching` und wird nicht gelinkt.
