@@ -18717,3 +18717,32 @@ Complete units bleiben 416.
 Nur `evRegisterMovie` hat sich geändert.
 
 DOL-SHA1 unverändert: `EventWatcher.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R581B (`evStartEventSE`)
+
+**Vollmatch, strikt.**
+
+`char pad[4]` mit `pad[0] = 0` vergrößert den Rahmen von `-0x50` auf `-0x58`.
+Der Store wird vom Compiler entfernt.
+Die Slice-Kopien und das Push-Paar rücken um 4 Bytes hoch.
+Der `fctiwz`-Spill und die gesicherten Register rücken um 8 Bytes hoch.
+
+`evStartEventSE`: 0 Abweichungen, 392 Bytes, 98 Instruktionen.
+`validate-symbol-order` `mario/System/EventWatcher`: FAIL.
+Fehlendes `set__Q29JGeometry8TVec3<f>FRC3Vec` bestand schon vorher.
+Ererbte Weak-Order-Warnung und UNUSED-Size-Warnungen.
+Kein neuer Fehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `ddb5a8c5`: fuzzy 81.126945 % -> 81.126960 %,
+matched code 52.944885 % -> 52.955807 % (1900768 -> 1901160, +392).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9893 -> 9894.
+`EventWatcher` 24492 -> 24884 (+392), Funktionen 65 -> 66.
+Fuzzy der Unit 98.88616 % -> 98.888054 %.
+Matched code der Unit 57.988445 % -> 58.91656 %.
+Complete units bleiben 416.
+Nur `evStartEventSE` hat sich geändert.
+
+DOL-SHA1 unverändert: `EventWatcher.cpp` bleibt `NonMatching` und wird nicht gelinkt.
