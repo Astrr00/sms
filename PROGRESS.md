@@ -18883,3 +18883,31 @@ Complete units bleiben 416.
 Nur `TMapXlu::changeXluJoint` hat sich geändert.
 
 DOL-SHA1 unverändert: `MapXlu.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R26C (`TMapCollisionData::polygonIsInGrid`)
+
+**Vollmatch, strikt.**
+
+`char trash[0x258]` mit `trash[0] = 0` vergrößert den Rahmen von `-0x60` auf `-0x2c0`.
+Der Store wird vom Compiler entfernt.
+Die gesicherten Register rücken um `0x260` hoch.
+Der Instruktionsrumpf war bereits identisch.
+
+`TMapCollisionData::polygonIsInGrid`: 0 Abweichungen, 1592 Bytes, 398 Instruktionen.
+`validate-symbol-order` `mario/Map/MapArea`: PASS.
+Die drei UNUSED-Größen stimmen.
+Die TU bleibt `NonMatching`.
+`pointIsInGrid`, `pointIsInPolygon` und `checkLinePolygonCollision` bleiben Extra-Symbole.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `7b0efa18`: fuzzy 81.127080 % -> 81.127120 %,
+matched code 53.018420 % -> 53.062767 % (1903408 -> 1905000, +1592).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9899 -> 9900.
+`MapArea` 216 -> 1808 (+1592), Funktionen 1 -> 2.
+Fuzzy der Unit 99.949110 % -> 100 %.
+Matched code der Unit 11.946902 % -> 100 %.
+Complete units bleiben 416.
+Nur `TMapCollisionData::polygonIsInGrid` hat sich geändert.
+
+DOL-SHA1 unverändert: `MapArea.cpp` bleibt `NonMatching` und wird nicht gelinkt.
