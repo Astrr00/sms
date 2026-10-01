@@ -19676,3 +19676,37 @@ Complete units bleiben 416.
 Nur `TNerveBPHover::execute` hat sich geändert.
 
 DOL-SHA1 unverändert: `bosspakkun.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R52C (`TMapEventSirenaSink::watch`)
+
+**Vollmatch, strikt. Die TU ist `Matching` und gelinkt.**
+
+Das Frame war `-0x48`, Ziel `-0x50`.
+Das `TFlagT` lag 12 Bytes zu tief (`0x38`, Ziel `0x44`) und lief nicht mit den Saved-Regs.
+`TFlagT<u16>(0)` lässt ein `int`-Temporary.
+`TFlagT<u16>()` nimmt das weg und hebt das Flag um 4.
+`director` und `flags` halten die Inline-Accessors.
+Zusammen sind das die fehlenden 8 Bytes.
+Flag auf `0x44`, Frame `-0x50`.
+
+`TMapEventSirenaSink::watch`: 0 Abweichungen, 280 Bytes, 70 Instruktionen.
+`validate-symbol-order` `mario/Map/MapEventSirena`: PASS.
+Keine UNUSED-Symbole.
+Linkage in Ordnung.
+Die TU ist komplett und steht in `configure.py` auf `Matching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `dd643a05`: fuzzy bleibt 81.12759 %,
+matched code 53.484596 % -> 53.49239 % (1920144 -> 1920424, +280).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9927 -> 9928.
+`MapEventSirena` 1432 -> 1712 (+280), Funktionen 7 -> 8 von 8.
+Fuzzy der Unit 99.97897 % -> 100 %.
+Matched code der Unit 83.64486 % -> 100 %.
+Complete units 416 -> 417.
+Complete code 20.322733 % -> 20.370419 % (729604 -> 731316).
+Complete data 22.041725 % -> 22.151045 % (141140 -> 141840).
+Nur `TMapEventSirenaSink::watch` hat sich im Code geändert.
+Der Link zieht die ganze TU.
+
+DOL-SHA1 unverändert: `build/GMSJ01/mario.dol` prüft gegen `build.sha1`.
