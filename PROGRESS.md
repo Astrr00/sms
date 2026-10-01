@@ -18448,3 +18448,28 @@ Die TU bleibt `NonMatching`.
 `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
 DOL-SHA1 unverändert: `hamukuri.cpp` wird nicht gelinkt.
 
+### R1C (`TPollutionObj::updateDepthMap`)
+
+**Vollmatch, strikt.**
+
+`getDepthFromMap` bleibt ein Aufruf.
+`#pragma dont_inline` unterbindet das Inlining in `updateDepthMap`.
+`setDepth` bleibt inline.
+
+`TPollutionObj::updateDepthMap`: 0 Abweichungen, 164 Bytes, 41 Instruktionen.
+`validate-symbol-order` `mario/Map/PollutionObj`: PASS.
+16 objekt-only Symbole, kein neuer Fehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `29acc5f8`: fuzzy 81.133 % -> 81.137566 %,
+matched code 52.847504 % -> 52.852077 % (1897272 -> 1897436, +164).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9883 -> 9884.
+`PollutionObj` 1928 -> 2092 (+164), Funktionen 7 -> 8.
+Fuzzy der Unit 92.160614 % -> 100 %.
+Matched code der Unit 92.160614 % -> 100 %.
+Complete units bleiben 416.
+Nur `updateDepthMap` hat sich geändert.
+
+DOL-SHA1 unverändert: `PollutionObj.cpp` bleibt `NonMatching` und wird nicht gelinkt.
