@@ -1165,7 +1165,9 @@ DEFINE_NERVE(TNerveTelesaFreeze, TLiveActor)
 
 	if (spine->getTime() == 0) {
 		self->setBckAnm(5);
-		self->setGoalPath(TPathNode((THitActor*)gpMarioAddress));
+		TPathNode node((THitActor*)gpMarioAddress);
+		char trash[4];
+		self->setGoalPath(node);
 	} else if (self->checkCurAnmEnd(0)) {
 		if (self->isBckAnm(4)) {
 			if (!self->isFlying()) {
