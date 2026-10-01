@@ -19438,3 +19438,35 @@ Complete units bleiben 416.
 Nur `TCardManager::copyTo` hat sich geändert.
 
 DOL-SHA1 unverändert: `CardManager.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R574A (`TBossMantaManager::setupEfbAlpha`)
+
+**Vollmatch, strikt.**
+
+Der Rahmen stand schon auf `-0xd8`.
+Projektion und Identität lagen 12 Bytes zu hoch (`0x50` / `0x20`, Ziel `0x44` / `0x14`).
+Ein `TVec3`-Slot davor hebt den Rahmen und schiebt die Matrizen in die falsche Richtung.
+`drawEfbAlphaQuad` ist `static inline` und wird nicht emittiert.
+Darin steht `Mtx m` vor `Mtx44 proj`, weil Inline die Slot-Reihenfolge umkehrt.
+Die Quad-Z ist `-10.0f`.
+Die Mat-Farbe ist ein Compound-Literal im `GXSetChanMatColor`-Aufruf.
+Ein benanntes `GXColor` vertauscht Source und Dest.
+
+`TBossMantaManager::setupEfbAlpha`: 0 Abweichungen, 692 Bytes, 173 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bossManta`: ererbtes ORDER-FAIL, `theNerve__*TNerveManta*` vor den `execute__*`.
+Sechs ererbte UNUSED-Größenwarnungen.
+Linkage in Ordnung.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `9239c676`: fuzzy 81.12748 % -> 81.127495 %,
+matched code 53.301872 % -> 53.321148 % (1913584 -> 1914276, +692).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9919 -> 9920.
+`bossManta` 4624 -> 5316 (+692), Funktionen 27 -> 28.
+Fuzzy der Unit 98.15196 % -> 98.15343 %.
+Matched code der Unit 21.164408 % -> 24.331747 %.
+Complete units bleiben 416.
+Nur `TBossMantaManager::setupEfbAlpha` hat sich geändert.
+
+DOL-SHA1 unverändert: `bossManta.cpp` bleibt `NonMatching` und wird nicht gelinkt.

@@ -1232,10 +1232,9 @@ void TBossMantaManager::perform(u32 cue, JDrama::TGraphics* graphics)
 		mCollisionSets[i]->update(cue, graphics);
 }
 
-void TBossMantaManager::setupEfbAlpha(JDrama::TGraphics* graphics)
+static inline void drawEfbAlphaQuad()
 {
-	ReInitializeGX();
-
+	Mtx m;
 	Mtx44 proj;
 	C_MTXOrtho(proj, (f32)SMSGetGameRenderHeight(), 0.0f, 0.0f,
 	           (f32)SMSGetGameRenderWidth(), 0.0f, 1000.0f);
@@ -1245,7 +1244,6 @@ void TBossMantaManager::setupEfbAlpha(JDrama::TGraphics* graphics)
 	GXSetDstAlpha(GX_TRUE, 0);
 	GXSetZMode(GX_TRUE, GX_ALWAYS, GX_FALSE);
 
-	Mtx m;
 	MTXIdentity(m);
 	GXLoadPosMtxImm(m, GX_PNMTX0);
 	GXSetCurrentMtx(GX_PNMTX0);
@@ -1255,12 +1253,19 @@ void TBossMantaManager::setupEfbAlpha(JDrama::TGraphics* graphics)
 	GXSetVtxAttrFmt(GX_VTXFMT0, GX_VA_POS, GX_POS_XYZ, GX_F32, 0);
 
 	GXBegin(GX_QUADS, GX_VTXFMT0, 4);
-	GXPosition3f32(0.0f, (f32)SMSGetGameRenderHeight(), -1.0f);
+	GXPosition3f32(0.0f, (f32)SMSGetGameRenderHeight(), -10.0f);
 	GXPosition3f32((f32)SMSGetGameRenderWidth(), (f32)SMSGetGameRenderHeight(),
-	               -1.0f);
-	GXPosition3f32((f32)SMSGetGameRenderWidth(), 0.0f, -1.0f);
-	GXPosition3f32(0.0f, 0.0f, -1.0f);
+	               -10.0f);
+	GXPosition3f32((f32)SMSGetGameRenderWidth(), 0.0f, -10.0f);
+	GXPosition3f32(0.0f, 0.0f, -10.0f);
 	GXEnd();
+}
+
+void TBossMantaManager::setupEfbAlpha(JDrama::TGraphics* graphics)
+{
+	ReInitializeGX();
+
+	drawEfbAlphaQuad();
 
 	GXSetNumChans(1);
 	GXSetChanCtrl(GX_COLOR0A0, GX_DISABLE, GX_SRC_REG, GX_SRC_REG,
@@ -1271,8 +1276,7 @@ void TBossMantaManager::setupEfbAlpha(JDrama::TGraphics* graphics)
 	GXSetNumTevStages(1);
 	GXSetTevOrder(GX_TEVSTAGE0, GX_TEXCOORD_NULL, GX_TEXMAP_NULL, GX_COLOR0A0);
 	GXSetTevOp(GX_TEVSTAGE0, GX_PASSCLR);
-	GXColor matColor = (GXColor) { 0, 0, 0, 0x4 };
-	GXSetChanMatColor(GX_COLOR0A0, matColor);
+	GXSetChanMatColor(GX_COLOR0A0, (GXColor) { 0, 0, 0, 0x4 });
 	GXSetAlphaUpdate(GX_TRUE);
 	GXSetDstAlpha(GX_FALSE, 0);
 	GXSetZMode(GX_TRUE, GX_GEQUAL, GX_FALSE);
