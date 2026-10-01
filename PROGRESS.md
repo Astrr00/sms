@@ -21356,3 +21356,36 @@ Complete code und complete data unverändert.
 Nur `load` hat sich geändert.
 
 DOL-SHA1 unverändert: `MapWireManager.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R607A (`execute`)
+
+**Vollmatch, strikt.**
+
+`getJointTransByIndex` im Pol-Zweig trifft Joint `0x18`.
+`getMarchSpeed` und `getTurnSpeed` laden `f2` vor `f1`.
+Das Frame war `-0xa8`, Ziel `-0x110`.
+Der Pol-Vektor lag auf `0x74`, Ziel `0xb0`.
+Der Schritt-Vektor lag auf `0x68`, Ziel `0xd4`.
+`char bot[0x8]` vor dem Schritt-Vektor, `char mid[0x18]` dazwischen und `char top[0x44]` dahinter legen beide Slots und das Frame.
+Die drei Stores fallen weg.
+
+`TNerveHino2GraphWander::execute`: 0 Abweichungen, 1248 Bytes, 312 Instruktionen.
+`validate-symbol-order` `mario/Enemy/hinokuri2`: PASS.
+6 ererbte UNUSED-Größenwarnungen (leere Stubs).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TNerveHino2Pollute::execute` bleibt 100 %.
+
+`ninja changes_all` gegen `f9e583d0`: fuzzy 81.13033 % -> 81.13039 %,
+matched code 54.56 % -> 54.59476 % (1958752 -> 1960000, +1248).
+Matched data unverändert 69.22779 % (443287).
+Funktionen matched 9983 -> 9984.
+`hinokuri2` matched code 14548 -> 15796 (+1248), Funktionen 58 -> 59 von 70.
+Fuzzy der Unit 99.19229 % -> 99.1993 %.
+Matched code der Unit 60.6571 % -> 65.86057 %.
+Matched data der Unit unverändert 68.008255 % (2636).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TNerveHino2GraphWander::execute` hat sich geändert.
+
+DOL-SHA1 unverändert: `hinokuri2.cpp` bleibt `NonMatching` und wird nicht gelinkt.

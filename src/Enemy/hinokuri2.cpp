@@ -1048,6 +1048,15 @@ DEFINE_NERVE(TNerveHino2Appear, TLiveActor)
 
 DEFINE_NERVE(TNerveHino2GraphWander, TLiveActor)
 {
+	char bot[0x8];
+	bot[0] = 0;
+	JGeometry::TVec3<f32> stack3c;
+	char mid[0x18];
+	mid[0] = 0;
+	JGeometry::TVec3<f32> local_60;
+	char top[0x44];
+	top[0] = 0;
+
 	THinokuri2* self = (THinokuri2*)spine->getBody();
 
 	self->unk188 = 1;
@@ -1074,12 +1083,11 @@ DEFINE_NERVE(TNerveHino2GraphWander, TLiveActor)
 
 		self->unk15C = 0;
 
-		JGeometry::TVec3<f32> local_60;
 		if (self->checkLiveFlag(LIVE_FLAG_CLIPPED_OUT)) {
 			local_60 = self->mPosition;
 			local_60.y += 500.0f;
 		} else {
-			self->getJointTransByIndex(0x14, &local_60);
+			self->getJointTransByIndex(0x18, &local_60);
 		}
 
 		self->resetPolInterval();
@@ -1089,7 +1097,7 @@ DEFINE_NERVE(TNerveHino2GraphWander, TLiveActor)
 		self->changeBck(0x18);
 
 	if (self->getCurrentBck() == 0x18) {
-		self->walkToCurPathNode(self->mMarchSpeed, self->mTurnSpeed, 0.0f);
+		self->walkToCurPathNode(self->getMarchSpeed(), self->getTurnSpeed(), 0.0f);
 	}
 
 	int frame = self->getMActor()->getFrameCtrl(ANM_TYPE_BCK)->getFrame();
@@ -1099,11 +1107,10 @@ DEFINE_NERVE(TNerveHino2GraphWander, TLiveActor)
 		if (!(ws * ws < self->mDistToMarioSquared))
 			gpCameraShake->startShake(CAM_SHAKE_MODE_UNK3, 0.8f);
 
-		JGeometry::TVec3<f32> TStack_3C;
 		if (frame == 0x24)
-			self->getJointTransByIndex(0x9, &TStack_3C);
+			self->getJointTransByIndex(0x9, &stack3c);
 		else if (frame == 0x55)
-			self->getJointTransByIndex(0x10, &TStack_3C);
+			self->getJointTransByIndex(0x10, &stack3c);
 	}
 
 	return false;
