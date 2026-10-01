@@ -20630,3 +20630,36 @@ Complete code und complete data unverändert.
 Nur `TNerveBPVomit::execute` hat sich geändert.
 
 DOL-SHA1 unverändert: `bosspakkun.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R596A (`TFireWanwan::behaveToWater`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0x98`, Ziel `-0xe8`.
+Die benannte `scale` lag bei `0x70`, Ziel `0xc0`.
+Die inlinierte Feuer-aus-`TVec3` lag bei `0x50`, Ziel `0xa0`.
+`char trash[0x50]` im Aufrufer schiebt die Lücke zwischen die beiden Vektoren.
+`static inline emitFireOff` mit `char trash[0x4c]; trash[0] = 0;` legt beide Vektoren auf `0xc0` und `0xa0`.
+Das Frame wird `-0xe8`.
+Die Hilfe wird nicht emittiert.
+`offFireEffect` bleibt die eigenständige Kopie.
+
+`TFireWanwan::behaveToWater`: 0 Abweichungen, 904 Bytes, 226 Instruktionen.
+`validate-symbol-order` `mario/Enemy/fireWanwan`: ORDER ok.
+4 geerbte MISSING (`TVec4` ctor, `isTaken`, `ArrayWrapper` `operator[]`/`size`).
+27 geerbte UNUSED-Größenwarnungen.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `8b0d656c`: fuzzy 81.127655 % -> 81.12767 %,
+matched code 53.925697 % -> 53.950874 % (1935980 -> 1936884, +904).
+Matched data unverändert 68.45444 % (438335).
+Funktionen matched 9958 -> 9959.
+`fireWanwan` matched code 12896 -> 13800 (+904), Funktionen 59 -> 60 von 95.
+Fuzzy der Unit 94.34871 % -> 94.350655 %.
+Matched code der Unit 33.04633 % -> 35.362854 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TFireWanwan::behaveToWater` hat sich geändert.
+
+DOL-SHA1 unverändert: `fireWanwan.cpp` bleibt `NonMatching` und wird nicht gelinkt.
