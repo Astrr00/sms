@@ -21142,3 +21142,31 @@ Complete code und complete data unverändert.
 Nur `load` hat sich geändert.
 
 DOL-SHA1 unverändert: `MapEventSink.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R619B (`__sinit_MSoundScene_cpp`)
+
+**Vollmatch, strikt.**
+
+Die Guard-Offsets lagen bei `0`, Ziel bei `+0xc00`.
+`Vec _posByCamera[256]` ist das BSS-Objekt aus der Map (`0xc00`, align 4).
+`r31` zeigt darauf, die `@`-Guards folgen direkt danach.
+
+`__sinit_MSoundScene_cpp`: 0 Abweichungen, 764 Bytes, 191 Instruktionen.
+`validate-symbol-order` `mario/MSound/MSoundScene`: PASS.
+3 ererbte UNUSED-Größenwarnungen (`calcPosPanSR`, `calcPosPanLR`, `calcPosVolume`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `610a845b`: fuzzy bleibt 81.129814 %,
+matched code 54.319 % -> 54.340286 % (1950100 -> 1950864, +764).
+Matched data 68.45444 % -> 68.96293 % (438335 -> 441591, +3256).
+Funktionen matched 9976 -> 9977.
+`MSoundScene` matched code 380 -> 1144 (+764), Funktionen 1 -> 2 von 4.
+Matched data der Unit 36 -> 3292 (100 %).
+Fuzzy der Unit 98.59699 % -> 98.61955 %.
+Matched code der Unit 14.285715 % -> 43.00752 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `__sinit_MSoundScene_cpp` hat sich im Code geändert.
+
+DOL-SHA1 unverändert: `MSoundScene.cpp` bleibt `NonMatching` und wird nicht gelinkt.
