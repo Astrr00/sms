@@ -22423,3 +22423,39 @@ Complete code und complete data unverändert.
 Nur `TTimeRec::flip` ist neu matched.
 
 DOL-SHA1 unverändert: `TimeRec.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R85C (`TSpcInterp`)
+
+**Vollmatch, strikt.**
+
+`TSpcInterp::TSpcInterp` war 98.03876 %.
+Die Schleife füllte den Storage-Stack mit `push(TSpcSlice(0))`.
+Der Slice-Konstruktor belegt `r3`.
+Der Inliner lädt `this` danach nach `r6`.
+Ziel hält `this` in `r3` über die beiden Null-Stores.
+Erst das Kopieren des Temporaries zerstört `r3`.
+`++mSize` lädt `this` dann aus `8(r1)`.
+Ein POD-Paar auf dem Stack, ohne Konstruktor, lässt `r3` leben.
+Der Overflow-Check und die 8-Byte-Kopie stimmen danach.
+
+`TSpcInterp::TSpcInterp`: 0 Abweichungen, 516 Bytes, 129 Instruktionen.
+`validate-symbol-order` `mario/Strategic/spcinterp`: PASS.
+6 ererbte UNUSED-Größenwarnungen
+(`referByName`, `referByIndex`, `invokeByName`, `invokeByAddress`, `callByName`, `callByAddress`).
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `44b8dc55`: fuzzy 81.13181 % -> 81.132095 %,
+matched code 55.01213 % -> 55.02651 % (1974984 -> 1975500, +516).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10016 -> 10017.
+`spcinterp` matched code 19392 -> 19908 (+516), Funktionen 67 -> 68 von 73.
+Fuzzy der Unit 99.94547 % -> 99.988716 %.
+Matched code der Unit 82.871796 % -> 85.07692 %.
+Matched data der Unit unverändert 100 % (2096).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TSpcInterp::TSpcInterp` ist neu matched.
+
+DOL-SHA1 unverändert: `spcinterp.cpp` bleibt `NonMatching` und wird nicht gelinkt.
