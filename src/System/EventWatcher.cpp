@@ -1282,10 +1282,12 @@ static void evOnNeutralMarioKey(TSpcTypedInterp<TEventWatcher>* interp,
 
 static void evInvalidatePad(TSpcTypedInterp<TEventWatcher>* interp, u32 arg_num)
 {
+	char pad[4];
+	pad[0] = 0;
 	interp->verifyArgNum(1, &arg_num);
 	int frames = interp->pop().getDataInt();
 
-	SMSGetMarDirector()->getGamePad()->mDisabledFrames = frames;
+	SMSGetMarDirector()->getGamePad()->invalidate(frames);
 
 	interp->push();
 }
