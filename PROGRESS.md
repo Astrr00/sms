@@ -21170,3 +21170,34 @@ Complete code und complete data unverändert.
 Nur `__sinit_MSoundScene_cpp` hat sich im Code geändert.
 
 DOL-SHA1 unverändert: `MSoundScene.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R72C (`perform`)
+
+**Vollmatch, strikt.**
+
+`J3DTransformInfo` lag auf `0x88`, Ziel auf `0x98`.
+Das Frame war `-0x170`, Ziel `-0x198`.
+`char trash[21]; trash[0] = 0;` nach `info` legt die Transform-Info.
+`char gap[9]; gap[0] = 0;` am Anfang hebt das Frame auf `-0x198`.
+Beide Stores fallen weg.
+
+`TShimmer::perform`: 0 Abweichungen, 648 Bytes, 162 Instruktionen.
+`validate-symbol-order` `mario/Map/Shimmer`: PASS.
+2 ererbte UNUSED-Größenwarnungen (`far` Map `0x14` Objekt `0x4`, `near` Map `0x18` Objekt `0x4`).
+Die TU bleibt `NonMatching` und wird nicht gelinkt.
+Code und Data der Unit sind 100 %.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `93c508cb`: fuzzy 81.129814 % -> 81.12985 %,
+matched code 54.340286 % -> 54.358334 % (1950864 -> 1951512, +648).
+Matched data unverändert 68.96293 % (441591).
+Funktionen matched 9977 -> 9978.
+`Shimmer` matched code 1868 -> 2516 (+648), Funktionen 7 -> 8 von 8.
+Fuzzy der Unit 99.953896 % -> 100 %.
+Matched code der Unit 74.244835 % -> 100 %.
+Matched data der Unit bleibt 100 % (436).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `perform` hat sich geändert.
+
+DOL-SHA1 unverändert: `Shimmer.cpp` bleibt `NonMatching` und wird nicht gelinkt.
