@@ -206,8 +206,28 @@ void CPolarSubCamera::getNozzleTopPos_(JGeometry::TVec3<f32>* out) const
 	}
 }
 
+static inline void fillNozzleTop(JGeometry::TVec3<f32>* out)
+{
+	char low[0x20];
+	low[0] = 0;
+	if (SMS_GetMarioWaterGun() == nullptr) {
+		out->set(gpCameraMario->unk0);
+	} else {
+		MtxPtr mtx = SMS_GetMarioWaterGun()->getNozzleMtx();
+		out->x     = mtx[0][3];
+		out->y     = mtx[1][3];
+		out->z     = mtx[2][3];
+
+		JGeometry::TVec3<f32> dir(mtx[0][1], mtx[1][1], mtx[2][1]);
+		dir.normalize();
+		dir *= 30.0f;
+		*out += dir;
+	}
+}
+
 void CPolarSubCamera::ctrlLButtonCamera_()
 {
+	char pad[0xC];
 	f32 stickX = -unk120->mCompSPos[4];
 	f32 stickY = -unk120->mCompSPos[5];
 
@@ -215,7 +235,7 @@ void CPolarSubCamera::ctrlLButtonCamera_()
 		if (!SMS_CheckMarioFlag(MARIO_FLAG_HAS_FLUDD))
 			mCurrentTarget.mTarget.set(gpCameraMario->unk0);
 		else
-			getNozzleTopPos_(&mCurrentTarget.mTarget);
+			fillNozzleTop(&mCurrentTarget.mTarget);
 	}
 
 	if (mPosFreezeFrames == 0) {
