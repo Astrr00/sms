@@ -23522,3 +23522,48 @@ Nur `TBPPolDrop::perform` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `bosspakkun.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R646B (`perform`)
+
+**Vollmatch, strikt.**
+
+`TSunMgr::perform` war 98.82243 %.
+Der einzige Opcode war `lfs` auf `unkF8[0].x` statt `lfsu f1, 0xf8(r3)`.
+Danach lädt Retail `y` über `4(r3)`.
+Eine Referenz auf `unkF8[0]` in `isInBounds` erzeugt das `lfsu`.
+Dieselbe Referenz macht aus `TSunModel::perform` ein `addi r3, r29, 0xf8`.
+Dort bleibt Retail bei `lfs f1, 0xf8(r29)`, weil `this` weiterlebt.
+`sunInView` bindet die Referenz nur in `TSunMgr::perform`.
+`isInBounds` bleibt für die anderen Aufrufer unverändert.
+Das Frame war `-0x28`.
+Die Referenz hebt es auf `-0x30`.
+Ziel ist `-0x60`.
+`char trash[0x30]` hebt das Frame auf `-0x60`.
+Es kommen keine Instruktionen dazu.
+`TLensFlare::perform` bleibt 76.7 %.
+`TLensGlow::perform` bleibt 98.7 %.
+`TSunModel::perform` bleibt 92.2 %.
+
+`TSunMgr::perform`: 0 Abweichungen, 428 Bytes, 107 Instruktionen.
+`validate-symbol-order` `mario/Camera/sunmgr`: PASS.
+Alle Map-Symbole vorhanden, Reihenfolge der nicht-weak Symbole stimmt, Linkage stimmt.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`SunModel.hpp` unberührt.
+`TBPPolDrop::perform` unberührt.
+
+`ninja changes_all` gegen `1a8855f1`: fuzzy 81.133644 % -> 81.13379 %,
+matched code 55.357975 % -> 55.369896 % (1987400 -> 1987828, +428).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10046 -> 10047.
+`sunmgr` matched code 1160 -> 1588 (+428), Funktionen 6 -> 7 von 8.
+Fuzzy der Unit 99.52446 % -> 99.771034 %.
+Matched code der Unit 56.751465 % -> 77.6908 %.
+Matched data der Unit unverändert 100 % (388).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TSunMgr::perform` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `sunmgr.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
