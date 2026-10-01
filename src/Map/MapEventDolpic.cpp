@@ -122,6 +122,11 @@ bool TDolpicEventRiccoMammaGate::control()
 	return true;
 }
 
+static inline void padWatch()
+{
+	char gap[16];
+	gap[0] = 0;
+}
 bool TDolpicEventRiccoMammaGate::watch()
 {
 	if (!TFlagManager::getInstance()->getBool(unk2C)) {
@@ -131,7 +136,8 @@ bool TDolpicEventRiccoMammaGate::watch()
 		TPosition3f mtx;
 		mtx.identity();
 		mtx.ref(1, 1) = unk34;
-		(void)&mtx; // unused?!
+		(void)&mtx;
+		padWatch();
 
 		unk24->setUp();
 
