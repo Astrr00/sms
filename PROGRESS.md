@@ -22052,3 +22052,35 @@ Complete code und complete data unverändert.
 Nur `TSmallEnemy::isHitWallInBound` ist neu matched.
 
 DOL-SHA1 unverändert: `smallEnemy.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R81C (`drawLower`)
+
+**Vollmatch, strikt.**
+
+`TMapWire::drawLower` war 99.496185 %.
+`xOffset` und `zOffset` werden in place mit `mDrawWidth` multipliziert.
+Im Schleifen-Streifen hält `addf` die `fadds`-Operanden als Basis plus Offset.
+`char gap[1]` hebt das Frame von `-0x58` auf `-0x78`.
+Der Store auf `gap` fällt weg.
+
+`TMapWire::drawLower`: 0 Abweichungen, 524 Bytes, 131 Instruktionen.
+`drawUpper` bleibt nonmatching.
+`validate-symbol-order` `mario/Map/MapWire`: PASS.
+3 ererbte UNUSED-Größenwarnungen (`initTipPoints`, `updateMovePointAtReleased`, `updatePointAtReleased`).
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `2471c6ed`: fuzzy 81.130974 % -> 81.13104 %,
+matched code 54.880325 % -> 54.894924 % (1970252 -> 1970776, +524).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10005 -> 10006.
+`MapWire` matched code 1416 -> 1940 (+524), Funktionen 8 -> 9 von 16.
+Fuzzy der Unit 92.900116 % -> 92.93736 %.
+Matched code der Unit 19.977427 % -> 27.370203 %.
+Matched data der Unit unverändert 100 % (412).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TMapWire::drawLower` ist neu matched.
+
+DOL-SHA1 unverändert: `MapWire.cpp` bleibt `NonMatching` und wird nicht gelinkt.
