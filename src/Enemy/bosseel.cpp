@@ -2048,10 +2048,12 @@ DEFINE_NERVE(TNerveBossEelWaitAppear, TLiveActor)
 
 void ExecSpinNerve_Sub(TBossEel* eel)
 {
+	char pad[0x28];
+	pad[0] = 0;
 	f32 spinSpeed = eel->mTurnSpeed;
-	CLBChaseGeneralConstantSpecifySpeed(&spinSpeed,
-	                                    eel->mSaveParams->mSLSpinMaxSpeed.get(),
-	                                    eel->mSaveParams->mSLSpinAccel.get());
+	CLBChaseGeneralConstantSpecifySpeed(
+	    &spinSpeed, eel->mSaveParams->mSLSpinMaxSpeed.value,
+	    eel->mSaveParams->mSLSpinAccel.get());
 	eel->mTurnSpeed = spinSpeed;
 	gpCameraShake->keepShake(static_cast<EnumCamShakeMode>(0x18), 1.0f);
 

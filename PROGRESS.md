@@ -21484,3 +21484,37 @@ Complete code und complete data unverändert.
 Nur `evSetPollutionIncreaseCount` ist neu matched.
 
 DOL-SHA1 unverändert: `EventWatcher.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R608A (`execute`)
+
+**Vollmatch, strikt.**
+
+`ExecSpinNerve_Sub` legt `char pad[0x28]` vor `spinSpeed`.
+`mSLSpinMaxSpeed.value` und `mSLSpinAccel.get()` laden `f1` aus `0x194` und `f2` aus `0x180` über `r5`.
+Das Frame von `TNerveBossEelFirstSpin::execute` war `-0x70`, Ziel `-0x90`.
+`spinSpeed` lag auf `0x48`, Ziel `0x6c`.
+Der Store auf `pad` fällt weg.
+Dieselbe Änderung trifft auch `TNerveBossEelSecondSpin::execute`.
+
+`TNerveBossEelFirstSpin::execute`: 0 Abweichungen, 860 Bytes, 215 Instruktionen.
+`TNerveBossEelSecondSpin::execute`: 0 Abweichungen, 988 Bytes, 247 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bosseel`: PASS.
+Ererbte Weak-Order-Warnungen.
+5 ererbte UNUSED-Größenwarnungen.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TNerveBossEelMouthOpenWait::execute` bleibt 100 %.
+
+`ninja changes_all` gegen `871a519c`: fuzzy 81.13042 % -> 81.13049 %,
+matched code 54.614704 % -> 54.66618 % (1960716 -> 1962564, +1848).
+Matched data unverändert 69.22779 % (443287).
+Funktionen matched 9987 -> 9989.
+`bosseel` matched code 24560 -> 26408 (+1848), Funktionen 122 -> 124 von 142.
+Fuzzy der Unit 99.17902 % -> 99.18542 %.
+Matched code der Unit 53.803017 % -> 57.851387 %.
+Matched data der Unit unverändert 55.96121 % (3924).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur die beiden Spin-`execute` haben sich geändert.
+
+DOL-SHA1 unverändert: `bosseel.cpp` bleibt `NonMatching` und wird nicht gelinkt.
