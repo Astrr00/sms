@@ -17837,3 +17837,30 @@ Nur `livemanager` hat sich geändert.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R512A (`TNameKuri::reset`)
+
+**Vollmatch, strikt.**
+
+- Ein nicht-triviales 8-Byte-Temporary am Funktionsende.
+  `char trash[8]` hebt nur das `rand`-Double.
+  Der Bereich liegt auf `r1+0x2c`, der Nullvektor auf `r1+0x20`.
+  Der Rahmen ist `-0x50`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 312 Bytes, 78 Instruktionen.
+`validate-symbol-order` `mario/Enemy/namekuri`: PASS gegen die Basis
+(ererbte Linkage von `NameKuriScaleCallback` / `NameKuriAttackCallback`,
+UNUSED-Größe von `canJumpAttack`, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `0e7712b8`: fuzzy 81.126816 % -> 81.126854 %,
+matched code 52.60049 % -> 52.60918 % (1888404 -> 1888716, +312).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9857 -> 9858.
+`namekuri` 9364 -> 9676 (+312), Funktionen 58 -> 59.
+Fuzzy der Unit 97.57834 % -> 97.584274 %.
+Complete units bleiben 416.
+Nur `namekuri` hat sich geändert.
+
+DOL-SHA1 unverändert: `namekuri.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+

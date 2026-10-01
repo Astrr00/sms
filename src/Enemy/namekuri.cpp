@@ -575,6 +575,12 @@ void TNameKuri::reset()
 	                                  ->getNextColorIdx()];
 
 	offLiveFlag(LIVE_FLAG_UNK10);
+
+	struct Pad {
+		~Pad() { }
+		char c[8];
+	};
+	Pad();
 }
 
 void TNameKuri::attackToMario()
