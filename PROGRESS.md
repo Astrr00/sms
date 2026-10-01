@@ -20761,3 +20761,33 @@ Complete code und complete data unverändert.
 Nur `evForceCloseTalk` hat sich geändert.
 
 DOL-SHA1 unverändert: `EventWatcher.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R611B (`evIsInsideCube`)
+
+**Vollmatch, strikt.**
+
+Das Frame war schon `-0x60`.
+Die Slices lagen 4 Bytes zu hoch.
+Ein benanntes `value` legt die Slices auf `0x24`.
+`TVec3 pos = mPosition` legt den Vektor auf `0x40`, Ziel `0x3c`.
+`int value` vor `TVec3 pos` und `pos = mPosition` legt den Vektor auf `0x3c`.
+Das `stfd` bleibt bei `0x50`.
+
+`evIsInsideCube`: 0 Abweichungen, 388 Bytes, 97 Instruktionen.
+`validate-symbol-order` `mario/System/EventWatcher`: ererbtes MISSING `set__Q29JGeometry8TVec3<f>FRC3Vec`, sonst nur schwache Ordnung.
+2 geerbte UNUSED-Größenwarnungen (`evSetEventEnd`, `evSetEventStart`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `f2fda8b7`: fuzzy 81.12855 % -> 81.12856 %,
+matched code 53.990765 % -> 54.001575 % (1938316 -> 1938704, +388).
+Matched data unverändert 68.45444 % (438335).
+Funktionen matched 9963 -> 9964.
+`EventWatcher` matched code 26572 -> 26960 (+388), Funktionen 70 -> 71 von 105.
+Fuzzy der Unit 98.9034 % -> 98.90501 %.
+Matched code der Unit 62.913155 % -> 63.8318 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `evIsInsideCube` hat sich geändert.
+
+DOL-SHA1 unverändert: `EventWatcher.cpp` bleibt `NonMatching` und wird nicht gelinkt.
