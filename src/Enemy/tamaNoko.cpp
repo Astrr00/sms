@@ -30,6 +30,25 @@
 #include <MSound/MSoundBGM.hpp>
 #include <M3DUtil/InfectiousStrings.hpp>
 
+namespace {
+
+// fabricated
+struct TamaParamAccess {
+	TTamaNokoSaveLoadParams* get(const TTamaNoko* self) const
+	{
+		return self->getSaveParams2();
+	}
+};
+
+struct TamaParamAccess2 {
+	TTamaNokoSaveLoadParams* get(const TTamaNoko* self) const
+	{
+		return TamaParamAccess().get(self);
+	}
+};
+
+} // namespace
+
 static const char* tamaNoko_bastable[] = {
 	"/scene/tamaNoko/bas/tamaflower_grow1.bas",
 	"/scene/tamaNoko/bas/tamanoko_appear1.bas",
@@ -817,7 +836,7 @@ DEFINE_NERVE(TNerveTamaNokoDown, TLiveActor)
 		SMSRumbleMgr->start(0x13, &self->mPosition);
 
 	// If didn't land on sand -- we pick ourselves back up after a moment
-	int pickUpTime = self->getSaveParams2()->mSLPickUpTime.get();
+	int pickUpTime = TamaParamAccess2().get(self)->mSLPickUpTime.value;
 	if (self->checkCurAnmEnd(0) && spine->getTime() > pickUpTime) {
 		self->unk164 = 0;
 		spine->pushAfterCurrent(&TNerveTamaNokoWait::theNerve());

@@ -23255,3 +23255,43 @@ Nur `TEnemyMario::tryTake` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `enemyMario.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R642A (`TamaNokoDown`)
+
+**Vollmatch, strikt.**
+
+`TNerveTamaNokoDown::execute` war 99.91926 %.
+Das Frame war `-0x68`, Ziel `-0x60`.
+`mSLPickUpTime.get()` ist eine tote Inline-Stufe und lässt das Frame 8 Bytes zu groß.
+Direktes `mSLPickUpTime.value` lässt das Frame 8 Bytes zu klein (`-0x58`).
+`char trash[8]` hebt nur den hohen Pool.
+Die Sand-`TVec3` blieb dabei zu tief.
+Zwei leere Zugriffs-Stufen (`TamaParamAccess`, `TamaParamAccess2`) plus `.value` legen Frame und `TVec3` auf das Ziel.
+Die Helfer werden vollständig geinlined und erscheinen nicht im Objekt.
+
+`TNerveTamaNokoDown::execute`: 0 Abweichungen, 644 Bytes, 161 Instruktionen.
+`validate-symbol-order` `mario/Enemy/tamaNoko`: PASS mit Warnungen.
+Alle Map-Symbole vorhanden, Linkage stimmt.
+Nur weak Symbole sind ungeordnet.
+Zwei ererbte UNUSED-Größenwarnungen bleiben (`forceWakeUp`, `setBckAnm` der Blume).
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TEnemyMario::tryTake` unberührt.
+`TNerveMantaSpawn::execute` unberührt.
+`TGesso::setPolluteGoal` unberührt.
+
+`ninja changes_all` gegen `93665d60`: fuzzy 81.13343 % -> 81.13345 %.
+Matched code 55.244774 % -> 55.262714 % (1983336 -> 1983980, +644).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10039 -> 10040.
+`tamaNoko` matched code 10632 -> 11276 (+644), Funktionen 50 -> 51 von 58.
+Fuzzy der Unit 97.4331 % -> 97.43624 %.
+Matched code der Unit 64.31164 % -> 68.207115 %.
+Matched data der Unit unverändert 94.22751 % (2220).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TNerveTamaNokoDown::execute` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `tamaNoko.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
