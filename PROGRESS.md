@@ -20083,3 +20083,34 @@ Complete code und complete data unverändert.
 Nur `xFadeBgm` hat sich geändert.
 
 DOL-SHA1 unverändert: `MSModBgm.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R58C (`TPinnaShell::TPinnaShell`)
+
+**Vollmatch, strikt.**
+
+Das Frame war schon `-0x18`.
+`this` lag bei `0x8`, Ziel `0xc`.
+Ein eigener `TPinnaShell()` und ein leerer `TPinnaShell(const char*)` erzeugen das Spill an `0x8`.
+Ein Konstruktor mit Default-Namen `"シェル"` lässt MWCC den Array-Thunk `__ct__Fv` klonen.
+Der Thunk lädt den Namen und legt `this` auf `0xc`.
+`__ct__FPCc` bleibt UNUSED und ist `0xa4`, passend zur Map.
+
+`TPinnaShell::TPinnaShell()`: 0 Abweichungen, 168 Bytes, 42 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/MapObjPinna`: PASS.
+5 geerbte UNUSED-Größenwarnungen, unverändert.
+Order und Linkage in Ordnung.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `ab65cf3d`: fuzzy bleibt 81.12714 %,
+matched code 53.65495 % -> 53.65963 % (1926260 -> 1926428, +168).
+Matched data unverändert 68.287025 % (437263).
+Funktionen matched 9940 -> 9941.
+`MapObjPinna` matched code 12076 -> 12244 (+168), Funktionen 66 -> 67 von 69.
+Fuzzy der Unit 96.711136 % -> 96.71203 %.
+Matched code der Unit 89.90471 % -> 91.15545 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TPinnaShell::TPinnaShell()` hat sich geändert.
+
+DOL-SHA1 unverändert: `MapObjPinna.cpp` bleibt `NonMatching` und wird nicht gelinkt.
