@@ -18193,3 +18193,29 @@ Nur `TNerveDoroHamuKuriRobCap::execute` hat sich geändert.
 
 DOL-SHA1 unverändert: `hamukuri.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 
+### R523A (`TNerveDoroHaneHitWater::execute`)
+
+**Vollmatch, strikt.**
+
+- `setGoalPath(*gpMarioPos)`.
+  Der `TPathNode` liegt auf `r1+0x28`.
+  Der Rahmen ist `-0x48`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 376 Bytes, 94 Instruktionen.
+`validate-symbol-order` `mario/Enemy/hamukuri`: dasselbe ererbte
+`onHaveCap` Linkage-FAIL, keine neuen Fehler.
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `adbcf29b`: fuzzy 81.12724 % -> 81.127266 %,
+matched code 52.766174 % -> 52.776646 % (1894352 -> 1894728, +376).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9873 -> 9874.
+`hamukuri` 28732 -> 29108 (+376), Funktionen 195 -> 196.
+Fuzzy der Unit 92.82821 % -> 92.830055 %.
+Matched code der Unit 63.119507 % -> 63.94552 %.
+Complete units bleiben 416.
+Nur `TNerveDoroHaneHitWater::execute` hat sich geändert.
+
+DOL-SHA1 unverändert: `hamukuri.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+

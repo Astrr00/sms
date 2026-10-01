@@ -2699,7 +2699,7 @@ DEFINE_NERVE(TNerveDoroHaneHitWater, TLiveActor)
 {
 	TDoroHaneKuri* self = (TDoroHaneKuri*)spine->getBody();
 	if (spine->getTime() == 0) {
-		self->setGoalPath((SMS_GetMarioPos()));
+		self->setGoalPath(*gpMarioPos);
 		self->getMActor()->setFrameRate(SMSGetAnmFrameRate() * 1.5f,
 		                                ANM_TYPE_BCK);
 	}
