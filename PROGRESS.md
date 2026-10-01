@@ -18662,3 +18662,29 @@ Complete units bleiben 416.
 Nur `isTouchedOneWall` hat sich geändert.
 
 DOL-SHA1 unverändert: `Map.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R20C (`TModelDataKeeper::createAndKeepData`)
+
+**Vollmatch, strikt.**
+
+`char pad[4]` mit `pad[0] = 0` vergrößert den Rahmen von `-0x138` auf `-0x140`.
+Der Store wird vom Compiler entfernt.
+Der Pfadpuffer rückt um 4 Bytes hoch.
+Gesicherte Register rücken um 8 Bytes hoch.
+
+`TModelDataKeeper::createAndKeepData`: 0 Abweichungen, 228 Bytes, 57 Instruktionen.
+`validate-symbol-order` `mario/Strategic/ObjModel`: PASS.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `986f7d97`: fuzzy 81.126910 % -> 81.126920 %,
+matched code 52.929510 % -> 52.935863 % (1900216 -> 1900444, +228).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9891 -> 9892.
+`ObjModel` 2148 -> 2376 (+228), Funktionen 12 -> 13.
+Fuzzy der Unit 92.725710 % -> 92.741700 %.
+Matched code der Unit 66.051660 % -> 73.062730 %.
+Complete units bleiben 416.
+Nur `createAndKeepData` hat sich geändert.
+
+DOL-SHA1 unverändert: `ObjModel.cpp` bleibt `NonMatching` und wird nicht gelinkt.

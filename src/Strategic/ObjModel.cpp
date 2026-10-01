@@ -47,6 +47,8 @@ SDLModelData* TModelDataKeeper::loadModelData(const char* name, u32 flags,
 
 SDLModelData* TModelDataKeeper::createAndKeepData(const char* name, u32 flags)
 {
+	char pad[4];
+	pad[0] = 0;
 	TModelDataNode* node = &mHead;
 	while (node->getNext())
 		node = node->getNext();
