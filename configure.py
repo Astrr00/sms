@@ -1075,7 +1075,7 @@ config.libs = [
             PCHObject(NonMatching, "Map/MapWire.cpp"),
             PCHObject(NonMatching, "Map/MapWireManager.cpp"),
             Object(NonMatching, "Map/MapXlu.cpp"),
-            Object(NonMatching, "Map/PollutionAction.cpp"),
+            Object(Matching, "Map/PollutionAction.cpp"),
             PCHObject(NonMatching, "Map/PollutionCount.cpp"),
             PCHObject(NonMatching, "Map/PollutionManager.cpp"),
             PCHObject(NonMatching, "Map/PollutionObj.cpp"),

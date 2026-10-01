@@ -19809,3 +19809,36 @@ Complete units bleiben 417.
 Nur `MSHandle::calcPan` hat sich geändert.
 
 DOL-SHA1 unverändert: `MSHandle.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R54C (`TPollutionLayer::action`)
+
+**Vollmatch, strikt. Die TU ist `Matching` und gelinkt.**
+
+Das Frame war `-0x78`, Ziel `-0xa0`.
+Saved-Regs und Rand-Spills lagen einheitlich `0x28` zu tief.
+Die beiden `TVec3` nur `0x18` (`0x20`/`0x2c`, Ziel `0x38`/`0x44`).
+`char trash[0x18]` mit `(void)trash` am Anfang von `spread` hebt die Vektoren.
+`char trash[0x10]` in `action` schließt das restliche Frame.
+`spread`, `glassWall` und `electric` bleiben in der Map-Größe.
+
+`TPollutionLayer::action`: 0 Abweichungen, 972 Bytes, 243 Instruktionen.
+`validate-symbol-order` `mario/Map/PollutionAction`: PASS.
+UNUSED-Größen stimmen 5/5.
+Linkage in Ordnung.
+Die TU ist komplett und steht in `configure.py` auf `Matching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `c2231990`: fuzzy 81.12696 % -> 81.12700 %,
+matched code 53.543865 % -> 53.570946 % (1922272 -> 1923244, +972).
+Matched data unverändert 68.287025 % (437263).
+Funktionen matched 9931 -> 9932.
+`PollutionAction` 2092 -> 3064 (+972), Funktionen 7 -> 8 von 8.
+Fuzzy der Unit 99.95431 % -> 100 %.
+Matched code der Unit 68.276764 % -> 100 %.
+Complete units 417 -> 418.
+Complete code 20.370419 % -> 20.455765 % (731316 -> 734380).
+Complete data 22.151045 % -> 22.192898 % (141840 -> 142108).
+Nur `TPollutionLayer::action` hat sich im Code geändert.
+Der Link zieht die ganze TU.
+
+DOL-SHA1 unverändert: `build/GMSJ01/mario.dol` prüft gegen `build.sha1`.
