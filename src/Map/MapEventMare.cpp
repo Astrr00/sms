@@ -68,6 +68,10 @@ void TMareWallRock::appear()
 
 void TMareWallRock::movement()
 {
+	// Declared ahead of the cases so the two spills pack under the
+	// saved regs. The named 0/0/z components are their 0x18 of homes.
+	JGeometry::TVec3<f32> tAppear;
+	JGeometry::TVec3<f32> tDepress;
 	switch (unkF4) {
 	case 0:
 		if (((TPollutionLayer*)gpPollution->getJointModel(unk108))
@@ -101,8 +105,13 @@ void TMareWallRock::movement()
 			SMSRumbleMgr->stop(0x13);
 			return;
 		}
-		JGeometry::TVec3<f32> t(0.0f, 0.0f, z);
-		unk10C[0]->moveTrans(t);
+		f32 tx = 0.0f;
+		f32 ty = 0.0f;
+		f32 tz = z;
+		tAppear.x = tx;
+		tAppear.y = ty;
+		tAppear.z = tz;
+		unk10C[0]->moveTrans(tAppear);
 		break;
 	}
 
@@ -131,15 +140,18 @@ void TMareWallRock::movement()
 		if (z > unkFC) {
 			unk10C[0]->remove();
 			// Retail calls sleep (vtable 0x1c), not kill (0x18).
-			// TODO: frame is still 0xd8 against retail 0xf0.
-			// Do not pad it.
 			unk104->sleep();
 			unk100 = mWaitTimeToAppear;
 			unkF4  = 3;
 			return;
 		}
-		JGeometry::TVec3<f32> t(0.0f, 0.0f, z);
-		unk10C[0]->moveTrans(t);
+		f32 tx = 0.0f;
+		f32 ty = 0.0f;
+		f32 tz = z;
+		tDepress.x = tx;
+		tDepress.y = ty;
+		tDepress.z = tz;
+		unk10C[0]->moveTrans(tDepress);
 		break;
 	}
 	}

@@ -19498,3 +19498,34 @@ Complete units bleiben 416.
 Nur `TBossManta::initNthGeneration` hat sich geändert.
 
 DOL-SHA1 unverändert: `bossManta.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R49C (`TMareWallRock::movement`)
+
+**Vollmatch, strikt.**
+
+Die beiden `TVec3` lagen nicht um die fehlenden `0x18` verschoben.
+Case 2 war `0x20` zu tief, Case 4 `0x28`.
+Zwischen den Spills lag ein 8-Byte-Loch.
+`tAppear` und `tDepress` stehen vor dem `switch`, damit sie direkt unter den gesicherten Registern packen.
+Die benannten `tx`/`ty`/`tz` sind die `0x18` Homes darunter.
+Sie werden nicht extra gespeichert.
+Ein `char[24]` an derselben Stelle trifft dieselben Offsets, bleibt aber draußen.
+
+`TMareWallRock::movement`: 0 Abweichungen, 904 Bytes, 226 Instruktionen.
+`validate-symbol-order` `mario/Map/MapEventMare`: PASS.
+Sechs ererbte UNUSED-Größenwarnungen.
+Linkage in Ordnung.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `9bb6536f`: fuzzy 81.12753 % -> 81.12755 %,
+matched code 53.37574 % -> 53.40092 % (1916236 -> 1917140, +904).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9921 -> 9922.
+`MapEventMare` 4128 -> 5032 (+904), Funktionen 23 -> 24.
+Fuzzy der Unit 99.24539 % -> 99.25104 %.
+Matched code der Unit 38.840797 % -> 47.34663 %.
+Complete units bleiben 416.
+Nur `TMareWallRock::movement` hat sich geändert.
+
+DOL-SHA1 unverändert: `MapEventMare.cpp` bleibt `NonMatching` und wird nicht gelinkt.
