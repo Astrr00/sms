@@ -20912,3 +20912,31 @@ Complete code und complete data unverändert.
 Nur `evSetTransScale` hat sich geändert.
 
 DOL-SHA1 unverändert: `EventWatcher.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R68C (`calcViewMtx`)
+
+**Vollmatch, strikt.**
+
+`makeWorldToPollutionMtx` speichert `[0][3]` als `-x * scale` und `[1][3]` als `-z * scale`.
+Sieben `int`-Pads am Ende von `calcViewMtx` heben das Frame von `-0xc8` auf `-0xe0`.
+Die gespeicherte View-Matrix liegt auf `0x78`, die Pollution-Matrix auf `0x3c`.
+
+`calcViewMtx`: 0 Abweichungen, 384 Bytes, 96 Instruktionen.
+`validate-symbol-order` `mario/Map/PollutionCount`: ererbtes MISSING `__ct__21TPollutionCounterBaseFv`, sonst nur schwache Ordnung.
+4 ererbte UNUSED-Größenwarnungen (`drawModelStamp`, `drawTexStamp`, `draw`, `setCallback`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `d01324d0`: fuzzy 81.12903 % -> 81.1291 %,
+matched code 54.160233 % -> 54.17093 % (1944400 -> 1944784, +384).
+Matched data unverändert 68.45444 % (438335).
+Funktionen matched 9968 -> 9969.
+`PollutionCount` matched code 8924 -> 9308 (+384), Funktionen 35 -> 36 von 38.
+Fuzzy der Unit 99.92608 % -> 99.951096 %.
+Matched code der Unit 84.57165 % -> 88.21077 %.
+`drawJointObjStamp` bleibt ungematcht.
+Dessen Fuzzy geht durch dieselbe Matrixformel von 99.388885 % auf 99.32716 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+
+DOL-SHA1 unverändert: `PollutionCount.cpp` bleibt `NonMatching` und wird nicht gelinkt.
