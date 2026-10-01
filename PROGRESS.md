@@ -19168,3 +19168,59 @@ Complete units bleiben 416.
 Nur `TNerveMantaAppearDemo::execute` hat sich geändert.
 
 DOL-SHA1 unverändert: `bossManta.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R566A (`CPolarSubCamera::execRoofCheck_`)
+
+**Vollmatch, strikt.**
+
+`roofHeight - mSLRoofHeight.get()` stand im Vergleich und in der Zuweisung.
+`f32 y = mCurrentTarget.mPosition.y` und `roofHeight -= mSaveEx->mSLRoofHeight.get()` erzeugen `lfs f0`, `lfs f2` und `fsubs f1, f1, f2`.
+Das verkleinert den Rahmen von `-0x48` auf `-0x40`.
+`char pad[4]` mit `pad[0] = 0` setzt den Rahmen zurück auf `-0x48` und den Roof-Pointer auf `0x30`.
+Der Store wird vom Compiler entfernt.
+
+`CPolarSubCamera::execRoofCheck_`: 0 Abweichungen, 324 Bytes, 81 Instruktionen.
+`validate-symbol-order` `mario/Camera/CameraBGCheck`: PASS.
+4 objekt-only Weaks, kein Fehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `0b04022e`: fuzzy 81.12723 % -> 81.127266 %,
+matched code 53.185104 % -> 53.19413 % (1909392 -> 1909716, +324).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9909 -> 9910.
+`CameraBGCheck` 948 -> 1272 (+324), Funktionen 3 -> 4.
+Fuzzy der Unit 88.07279 % -> 88.111984 %.
+Matched code der Unit 26.539755 % -> 35.610302 %.
+Complete units bleiben 416.
+Nur `execRoofCheck_` hat sich geändert.
+
+DOL-SHA1 unverändert: `CameraBGCheck.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R566A (`CPolarSubCamera::execRoofCheck_`)
+
+**Vollmatch, strikt.**
+
+`roofHeight - mSLRoofHeight.get()` stand im Vergleich und in der Zuweisung.
+`f32 y = mCurrentTarget.mPosition.y` und `roofHeight -= mSaveEx->mSLRoofHeight.get()` erzeugen `lfs f0`, `lfs f2` und `fsubs f1, f1, f2`.
+Das verkleinert den Rahmen von `-0x48` auf `-0x40`.
+`char pad[4]` mit `pad[0] = 0` setzt den Rahmen zurück auf `-0x48` und den Roof-Pointer auf `0x30`.
+Der Store wird vom Compiler entfernt.
+
+`CPolarSubCamera::execRoofCheck_`: 0 Abweichungen, 324 Bytes, 81 Instruktionen.
+`validate-symbol-order` `mario/Camera/CameraBGCheck`: PASS.
+4 objekt-only Weaks, kein Fehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `0b04022e`: fuzzy 81.12723 % -> 81.127266 %,
+matched code 53.185104 % -> 53.19413 % (1909392 -> 1909716, +324).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9909 -> 9910.
+`CameraBGCheck` 948 -> 1272 (+324), Funktionen 3 -> 4.
+Fuzzy der Unit 88.07279 % -> 88.111984 %.
+Matched code der Unit 26.539755 % -> 35.610302 %.
+Complete units bleiben 416.
+Nur `execRoofCheck_` hat sich geändert.
+
+DOL-SHA1 unverändert: `CameraBGCheck.cpp` bleibt `NonMatching` und wird nicht gelinkt.

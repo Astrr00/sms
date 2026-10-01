@@ -193,6 +193,8 @@ bool CPolarSubCamera::execWallCheck_(Vec* param_1)
 
 bool CPolarSubCamera::execRoofCheck_(Vec param_1)
 {
+	char pad[4];
+	pad[0] = 0;
 	bool moved               = false;
 	bool skipCheck           = false;
 	const TBGCheckData* roof = nullptr;
@@ -209,11 +211,11 @@ bool CPolarSubCamera::execRoofCheck_(Vec param_1)
 	}
 
 	if (skipCheck || should_clip_fabricated(roof)) {
-		if (mCurrentTarget.mPosition.y
-		    > roofHeight - mSaveEx->mSLRoofHeight.get()) {
-			mCurrentTarget.mPosition.y
-			    = roofHeight - mSaveEx->mSLRoofHeight.get();
-			moved = true;
+		f32 y = mCurrentTarget.mPosition.y;
+		roofHeight -= mSaveEx->mSLRoofHeight.get();
+		if (y > roofHeight) {
+			mCurrentTarget.mPosition.y = roofHeight;
+			moved                      = true;
 		}
 	}
 	return moved;
