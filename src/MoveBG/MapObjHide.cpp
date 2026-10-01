@@ -224,7 +224,9 @@ void TFruitBasket::touchFruit(THitActor* param_1)
 	rotX = mRotation.x;
 	if (fabsf(rotX) < 45.0f) {
 		// Upwards facing basket -- check that the fruit's on top of us
-		if (((TLiveActor*)param_1)->getGroundPlane()->getActor() != this)
+		const TBGCheckData* groundPlane
+		    = ((TLiveActor*)param_1)->getGroundPlane();
+		if (groundPlane->getActor() != this)
 			return;
 	} else {
 		// Basket lying on it's side -- check that the fruit rolled inside
