@@ -18298,3 +18298,30 @@ Nur `TNerveMameGessoJitabata::execute` hat sich geändert.
 
 DOL-SHA1 unverändert: `mameGesso.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 
+### R527A (`TNerveDangoHamuKuriWait::execute`)
+
+**Vollmatch, strikt.**
+
+- `TMsRange<f32>(0.0f, 30.0f).rand()` setzt den BCK-Frame.
+  Der Bereich liegt auf `r1+0x20`.
+  Rahmen `-0x40`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 180 Bytes, 45 Instruktionen.
+`validate-symbol-order` `mario/Enemy/hamukuri`: ererbter `onHaveCap` Linkage-FAIL,
+dieselben ererbten Weak-Order- und UNUSED-Size-Warnungen.
+Kein neuer Fehler.
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `2048ba71`: fuzzy 81.12732 % -> 81.12851 %,
+matched code 52.811073 % -> 52.816086 % (1895964 -> 1896144, +180).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9877 -> 9878.
+`hamukuri` 29836 -> 30016 (+180), Funktionen 198 -> 199.
+Fuzzy der Unit 92.83321 % -> 92.9268 %.
+Matched code der Unit 65.544815 % -> 65.94025 %.
+Complete units bleiben 416.
+Nur `TNerveDangoHamuKuriWait::execute` hat sich geändert.
+
+DOL-SHA1 unverändert: `hamukuri.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
