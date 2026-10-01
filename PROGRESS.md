@@ -20820,3 +20820,36 @@ Complete code und complete data unverändert.
 Nur `evInvalidatePad` hat sich geändert.
 
 DOL-SHA1 unverändert: `EventWatcher.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R599A (`TNerveBossEelMouthOpenWait::execute`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0xe8`, Ziel `-0x110`.
+Die inlinierte Distanz-`TVec3` lag bei `0xb4`, Ziel `0xd4`.
+`mSaveParams` in `generateVortex` landete in `r4`, Ziel `r5`.
+Benannte `xz` und `y` legen den Zeiger in `r5`.
+`static inline mouthOpenCanEat` trägt `char trash[0x20]` vor der Distanz und `char gap[8]` dahinter.
+Das Frame wird `-0x110` und die Distanz liegt bei `0xd4`.
+`canEatMario` bleibt unverändert.
+`TNerveBossEelEat::execute` und `TBossEelCollision::behaveToMario` bleiben bei 26 bzw. 17 `~` ohne neue Opcodes.
+
+`TNerveBossEelMouthOpenWait::execute`: 0 Abweichungen, 1288 Bytes, 322 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bosseel`: PASS.
+Nur schwache Symbole sind außer der Reihe.
+5 geerbte UNUSED-Größenwarnungen (`quickBack`, `isEyeBlurOn`, `TBossEelEye::setBckAnm`, `setRecoverTears`, `TBEelTearsDrop::generate`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `267f0af2`: fuzzy 81.128586 % -> 81.12864 %,
+matched code 54.0106 % -> 54.046474 % (1939028 -> 1940316, +1288).
+Matched data unverändert 68.45444 % (438335).
+Funktionen matched 9965 -> 9966.
+`bosseel` matched code 23272 -> 24560 (+1288), Funktionen 121 -> 122 von 142.
+Fuzzy der Unit 99.175865 % -> 99.17902 %.
+Matched code der Unit 50.98142 % -> 53.803017 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TNerveBossEelMouthOpenWait::execute` hat sich geändert.
+
+DOL-SHA1 unverändert: `bosseel.cpp` bleibt `NonMatching` und wird nicht gelinkt.
