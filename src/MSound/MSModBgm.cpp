@@ -98,10 +98,22 @@ f32 MSBgmXFade::scExp[18] = {
 	0.57563f,  0.666377f, 0.766667f,   0.877505f, 1.0f,      1.0f,
 };
 
+static inline u8 findTiming(f32 param_1, f32 prev)
+{
+	for (u8 i = 0; i < 18; ++i) {
+		if (param_1 > MSBgmXFade::scTiming[i] && prev <= MSBgmXFade::scTiming[i])
+			return i;
+		if (param_1 < MSBgmXFade::scTiming[i] && prev >= MSBgmXFade::scTiming[i])
+			return i;
+	}
+	return 0xff;
+}
+
 void MSBgmXFade::xFadeBgm(f32 param_1)
 {
-	// TODO: some stupid trick with casting the second param?
-	u8 tmp = getTiming(param_1, nullptr);
+	char pad[8];
+	f32 prev = unk0;
+	u8 tmp   = findTiming(param_1, prev);
 
 	bool b = tmp >= 1 && tmp <= 16;
 	if (b) {
@@ -124,15 +136,7 @@ void MSBgmXFade::xFadeBgmForce(f32 param_1)
 
 u8 MSBgmXFade::getTiming(f32 param_1, u32* param_2)
 {
-	f32 f1 = unk0;
-	for (u8 i = 0; i < 18; ++i) {
-		if (param_1 > scTiming[i] && f1 <= scTiming[i])
-			return i;
-		if (param_1 < scTiming[i] && scTiming[i] >= f1)
-			return i;
-	}
-
-	return 0xff;
+	return findTiming(param_1, unk0);
 }
 
 u8 MSBgmXFade::getTimingForce(f32 param_1)
