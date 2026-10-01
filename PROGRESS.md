@@ -18804,3 +18804,29 @@ Complete units bleiben 416.
 Nur `evSetNextStage` hat sich geändert.
 
 DOL-SHA1 unverändert: `EventWatcher.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R557A (`TNervePoihanaThrow::execute`)
+
+**Vollmatch, strikt.**
+
+`char trash[0x10]` vergrößert den Rahmen von `-0xa0` auf `-0xb0`.
+Die Rotationsmatrix, der Wurfvektor und die gesicherten Register rücken um 16 Bytes hoch.
+
+`TNervePoihanaThrow::execute`: 0 Abweichungen, 460 Bytes, 115 Instruktionen.
+`validate-symbol-order` `mario/Enemy/poihana`: PASS.
+Vorbestehende UNUSED-Size-Warnung `isOnTrap__8TPoiHanaFv` (0xb0 vs 0xb4).
+Kein neuer Fehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `3b8cafe1`: fuzzy 81.127030 % -> 81.127050 %,
+matched code 52.984325 % -> 52.997143 % (1902184 -> 1902644, +460).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9896 -> 9897.
+`poihana` 9552 -> 10012 (+460), Funktionen 48 -> 49.
+Fuzzy der Unit 97.886200 % -> 97.891710 %.
+Matched code der Unit 73.049860 % -> 76.567760 %.
+Complete units bleiben 416.
+Nur `TNervePoihanaThrow::execute` hat sich geändert.
+
+DOL-SHA1 unverändert: `poihana.cpp` bleibt `NonMatching` und wird nicht gelinkt.

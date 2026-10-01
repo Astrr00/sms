@@ -666,8 +666,6 @@ DEFINE_NERVE(TNervePoihanaThrow, TLiveActor)
 			f32 backThrowVal = self->unk19C->mSLBackThrowVal.get();
 			Mtx afStack_4c;
 			// Retail loads the rotation column (0x30), not the position (0x10).
-			// TODO: frame is still 0x10 short (0xa0 vs retail 0xb0). Every
-			// stack slot shifts with it. Do not pad with a single int.
 			MsMtxSetRotRPH(afStack_4c, self->mRotation.x, self->mRotation.y,
 			               self->mRotation.z);
 			JGeometry::TVec3<f32> local_58(0.0f, 1.0f, -backThrowVal);
@@ -692,6 +690,7 @@ DEFINE_NERVE(TNervePoihanaThrow, TLiveActor)
 	if (self->checkCurAnmEnd(0))
 		return true;
 
+	char trash[0x10];
 	return false;
 }
 
