@@ -1809,7 +1809,21 @@ DEFINE_NERVE(TNerveBPPreDie, TLiveActor)
 	if (spine->getTime() == 0) {
 		boss->changeBck(5);
 		boss->mHeadHit->onHitFlag(HIT_FLAG_NO_COLLISION);
-		boss->resetWaterMark();
+		if (boss->unk17C == 0) {
+			boss->unk17C = 1;
+			boss->unk174 = 0;
+			boss->unk170 = 0;
+			boss->unk1B8 = 50;
+			if (boss->unk18C != nullptr) {
+				char pad[4];
+				JGeometry::TVec3<f32> position;
+				char trash[0x14];
+				boss->getJointTransByIndex(18, &position);
+				position.y += 250.0f;
+				boss->unk18C->mPos.value = position;
+				gpModelWaterManager->emitRequest(*boss->unk18C);
+			}
+		}
 		boss->killSmallEnemies();
 		MSBgm::stopTrackBGM(1, 10);
 	}
