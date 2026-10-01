@@ -21114,3 +21114,31 @@ Complete code und complete data unverändert.
 Nur `__sinit_MSoundSE_cpp` hat sich geändert.
 
 DOL-SHA1 unverändert: `MSoundSE.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R71C (`load`)
+
+**Vollmatch, strikt.**
+
+`readU32` legt das `u32` auf `0x18`, Ziel auf `0x30`.
+Das Frame war `-0x30`, Ziel `-0x48`.
+`stream >> num` und `char trash[25]; trash[0] = 0;` danach legen beides.
+Der Store fällt weg.
+
+`TMapEventSink::load`: 0 Abweichungen, 268 Bytes, 67 Instruktionen.
+`validate-symbol-order` `mario/Map/MapEventSink`: PASS.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`startControl` bleibt 100 %.
+
+`ninja changes_all` gegen `29e8bffe`: fuzzy 81.1298 % -> 81.129814 %,
+matched code 54.31154 % -> 54.319 % (1949832 -> 1950100, +268).
+Matched data unverändert 68.45444 % (438335).
+Funktionen matched 9975 -> 9976.
+`MapEventSink` matched code 6564 -> 6832 (+268), Funktionen 33 -> 34 von 36.
+Fuzzy der Unit 99.7424 % -> 99.74827 %.
+Matched code der Unit 87.52 % -> 91.09333 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `load` hat sich geändert.
+
+DOL-SHA1 unverändert: `MapEventSink.cpp` bleibt `NonMatching` und wird nicht gelinkt.
