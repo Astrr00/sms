@@ -489,6 +489,8 @@ void TNameKuri::setWalkAnm() { setBckAnm(7); }
 
 void TNameKuri::setDeadAnm()
 {
+	char trash[8];
+
 	setBckAnm(0);
 
 	SMSGetMSound()->startSoundActor(MSD_SE_EN_NAMEKURI_DOWN, &mPosition, 0,
@@ -510,6 +512,12 @@ void TNameKuri::setDeadAnm()
 
 	setVelocity(JGeometry::TVec3<f32>(0.0f, 0.0f, 0.0f));
 	onLiveFlag(LIVE_FLAG_UNK10);
+
+	struct Pad {
+		~Pad() { }
+		char c[0x1c];
+	};
+	Pad();
 }
 
 void TNameKuri::setAfterDeadEffect()
@@ -526,6 +534,8 @@ void TNameKuri::setWaitAnm() { setBckAnm(6); }
 
 void TNameKuri::setMeltAnm()
 {
+	char trash[8];
+
 	setBckAnm(1);
 
 	MtxPtr mtx = getMActor()->getModel()->getAnmMtx(2);
@@ -547,6 +557,12 @@ void TNameKuri::setMeltAnm()
 
 	SMSGetMSound()->startSoundActor(MSD_SE_EN_NAMEKURI_DOWN_WT, &mPosition, 0,
 	                                nullptr, 0, 4);
+
+	struct Pad {
+		~Pad() { }
+		char c[0x1c];
+	};
+	Pad();
 }
 
 void TNameKuri::setMActorAndKeeper()

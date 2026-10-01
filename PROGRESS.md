@@ -17864,3 +17864,35 @@ Nur `namekuri` hat sich geändert.
 
 DOL-SHA1 unverändert: `namekuri.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 
+### R512A (`TNameKuri::setMeltAnm`, `TNameKuri::setDeadAnm`)
+
+**Vollmatch, strikt.**
+
+- Ein nicht-triviales 0x1c-Temporary am Funktionsende
+  (auf 0x20 aufgerundet) schiebt den Nullvektor von `r1+0x2c` auf `r1+0x48`.
+  Der Rahmen geht dabei von `-0x40` auf `-0x60`.
+  `char trash[8]` hebt ihn auf `-0x68`.
+  Die Saved-Regs sitzen auf `r1+0x60`.
+- Dieselbe Lage in beiden Funktionen.
+  Der Sound-Call steht bei `setDeadAnm` vor den Partikeln, bei `setMeltAnm` danach.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen.
+`setMeltAnm` 344 Bytes, 86 Instruktionen.
+`setDeadAnm` 344 Bytes, 86 Instruktionen.
+`validate-symbol-order` `mario/Enemy/namekuri`: PASS gegen die Basis
+(ererbte Linkage von `NameKuriScaleCallback` / `NameKuriAttackCallback`,
+UNUSED-Größe von `canJumpAttack`, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `abedd8a0`: fuzzy 81.126854 % -> 81.12687 %,
+matched code 52.60918 % -> 52.62835 % (1888716 -> 1889404, +688).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9858 -> 9860.
+`namekuri` 9676 -> 10364 (+688), Funktionen 59 -> 61.
+Fuzzy der Unit 97.584274 % -> 97.59163 %.
+Complete units bleiben 416.
+Nur `namekuri` hat sich geändert.
+
+DOL-SHA1 unverändert: `namekuri.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
