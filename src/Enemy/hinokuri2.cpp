@@ -686,6 +686,9 @@ void THinokuri2::updateAnmSound()
 
 void THinokuri2::changeBck(int param_1)
 {
+	char trash[4];
+	trash[0] = 0;
+
 	if (param_1 < 0)
 		return;
 
@@ -697,13 +700,13 @@ void THinokuri2::changeBck(int param_1)
 		    || curBck == 0xE && param_1 == 0x18
 		    || curBck == 0x16 && param_1 == 0xB
 		    || curBck == 0xB && param_1 == 0x18) {
-			unk1A0->addTransform(
-			    getActorKeeper()->getMActorAnmData()->getUnk2C()->getAnmPtr(
-			        param_1));
+			unk1A0->addTransform(getActorKeeper()
+			                         ->getMActorAnmData()
+			                         ->mBckAnms->getAnmPtr(param_1));
 		} else {
-			unk1A0->setAnmTransform(
-			    getActorKeeper()->getMActorAnmData()->getUnk2C()->getAnmPtr(
-			        param_1));
+			unk1A0->setAnmTransform(getActorKeeper()
+			                            ->getMActorAnmData()
+			                            ->mBckAnms->getAnmPtr(param_1));
 		}
 
 		getMActor()->getAnmBck()->setFrameCtrl(param_1);
