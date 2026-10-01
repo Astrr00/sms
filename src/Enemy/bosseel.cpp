@@ -1298,6 +1298,7 @@ void TBossEelCollision::initCollision()
 void TBossEelCollision::behaveToMario()
 {
 	JGeometry::TVec3<f32> marioTarget(0.0f, TBossEel::mForcePow, 0.0f);
+	char trash[4];
 	marioTarget += SMS_GetMarioPos();
 	SMS_MarioMoveRequest(marioTarget);
 

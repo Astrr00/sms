@@ -23295,3 +23295,40 @@ Nur `TNerveTamaNokoDown::execute` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `tamaNoko.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R643A (`behaveToMario`)
+
+**Vollmatch, strikt.**
+
+`TBossEelCollision::behaveToMario` war 99.87681 %.
+Das Frame war `-0x78`, Ziel `-0x80`.
+Die `TVec3` lag 4 Bytes zu tief, die gesicherten Register 8 Bytes zu tief.
+`char trash[4]` hebt den hohen Pool.
+Das ist dasselbe Muster wie in `TBossEelAwaCollision::behaveToMario` und `TBossEelBarrierCollision::behaveToMario`.
+Das Frame ist `-0x80`.
+Die `TVec3` liegt auf `0x68`.
+
+`TBossEelCollision::behaveToMario`: 0 Abweichungen, 552 Bytes, 138 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bosseel`: PASS mit Warnungen.
+Alle Map-Symbole vorhanden, Linkage stimmt.
+Nur weak Symbole sind ungeordnet.
+5 ererbte UNUSED-Größenwarnungen bleiben.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TNerveTamaNokoDown::execute` unberührt.
+
+`ninja changes_all` gegen `f6e1d30d`: fuzzy 81.13345 % -> 81.13347 %.
+Matched code 55.262714 % -> 55.278088 % (1983980 -> 1984532, +552).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10040 -> 10041.
+`bosseel` matched code 26740 -> 27292 (+552), Funktionen 125 -> 126 von 142.
+Fuzzy der Unit 99.18656 % -> 99.18805 %.
+Matched code der Unit 58.57869 % -> 59.78794 %.
+Matched data der Unit unverändert 55.96121 % (3924).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TBossEelCollision::behaveToMario` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `bosseel.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
