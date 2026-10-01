@@ -18911,3 +18911,31 @@ Complete units bleiben 416.
 Nur `TMapCollisionData::polygonIsInGrid` hat sich geändert.
 
 DOL-SHA1 unverändert: `MapArea.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R560A (`TBossPakkun::receiveMessage`)
+
+**Vollmatch, strikt.**
+
+`char trash[8]` mit `trash[0] = 0` vergrößert den Rahmen von `-0x50` auf `-0x60`.
+Der Store wird vom Compiler entfernt.
+Die gesicherten Register rücken um 16 Bytes hoch.
+Im Rumpf gibt es keinen Stack-Zugriff.
+
+`TBossPakkun::receiveMessage`: 0 Abweichungen, 592 Bytes, 148 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bosspakkun`: PASS.
+Vorbestehende UNUSED-Size-Warnungen `ignoreWaterCheck__11TBossPakkunFv` (0xf0 vs 0x4) und `vomitFinished__8TBPVomitFv` (0x3c vs 0x40).
+Kein neuer Fehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `98f54a29`: fuzzy bleibt 81.127120 %,
+matched code 53.062767 % -> 53.079254 % (1905000 -> 1905592, +592).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9900 -> 9901.
+`bosspakkun` 15788 -> 16380 (+592), Funktionen 100 -> 101.
+Fuzzy der Unit 99.180466 % -> 99.181380 %.
+Matched code der Unit 39.860634 % -> 41.355280 %.
+Complete units bleiben 416.
+Nur `receiveMessage` hat sich geändert.
+
+DOL-SHA1 unverändert: `bosspakkun.cpp` bleibt `NonMatching` und wird nicht gelinkt.
