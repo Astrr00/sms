@@ -22823,3 +22823,36 @@ Complete code und complete data unverändert.
 Nur `THinokuri2::receiveMessageLv1` ist neu matched.
 
 DOL-SHA1 unverändert: `hinokuri2.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R636B (`updateDemo`)
+
+**Vollmatch, strikt.**
+
+`TCameraBck::updateDemo` war 98.9646 %.
+Das Frame war zu klein und `J3DTransformInfo` lag zu tief.
+`J3DTransformInfo info` vor `char trash[8]` und `char low[0xC]` setzt das Frame auf `-0x80` und die Info auf `0x44`.
+`checkState` materialisiert beide Seiten in `r0`.
+`int result` plus `switch` auf `getState() & STATE_COMPLETED_ONCE` schreibt nur im Fall 0 eine Null und normalisiert danach mit `cmpwi r31`.
+Der Rückgabetyp ist `int`, damit das Epilog `mr r3, r31` bleibt.
+
+`TCameraBck::updateDemo`: 0 Abweichungen, 452 Bytes, 113 Instruktionen.
+`validate-symbol-order` `mario/Camera/CameraBck`: PASS.
+4 ererbte UNUSED-Größenwarnungen bleiben.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`THinokuri2::receiveMessageLv1` unberührt.
+
+`ninja changes_all` gegen `bf5af9b3`: fuzzy 81.13259 % -> 81.13274 %,
+matched code 55.125664 % -> 55.13826 % (1979060 -> 1979512, +452).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10028 -> 10029.
+`CameraBck` matched code 616 -> 1068 (+452), Funktionen 6 -> 7 von 7.
+Fuzzy der Unit 99.5618 % -> 100.0 %.
+Matched code der Unit 57.677902 % -> 100.0 %.
+Matched data der Unit unverändert 100 % (608).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TCameraBck::updateDemo` ist neu matched.
+
+DOL-SHA1 unverändert: `CameraBck.cpp` bleibt `NonMatching` und wird nicht gelinkt.
