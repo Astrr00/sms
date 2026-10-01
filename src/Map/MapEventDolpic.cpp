@@ -166,6 +166,7 @@ bool TDolpicEventRiccoMammaGate::watch()
 
 void TDolpicEventRiccoMammaGate::loadAfter()
 {
+	char trash[8];
 	JDrama::TNameRef::loadAfter();
 	unk38 = 720;
 	unk3C = 120;
@@ -175,9 +176,9 @@ void TDolpicEventRiccoMammaGate::loadAfter()
 		unk28->setUp();
 		unk18 = 0;
 		if (unk2C == 0x50001)
-			gpPollution->getCounterLayer().offLayer(0);
+			gpPollution->offLayer(0);
 		else
-			gpPollution->getCounterLayer().offLayer(1);
+			gpPollution->offLayer(1);
 	}
 }
 

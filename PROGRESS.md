@@ -19902,3 +19902,32 @@ Complete units bleiben 418.
 Nur `CPolarSubCamera::startGateDemoCamera` hat sich geändert.
 
 DOL-SHA1 unverändert: `CameraDemo.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R55C (`TDolpicEventRiccoMammaGate::loadAfter`)
+
+**Vollmatch, strikt.**
+
+`getCounterLayer().offLayer` legt eine Referenz ab.
+Das Frame war `-0x30`, Ziel `-0x28`.
+Der Double-Spill zog mit.
+`gpPollution->offLayer` inlined ohne diese Referenz und fällt auf `-0x20`.
+`char trash[8]` als erstes Local hebt Frame und Spill auf `-0x28`.
+
+`TDolpicEventRiccoMammaGate::loadAfter`: 0 Abweichungen, 216 Bytes, 54 Instruktionen.
+`validate-symbol-order` `mario/Map/MapEventDolpic`: PASS.
+UNUSED-Größe stimmt 1/1.
+Linkage in Ordnung.
+Die TU bleibt `NonMatching` (`load`, `watch`, `control`).
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `4b72b434`: fuzzy bleibt 81.12703 %,
+matched code 53.586544 % -> 53.592556 % (1923804 -> 1924020, +216).
+Matched data unverändert 68.287025 % (437263).
+Funktionen matched 9934 -> 9935.
+`MapEventDolpic` 1800 -> 2016 (+216), Funktionen 10 -> 11 von 14.
+Fuzzy der Unit 99.78901 % -> 99.797806 %.
+Matched code der Unit 49.45055 % -> 55.384617 %.
+Complete units bleiben 418.
+Nur `TDolpicEventRiccoMammaGate::loadAfter` hat sich geändert.
+
+DOL-SHA1 unverändert: `MapEventDolpic.cpp` bleibt `NonMatching` und wird nicht gelinkt.
