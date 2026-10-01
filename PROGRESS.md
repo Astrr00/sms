@@ -23934,3 +23934,34 @@ Nur `TMapCollisionMove::moveSRT` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `MapCollisionEntry.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R108C (`isTouchedOneWallAndMoveXZ`)
+
+**Vollmatch, strikt.**
+
+`TMap::isTouchedOneWallAndMoveXZ` war 99.7907 %.
+Das Frame war schon `-0x60`.
+Der `TBGWallCheckRecord` lag 4 Bytes zu tief.
+`(void)SMSGetMarDirector()` davor hebt den Record um 4, ohne eine eigene Instruktion.
+0 Abweichungen, 172 Bytes, 43 Instruktionen.
+`isTouchedOneWall` inlined denselben Rumpf und bleibt strikt.
+Sein bisheriges `char pad[4]` fällt weg, die Bytes bleiben dieselben.
+`validate-symbol-order` `mario/Map/Map`: dieselben vorbestehenden MISSING und die BINDING-Abweichung `__dt__4TMapFv`.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TMapCollisionMove::moveSRT` aus R107C bleibt unberührt.
+
+`ninja changes_all` gegen `6eea63d8`: fuzzy bleibt 81.13404 %.
+Matched code 55.503376 % -> 55.508167 % (1992620 -> 1992792, +172).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10060 -> 10061.
+`Map` matched code 2992 -> 3164 (+172), Funktionen 24 -> 25 von 29.
+Fuzzy der Unit 99.39426 % -> 99.40056 %.
+Matched code der Unit 52.380955 % -> 55.39216 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `isTouchedOneWallAndMoveXZ` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `Map.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
