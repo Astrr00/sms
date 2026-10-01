@@ -1240,6 +1240,10 @@ static void evAppearReadyGo(TSpcTypedInterp<TEventWatcher>* interp, u32 arg_num)
 	interp->verifyArgNum(0, &arg_num);
 	SMSGetMarDirector()->getConsole()->unk94->startAppearReady();
 	interp->push();
+	(void)SMSGetMarDirector();
+	(void)SMSGetMarDirector();
+	char pad[4];
+	pad[0] = 0;
 }
 
 static void evAppear8RedCoinsAndTimer(TSpcTypedInterp<TEventWatcher>* interp,

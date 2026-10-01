@@ -21820,3 +21820,35 @@ Complete code und complete data unverändert.
 Nur `execute` hat sich geändert.
 
 DOL-SHA1 unverändert: `fireWanwan.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R628B (`evAppearReadyGo`)
+
+**Vollmatch, strikt.**
+
+`evAppearReadyGo` startet die Ready-Anzeige und pusht eine leere Slice.
+Das Frame war `-0x30`, Ziel `-0x40`.
+Die Slice lag auf `0x18`, Ziel `0x24`.
+Zwei verworfene `SMSGetMarDirector()`-Aufrufe nach `push` und ein `char pad[4]` heben Frame und Slice.
+Die Loads und der Pad-Store fallen weg.
+
+`evAppearReadyGo`: 0 Abweichungen, 160 Bytes, 40 Instruktionen.
+`validate-symbol-order` `mario/System/EventWatcher`: dieselbe vorbestehende MISSING-Meldung `set__Q29JGeometry8TVec3<f>FRC3Vec`.
+Ererbte Weak-Order-Warnungen.
+2 ererbte UNUSED-Größenwarnungen (`evSetEventStart`, `evSetEventEnd`).
+`evGameOver`, `evSetAttentionTime`, `evSetPollutionIncreaseCount` und `evStartAppearJetBalloon` bleiben 100 %.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `b51ad27a`: fuzzy 81.13076 % -> 81.13076 %,
+matched code 54.79008 % -> 54.794533 % (1967012 -> 1967172, +160).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 9998 -> 9999.
+`EventWatcher` matched code 30068 -> 30228 (+160), Funktionen 77 -> 78 von 105.
+Fuzzy der Unit 98.93352 % -> 98.93437 %.
+Matched code der Unit 71.19045 % -> 71.569275 %.
+Matched data der Unit bleibt 100 % (2508).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `evAppearReadyGo` ist neu matched.
+
+DOL-SHA1 unverändert: `EventWatcher.cpp` bleibt `NonMatching` und wird nicht gelinkt.
