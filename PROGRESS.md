@@ -24260,3 +24260,36 @@ Nur `TNerveBPTakeOff::execute` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `bosspakkun.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R659A (`TWalkerEnemy::isReachedToGoalXZ`)
+
+**Vollmatch, strikt.**
+
+`TWalkerEnemy::isReachedToGoalXZ` war 99,68 %.
+`getPoint()` zieht das fabrizierte `getPosition()` mit, und das hält ein 8-Byte-Phantom.
+Das Frame lag bei `-0x30` statt `-0x20`, der Ziel-`TVec3` bei `0x20` statt `0x14`.
+Ein lokales `Pt::get` gibt `mPosition` mit derselben Nullprüfung zurück.
+Frame und Vektor treffen ohne zusätzliches `trash`.
+0 Abweichungen, 200 Bytes, 50 Instruktionen.
+`validate-symbol-order` `mario/Enemy/walkerEnemy`: PASS.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TNerveBPTakeOff::execute` aus R658A bleibt unberührt.
+`TPathNode::getPoint` bleibt unverändert.
+`isResignationAttack` bleibt unberührt.
+
+`ninja changes_all` gegen `8a02a3cd`: fuzzy 81.13431 % -> 81.13432 %.
+Matched code 55.626045 % -> 55.63162 % (1997024 -> 1997224, +200).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10070 -> 10071.
+`walkerEnemy` matched code 6468 -> 6668 (+200), Funktionen 30 -> 31 von 33.
+Fuzzy der Unit 99.97429 % -> 99.98286 %.
+Matched code der Unit 86.609535 % -> 89.28763 %.
+Matched data der Unit unverändert 100 % (1204).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TWalkerEnemy::isReachedToGoalXZ` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `walkerEnemy.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
