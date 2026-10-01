@@ -21754,3 +21754,35 @@ Complete code und complete data unverändert.
 Nur `execute` hat sich geändert.
 
 DOL-SHA1 unverändert: `hinokuri2.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R627B (`evGameOver`)
+
+**Vollmatch, strikt.**
+
+`evGameOver` setzt das Game-Over-Flag und pusht eine leere Slice.
+Das Frame war `-0x28`, Ziel `-0x38`.
+Die Slice lag auf `0x14`, Ziel `0x24`.
+Vier verworfene `SMSGetMarDirector()`-Aufrufe nach `push` heben Frame und Slice um 16.
+Die Loads fallen weg.
+
+`evGameOver`: 0 Abweichungen, 160 Bytes, 40 Instruktionen.
+`validate-symbol-order` `mario/System/EventWatcher`: dieselbe vorbestehende MISSING-Meldung `set__Q29JGeometry8TVec3<f>FRC3Vec`.
+Ererbte Weak-Order-Warnungen.
+2 ererbte UNUSED-Größenwarnungen (`evSetEventStart`, `evSetEventEnd`).
+`evSetAttentionTime`, `evSetPollutionIncreaseCount` und `evStartAppearJetBalloon` bleiben 100 %.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `0d4a77f4`: fuzzy 81.13072 % -> 81.13074 %,
+matched code 54.775368 % -> 54.779827 % (1966484 -> 1966644, +160).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 9996 -> 9997.
+`EventWatcher` matched code 29908 -> 30068 (+160), Funktionen 76 -> 77 von 105.
+Fuzzy der Unit 98.93266 % -> 98.93352 %.
+Matched code der Unit 70.81163 % -> 71.19045 %.
+Matched data der Unit bleibt 100 % (2508).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `evGameOver` ist neu matched.
+
+DOL-SHA1 unverändert: `EventWatcher.cpp` bleibt `NonMatching` und wird nicht gelinkt.

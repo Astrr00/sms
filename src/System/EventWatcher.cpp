@@ -501,6 +501,10 @@ static void evGameOver(TSpcTypedInterp<TEventWatcher>* interp, u32 arg_num)
 	interp->verifyArgNum(0, &arg_num);
 	SMSGetMarDirector()->onUnk4CFlag(0x1);
 	interp->push();
+	(void)SMSGetMarDirector();
+	(void)SMSGetMarDirector();
+	(void)SMSGetMarDirector();
+	(void)SMSGetMarDirector();
 }
 
 static void evIsGraffitoCoverage0(TSpcTypedInterp<TEventWatcher>* interp,
