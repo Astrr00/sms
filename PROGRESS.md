@@ -22492,3 +22492,36 @@ Complete code und complete data unverändert.
 Nur `TNerveKageMarioModokiWait::execute` ist neu matched.
 
 DOL-SHA1 unverändert: `telesa.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R633B (`getRandVol`)
+
+**Vollmatch, strikt.**
+
+`MSRandVol::getRandVol` war 99.29032 %.
+`f1`, `f2` und `f3` trugen schon Amplitude, Kurve und Plus.
+Die Index-Rechnung für Kurve und Plus lag in `r0` und `r5` vertauscht.
+Dadurch tauschten die Basen `r3` und `r4` und die Loads von `0x2C` und `0x1C`.
+`plus` steht im Quelltext vor `curve`.
+MWCC rechnet das spätere Local zuerst, also Kurve vor Plus.
+Der Aufruf bleibt `getRandom(amp, curve, plus)`.
+
+`MSRandVol::getRandVol`: 0 Abweichungen, 124 Bytes, 31 Instruktionen.
+`validate-symbol-order` `mario/MSound/MSoundSE`: PASS.
+Schwache Reihenfolge bleibt compiler-gesteuert.
+1 ererbte UNUSED-Größenwarnung (`getRandomVolume`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `7042f0ed`: fuzzy 81.13211 % -> 81.13215 %,
+matched code 55.037983 % -> 55.04144 % (1975912 -> 1976036, +124).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10018 -> 10019.
+`MSoundSE` matched code 10756 -> 10880 (+124), Funktionen 26 -> 27 von 29.
+Fuzzy der Unit 99.0837 % -> 99.091125 %.
+Matched code der Unit 90.75262 % -> 91.79885 %.
+Matched data der Unit unverändert 100 % (2172).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `MSRandVol::getRandVol` ist neu matched.
+
+DOL-SHA1 unverändert: `MSoundSE.cpp` bleibt `NonMatching` und wird nicht gelinkt.
