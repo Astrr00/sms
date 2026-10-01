@@ -19993,3 +19993,34 @@ Complete code und complete data unverändert.
 Nur `THinokuri2::perform` hat sich geändert.
 
 DOL-SHA1 unverändert: `hinokuri2.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R583A (`TNerveBPTumbleOut::execute`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0x58`, Ziel `-0xa0`.
+Der inlinierte `TVec3` aus `resetWaterMark` lag bei `0x28`, Ziel `0x64`.
+`char trash[0x34]` unter dem `TVec3` legt den Vektor auf `0x64`.
+Das Frame bleibt dabei `-0x90`.
+`char trash[0x10]` am Anfang der Nerve hebt das Frame auf `-0xa0`.
+`resetWaterMark` bleibt `0xa4`, passend zur Map.
+
+`TNerveBPTumbleOut::execute`: 0 Abweichungen, 636 Bytes, 159 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bosspakkun`: PASS.
+2 geerbte UNUSED-Größenwarnungen.
+Order und Linkage in Ordnung.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `2ed8f8e6`: fuzzy 81.12707 % -> 81.12708 %,
+matched code 53.625317 % -> 53.64303 % (1925196 -> 1925832, +636).
+Matched data unverändert 68.287025 % (437263).
+Funktionen matched 9937 -> 9938.
+`bosspakkun` matched code 17284 -> 17920 (+636), Funktionen 102 -> 103 von 126.
+Fuzzy der Unit 99.18289 % -> 99.18461 %.
+Matched code der Unit 43.63765 % -> 45.243385 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TNerveBPTumbleOut::execute` hat sich geändert.
+
+DOL-SHA1 unverändert: `bosspakkun.cpp` bleibt `NonMatching` und wird nicht gelinkt.

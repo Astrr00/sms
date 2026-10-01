@@ -1677,6 +1677,7 @@ DEFINE_NERVE(TNerveBPTumble, TLiveActor)
 
 DEFINE_NERVE(TNerveBPTumbleOut, TLiveActor)
 {
+	char trash[0x10];
 	TBossPakkun* boss = static_cast<TBossPakkun*>(spine->getBody());
 	MActor* actor     = boss->mMActor;
 	if (spine->getTime() == 0) {
@@ -1704,8 +1705,20 @@ DEFINE_NERVE(TNerveBPTumbleOut, TLiveActor)
 
 	if (actor->checkCurBckFromIndex(22)) {
 		f32 frame = actor->getFrameCtrl(ANM_TYPE_BCK)->getFrame();
-		if (140.0f < frame && frame < 160.0f)
-			boss->resetWaterMark();
+		if (140.0f < frame && frame < 160.0f && boss->unk17C == 0) {
+			boss->unk17C = 1;
+			boss->unk174 = 0;
+			boss->unk170 = 0;
+			boss->unk1B8 = 50;
+			if (boss->unk18C != nullptr) {
+				JGeometry::TVec3<f32> position;
+				char trash[0x34];
+				boss->getJointTransByIndex(18, &position);
+				position.y += 250.0f;
+				boss->unk18C->mPos.value = position;
+				gpModelWaterManager->emitRequest(*boss->unk18C);
+			}
+		}
 		if (35.0f < frame)
 			boss->unk1BC = 1;
 	}
