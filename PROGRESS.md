@@ -19529,3 +19529,33 @@ Complete units bleiben 416.
 Nur `TMareWallRock::movement` hat sich geändert.
 
 DOL-SHA1 unverändert: `MapEventMare.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R576A (`TNerveBGKAppear::execute`)
+
+**Vollmatch, strikt.**
+
+Der Rahmen war 0x20 zu klein (`-0x58`, Ziel `-0x78`).
+Das `TFlag` und die gesicherten Register lagen gleichmäßig 0x20 zu tief.
+`char trash[0x20]` im Caller schiebt nur die Register; das Flag bleibt bei `0x48`.
+`bgkAppearPad` legt die `0x20` in `startAppearDemo` unter das Flag.
+Der kleine Return hält den Slot und emittiert nichts.
+`startAppearDemo` bleibt UNUSED mit Größe `0xa8`.
+
+`TNerveBGKAppear::execute`: 0 Abweichungen, 652 Bytes, 163 Instruktionen.
+`validate-symbol-order` `mario/Enemy/gatekeeper`: PASS.
+UNUSED-Größen stimmen 25/25.
+Linkage in Ordnung.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `241450ab`: fuzzy 81.12755 % -> 81.12756 %,
+matched code 53.40092 % -> 53.419083 % (1917140 -> 1917792, +652).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9922 -> 9923.
+`gatekeeper` 11192 -> 11844 (+652), Funktionen 46 -> 47.
+Fuzzy der Unit 99.23992 % -> 99.24186 %.
+Matched code der Unit 60.31472 % -> 63.828407 %.
+Complete units bleiben 416.
+Nur `TNerveBGKAppear::execute` hat sich geändert.
+
+DOL-SHA1 unverändert: `gatekeeper.cpp` bleibt `NonMatching` und wird nicht gelinkt.

@@ -527,12 +527,27 @@ void TBiancoGateKeeper::startBGM()
 
 void TBiancoGateKeeper::stopBGM() { MSBgm::stopTrackBGM(1, 0xA); }
 
+// Dead 0x20 local under the inlined TFlag temp.
+// The small return keeps the slot and emits no instructions.
+struct BGKPadBig {
+	char c[0x20];
+};
+struct BGKPadSmall {
+	char c[4];
+};
+static inline BGKPadSmall bgkAppearPad()
+{
+	BGKPadBig big;
+	return *(BGKPadSmall*)(void*)&big;
+}
+
 void TBiancoGateKeeper::startAppearDemo()
 {
 	if (unk28A != 0)
 		return;
 
 	snprintf(mDemoName, 0x100, "%s出現カメラ", mName);
+	bgkAppearPad();
 	SMSGetMarDirector()->fireStartDemoCamera(mDemoName, &mPosition, -1, 0.0f,
 	                                         true, nullptr, 0, nullptr,
 	                                         JDrama::TFlagT<u16>(0));
