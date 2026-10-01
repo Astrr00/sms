@@ -179,6 +179,8 @@ void TMirrorModel::init(const char* name)
 	                                     | (1 << J3DMLF_TevStageNumShift));
 
 	TPosition3f local_44;
+	char gap[0x10];
+	gap[0] = 0;
 	local_44.identity();
 	unk4->getModel()->setBaseTRMtx(local_44);
 	unk4->calc();
