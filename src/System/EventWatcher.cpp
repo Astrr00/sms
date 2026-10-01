@@ -1100,6 +1100,7 @@ static void evEggYoshiStartFruit(TSpcTypedInterp<TEventWatcher>* interp,
 	if (!egg->checkLiveFlag(LIVE_FLAG_DEAD))
 		egg->startFruit();
 	interp->push();
+	(void)SMSGetMarDirector();
 }
 
 static void evPutNozzle(TSpcTypedInterp<TEventWatcher>* interp, u32 arg_num)

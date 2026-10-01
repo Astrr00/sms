@@ -23838,3 +23838,36 @@ Neu strikt matched sind `entryMirrorDrawBufferAlways` und `init`.
 
 DOL-SHA1 unverändert: `MirrorActor.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R652B (`evEggYoshiStartFruit`)
+
+**Vollmatch, strikt.**
+
+`evEggYoshiStartFruit` war 99.86207 %.
+Das Frame war schon `-0x80`, das `stfd` schon bei `0x68`.
+Pop-, Kopie- und Push-Slices lagen 4 Bytes zu tief, mit einem 4-Byte-Loch unter dem Spill.
+Ein `(void)SMSGetMarDirector()` nach `push()` hebt nur die Slices um 4, ohne eine eigene Instruktion.
+0 Abweichungen, 464 Bytes, 116 Instruktionen.
+`validate-symbol-order` `mario/System/EventWatcher`: dieselbe vorbestehende MISSING `set__Q29JGeometry8TVec3<f>FRC3Vec`.
+Die Weak-Order-Warnung und die beiden UNUSED-Größenwarnungen bleiben.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`evStartTimer` aus R651B bleibt unberührt.
+`TStayPakkun::isHitValid` aus R654A bleibt unberührt.
+`TMirrorActor::entryMirrorDrawBufferAlways` und `init` aus R106C bleiben unberührt.
+
+`ninja changes_all` gegen `564ded60`: fuzzy 81.134 % -> 81.13402 %.
+Matched code 55.47396 % -> 55.48689 % (1991564 -> 1992028, +464).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10057 -> 10058.
+`EventWatcher` matched code 30592 -> 31056 (+464), Funktionen 79 -> 80 von 105.
+Fuzzy der Unit 98.936455 % -> 98.937965 %.
+Matched code der Unit 72.4311 % -> 73.52969 %.
+Matched data der Unit unverändert 100 % (2508).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `evEggYoshiStartFruit` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `EventWatcher.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
