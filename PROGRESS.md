@@ -23695,3 +23695,39 @@ Nur `TNerveMantaHitWater::execute` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `bossManta.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R105C (`initTexImage`)
+
+**Vollmatch, strikt.**
+
+`TPollutionLayer::initTexImage` war 99.8547 %.
+Der Frame war zu klein (`-0x168` gegen `-0x1d8`).
+`fullPath` lag bei `0x44`, Ziel `0xb8`.
+`long long pad[14]` nach dem Puffer hebt Frame und Puffer.
+Die Adresse bleibt ein direktes `addi r3, r1, 0xb8`.
+Die Indexsumme war `x + Produkt` (`add r3, r26, r0`).
+Ziel ist `Produkt + x` (`add r3, r0, r26`).
+Ein benanntes `row` und `bmp[0x436 + row + x]` dreht die Operanden.
+0 Abweichungen, 468 Bytes, 117 Instruktionen.
+`validate-symbol-order` `mario/Map/PollutionLayer`: PASS mit Warnungen.
+Die ererbten UNUSED-Größenwarnungen bleiben.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TBoxTelesa::load` unberührt.
+`stampModel` bleibt 99.3 %.
+
+`ninja changes_all` gegen `d8cb52cd`: fuzzy 81.13383 % -> 81.13386 %.
+Matched code 55.401314 % -> 55.414356 % (1988956 -> 1989424, +468).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10051 -> 10052.
+`PollutionLayer` matched code 5616 -> 6084 (+468), Funktionen 24 -> 25 von 26.
+Fuzzy der Unit 99.97485 % -> 99.98582 %.
+Matched code der Unit 90.52224 % -> 98.065765 %.
+Matched data der Unit unverändert 100 % (1036).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TPollutionLayer::initTexImage` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `PollutionLayer.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
