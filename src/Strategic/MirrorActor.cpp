@@ -17,6 +17,8 @@
 
 void TMirrorActor::isInMirror() const { }
 
+static inline int& mirrorSlot(TMirrorModelManager* mgr) { return mgr->unk18; }
+
 void TMirrorActor::checkIsInMirror()
 {
 	if (unk1A & 1) {
@@ -40,6 +42,8 @@ void TMirrorActor::checkIsInMirror()
 
 	MtxPtr mtx = unk10->getAnmMtx(0);
 	JGeometry::TVec3<f32> local_18;
+	char trash[4];
+	trash[0] = 0;
 	if (!(unk1A & 4)) {
 		local_18.set(mtx[0][3], mtx[1][3], mtx[2][3]);
 	} else {
@@ -47,7 +51,7 @@ void TMirrorActor::checkIsInMirror()
 	}
 
 	int uVar4 = gpCubeMirror->getDataNo(gpCubeMirror->getInCubeNo(local_18));
-	if (uVar4 != gpMirrorModelManager->unk18) {
+	if (uVar4 != mirrorSlot(gpMirrorModelManager)) {
 		unk18 = 0;
 	} else if (!gpMirrorModelManager->isUnk18Present() && !(unk1A & 4)) {
 		unk18 = 0;
