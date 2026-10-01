@@ -20508,3 +20508,33 @@ Complete code und complete data unverändert.
 Nur `TGenerator::perform` hat sich geändert.
 
 DOL-SHA1 unverändert: `generator.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R606B (`MSoundSE::startSoundNpcActor`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0x78`, Ziel `-0x88`.
+Die Locals lagen um `+0xC` zu tief, die Saves um `+0x10`.
+Ein `char pad[0xC]` im Aufrufer hebt nur den `JAIActor`.
+`static inline npcPad` mit `char pad[0xC]; pad[0] = 0;` nach `startSoundActorInner` legt das Loch unter `local_c`.
+Die Hilfe wird nicht emittiert.
+`checkMonoSound` bleibt bei 0 Abweichungen.
+
+`startSoundNpcActor`: 0 Abweichungen, 272 Bytes, 68 Instruktionen.
+`validate-symbol-order` `mario/MSound/MSoundSE`: PASS.
+Schwache Symbolreihenfolge und eine UNUSED-Größenwarnung (`getRandomVolume`) geerbt.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `0b36f1b1`: fuzzy 81.12755 % -> 81.12756 %,
+matched code 53.868984 % -> 53.87656 % (1933944 -> 1934216, +272).
+Matched data unverändert 68.45444 % (438335).
+Funktionen matched 9954 -> 9955.
+`MSoundSE` matched code 3292 -> 3564 (+272), Funktionen 21 -> 22 von 29.
+Fuzzy der Unit 98.8839 % -> 98.89031 %.
+Matched code der Unit 27.775902 % -> 30.070873 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `startSoundNpcActor` hat sich geändert.
+
+DOL-SHA1 unverändert: `MSoundSE.cpp` bleibt `NonMatching` und wird nicht gelinkt.
