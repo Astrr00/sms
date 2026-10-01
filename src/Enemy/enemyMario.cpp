@@ -605,6 +605,7 @@ void TEnemyMario::startMonteReplay(u32 replayIndex)
 	    &currentPoint);
 	mPosition = currentPoint;
 	JGeometry::TVec3<f32> nextPoint;
+	char trash[8];
 	mEMario->getTracer()
 	    ->getGraph()
 	    ->getGraphNode(nodeIndex + 1)

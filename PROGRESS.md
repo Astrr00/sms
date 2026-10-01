@@ -19383,3 +19383,30 @@ Complete units bleiben 416.
 Nur `TSplineRail::getPosAndRot` hat sich geändert.
 
 DOL-SHA1 unverändert: `graph.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R573A (`TEnemyMario::startMonteReplay`)
+
+**Vollmatch, strikt.**
+
+Der Rahmen war 8 Bytes zu klein (`-0x90`, Ziel `-0x98`).
+Die beiden `TVec3` lagen relativ zum Rahmen schon richtig und nur 8 Bytes zu tief gegen `r1`.
+`char trash[8]` vor den Vecs hebt nur den Rahmen; die Vecs bleiben bei `0x74` / `0x68`.
+Dasselbe Array hinter `nextPoint` schiebt beide Slots um 8 (`0x7c` / `0x70`) und den Rahmen auf `-0x98`.
+
+`TEnemyMario::startMonteReplay`: 0 Abweichungen, 328 Bytes, 82 Instruktionen.
+`validate-symbol-order` `mario/Enemy/enemyMario`: ererbtes MISSING `getPoint__9TPathNodeCFv`, sonst Ordnung und Linkage in Ordnung.
+Sieben ererbte UNUSED-Größenwarnungen.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `aa26d656`: fuzzy 81.12744 % -> 81.12746 %,
+matched code 53.281258 % -> 53.29039 % (1912844 -> 1913172, +328).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9917 -> 9918.
+`enemyMario` 4380 -> 4708 (+328), Funktionen 19 -> 20.
+Fuzzy der Unit 97.10448 % -> 97.10768 %.
+Matched code der Unit 19.522196 % -> 20.984133 %.
+Complete units bleiben 416.
+Nur `TEnemyMario::startMonteReplay` hat sich geändert.
+
+DOL-SHA1 unverändert: `enemyMario.cpp` bleibt `NonMatching` und wird nicht gelinkt.
