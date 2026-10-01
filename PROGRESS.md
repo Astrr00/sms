@@ -19112,3 +19112,31 @@ Complete units bleiben 416.
 Nur `THinokuri2::changeBck` hat sich geändert.
 
 DOL-SHA1 unverändert: `hinokuri2.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R564A (`TBiancoGateKeeper::changeBck`)
+
+**Vollmatch, strikt.**
+
+`getUnk2C()` in den eingezeilten `TBGKMtxCalc::setAnm` und `joinAnm` reservierte unbenutzten Stack (Rahmen `-0xb8`, Ziel `-0xa0`).
+Beide lesen `getActorKeeper()->getMActorAnmData()->mBckAnms->getAnmPtr(param_1)`.
+Der s16-nach-f32-Cast bleibt an seiner Stelle und wandert mit dem Rahmen.
+Im Rumpf gibt es keine abweichende Instruktion.
+
+`TBiancoGateKeeper::changeBck`: 0 Abweichungen, 700 Bytes, 175 Instruktionen.
+`validate-symbol-order` `mario/Enemy/gatekeeper`: PASS.
+UNUSED-Größen stimmen 25/25.
+Kein neuer Fehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `9fc08971`: fuzzy 81.12719 % -> 81.12721 %,
+matched code 53.153683 % -> 53.17318 % (1908264 -> 1908964, +700).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9907 -> 9908.
+`gatekeeper` 10492 -> 11192 (+700), Funktionen 45 -> 46.
+Fuzzy der Unit 99.237335 % -> 99.23992 %.
+Matched code der Unit 56.542362 % -> 60.31472 %.
+Complete units bleiben 416.
+Nur `TBiancoGateKeeper::changeBck` hat sich geändert.
+
+DOL-SHA1 unverändert: `gatekeeper.cpp` bleibt `NonMatching` und wird nicht gelinkt.
