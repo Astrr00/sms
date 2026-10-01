@@ -23636,3 +23636,33 @@ Nur `TPakkunSeed::moveObject` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `pakkun.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R652A (`load`)
+
+**Vollmatch, strikt.**
+
+`TBoxTelesa::load` war 99.818184 %.
+Der Frame war schon `-0x40`.
+Die drei Default-`TVec3` von `newAndRegisterObj` lagen 4 Bytes zu tief (`0x10`/`0x1c`/`0x28` gegen `0x14`/`0x20`/`0x2c`).
+Die `stfs`-Reihenfolge stimmte bereits.
+`boxPad()` legt einen toten 4-Byte-Return-Slot unter die Argumente und hebt sie um 4, ohne den Frame zu ändern und ohne eine Instruktion im Diff.
+0 Abweichungen, 264 Bytes, 66 Instruktionen.
+`validate-symbol-order` `mario/Enemy/telesa`: PASS mit Warnungen.
+Die ererbten Weak-Order- und UNUSED-Größenwarnungen bleiben.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TPakkunSeed::moveObject` aus R651A bleibt unberührt.
+
+`ninja changes_all` gegen `84cbc934`: fuzzy bleibt 81.13383 %.
+Matched code 55.393963 % -> 55.401314 % (1988692 -> 1988956, +264).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10050 -> 10051.
+`telesa` matched code 15440 -> 15704 (+264), Funktionen 77 -> 78 von 86.
+Fuzzy der Unit 99.61473 % -> 99.61706 %.
+Matched code der Unit 74.99514 % -> 76.27744 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TBoxTelesa::load` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `telesa.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.

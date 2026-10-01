@@ -913,12 +913,22 @@ TBoxTelesa::TBoxTelesa(const char* name)
 {
 }
 
+struct BoxPad4 {
+	char c[4];
+};
+static inline BoxPad4 boxPad()
+{
+	BoxPad4 p;
+	return *(BoxPad4*)(void*)&p;
+}
+
 void TBoxTelesa::load(JSUMemoryInputStream& stream)
 {
 	TTelesa::load(stream);
 
 	setTypeCanSee();
 
+	boxPad();
 	unk150 = 0x40;
 	if (TJuiceBlock* block
 	    = (TJuiceBlock*)gpMapObjManager->newAndRegisterObj("TelesaBlock")) {
