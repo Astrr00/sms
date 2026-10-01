@@ -21389,3 +21389,35 @@ Complete code und complete data unverändert.
 Nur `TNerveHino2GraphWander::execute` hat sich geändert.
 
 DOL-SHA1 unverändert: `hinokuri2.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R622B (`evSetAttentionTime`)
+
+**Vollmatch, strikt.**
+
+`evSetAttentionTime` verwirft das Argument und pusht eine leere `TSpcSlice`.
+Das Frame war `-0x58`, Ziel `-0x70`.
+Die Slice lag auf `0x30`, Ziel `0x40`.
+Eine benannte `TSpcSlice` legt den Slot auf `0x40`.
+Drei `long long` heben nur das Frame auf `-0x70`.
+Die Stores auf die `long long` fallen weg.
+
+`evSetAttentionTime`: 0 Abweichungen, 184 Bytes, 46 Instruktionen.
+`validate-symbol-order` `mario/System/EventWatcher`: dieselbe vorbestehende MISSING-Meldung `set__Q29JGeometry8TVec3<f>FRC3Vec`.
+Ererbte Weak-Order-Warnungen.
+2 ererbte UNUSED-Größenwarnungen (`evSetEventStart`, `evSetEventEnd`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `b6250bde`: fuzzy 81.13039 % bleibt 81.13039 %,
+matched code 54.59476 % -> 54.599888 % (1960000 -> 1960184, +184).
+Matched data unverändert 69.22779 % (443287).
+Funktionen matched 9984 -> 9985.
+`EventWatcher` matched code 28936 -> 29120 (+184), Funktionen 73 -> 74 von 105.
+Fuzzy der Unit 98.928024 % -> 98.92888 %.
+Matched code der Unit 68.51028 % -> 68.94592 %.
+Matched data der Unit bleibt 100 % (2508).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `evSetAttentionTime` ist neu matched.
+
+DOL-SHA1 unverändert: `EventWatcher.cpp` bleibt `NonMatching` und wird nicht gelinkt.

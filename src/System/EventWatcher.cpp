@@ -429,12 +429,12 @@ static void evSetTimeLimit(TSpcTypedInterp<TEventWatcher>* interp, u32 arg_num)
 static void evSetAttentionTime(TSpcTypedInterp<TEventWatcher>* interp,
                                u32 arg_num)
 {
+	long long a, b, c;
+	a = b = c = 0;
 	interp->verifyArgNum(1, &arg_num);
 	int tmp = interp->pop().getDataInt();
-
-	// not implemented?
-
-	interp->push();
+	TSpcSlice s;
+	interp->push(s);
 }
 
 static void evSetPollutionIncreaseCount(TSpcTypedInterp<TEventWatcher>* interp,
