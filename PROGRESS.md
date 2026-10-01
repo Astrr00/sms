@@ -20207,3 +20207,35 @@ Complete code und complete data unverändert.
 Nur `startSoundActorSpecial` hat sich geändert.
 
 DOL-SHA1 unverändert: `MSound.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R602B (`MSound::exitStage`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0x38`, Ziel `-0x40`.
+Die beiden `JAICamera()`-Temps lagen aneinander.
+Ziel: der zweite 8 Bytes höher, der erste 12 Bytes höher, mit 4 Bytes dazwischen.
+Ein `char pad[8]` schiebt nur die gesicherten Register.
+`static inline clearOneCam` mit `char pad[4]; pad[0] = 0;` wird zweimal inlined.
+Jeder Aufruf legt sein eigenes Pad unter den Temp, der Store fällt weg.
+Die Hilfe wird nicht emittiert.
+
+`MSound::exitStage`: 0 Abweichungen, 320 Bytes, 80 Instruktionen.
+`startSoundActorSpecial` bleibt 100 %.
+`validate-symbol-order` `mario/MSound/MSound`: PASS.
+Geerbte weak-Order-Warnung und 6 UNUSED-Größenwarnungen, unverändert.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `2c1ec171`: fuzzy 81.12721 % -> 81.12723 %,
+matched code 53.703310 % -> 53.712220 % (1927996 -> 1928316, +320).
+Matched data unverändert 68.287025 % (437263).
+Funktionen matched 9944 -> 9945.
+`MSound` matched code 7984 -> 8304 (+320), Funktionen 44 -> 45 von 49.
+Fuzzy der Unit 99.20288 % -> 99.20898 %.
+Matched code der Unit 63.974358 % -> 66.53846 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `exitStage` hat sich geändert.
+
+DOL-SHA1 unverändert: `MSound.cpp` bleibt `NonMatching` und wird nicht gelinkt.
