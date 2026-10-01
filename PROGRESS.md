@@ -22185,3 +22185,37 @@ Complete code und complete data unverändert.
 Nur `TGCLogoDir::direct_dolby` ist neu matched.
 
 DOL-SHA1 unverändert: `GCLogoDir.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R82C (`drawUpper`)
+
+**Vollmatch, strikt.**
+
+`TMapWire::drawUpper` war 99.1579 %.
+`xOffset` und `zOffset` werden in place mit `mDrawWidth` multipliziert.
+Das hält die Offsets in `f31` und `f30` und hebt das Frame von `-0x40` auf `-0x58`.
+Im Schleifen-Streifen hält `addf` die `fadds`-Operanden als Basis plus Offset.
+Start- und Endpunkte bleiben beim rohen `+`.
+Kein Padding.
+
+`TMapWire::drawUpper`: 0 Abweichungen, 304 Bytes, 76 Instruktionen.
+`drawLower` bleibt matching.
+`validate-symbol-order` `mario/Map/MapWire`: PASS.
+3 ererbte UNUSED-Größenwarnungen (`initTipPoints`, `updateMovePointAtReleased`, `updatePointAtReleased`).
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+`addf` bleibt inlined.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `952cda10`: fuzzy 81.13122 % -> 81.131294 %,
+matched code 54.9201 % -> 54.92857 % (1971680 -> 1971984, +304).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10009 -> 10010.
+`MapWire` matched code 1940 -> 2244 (+304), Funktionen 9 -> 10 von 16.
+Fuzzy der Unit 92.93736 % -> 92.97347 %.
+Matched code der Unit 27.370203 % -> 31.659142 %.
+Matched data der Unit unverändert 100 % (412).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TMapWire::drawUpper` ist neu matched.
+
+DOL-SHA1 unverändert: `MapWire.cpp` bleibt `NonMatching` und wird nicht gelinkt.
