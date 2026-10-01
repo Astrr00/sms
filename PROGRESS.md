@@ -22251,3 +22251,36 @@ Complete code und complete data unverändert.
 Nur `TApplication::checkAdditionalMovie` ist neu matched.
 
 DOL-SHA1 unverändert: `Application.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R622A (`init`)
+
+**Vollmatch, strikt.**
+
+`TSmallEnemy::init` war 99.78854 %.
+Das Frame war `-0x108`, Ziel `-0x128`.
+Die Spill-Slots lagen `0x20` Bytes zu tief.
+`TPathNode` lag nur `0x1c` zu tief, direkt an den Doubles.
+Ein benannter Node plus `char trash[0x1c]` hebt das Frame auf `-0x128`.
+Der Node landet auf `0xbc`, die Spills rutschen um `0x20`.
+Der Store auf `trash` fällt weg.
+
+`TSmallEnemy::init`: 0 Abweichungen, 908 Bytes, 227 Instruktionen.
+`validate-symbol-order` `mario/Enemy/smallEnemy`: PASS.
+Alle Map-Symbole vorhanden, Reihenfolge der nicht-weak Symbole stimmt, Linkage stimmt.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `53ec2a0e`: fuzzy 81.13142 % -> 81.13147 %,
+matched code 54.942055 % -> 54.967342 % (1972468 -> 1973376, +908).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10011 -> 10012.
+`smallEnemy` matched code 10892 -> 11800 (+908), Funktionen 53 -> 54 von 64.
+Fuzzy der Unit 98.392395 % -> 98.40333 %.
+Matched code der Unit 62.01321 % -> 67.18288 %.
+Matched data der Unit unverändert 66.87631 % (1276).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TSmallEnemy::init` ist neu matched.
+
+DOL-SHA1 unverändert: `smallEnemy.cpp` bleibt `NonMatching` und wird nicht gelinkt.
