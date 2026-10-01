@@ -22151,3 +22151,37 @@ Complete code und complete data unverändert.
 Nur `TPakkun::load` ist neu matched.
 
 DOL-SHA1 unverändert: `pakkun.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R629B (`direct_dolby`)
+
+**Vollmatch, strikt.**
+
+`TGCLogoDir::direct_dolby` war 98.57304 %.
+Das Frame war `-0x38`, Ziel `-0x68`.
+Jeder Stack-Slot lag `0x30` Bytes zu tief.
+`char pad[0x30]` am Anfang hebt das Frame auf `-0x68` und schiebt die Slots um `0x30`.
+Der Store auf `pad` fällt weg.
+Der Vergleich mit `mState` lud das Feld nicht neu.
+`*(volatile int*)&mState` stellt denselben Reload her wie in `direct`.
+
+`TGCLogoDir::direct_dolby`: 0 Abweichungen, 356 Bytes, 89 Instruktionen.
+`direct_nlogo` und `direct` bleiben 100 %.
+`validate-symbol-order` `mario/System/GCLogoDir`: PASS.
+Alle Map-Symbole vorhanden, Reihenfolge stimmt, Linkage stimmt.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `44da484b`: fuzzy 81.13108 % -> 81.13122 %,
+matched code 54.91019 % -> 54.9201 % (1971324 -> 1971680, +356).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10008 -> 10009.
+`GCLogoDir` matched code 2976 -> 3332 (+356), Funktionen 9 -> 10 von 11.
+Fuzzy der Unit 99.78833 % -> 99.88716 %.
+Matched code der Unit 57.89883 % -> 64.824905 %.
+Matched data der Unit bleibt 100 % (620).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TGCLogoDir::direct_dolby` ist neu matched.
+
+DOL-SHA1 unverändert: `GCLogoDir.cpp` bleibt `NonMatching` und wird nicht gelinkt.
