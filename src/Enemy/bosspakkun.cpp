@@ -1910,7 +1910,18 @@ DEFINE_NERVE(TNerveBPTakeOff, TLiveActor)
 
 	if (actor->checkCurBckFromIndex(11)) {
 		boss->mPosition.y += 5.0f;
-		JGeometry::TVec3<f32> goal = boss->getUnk104().getPoint();
+		struct Pt {
+			static const JGeometry::TVec3<f32>&
+			get(const TPathNode& node)
+			{
+				if (node.unk0 != 0)
+					return node.unk0->mPosition;
+				return node.unk4;
+			}
+		};
+		JGeometry::TVec3<f32> goal = Pt::get(boss->getUnk104());
+		char trash[4];
+		(void)&trash;
 		if (goal.y < boss->mPosition.y) {
 			boss->mPosition.y = goal.y;
 			if (boss->getTracer()->getGraph() != nullptr)

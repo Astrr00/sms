@@ -24224,3 +24224,39 @@ Nur `TNerveBPTouchDown::execute` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `bosspakkun.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R658A (`TNerveBPTakeOff::execute`)
+
+**Vollmatch, strikt.**
+
+`TNerveBPTakeOff::execute` war 99,9058 %.
+`getPoint()` zieht das fabrizierte `getPosition()` mit, und das hält ein 8-Byte-Phantom.
+Das Frame lag bei `-0x68` statt `-0x60`, der Ziel-`TVec3` acht Bytes zu hoch.
+Ein lokales `Pt::get` gibt `mPosition` mit derselben Nullprüfung zurück.
+Das Frame trifft `-0x60`.
+Der Vektor liegt danach bei `0x40` statt `0x44`.
+`char trash[4]` mit `(void)&trash` direkt nach der Kopie hebt ihn auf `0x44`, ohne eine Instruktion.
+0 Abweichungen, 552 Bytes, 138 Instruktionen.
+`TNerveBPTouchDown::execute` bleibt 100 %.
+`validate-symbol-order` `mario/Enemy/bosspakkun`: PASS mit Warnungen.
+Zwei ererbte UNUSED-Größenwarnungen bleiben (`ignoreWaterCheck`, `vomitFinished`).
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TNerveBPTouchDown::execute` aus R657A bleibt unberührt.
+`TPathNode::getPoint` bleibt unverändert.
+
+`ninja changes_all` gegen `9664af57`: fuzzy 81.134285 % -> 81.13431 %.
+Matched code 55.61067 % -> 55.626045 % (1996472 -> 1997024, +552).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10069 -> 10070.
+`bosspakkun` matched code 22324 -> 22876 (+552), Funktionen 111 -> 112 von 126.
+Fuzzy der Unit 99.2048 % -> 99.20612 %.
+Matched code der Unit 56.36235 % -> 57.75601 %.
+Matched data der Unit unverändert 99.855804 % (5540).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TNerveBPTakeOff::execute` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `bosspakkun.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
