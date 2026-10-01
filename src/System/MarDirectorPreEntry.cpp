@@ -11,8 +11,15 @@ static const char* SMS_NO_MEMORY_MESSAGE = "メモリが足りません\n";
 static const char cDirtyFileName[]       = "/scene/map/pollution/H_ma_rak.bti";
 static const char cDirtyTexName[]        = "H_ma_rak_dummy";
 
+static inline void padPreEntry()
+{
+	char trash[0x30];
+	trash[0] = 0;
+}
+
 void TMarDirector::preEntry(TPerformList* list)
 {
+	padPreEntry();
 	JDrama::TViewObj* setViewMtx = static_cast<JDrama::TViewObj*>(
 	    JDrama::TNameRefGen::search("J3D System Set View Mtx"));
 	JDrama::TViewObj* mirrorDisplayModelControl

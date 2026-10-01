@@ -19197,34 +19197,6 @@ Nur `execRoofCheck_` hat sich geändert.
 
 DOL-SHA1 unverändert: `CameraBGCheck.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 
-### R566A (`CPolarSubCamera::execRoofCheck_`)
-
-**Vollmatch, strikt.**
-
-`roofHeight - mSLRoofHeight.get()` stand im Vergleich und in der Zuweisung.
-`f32 y = mCurrentTarget.mPosition.y` und `roofHeight -= mSaveEx->mSLRoofHeight.get()` erzeugen `lfs f0`, `lfs f2` und `fsubs f1, f1, f2`.
-Das verkleinert den Rahmen von `-0x48` auf `-0x40`.
-`char pad[4]` mit `pad[0] = 0` setzt den Rahmen zurück auf `-0x48` und den Roof-Pointer auf `0x30`.
-Der Store wird vom Compiler entfernt.
-
-`CPolarSubCamera::execRoofCheck_`: 0 Abweichungen, 324 Bytes, 81 Instruktionen.
-`validate-symbol-order` `mario/Camera/CameraBGCheck`: PASS.
-4 objekt-only Weaks, kein Fehler.
-Die TU bleibt `NonMatching`.
-`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
-
-`ninja changes_all` gegen `0b04022e`: fuzzy 81.12723 % -> 81.127266 %,
-matched code 53.185104 % -> 53.19413 % (1909392 -> 1909716, +324).
-Matched data unverändert 67.8535 % (434487).
-Funktionen matched 9909 -> 9910.
-`CameraBGCheck` 948 -> 1272 (+324), Funktionen 3 -> 4.
-Fuzzy der Unit 88.07279 % -> 88.111984 %.
-Matched code der Unit 26.539755 % -> 35.610302 %.
-Complete units bleiben 416.
-Nur `execRoofCheck_` hat sich geändert.
-
-DOL-SHA1 unverändert: `CameraBGCheck.cpp` bleibt `NonMatching` und wird nicht gelinkt.
-
 ### R567A (`TNerveTamaNokoSink::execute`)
 
 **Vollmatch, strikt.**
@@ -19253,3 +19225,30 @@ Complete units bleiben 416.
 Nur `TNerveTamaNokoSink::execute` hat sich geändert.
 
 DOL-SHA1 unverändert: `tamaNoko.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R568A (`TMarDirector::preEntry`)
+
+**Vollmatch, strikt.**
+
+`SMSGetRederRect_Game()` legt das `TRect` auf `0x84` (Rahmen `-0xb8`, Ziel `-0xe8`).
+Ein lokales `char trash[0x30]` setzt den Rahmen, schiebt das Rect aber nur auf `0x88`.
+`padPreEntry()` mit `char trash[0x30]` und `trash[0] = 0` wird eingezeilt.
+Der Store wird entfernt.
+Der Rahmen wird `-0xe8` und das Rect liegt auf `0xb8`.
+
+`TMarDirector::preEntry`: 0 Abweichungen, 892 Bytes, 223 Instruktionen.
+`validate-symbol-order` `mario/System/MarDirectorPreEntry`: PASS.
+Die TU bleibt `NonMatching` (extra Rodata `dummy` und `SMS_NO_MEMORY_MESSAGE`).
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `1f1154e6`: fuzzy 81.12728 % -> 81.1273 %,
+matched code 53.20906 % -> 53.233902 % (1910252 -> 1911144, +892).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9911 -> 9912.
+`MarDirectorPreEntry` 0 -> 892 (+892), Funktionen 0 -> 1.
+Fuzzy der Unit 99.96861 % -> 100 %.
+Matched code der Unit 0 % -> 100 %.
+Complete units bleiben 416.
+Nur `preEntry` hat sich geändert.
+
+DOL-SHA1 unverändert: `MarDirectorPreEntry.cpp` bleibt `NonMatching` und wird nicht gelinkt.
