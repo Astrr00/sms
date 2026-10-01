@@ -478,10 +478,10 @@ f32 TBiancoGateKeeper::getRumblePow()
 	f32 dist = diff.length();
 	if (dist == 0.0f)
 		return 1.0f;
-	f32 pow = 2000.0f / dist;
-	if (pow > 1.0f)
-		pow = 1.0f;
-	return pow;
+	dist = 2000.0f / dist;
+	if (dist > 1.0f)
+		dist = 1.0f;
+	return dist;
 }
 
 void TBiancoGateKeeper::rumblePad()

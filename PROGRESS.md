@@ -22626,3 +22626,38 @@ Complete code und complete data unverändert.
 Nur `MSoundSE::checkSoundArea` ist neu matched.
 
 DOL-SHA1 unverändert: `MSoundSE.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R630A (`getRumblePow`)
+
+**Vollmatch, strikt.**
+
+`TBiancoGateKeeper::getRumblePow` war 99.781815 %.
+Das Frame war beidseitig `-0x28`.
+`diff` lag bei `0x1c` statt `0x18`.
+`dist` und `pow` sind zwei Float-Locals.
+Zusammen belegen sie den 4-Byte-Slot über dem Vec.
+`dist` wird nach dem Nulltest mit `2000 / dist` überschrieben.
+Der zweite Local fällt weg.
+Der Vec landet auf `0x18`.
+Der Clamp bleibt eine Zuweisung.
+
+`TBiancoGateKeeper::getRumblePow`: 0 Abweichungen, 220 Bytes, 55 Instruktionen.
+`validate-symbol-order` `mario/Enemy/gatekeeper`: PASS.
+0 neue Fehler.
+25 UNUSED-Größen stimmen.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `f49beeb4`: fuzzy 81.13224 % -> 81.132256 %,
+matched code 55.076313 % -> 55.08244 % (1977288 -> 1977508, +220).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10022 -> 10023.
+`gatekeeper` matched code 11844 -> 12064 (+220), Funktionen 47 -> 48 von 55.
+Fuzzy der Unit 99.24186 % -> 99.244446 %.
+Matched code der Unit 63.828407 % -> 65.01401 %.
+Matched data der Unit unverändert 99.743256 % (3108).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TBiancoGateKeeper::getRumblePow` ist neu matched.
+
+DOL-SHA1 unverändert: `gatekeeper.cpp` bleibt `NonMatching` und wird nicht gelinkt.
