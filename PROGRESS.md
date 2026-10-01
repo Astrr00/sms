@@ -19710,3 +19710,33 @@ Nur `TMapEventSirenaSink::watch` hat sich im Code geändert.
 Der Link zieht die ganze TU.
 
 DOL-SHA1 unverändert: `build/GMSJ01/mario.dol` prüft gegen `build.sha1`.
+
+### R53C (`TMapEventSinkInPollutionReset::loadAfter`)
+
+**Vollmatch, strikt.**
+
+Der Body stimmte schon.
+Das Frame war `-0xd0`, Ziel `-0x158`, inklusive der Saved-Regs.
+`char trash[0x88]` als erstes Local schließt genau diese Lücke.
+Die Saved-Regs wandern mit dem Frame.
+`TMapEventSinkInPollution::loadAfter` bleibt inlined.
+`TMapEventSinkBianco::loadAfter` und die Parent-Funktion bleiben Match.
+
+`TMapEventSinkInPollutionReset::loadAfter`: 0 Abweichungen, 308 Bytes, 77 Instruktionen.
+`validate-symbol-order` `mario/Map/MapEventSink`: PASS.
+UNUSED-Größen stimmen 1/1.
+Linkage in Ordnung.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `32ddf324`: fuzzy 81.12759 % -> 81.12760 %,
+matched code 53.49239 % -> 53.500973 % (1920424 -> 1920732, +308).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9928 -> 9929.
+`MapEventSink` 5812 -> 6120 (+308), Funktionen 31 -> 32 von 36.
+Fuzzy der Unit 99.72853 % -> 99.73333 %.
+Matched code der Unit 77.49333 % -> 81.6 %.
+Complete units bleiben 417.
+Nur `TMapEventSinkInPollutionReset::loadAfter` hat sich geändert.
+
+DOL-SHA1 unverändert: `MapEventSink.cpp` bleibt `NonMatching` und wird nicht gelinkt.

@@ -262,6 +262,9 @@ void TMapEventSinkInPollutionReset::makeBuildingRecovered(int i)
 
 void TMapEventSinkInPollutionReset::loadAfter()
 {
+	// Unused block fills the 0x88 frame gap left when the parent loadAfter
+	// is inlined here. Sized so saved regs move with the frame.
+	char trash[0x88];
 	TMapEventSinkInPollution::loadAfter();
 	for (int i = 0; i < mBuildingNum; ++i) {
 		getPollutionObj(i)->alive();
