@@ -23445,3 +23445,40 @@ Nur `TObjHitCheck::entryGroup` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `ObjHitCheck.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R647A (`isResignationAttack`)
+
+**Vollmatch, strikt.**
+
+`TWalkerEnemy::isResignationAttack` war 99.65455 %.
+Das Frame war `-0x58`, Ziel `-0x48`.
+Die `dist`-`TVec3` lag 12 Bytes zu hoch.
+`getSLGiveUpLength()` geht durch `TParamT::get()` und lässt das Frame 16 Bytes zu groß.
+Direktes `mSLGiveUpLength.value` legt das Frame auf `-0x48`.
+Der `dont_inline`-Kopierkonstruktor von `TVec3` lässt die `TVec3` dann noch 4 Bytes zu hoch (`0x2c` statt `0x28`).
+Die Kopie als `Vec`-Zuweisung, derselbe Rumpf wie der Kopierkonstruktor, legt sie auf `0x28`.
+
+`TWalkerEnemy::isResignationAttack`: 0 Abweichungen, 220 Bytes, 55 Instruktionen.
+`validate-symbol-order` `mario/Enemy/walkerEnemy`: PASS.
+Alle Map-Symbole vorhanden, Reihenfolge und Linkage stimmen.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TObjHitCheck::entryGroup` unberührt.
+`TObjHitCheck::checkAndEntryGroup` unberührt.
+`TObjHitCheck::checkActorsHit` unberührt.
+
+`ninja changes_all` gegen `45b13131`: fuzzy 81.13359 % -> 81.13361 %.
+Matched code 55.334354 % -> 55.34048 % (1986552 -> 1986772, +220).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10044 -> 10045.
+`walkerEnemy` matched code 6248 -> 6468 (+220), Funktionen 29 -> 30 von 33.
+Fuzzy der Unit 99.96411 % -> 99.97429 %.
+Matched code der Unit 83.66363 % -> 86.609535 %.
+Matched data der Unit unverändert 100 % (1204).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TWalkerEnemy::isResignationAttack` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `walkerEnemy.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.

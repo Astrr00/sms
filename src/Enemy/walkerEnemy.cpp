@@ -162,14 +162,16 @@ void TWalkerEnemy::initAttacker(THitActor* param_1)
 static inline f32 dist(const JGeometry::TVec3<f32>& a,
                        const JGeometry::TVec3<f32>& b)
 {
-	JGeometry::TVec3<f32> tmp = a;
+	JGeometry::TVec3<f32> tmp;
+	// dont_inline copy ctor reserves an extra slot
+	*(Vec*)&tmp = *(const Vec*)&a;
 	tmp.sub(b);
 	return tmp.length();
 }
 
 bool TWalkerEnemy::isResignationAttack()
 {
-	f32 fVar1 = getSaveParam2()->getSLGiveUpLength();
+	f32 fVar1 = getSaveParam2()->mSLGiveUpLength.value;
 
 	if (dist(unk104.getPoint(), mPosition) > fVar1)
 		return true;
