@@ -18830,3 +18830,29 @@ Complete units bleiben 416.
 Nur `TNervePoihanaThrow::execute` hat sich geändert.
 
 DOL-SHA1 unverändert: `poihana.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R558A (`TGesso::pollute`)
+
+**Vollmatch, strikt.**
+
+`char trash[0x10]` vergrößert den Rahmen von `-0x88` auf `-0x98`.
+Der Verschmutzungsvektor, die Rotationsmatrix und die gesicherten Register rücken um 16 Bytes hoch.
+
+`TGesso::pollute`: 0 Abweichungen, 484 Bytes, 121 Instruktionen.
+`validate-symbol-order` `mario/Enemy/gesso`: vorbestehend MISSING `checkDropInWater__6TGessoFv` (UNUSED).
+Ererbte Weak-Order-Warnung und UNUSED-Size-Warnungen.
+Kein neuer Fehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `b3349c57`: fuzzy 81.127050 % -> 81.127070 %,
+matched code 52.997143 % -> 53.010624 % (1902644 -> 1903128, +484).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9897 -> 9898.
+`gesso` 12348 -> 12832 (+484), Funktionen 77 -> 78.
+Fuzzy der Unit 98.305800 % -> 98.310310 %.
+Matched code der Unit 63.271164 % -> 65.751175 %.
+Complete units bleiben 416.
+Nur `TGesso::pollute` hat sich geändert.
+
+DOL-SHA1 unverändert: `gesso.cpp` bleibt `NonMatching` und wird nicht gelinkt.
