@@ -97,7 +97,10 @@ static bool loadWaveBackword(JASystem::WaveArcLoader::TObject* obj)
 		return false;
 
 	JASystem::Kernel::THeap* root = JASystem::WaveArcLoader::getRootHeap();
-	if (!heap->selfAlloc(root, extent, (u32)root->mBase + root->unk10 - extent))
+	u32 addr = (u32)root->mBase;
+	addr += root->unk10;
+	addr -= extent;
+	if (!heap->selfAlloc(root, extent, addr))
 		return false;
 
 	u32* ptr = obj->getLoadFlagPtr();
@@ -109,6 +112,7 @@ static bool loadWaveBackword(JASystem::WaveArcLoader::TObject* obj)
 		return false;
 	}
 
+	char pad[0xC];
 	return true;
 }
 
