@@ -958,6 +958,11 @@ DEFINE_NERVE(TNerveTobiPukuPitiPiti, TLiveActor)
 
 DEFINE_NERVE(TNerveTobiPukuDie, TLiveActor)
 {
+	struct Pad {
+		~Pad() { }
+		char c[8];
+	};
+	Pad();
 	TTobiPuku* self = (TTobiPuku*)spine->getBody();
 	if (spine->getTime() == 0) {
 		if (self->isAirborne()) {

@@ -17947,3 +17947,29 @@ Nur `mameGesso` hat sich geändert.
 
 DOL-SHA1 unverändert: `mameGesso.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 
+### R515A (`TNerveTobiPukuDie::execute`)
+
+**Vollmatch, strikt.**
+
+- Ein nicht-triviales 8-Byte-Temporary am Funktionsanfang.
+  Der Nullvektor liegt auf `r1+0x34`, die Velocity auf `r1+0x28`.
+  Der Rahmen ist `-0x50`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 508 Bytes, 127 Instruktionen.
+`validate-symbol-order` `mario/Enemy/tobiPuku`: PASS gegen die Basis
+(keine neuen Fehler; weak-Order und UNUSED-Größen ererbt).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `8679f36d`: fuzzy 81.127 % -> 81.127014 %,
+matched code 52.648067 % -> 52.662216 % (1890112 -> 1890620, +508).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9862 -> 9863.
+`tobiPuku` 13304 -> 13812 (+508), Funktionen 103 -> 104.
+Fuzzy der Unit 98.961716 % -> 98.965706 %.
+Matched code der Unit 66.32104 % -> 68.85344 %.
+Complete units bleiben 416.
+Nur `tobiPuku` hat sich geändert.
+
+DOL-SHA1 unverändert: `tobiPuku.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
