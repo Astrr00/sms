@@ -19470,3 +19470,31 @@ Complete units bleiben 416.
 Nur `TBossMantaManager::setupEfbAlpha` hat sich geändert.
 
 DOL-SHA1 unverändert: `bossManta.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R575A (`TBossManta::initNthGeneration`)
+
+**Vollmatch, strikt.**
+
+Der Rahmen war 0x20 zu klein (`-0xa0`, Ziel `-0xc0`).
+`heights`, die beiden Konvertierungs-Doubles und die gesicherten Register lagen gleichmäßig 0x20 zu tief.
+`char trash[0x20]` hinter `heights` schiebt den ganzen Block um 0x20.
+Das Array wird nicht beschrieben.
+
+`TBossManta::initNthGeneration`: 0 Abweichungen, 1960 Bytes, 490 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bossManta`: ererbtes ORDER-FAIL, `theNerve__*TNerveManta*` vor den `execute__*`.
+Sechs ererbte UNUSED-Größenwarnungen.
+Linkage in Ordnung.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `b294d982`: fuzzy 81.127495 % -> 81.12753 %,
+matched code 53.321148 % -> 53.37574 % (1914276 -> 1916236, +1960).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9920 -> 9921.
+`bossManta` 5316 -> 7276 (+1960), Funktionen 28 -> 29.
+Fuzzy der Unit 98.15343 % -> 98.16056 %.
+Matched code der Unit 24.331747 % -> 33.30282 %.
+Complete units bleiben 416.
+Nur `TBossManta::initNthGeneration` hat sich geändert.
+
+DOL-SHA1 unverändert: `bossManta.cpp` bleibt `NonMatching` und wird nicht gelinkt.
