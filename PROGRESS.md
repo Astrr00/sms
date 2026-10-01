@@ -23332,3 +23332,42 @@ Nur `TBossEelCollision::behaveToMario` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `bosseel.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R644A (`checkActorsHit`)
+
+**Vollmatch, strikt.**
+
+`TObjHitCheck::checkActorsHit` war 99.824646 %.
+Die vier mittleren Gruppen gingen durch `entryGroup`.
+Die Spielerschleife nahm `unk10[3]` und Marios Angriffsradius.
+Ziel ist `checkAndEntryGroup` für `unk10[7]`, `unk10[8]`, `unk10[9]` und `unk10[6]`.
+Die Schleife läuft über `unk10[5]`.
+Mario geht mit `getDamageRadius` und `getDamageHeight` in `checkDistance`.
+`getChildren()` einmal in eine Referenz zu ziehen nimmt die 8 Bytes unter den Iterator-Temps weg.
+`char trash[4]` in `checkGroupPlayer` hebt den hohen Iterator-Pool um 4.
+`char trash[0x18]` in `checkActorsHit` hebt das Frame von `-0xc0` auf `-0xd8`.
+`checkGroupPlayer` bleibt UNUSED mit Größe `0x194`.
+
+`TObjHitCheck::checkActorsHit`: 0 Abweichungen, 844 Bytes, 211 Instruktionen.
+`validate-symbol-order` `mario/Strategic/ObjHitCheck`: PASS mit Warnungen.
+Alle Map-Symbole vorhanden, Reihenfolge und Linkage stimmen.
+Die ererbte `checkGroup`-Größenwarnung bleibt (`0x274` gegen `0x4`).
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TBossEelCollision::behaveToMario` unberührt.
+
+`ninja changes_all` gegen `e05bb2f0`: fuzzy 81.13347 % -> 81.13351 %.
+Matched code 55.278088 % -> 55.301594 % (1984532 -> 1985376, +844).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10041 -> 10042.
+`ObjHitCheck` matched code 700 -> 1544 (+844), Funktionen 5 -> 6 von 10.
+Fuzzy der Unit 99.68316 % -> 99.71836 %.
+Matched code der Unit 16.65081 % -> 36.72693 %.
+Matched data der Unit unverändert 100 % (16).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TObjHitCheck::checkActorsHit` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `ObjHitCheck.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
