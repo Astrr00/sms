@@ -27,11 +27,15 @@ void TShimmer::far() { }
 
 void TShimmer::perform(u32 cue, JDrama::TGraphics* graphics)
 {
+	char gap[9];
+	gap[0] = 0;
 	Mtx effectMtx;
 	Mtx afStack_80;
 	Mtx afStack_b0;
 	Mtx afStack_e0;
 	J3DTransformInfo info;
+	char trash[21];
+	trash[0] = 0;
 
 	if (gpMarioOriginal->checkFlag(MARIO_FLAG_FLUDD_EMITTING))
 		return;
