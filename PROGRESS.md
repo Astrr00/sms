@@ -20853,3 +20853,32 @@ Complete code und complete data unverändert.
 Nur `TNerveBossEelMouthOpenWait::execute` hat sich geändert.
 
 DOL-SHA1 unverändert: `bosseel.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R613B (`TMarDirector::loadParticle`)
+
+**Vollmatch, strikt.**
+
+`new (0x20)` schrieb `li r4, 0x20`, Ziel `li r4, -0x20`.
+Beide Anlagen kommen vom Heap-Ende: `new (-0x20)`.
+`SMSLoadArchive` für `bosshanachanJpa.arc` gibt den Puffer zurück, das Original mountet aber `pvVar1`.
+`TBossHanachan::staticLoadParticle()` stand auskommentiert und fehlt sonst als `bl`.
+Das Frame war `-0x28`, Ziel `-0x40`.
+`char pad[0x18]; pad[0] = 0;` hebt `stmw r26` von `0x10` auf `0x28`, der Store fällt weg.
+
+`TMarDirector::loadParticle`: 0 Abweichungen, 2432 Bytes, 608 Instruktionen.
+`validate-symbol-order` `mario/System/MarDirectorLoadResource`: PASS.
+Die TU bleibt `NonMatching` (Extra-Symbole aus den rogue includes, Objekt nicht bytegleich).
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `c678d066`: fuzzy 81.12864 % -> 81.12878 %,
+matched code 54.046474 % -> 54.114216 % (1940316 -> 1942748, +2432).
+Matched data unverändert 68.45444 % (438335).
+Funktionen matched 9966 -> 9967.
+`MarDirectorLoadResource` matched code 6948 -> 9380 (+2432), Funktionen 4 -> 5 von 5.
+Fuzzy der Unit 99.94584 % -> 100.0 %.
+Matched code der Unit 74.072495 % -> 100.0 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `loadParticle` hat sich geändert.
+
+DOL-SHA1 unverändert: `MarDirectorLoadResource.cpp` bleibt `NonMatching` und wird nicht gelinkt.
