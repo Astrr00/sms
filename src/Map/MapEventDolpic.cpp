@@ -83,13 +83,14 @@ bool TDolpicEventRiccoMammaGate::isFinishedAll() const
 
 void TDolpicEventRiccoMammaGate::rising()
 {
-	f32 scale = TMapObjBase::getJointScaleY(unk20) + unk34;
-
+	char gap[1];
+	gap[0] = 0;
+	f32 scale = TMapObjBase::getJointScaleY(unk20);
+	scale += unk34;
 	TPosition3f mtx;
 	mtx.identity();
 	mtx.ref(1, 1) = scale;
 	unk24->moveMtx(mtx.mMtx);
-
 	gpCameraShake->keepShake(CAM_SHAKE_MODE_UNK5, 1.0f);
 	SMSRumbleMgr->start(0, (f32*)nullptr);
 	TMapObjBase::setJointScaleY(unk20, scale);
