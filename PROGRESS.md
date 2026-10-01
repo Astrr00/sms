@@ -19083,3 +19083,32 @@ Complete units bleiben 416.
 Nur `initStage` hat sich geändert.
 
 DOL-SHA1 unverändert: `Map.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R563A (`THinokuri2::changeBck`)
+
+**Vollmatch, strikt.**
+
+`getUnk2C()` auf beiden Zweigen reservierte unbenutzten Stack (Rahmen `-0x90`, Ziel `-0x80`).
+Beide Zweige lesen `getActorKeeper()->getMActorAnmData()->mBckAnms->getAnmPtr(param_1)`.
+`char trash[4]` mit `trash[0] = 0` setzt den Rahmen auf `-0x80`.
+Der Store wird vom Compiler entfernt.
+Im Rumpf gibt es keinen Stack-Zugriff.
+
+`THinokuri2::changeBck`: 0 Abweichungen, 540 Bytes, 135 Instruktionen.
+`validate-symbol-order` `mario/Enemy/hinokuri2`: PASS.
+Vorbestehende UNUSED-Size-Warnungen `makeQuake__10THinokuri2Ff` (0x40 vs 0x4), `shakeCamera__10THinokuri2Fi` (0xa8 vs 0x4), `updatePolTrans__10THinokuri2Fv` (0x70 vs 0x4), `emitPolParticle__10THinokuri2Fv` (0x68 vs 0x4), `startDamageMotion__10THino2MaskFv` (0x28 vs 0x4) und `breakMask__10THino2MaskFv` (0x50 vs 0x4).
+Kein neuer Fehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `fd8a2e7e`: fuzzy bleibt 81.12719 %,
+matched code 53.138645 % -> 53.153683 % (1907724 -> 1908264, +540).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9906 -> 9907.
+`hinokuri2` 11888 -> 12428 (+540), Funktionen 54 -> 55.
+Fuzzy der Unit 99.180954 % -> 99.18246 %.
+Matched code der Unit 49.566376 % -> 51.817875 %.
+Complete units bleiben 416.
+Nur `THinokuri2::changeBck` hat sich geändert.
+
+DOL-SHA1 unverändert: `hinokuri2.cpp` bleibt `NonMatching` und wird nicht gelinkt.
