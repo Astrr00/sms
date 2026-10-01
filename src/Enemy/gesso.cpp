@@ -676,6 +676,7 @@ void TGesso::calcRootMatrix()
 		               mRotation.x, mRotation.y, mRotation.z);
 
 		Mtx local_68;
+		char trash[4];
 		MsMtxSetRotY(local_68, mStayYaw);
 
 		MTXConcat(mA, local_68, mA);
@@ -800,7 +801,29 @@ void TGesso::turnOut()
 }
 
 // TODO: the size & logic matches but it won't inline =(
-inline bool TGesso::checkDropInWater()
+static inline bool checkDropInWaterInline(TGesso* self)
+{
+	// Don't skip your calculus class, kids.
+	JGeometry::TVec3<f32> position = self->mPosition;
+	JGeometry::TVec3<f32> velocity = self->mVelocity;
+	for (int i = 0; i < 50; ++i) {
+		position += velocity;
+		velocity.y -= self->getGravityY();
+		if (position.y < self->mGroundHeight)
+			break;
+	}
+
+	const TBGCheckData* local_34;
+	gpMap->checkGround(position.x, self->mHeadHeight * 2.0f + position.y,
+	                   position.z, &local_34);
+
+	if (local_34->isWaterSurface())
+		return true;
+	else
+		return false;
+}
+
+bool TGesso::checkDropInWater()
 {
 	// Don't skip your calculus class, kids.
 	JGeometry::TVec3<f32> position = mPosition;
@@ -1011,7 +1034,7 @@ DEFINE_NERVE(TNerveGessoFreeze, TLiveActor)
 		self->onLiveFlag(LIVE_FLAG_AIRBORNE);
 		self->unk1DC = local_88;
 
-		if (self->checkDropInWater()) {
+		if (checkDropInWaterInline(self)) {
 			spine->pushAfterCurrent(&TNerveGessoFall::theNerve());
 			return true;
 		}

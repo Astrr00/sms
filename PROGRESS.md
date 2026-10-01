@@ -22354,3 +22354,40 @@ Complete code und complete data unverändert.
 Nur `TNerveBPStompReact::execute` ist neu matched.
 
 DOL-SHA1 unverändert: `bosspakkun.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R625A (`calcRootMatrix`)
+
+**Vollmatch, strikt.**
+
+`TGesso::calcRootMatrix` war 99.666664 %.
+Das Frame war `-0x88`, Ziel `-0x90`.
+Die Spill-Slots lagen `0x8` Bytes zu tief.
+`Mtx local_68` lag nur `0x4` zu tief.
+`char trash[4]` hinter der Matrix hebt das Frame auf `-0x90`.
+Die Matrix landet auf `0x28`.
+Der Store auf `trash` fällt weg.
+`checkDropInWater` war `inline` und fehlte als UNUSED-Symbol.
+Die Nerve ruft jetzt ein `static inline` auf, der Rumpf bleibt gleich.
+Die Methode selbst ist nicht mehr `inline` und kommt mit `0x144` Bytes heraus.
+`TNerveGessoFreeze::execute` bleibt 99.44 %.
+
+`TGesso::calcRootMatrix`: 0 Abweichungen, 360 Bytes, 90 Instruktionen.
+`validate-symbol-order` `mario/Enemy/gesso`: PASS.
+Schwache Reihenfolge war schon vorher offen.
+2 ererbte UNUSED-Größenwarnungen (`modifyRotate`, `isUseBodyCallBack`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `abbacfe7`: fuzzy 81.13174 % -> 81.131775 %,
+matched code 54.998093 % -> 55.008125 % (1974480 -> 1974840, +360).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10014 -> 10015.
+`gesso` matched code 12832 -> 13192 (+360), Funktionen 78 -> 79 von 91.
+Fuzzy der Unit 98.31031 % -> 98.31646 %.
+Matched code der Unit 65.751175 % -> 67.595825 %.
+Matched data der Unit unverändert 100 % (3980).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TGesso::calcRootMatrix` ist neu matched.
+
+DOL-SHA1 unverändert: `gesso.cpp` bleibt `NonMatching` und wird nicht gelinkt.
