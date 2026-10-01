@@ -2105,6 +2105,9 @@ DEFINE_NERVE(TNerveFireWanwanFly, TLiveActor)
 
 DEFINE_NERVE(TNerveFireWanwanFreeze, TLiveActor)
 {
+	JGeometry::TVec3<f32> zero;
+	char gap[1];
+	gap[0] = 0;
 	TFireWanwan* self = (TFireWanwan*)spine->getBody();
 
 	if (spine->getTime() == 0) {
@@ -2116,7 +2119,8 @@ DEFINE_NERVE(TNerveFireWanwanFreeze, TLiveActor)
 		                                &self->mPosition, 0, nullptr, 0, 4);
 	}
 
-	self->setVelocity(JGeometry::TVec3<f32>(0.0f, 0.0f, 0.0f));
+	zero.set(0.0f, 0.0f, 0.0f);
+	self->setVelocity(zero);
 
 	if (self->getFreezeTime() < spine->getTime()) {
 		spine->pushAfterCurrent(&TNerveFireWanwanRecover::theNerve());

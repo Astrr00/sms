@@ -21786,3 +21786,37 @@ Complete code und complete data unverändert.
 Nur `evGameOver` ist neu matched.
 
 DOL-SHA1 unverändert: `EventWatcher.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R613A (`execute`)
+
+**Vollmatch, strikt.**
+
+`TNerveFireWanwanFreeze::execute` war 99.83696 %.
+Das Frame war `-0x48`, Ziel `-0x50`.
+Die Zero-Vec lag auf `0x2c`, Ziel `0x34`.
+`JGeometry::TVec3<f32> zero` vor `char gap[1]` legt die Vec auf `0x34`.
+`zero.set(0.0f, 0.0f, 0.0f)` und `setVelocity(zero)` halten die Stores an der Retail-Stelle.
+Der Store auf `gap` fällt weg.
+
+`TNerveFireWanwanFreeze::execute`: 0 Abweichungen, 368 Bytes, 92 Instruktionen.
+`TFireWanwan::behaveToWater` bleibt 100 %.
+`validate-symbol-order` `mario/Enemy/fireWanwan`: Symbolreihenfolge stimmt.
+4 ererbte MISSING-Symbole (`TVec4`-Ctor, `isTaken`, `ArrayWrapper` `operator[]` / `size`).
+27 ererbte UNUSED-Größenwarnungen.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `f9adb14a`: fuzzy 81.13074 % -> 81.13076 %,
+matched code 54.779827 % -> 54.79008 % (1966644 -> 1967012, +368).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 9997 -> 9998.
+`fireWanwan` matched code 13800 -> 14168 (+368), Funktionen 60 -> 61 von 95.
+Fuzzy der Unit 94.350655 % -> 94.352196 %.
+Matched code der Unit 35.362854 % -> 36.305862 %.
+Matched data der Unit unverändert 90.77341 % (2676).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `execute` hat sich geändert.
+
+DOL-SHA1 unverändert: `fireWanwan.cpp` bleibt `NonMatching` und wird nicht gelinkt.
