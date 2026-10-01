@@ -24328,3 +24328,36 @@ Nur `TTobiPuku::isReachedToGoalXZ` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `tobiPuku.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R658B (`MAnmSound::startAnimSound`)
+
+**Vollmatch, strikt.**
+
+`MAnmSound::startAnimSound` war 99,42 %.
+Das Frame lag bei `-0x30` statt `-0x38`.
+`char trash[8]` hebt das Frame auf `-0x38`.
+Fall 7 lud das Ground-Wort nach `r0` und das Nibble nach `r5`.
+Das Original hält das Wort in `r5`, das Nibble in `r0`, `srwi` direkt nach `r6`, danach `extsh r5, r0`.
+Ein lokales `startMarioVoiceGround` trifft diese Register ohne Extra-Instruktion.
+0 Abweichungen, 248 Bytes, 62 Instruktionen.
+`validate-symbol-order` `mario/MSound/MAnmSound`: PASS.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TTobiPuku::isReachedToGoalXZ` aus R660A bleibt unberührt.
+`MAnmSoundNPC::startAnimSound` bleibt unberührt.
+
+`ninja changes_all` gegen `68b2c752`: fuzzy 81.13434 % -> 81.13439 %.
+Matched code 55.637188 % -> 55.644096 % (1997424 -> 1997672, +248).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10072 -> 10073.
+`MAnmSound` matched code 1056 -> 1304 (+248), Funktionen 5 -> 6 von 7.
+Fuzzy der Unit 93.93067 % -> 94.0063 %.
+Matched code der Unit 55.46219 % -> 68.4874 %.
+Matched data der Unit unverändert 100 % (252).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `MAnmSound::startAnimSound` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `MAnmSound.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.

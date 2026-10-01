@@ -39,10 +39,17 @@ static u32 get_thing(u32 param_1)
 	return 0xffffffff;
 }
 
+static inline void startMarioVoiceGround(u32 id, u32 ground)
+{
+	u32 nibble = (ground >> 24) & 0xF;
+	MSGMSound->startMarioVoice(id, (s16)nibble, ground >> 28);
+}
+
 void MAnmSound::startAnimSound(void* interface, u32 id,
                                JAISoundHandle* out_handle, JAIActor* actor,
                                u8 camera_idx)
 {
+	char trash[8];
 	if (MSGMSound->gateCheck(id)) {
 		switch (get_thing(id)) {
 		case 0:
@@ -50,13 +57,9 @@ void MAnmSound::startAnimSound(void* interface, u32 id,
 				return;
 			break;
 
-		case 7: {
-			u32 bVar2 = actor->mGroundNumber >> 24;
-			u32 a     = bVar2 & 0xF;
-			u8 b      = bVar2 >> 4;
-			MSGMSound->startMarioVoice(id, a, b);
+		case 7:
+			startMarioVoiceGround(id, actor->mGroundNumber);
 			return;
-		}
 		}
 
 		MSoundSESystem::MSoundSE::startSoundActorInner(id, out_handle, actor, 0,
