@@ -770,8 +770,10 @@ TGraphWeb::getNearestPosOnGraphLink(const JGeometry::TVec3<f32>& param_1) const
 int TGraphWeb::getNeighborNodeIndexByFlag(int param_1, int param_2,
                                           u32 param_3) const
 {
+	char trash[8];
 	int goodConnectionNum = 0;
 	int goodConnections[8];
+	char trash2[8];
 
 	const TRailNode* railNode = getGraphNode(param_1).getRailNode();
 	for (int i = 0; i < railNode->mConnectionNum; ++i) {

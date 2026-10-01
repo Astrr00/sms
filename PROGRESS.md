@@ -17733,3 +17733,28 @@ Nur `graph` hat sich geändert.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R522B (`TGraphWeb::getNeighborNodeIndexByFlag`)
+
+**Vollmatch, strikt.**
+
+- `char trash[8]` vor dem Verbindungsarray und `char trash2[8]` dahinter.
+  Das Array liegt auf `r1+0x30`.
+  Der Rahmen wird `-0x78`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 244 Bytes, 61 Instruktionen.
+`validate-symbol-order` `mario/Enemy/graph`: PASS
+(ererbte UNUSED-Größen, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `7afcece7`: fuzzy 81.126785 % -> 81.1268 %,
+matched code 52.575428 % -> 52.582222 % (1887504 -> 1887748, +244).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9853 -> 9854.
+`graph` 5224 -> 5468 (+244), Funktionen 22 -> 23.
+Fuzzy der Unit 95.1726 % -> 95.17732 %.
+Complete units bleiben 416.
+Nur `graph` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
