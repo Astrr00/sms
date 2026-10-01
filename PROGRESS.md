@@ -19140,3 +19140,31 @@ Complete units bleiben 416.
 Nur `TBiancoGateKeeper::changeBck` hat sich geändert.
 
 DOL-SHA1 unverändert: `gatekeeper.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R565A (`TNerveMantaAppearDemo::execute`)
+
+**Vollmatch, strikt.**
+
+`getUnk2C()` im eingezeilten `TBossManta::startWalkAnim` reservierte unbenutzten Stack (Rahmen `-0x68`, Ziel `-0x58`).
+Der Zeiger kommt aus `getActorKeeper()->getMActorAnmData()->mBckAnms->getAnmPtr(4)`.
+Die Instruktionen im Rumpf bleiben gleich.
+`startWalkAnim` bleibt außer Zeile, Größe weiter 0xd8 gegen 0xd4 in der Map.
+
+`TNerveMantaAppearDemo::execute`: 0 Abweichungen, 428 Bytes, 107 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bossManta`: dieselben vorbestehenden Fehler
+(ORDER der `theNerve`-Symbole, 6 UNUSED-Size-Warnungen einschließlich `startWalkAnim__10TBossMantaFv` 0xd4 vs 0xd8).
+Kein neuer Fehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `a446318d`: fuzzy 81.12721 % -> 81.12723 %,
+matched code 53.17318 % -> 53.185104 % (1908964 -> 1909392, +428).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9908 -> 9909.
+`bossManta` 4196 -> 4624 (+428), Funktionen 26 -> 27.
+Fuzzy der Unit 98.150314 % -> 98.15196 %.
+Matched code der Unit 19.20542 % -> 21.164408 %.
+Complete units bleiben 416.
+Nur `TNerveMantaAppearDemo::execute` hat sich geändert.
+
+DOL-SHA1 unverändert: `bossManta.cpp` bleibt `NonMatching` und wird nicht gelinkt.
