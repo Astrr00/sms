@@ -18271,3 +18271,30 @@ Nur `TNerveHamuKuriGoForSearchActor::execute` hat sich geändert.
 
 DOL-SHA1 unverändert: `hamukuri.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 
+### R526A (`TNerveMameGessoJitabata::execute`)
+
+**Vollmatch, strikt.**
+
+- `static inline dist` kopiert den Punkt, ruft `sub` und `length`.
+  Verglichen wird `mPosition`.
+- `mSLFreezeWait.value` liegt in einem `int`, dann Vergleich mit `getTime()`.
+- Rahmen `-0x60`, Differenzvektor auf `r1+0x44`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 508 Bytes, 127 Instruktionen.
+`validate-symbol-order` `mario/Enemy/mameGesso`: PASS,
+dieselben ererbten Weak-Order- und UNUSED-Size-Warnungen.
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `3d845d6d`: fuzzy 81.1273 % -> 81.12732 %,
+matched code 52.796925 % -> 52.811073 % (1895456 -> 1895964, +508).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9876 -> 9877.
+`mameGesso` 9948 -> 10456 (+508), Funktionen 52 -> 53.
+Fuzzy der Unit 99.18622 % -> 99.19222 %.
+Matched code der Unit 78.627884 % -> 82.64306 %.
+Complete units bleiben 416.
+Nur `TNerveMameGessoJitabata::execute` hat sich geändert.
+
+DOL-SHA1 unverändert: `mameGesso.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+

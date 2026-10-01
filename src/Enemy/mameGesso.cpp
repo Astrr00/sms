@@ -476,6 +476,14 @@ DEFINE_NERVE(TNerveMameGessoDamage, TLiveActor)
 	return false;
 }
 
+static inline f32 dist(const JGeometry::TVec3<f32>& a,
+                       const JGeometry::TVec3<f32>& b)
+{
+	JGeometry::TVec3<f32> tmp = a;
+	tmp.sub(b);
+	return tmp.length();
+}
+
 DEFINE_NERVE(TNerveMameGessoJitabata, TLiveActor)
 {
 	TMameGesso* self = (TMameGesso*)spine->getBody();
@@ -485,12 +493,11 @@ DEFINE_NERVE(TNerveMameGessoJitabata, TLiveActor)
 	} else {
 		if (self->checkCurAnmEnd(0)) {
 			if (self->isBckAnm(15)) {
-				if (spine->getTime() > self->unk194->mSLFreezeWait.get())
+				int wait = self->unk194->mSLFreezeWait.value;
+				if (spine->getTime() > wait)
 					self->setBckAnm(5);
 			} else if (self->isBckAnm(5)) {
-				// TODO: operator- inline is wrong here, too much stack frame
-				if ((self->unk104.getPoint() - self->getPosition()).length()
-				    > 300.0f)
+				if (dist(self->unk104.getPoint(), self->mPosition) > 300.0f)
 					self->unk1EC = 0;
 
 				spine->pushAfterCurrent(&TNerveMameGessoWait::theNerve());
