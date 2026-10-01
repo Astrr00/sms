@@ -23029,3 +23029,44 @@ Complete code und complete data unverändert.
 Nur `TMapWireActorManager::doActorToWire` ist neu matched.
 
 DOL-SHA1 unverändert: `MapWireManager.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R638B (`readBlock_`)
+
+**Vollmatch, strikt.**
+
+`TCardManager::readBlock_` war 99.13 %.
+Ein direkter `TCardSector::read`-Aufruf ließ den ersten `CARDRead`-Status nicht in `r30`.
+`readSector` nimmt `result` als Referenz, damit der Status im Aufruferregister bleibt.
+Die Hilfsgrenze hält `CalcCheckSum` und `set` als `bl`.
+`char trash[4]` und `char trash2[0x18]` setzen das Frame auf `-0x58`.
+`CARDFileInfo` liegt dann auf `0x28`.
+
+`TCardManager::readBlock_`: 0 Abweichungen, 620 Bytes, 155 Instruktionen.
+`validate-symbol-order` `mario/System/CardManager`: PASS.
+4 ererbte UNUSED-Größenwarnungen bleiben.
+`read` ist jetzt `0x104` gegen `0xc8` in der Map, vorher `0x90`.
+`writeCardSector_` ist jetzt `0x108` gegen `0x104` in der Map, vorher `0xd4`.
+`readSector` ist ein zusätzliches lokales Symbol, nicht in der Map.
+Die Reihenfolge der Map-Symbole stimmt.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TMapWireActorManager::doActorToWire` unberührt.
+`TPoiHanaManager::load` unberührt.
+`TDolpicEventRiccoMammaGate::load` unberührt.
+`TMirrorCamera::drawSetting` unberührt.
+`open_`, `mount_` und `createFile_` bleiben 100 %.
+
+`ninja changes_all` gegen `e7927fe9`: fuzzy 81.13302 % -> 81.13316 %,
+matched code 55.181377 % -> 55.198647 % (1981060 -> 1981680, +620).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10033 -> 10034.
+`CardManager` matched code 4832 -> 5452 (+620), Funktionen 27 -> 28 von 33.
+Fuzzy der Unit 95.82776 % -> 95.89516 %.
+Matched code der Unit 60.309536 % -> 68.04793 %.
+Matched data der Unit unverändert 48.64865 % (144).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TCardManager::readBlock_` ist neu matched.
+
+DOL-SHA1 unverändert: `CardManager.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
