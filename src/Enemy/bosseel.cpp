@@ -1688,9 +1688,9 @@ void TBossEel::generateVortex()
 	    = getMActor()->getModel()->getAnmMtx(mMapCollisionJointIndices[2]);
 	mVortex->mPosition.set(vortexMtx[0][3], vortexMtx[1][3], vortexMtx[2][3]);
 	mVortex->mInactive = false;
-	mVortex->mScaling.set(mSaveParams->mSLVortexScaleXZ.get(),
-	                      mSaveParams->mSLVortexScaleY.get(),
-	                      mSaveParams->mSLVortexScaleXZ.get());
+	f32 xz = mSaveParams->mSLVortexScaleXZ.get();
+	f32 y = mSaveParams->mSLVortexScaleY.get();
+	mVortex->mScaling.set(xz, y, xz);
 	offHitFlag(HIT_FLAG_NO_COLLISION);
 }
 
@@ -2373,6 +2373,28 @@ DEFINE_NERVE(TNerveBossEelDie, TLiveActor)
 	return false;
 }
 
+// fabricated
+static inline bool mouthOpenCanEat(TBossEel* self)
+{
+	char trash[0x20];
+	trash[0] = 0;
+	if (self->mForceEat)
+		return true;
+
+	MtxPtr mouthMtx
+	    = self->getMActor()->getModel()->getAnmMtx(
+	        self->mMapCollisionJointIndices[0]);
+	JGeometry::TVec3<f32> distance = *gpMarioPos;
+	distance.x -= mouthMtx[0][3];
+	distance.y -= mouthMtx[1][3];
+	distance.z -= mouthMtx[2][3];
+	char gap[8];
+	gap[0] = 0;
+	if (MsVECMag2(&distance) < self->mMouthOpenAmount * self->mMouthOpenSpeed)
+		return true;
+	return false;
+}
+
 DEFINE_NERVE(TNerveBossEelMouthOpenWait, TLiveActor)
 {
 	TBossEel* eel = static_cast<TBossEel*>(spine->getBody());
@@ -2390,7 +2412,7 @@ DEFINE_NERVE(TNerveBossEelMouthOpenWait, TLiveActor)
 			s32 openFrames = eel->mSaveParams->mSLMouthOpenFrame.get();
 			if (spine->getTime()
 			    > openFrames - eel->mSaveParams->mSLCanEatFrame.get()) {
-				if (eel->canEatMario()) {
+				if (mouthOpenCanEat(eel)) {
 					spine->pushAfterCurrent(&TNerveBossEelEat::theNerve());
 					return true;
 				}
