@@ -18031,3 +18031,29 @@ Nur `tobiPuku` hat sich geändert.
 
 DOL-SHA1 unverändert: `tobiPuku.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 
+### R517A (`TSpineEnemy::turnToCurPathNode`)
+
+**Vollmatch, strikt.**
+
+- `const TPathNode& node = getUnkF4();` dann `node.getPoint()`.
+  Der Differenzvektor liegt auf `r1+0x28`.
+  Der Rahmen ist `-0x58`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 484 Bytes, 121 Instruktionen.
+`validate-symbol-order` `mario/Enemy/enemy`: keine neuen Fehler
+(ererbtes MISSING `__as__Q29JGeometry8TVec3<f>`, 4 UNUSED-Größen).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `118db3b9`: fuzzy 81.12708 % -> 81.127106 %,
+matched code 52.703552 % -> 52.717037 % (1892104 -> 1892588, +484).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9866 -> 9867.
+`enemy` 3356 -> 3840 (+484), Funktionen 22 -> 23.
+Fuzzy der Unit 96.62668 % -> 96.63126 %.
+Matched code der Unit 29.6048 % -> 33.874382 %.
+Complete units bleiben 416.
+Nur `enemy` hat sich geändert.
+
+DOL-SHA1 unverändert: `enemy.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
