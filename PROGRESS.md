@@ -18969,3 +18969,31 @@ Complete units bleiben 416.
 Nur `TMirrorModel::initPlaneInfo` hat sich geändert.
 
 DOL-SHA1 unverändert: `MapMirror.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R561A (`TFireWanwanTailHit::receiveMessage`)
+
+**Vollmatch, strikt.**
+
+`char trash[0x10]` mit `trash[0] = 0` vergrößert den Rahmen von `-0xa0` auf `-0xb0`.
+Der Store wird vom Compiler entfernt.
+Die gesicherten Register rücken um 16 Bytes hoch.
+Im Rumpf gibt es keinen Stack-Zugriff.
+
+`TFireWanwanTailHit::receiveMessage`: 0 Abweichungen, 644 Bytes, 161 Instruktionen.
+`validate-symbol-order` `mario/Enemy/fireWanwan`: vorbestehende MISSING `__ct__Q29JGeometry8TVec4<f>Fv`, `isTaken__10TTakeActorCFv`, `__vc__Q29@unnamed@34ArrayWrapper<Q211TTailRubber4Node>CFi`, `size__Q29@unnamed@34ArrayWrapper<Q211TTailRubber4Node>CFv`.
+27 vorbestehende UNUSED-Size-Warnungen.
+Kein neuer Symbolfehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `a59ae595`: fuzzy 81.12714 % -> 81.12716 %,
+matched code 53.092735 % -> 53.110676 % (1906076 -> 1906720, +644).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9902 -> 9903.
+`fireWanwan` 12252 -> 12896 (+644), Funktionen 58 -> 59.
+Fuzzy der Unit 94.347374 % -> 94.34871 %.
+Matched code der Unit 31.396065 % -> 33.04633 %.
+Complete units bleiben 416.
+Nur `receiveMessage` hat sich geändert.
+
+DOL-SHA1 unverändert: `fireWanwan.cpp` bleibt `NonMatching` und wird nicht gelinkt.
