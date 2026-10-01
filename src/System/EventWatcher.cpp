@@ -670,6 +670,8 @@ static void evStartTimer(TSpcTypedInterp<TEventWatcher>* interp, u32 arg_num)
 	SMSGetMarDirector()->getConsole()->startMoveTimer(time);
 
 	interp->push();
+	(void)SMSGetMarDirector();
+	(void)SMSGetMarDirector();
 }
 
 static void evStartMonteman(TSpcTypedInterp<TEventWatcher>* interp, u32 arg_num)

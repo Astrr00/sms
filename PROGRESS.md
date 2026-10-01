@@ -23731,3 +23731,34 @@ Nur `TPollutionLayer::initTexImage` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `PollutionLayer.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R651B (`evStartTimer`)
+
+**Vollmatch, strikt.**
+
+`evStartTimer` war 99.75824 %.
+Der Frame war 8 Bytes zu klein (`-0x60` gegen `-0x68`).
+Pop-Slice, Push-Slice und der `fctiwz`-Spill lagen 8 Bytes zu tief.
+Zwei `(void)SMSGetMarDirector()` nach `push()` heben Slices, Spill und Frame um 8, ohne eine eigene Instruktion.
+0 Abweichungen, 364 Bytes, 91 Instruktionen.
+`validate-symbol-order` `mario/System/EventWatcher`: dieselbe vorbestehende MISSING `set__Q29JGeometry8TVec3<f>FRC3Vec`.
+Die Weak-Order-Warnung und die beiden UNUSED-Größenwarnungen bleiben.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TPollutionLayer::initTexImage` aus R105C bleibt unberührt.
+
+`ninja changes_all` gegen `bc1e801f`: fuzzy 81.133896 % -> 81.13391 %.
+Matched code 55.428165 % -> 55.438305 % (1989920 -> 1990284, +364).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10053 -> 10054.
+`EventWatcher` matched code 30228 -> 30592 (+364), Funktionen 78 -> 79 von 105.
+Fuzzy der Unit 98.93437 % -> 98.936455 %.
+Matched code der Unit 71.569275 % -> 72.4311 %.
+Matched data der Unit unverändert 100 % (2508).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `evStartTimer` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `EventWatcher.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
