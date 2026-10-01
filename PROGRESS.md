@@ -22758,3 +22758,36 @@ Complete code und complete data unverändert.
 Nur `THitActor::calcEntryRadius` ist neu matched.
 
 DOL-SHA1 unverändert: `HitActor.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R632A (`loadInit`)
+
+**Vollmatch, strikt.**
+
+`TGessoPolluteObj::loadInit` war 99.83582 %.
+Das Frame war beidseitig `-0x78`.
+`search` hing direkt an `getChildren().push_back`.
+Die Iterator-Slots lagen gemischt `0x4` und `0x8` zu hoch.
+Ein benannter `TIdxGroupObj*` wie in `TOneShotGenerator::loadAfter` setzt die Slots.
+`push_back` bleibt der nächste Aufruf.
+
+`TGessoPolluteObj::loadInit`: 0 Abweichungen, 268 Bytes, 67 Instruktionen.
+`validate-symbol-order` `mario/Enemy/gesso`: PASS.
+Schwache Reihenfolge war schon vorher offen.
+2 ererbte UNUSED-Größenwarnungen (`modifyRotate`, `isUseBodyCallBack`).
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `e66f7786`: fuzzy 81.13254 % -> 81.13256 %,
+matched code 55.099823 % -> 55.107285 % (1978132 -> 1978400, +268).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10026 -> 10027.
+`gesso` matched code 13192 -> 13460 (+268), Funktionen 79 -> 80 von 91.
+Fuzzy der Unit 98.31646 % -> 98.31871 %.
+Matched code der Unit 67.595825 % -> 68.969055 %.
+Matched data der Unit unverändert 100 % (3980).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TGessoPolluteObj::loadInit` ist neu matched.
+
+DOL-SHA1 unverändert: `gesso.cpp` bleibt `NonMatching` und wird nicht gelinkt.
