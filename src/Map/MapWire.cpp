@@ -95,8 +95,11 @@ void TMapWire::drawLower() const
 
 void TMapWire::drawUpper() const
 {
-	f32 xOffset = mDrawAxes.x * mDrawWidth;
-	f32 zOffset = mDrawAxes.y * mDrawWidth;
+	f32 width   = mDrawWidth;
+	f32 xOffset = mDrawAxes.x;
+	f32 zOffset = mDrawAxes.y;
+	xOffset *= width;
+	zOffset *= width;
 
 	GXBegin(GX_TRIANGLESTRIP, GX_VTXFMT0, (mNumActiveMapWirePoints + 2) * 2);
 
@@ -106,9 +109,9 @@ void TMapWire::drawUpper() const
 	               mStartPoint.z - zOffset);
 
 	for (int index = 0; index < mNumActiveMapWirePoints; index++) {
-		GXPosition3f32(mMapWirePoints[index].mPosition.x + xOffset,
+		GXPosition3f32(addf(mMapWirePoints[index].mPosition.x, xOffset),
 		               mMapWirePoints[index].mPosition.y,
-		               mMapWirePoints[index].mPosition.z + zOffset);
+		               addf(mMapWirePoints[index].mPosition.z, zOffset));
 		GXPosition3f32(mMapWirePoints[index].mPosition.x - xOffset,
 		               mMapWirePoints[index].mPosition.y,
 		               mMapWirePoints[index].mPosition.z - zOffset);
