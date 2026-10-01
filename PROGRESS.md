@@ -20968,3 +20968,31 @@ Complete code und complete data unverändert.
 Nur `direct_nlogo` hat sich geändert.
 
 DOL-SHA1 unverändert: `GCLogoDir.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R602A (`TBossGessoParams::TBossGessoParams`)
+
+**Vollmatch, strikt.**
+
+`TBGBodyHit` hat `THitActor` ohne Namen aufgerufen.
+Der Default `"HitActor"` lag 12 Bytes vor den Parameternamen.
+`THitActor(name)` entfernt das Literal.
+Die Namen rücken von `+0xc` auf die Zieloffsets.
+
+`TBossGessoParams::TBossGessoParams`: 0 Abweichungen, 1452 Bytes, 363 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bossgesso`: ererbtes MISSING `getMActorAnmData__13TMActorKeeperCFv` und `SMS_GetMarioPos__Fv`.
+15 ererbte UNUSED-Größenwarnungen.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `fe36287c`: fuzzy 81.12926 % -> 81.1294 %,
+matched code 54.196 % -> 54.236443 % (1945684 -> 1947136, +1452).
+Matched data unverändert 68.45444 % (438335).
+Funktionen matched 9970 -> 9971.
+`bossgesso` matched code 8860 -> 10312 (+1452), Funktionen 60 -> 61 von 88.
+Fuzzy der Unit 90.3802 % -> 90.392845 %.
+Matched code der Unit 22.391832 % -> 26.061462 %.
+`TBossGesso::init` Fuzzy 97.40536 % -> 97.51786 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+
+DOL-SHA1 unverändert: `bossgesso.cpp` bleibt `NonMatching` und wird nicht gelinkt.
