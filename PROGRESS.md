@@ -21057,3 +21057,31 @@ Complete code und complete data unverändert.
 Nur `startSoundActorInner` hat sich geändert.
 
 DOL-SHA1 unverändert: `MSoundSE.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R70C (`startControl`)
+
+**Vollmatch, strikt.**
+
+`moveTrans` trifft Slot `0x10`.
+Ziel ruft `setUpTrans` auf Slot `0x1c`.
+Das Frame war `-0x58`, Ziel `-0x68`.
+Eine benannte `TVec3` und `char trash[21]; trash[0] = 0;` legen den Vektor auf `0x3c`.
+Der Store fällt weg.
+
+`TMapEventSink::startControl`: 0 Abweichungen, 444 Bytes, 111 Instruktionen.
+`validate-symbol-order` `mario/Map/MapEventSink`: PASS.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `34bc13ab`: fuzzy 81.12976 % -> 81.129776 %,
+matched code 54.27533 % -> 54.287697 % (1948532 -> 1948976, +444).
+Matched data unverändert 68.45444 % (438335).
+Funktionen matched 9973 -> 9974.
+`MapEventSink` matched code 6120 -> 6564 (+444), Funktionen 32 -> 33 von 36.
+Fuzzy der Unit 99.73333 % -> 99.7424 %.
+Matched code der Unit 81.6 % -> 87.52 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `startControl` hat sich geändert.
+
+DOL-SHA1 unverändert: `MapEventSink.cpp` bleibt `NonMatching` und wird nicht gelinkt.
