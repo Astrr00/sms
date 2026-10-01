@@ -21852,3 +21852,39 @@ Complete code und complete data unverändert.
 Nur `evAppearReadyGo` ist neu matched.
 
 DOL-SHA1 unverändert: `EventWatcher.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R79C (`init`)
+
+**Vollmatch, strikt.**
+
+`TMirrorModel::init` war 99.675674 %.
+Das Frame war `-0xa0`, Ziel `-0xb8`.
+Die `TPosition3f` lag auf `0x60`, Ziel `0x74`.
+`char gap[0x10]` nach der Matrix legt sie auf `0x74` und hebt das Frame auf `-0xb8`.
+Der Store auf `gap` fällt weg.
+
+`TMirrorModel::init`: 0 Abweichungen, 296 Bytes, 74 Instruktionen.
+`TMirrorModelObj::init` bleibt nonmatching.
+Das geinlinte Frame stimmt, die Matrix liegt dort auf `0x64` statt `0x74`.
+Fuzzy 99.70238 % -> 99.833336 %.
+`validate-symbol-order` `mario/Map/MapMirror`: dieselben vorbestehenden Fehler.
+MISSING `scaleAdd` von `JGeometry::TVec3<f32>`.
+ORDER `set<f>` von `JGeometry::TVec3<f32>`.
+5 ererbte UNUSED-Größenwarnungen (`getMirrorTexInfo`, `calcView`, `entry`, `calcEffectMtx`, `makeMirrorViewMtx`).
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `4b8b1c98`: fuzzy 81.13076 % -> 81.13081 %,
+matched code 54.794533 % -> 54.80278 % (1967172 -> 1967468, +296).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 9999 -> 10000.
+`MapMirror` matched code 2880 -> 3176 (+296), Funktionen 19 -> 20 von 27.
+Fuzzy der Unit 86.326546 % -> 86.34954 %.
+Matched code der Unit 47.306175 % -> 52.1682 %.
+Matched data der Unit unverändert 93.99142 % (876).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TMirrorModel::init` ist neu matched.
+
+DOL-SHA1 unverändert: `MapMirror.cpp` bleibt `NonMatching` und wird nicht gelinkt.
