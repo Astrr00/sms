@@ -238,10 +238,18 @@ TMirrorModelManager* gpMirrorModelManager;
 bool TMirrorModelManager::isUpperThanMirrorPlane(
     const JGeometry::TVec3<f32>& param_1) const
 {
-	const JGeometry::TVec3<f32>* normal
-	    = unk18 != -1 ? &unk1C[unk18]->getNormalVec() : nullptr;
+	const JGeometry::TVec3<f32>* normal;
+	if (unk18 != -1)
+		normal = &unk1C[unk18]->getNormalVec();
+	else
+		normal = nullptr;
 
-	f32 d   = unk18 != -1 ? unk1C[unk18]->getD() : 0.0f;
+	f32 d;
+	if (unk18 != -1)
+		d = unk1C[unk18]->getD();
+	else
+		d = 0.0f;
+
 	f32 dot = normal->dot(param_1);
 
 	return dot + d < -50.0f ? false : true;
