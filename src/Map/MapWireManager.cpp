@@ -225,6 +225,8 @@ void TMapWireManager::loadAfter()
 
 void TMapWireManager::load(JSUMemoryInputStream& stream)
 {
+	char gap[4];
+	gap[0] = 0;
 	JDrama::TViewObj::load(stream);
 	stream.readString();
 	stream >> unk14;
@@ -233,6 +235,8 @@ void TMapWireManager::load(JSUMemoryInputStream& stream)
 	stream >> TMapWire::mDrawHeight;
 
 	s32 val;
+	char trash[1];
+	trash[0] = 0;
 	stream >> val;
 	mUpperSurface.r = val;
 	stream >> val;
