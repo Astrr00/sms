@@ -20568,3 +20568,34 @@ Complete code und complete data unverändert.
 Nur `loadWaveBackword` hat sich geändert.
 
 DOL-SHA1 unverändert: `MSound.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R608B (`CPolarSubCamera::warpPosAndAt`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0x50`, Ziel `-0x58`.
+`pos` lag unter `usualLookat`, Ziel ist umgekehrt.
+`Vec pos` vor `usualLookat` dreht die beiden Vektoren.
+Ein `char pad[4]` im Aufrufer lässt das Return-Temporary von `getUsualLookat` bei `0x1c`.
+`static inline warpPad` mit `char pad[4]; pad[0] = 0;` nach dem Aufruf legt es auf `0x20`.
+Die Hilfe wird nicht emittiert.
+`warpPosAndAt(const Vec&, const Vec&)` bleibt bei 0 Abweichungen.
+
+`warpPosAndAt(float, short)`: 0 Abweichungen, 580 Bytes, 145 Instruktionen.
+`validate-symbol-order` `mario/Camera/CameraWarp`: PASS.
+Symbolreihenfolge stimmt.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `f6593d6d`: fuzzy 81.12759 % -> 81.12762 %,
+matched code 53.88548 % -> 53.90163 % (1934536 -> 1935116, +580).
+Matched data unverändert 68.45444 % (438335).
+Funktionen matched 9956 -> 9957.
+`CameraWarp` matched code 968 -> 1548 (+580), Funktionen 2 -> 3 von 3.
+Fuzzy der Unit 99.91215 % -> 100 %.
+Matched code der Unit 62.5323 % -> 100 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `warpPosAndAt(float, short)` hat sich geändert.
+
+DOL-SHA1 unverändert: `CameraWarp.cpp` bleibt `NonMatching` und wird nicht gelinkt.
