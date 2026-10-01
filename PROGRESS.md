@@ -22391,3 +22391,35 @@ Complete code und complete data unverändert.
 Nur `TGesso::calcRootMatrix` ist neu matched.
 
 DOL-SHA1 unverändert: `gesso.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R632B (`flip`)
+
+**Vollmatch, strikt.**
+
+`TTimeRec::flip` war 99.166664 %.
+Der Ablauf stimmte schon.
+`curr` lag in `r7` und der Entry-Zeiger in `r5`.
+Ziel ist `r5` für die Zeit und `r7` für den Zeiger.
+`TTimeArray::Entry& entry = array.mEntries[--i]` dreht die Belegung.
+Der Predecrement steht im Referenz-Init.
+Es kommt keine zusätzliche Instruktion dazu.
+
+`TTimeRec::flip`: 0 Abweichungen, 144 Bytes, 36 Instruktionen.
+`validate-symbol-order` `mario/System/TimeRec`: PASS.
+3 ererbte UNUSED-Größenwarnungen (`suppleGXTime`, `drawSyncCallbackSt`, `end`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `9c721e41`: fuzzy 81.131775 % -> 81.13181 %,
+matched code 55.008125 % -> 55.01213 % (1974840 -> 1974984, +144).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10015 -> 10016.
+`TimeRec` matched code 472 -> 616 (+144), Funktionen 5 -> 6 von 6.
+Fuzzy der Unit 99.80519 % -> 100 %.
+Matched code der Unit 76.623375 % -> 100 %.
+Matched data der Unit unverändert 100 % (32).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TTimeRec::flip` ist neu matched.
+
+DOL-SHA1 unverändert: `TimeRec.cpp` bleibt `NonMatching` und wird nicht gelinkt.
