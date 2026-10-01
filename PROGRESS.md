@@ -21296,3 +21296,34 @@ Complete code und complete data unverändert.
 Nur `construct` ist neu matched.
 
 DOL-SHA1 unverändert: `MSoundSE.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R73C (`watch`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0x88`, Ziel `-0x98`.
+Die `TPosition3f` lag auf `0x4c`, Ziel auf `0x60`.
+Ein `char`-Array in `watch` selbst schiebt das Frame, nicht die Matrix.
+`static inline padWatch` mit `char gap[16]; gap[0] = 0;` nach `(void)&mtx` legt beides.
+Der Store fällt weg.
+Der Scale-Load bleibt hinter `identity`.
+
+`TDolpicEventRiccoMammaGate::watch`: 0 Abweichungen, 488 Bytes, 122 Instruktionen.
+`validate-symbol-order` `mario/Map/MapEventDolpic`: PASS.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`loadAfter` bleibt 100 %.
+
+`ninja changes_all` gegen `9df22f4b`: fuzzy 81.13028 % -> 81.130295 %,
+matched code 54.534374 % -> 54.547966 % (1957832 -> 1958320, +488).
+Matched data unverändert 69.22779 % (443287).
+Funktionen matched 9981 -> 9982.
+`MapEventDolpic` matched code 2016 -> 2504 (+488), Funktionen 11 -> 12 von 14.
+Fuzzy der Unit 99.797806 % -> 99.821976 %.
+Matched code der Unit 55.384617 % -> 68.791214 %.
+Matched data der Unit bleibt 100 % (868).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `watch` hat sich geändert.
+
+DOL-SHA1 unverändert: `MapEventDolpic.cpp` bleibt `NonMatching` und wird nicht gelinkt.
