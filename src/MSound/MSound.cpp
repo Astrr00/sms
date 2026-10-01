@@ -1150,6 +1150,7 @@ void MSound::startSoundActorSpecial(u32 id, const Vec* position, f32 param_3,
 			}
 		}
 	}
+	char trash[8];
 }
 
 bool MSound::cameraLooksAtMario()
