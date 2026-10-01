@@ -20359,3 +20359,32 @@ Complete code und complete data unverändert.
 Nur `startMarioVoice` hat sich geändert.
 
 DOL-SHA1 unverändert: `MSound.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R591A (`TNerveBPPreDie::execute`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0x60`, Ziel `-0x78`.
+Der Gelenk-Vektor lag bei `0x3c`, Ziel `0x54`.
+`resetWaterMark` steht offen an der Stelle.
+`char pad[4]` vor dem `TVec3` und `char trash[0x14]` dahinter legen den Vektor auf `0x54`.
+Das Frame geht auf `-0x78`.
+
+`TNerveBPPreDie::execute`: 0 Abweichungen, 472 Bytes, 118 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bosspakkun`: PASS.
+2 geerbte UNUSED-Größenwarnungen (`ignoreWaterCheck`, `vomitFinished`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `fbd55b4d`: fuzzy 81.12739 % -> 81.1274 %,
+matched code 53.806038 % -> 53.81918 % (1931684 -> 1932156, +472).
+Matched data unverändert 68.45444 % (438335).
+Funktionen matched 9949 -> 9950.
+`bosspakkun` matched code 18272 -> 18744 (+472), Funktionen 104 -> 105 von 126.
+Fuzzy der Unit 99.18582 % -> 99.18754 %.
+Matched code der Unit 46.132095 % -> 47.323772 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TNerveBPPreDie::execute` hat sich geändert.
+
+DOL-SHA1 unverändert: `bosspakkun.cpp` bleibt `NonMatching` und wird nicht gelinkt.
