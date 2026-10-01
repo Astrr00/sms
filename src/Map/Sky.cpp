@@ -16,6 +16,12 @@
 
 void TSky::perform(u32 cue, JDrama::TGraphics* graphics)
 {
+	(void)SMSGetMarDirector();
+	(void)SMSGetMarDirector();
+	(void)SMSGetMarDirector();
+	(void)SMSGetMarDirector();
+	(void)SMSGetMarDirector();
+	(void)SMSGetMarDirector();
 	if (cue & CUE_CALC_ANIM) {
 		MtxPtr mtx = gpCamera->unk1EC;
 

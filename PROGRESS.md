@@ -24059,3 +24059,33 @@ Nur `CPolarSubCamera::execGroundCheck_` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `CameraBGCheck.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R109C (`TSky::perform`)
+
+**Vollmatch, strikt.**
+
+`TSky::perform` war 99.77103 %.
+Das Frame lag bei `-0x120` statt `-0x138`.
+Jeder Stack-Slot, inklusive der `GXColor`-Kopie, lag um `0x18` zu tief.
+Sechs `(void)SMSGetMarDirector()` heben Frame und Slots um `0x18`, ohne eine eigene Instruktion.
+0 Abweichungen, 856 Bytes, 214 Instruktionen.
+`validate-symbol-order` `mario/Map/Sky`: PASS.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`CPolarSubCamera::execGroundCheck_` aus R655B bleibt unberührt.
+
+`ninja changes_all` gegen `9b08519d`: fuzzy 81.13416 % -> 81.13422 %.
+Matched code 55.541927 % -> 55.56577 % (1994004 -> 1994860, +856).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10064 -> 10065.
+`Sky` matched code 1312 -> 2168 (+856), Funktionen 6 -> 7 von 7.
+Fuzzy der Unit 99.90959 % -> 100 %.
+Matched code der Unit 60.51661 % -> 100 %.
+Matched data der Unit unverändert 100 % (412).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TSky::perform` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `Sky.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
