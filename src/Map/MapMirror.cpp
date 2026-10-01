@@ -333,6 +333,8 @@ void TMirrorModelManager::registerObjMirror(TMirrorModel* model)
 
 void TMirrorModelManager::load(JSUMemoryInputStream& stream)
 {
+	(void)SMSGetMarDirector();
+	(void)SMSGetMarDirector();
 	JDrama::TViewObj::load(stream);
 	s32 local_28;
 	s32 local_2C;

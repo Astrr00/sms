@@ -24089,3 +24089,34 @@ Nur `TSky::perform` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `Sky.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R110C (`TMirrorModelManager::load`)
+
+**Vollmatch, strikt.**
+
+`TMirrorModelManager::load` war 99.84112 %.
+Das Frame lag bei `-0x148` statt `-0x150`.
+Die drei `s32` und der `snprintf`-Puffer lagen 8 Bytes zu tief.
+Zwei `(void)SMSGetMarDirector()` heben Frame und Slots um 8, ohne eine eigene Instruktion.
+0 Abweichungen, 428 Bytes, 107 Instruktionen.
+`validate-symbol-order` `mario/Map/MapMirror`: dieselben vorbestehenden MISSING `scaleAdd` und die ORDER-Abweichung `set<f>`.
+Fünf UNUSED-Größenwarnungen bleiben.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TSky::perform` aus R109C bleibt unberührt.
+
+`ninja changes_all` gegen `65a5ad7b`: fuzzy 81.13422 % -> 81.13423 %.
+Matched code 55.56577 % -> 55.57769 % (1994860 -> 1995288, +428).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10065 -> 10066.
+`MapMirror` matched code 3332 -> 3760 (+428), Funktionen 21 -> 22 von 27.
+Fuzzy der Unit 86.372536 % -> 86.383705 %.
+Matched code der Unit 54.730618 % -> 61.76084 %.
+Matched data der Unit unverändert 100 % (932).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TMirrorModelManager::load` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `MapMirror.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
