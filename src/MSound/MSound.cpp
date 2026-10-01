@@ -334,6 +334,14 @@ void MSound::enterStage(MS_SCENE_WAVE wave, u8 param_2, u8 param3)
 	loadWave(wave);
 }
 
+static inline void clearOneCam(JAICamera& cam)
+{
+	char pad[4];
+	pad[0] = 0;
+	cam    = JAICamera();
+	cam    = JAInullCamera;
+}
+
 void MSound::exitStage()
 {
 	for (u8 cat = 0; cat < JAIGlobalParameter::getParamSeCategoryMax(); ++cat)
@@ -346,10 +354,8 @@ void MSound::exitStage()
 
 	mAudioCameras[0] = JAInullCamera;
 
-	unkAC[0] = JAICamera();
-	unkAC[0] = JAInullCamera;
-	unkAC[1] = JAICamera();
-	unkAC[1] = JAInullCamera;
+	clearOneCam(unkAC[0]);
+	clearOneCam(unkAC[1]);
 
 	unkCD    = 0xff;
 	unkCE    = 0xff;
