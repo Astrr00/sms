@@ -23180,3 +23180,40 @@ Nur `TNerveMantaSpawn::execute` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `bossManta.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R640B (`initECTMir`)
+
+**Vollmatch, strikt.**
+
+`TMarDirector::initECTMir` war 99.48387 %.
+Das anonyme `TRect` im Aufruf setzte `r4` vor `r3`.
+Ein benanntes `rect` setzt `r3` vor `r4`.
+Das Frame war `-0x68`, Ziel `-0x88`.
+`rect` lag auf `0x40`, Ziel `0x64`.
+`char trash[0x24]` hinter `rect` hebt das Frame auf `-0x88`.
+`rect` landet auf `0x64`.
+Der Store auf `trash` fällt weg.
+`trash[0x20]` ließ `rect` auf `0x60`.
+
+`TMarDirector::initECTMir`: 0 Abweichungen, 248 Bytes, 62 Instruktionen.
+`validate-symbol-order` `mario/System/MarDirectorInitECT`: PASS.
+Alle Map-Symbole vorhanden, Reihenfolge der nicht-weak Symbole stimmt, Linkage stimmt.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TNerveMantaSpawn::execute` unberührt.
+
+`ninja changes_all` gegen `b972a840`: fuzzy 81.1334 % -> 81.13343 %,
+matched code 55.231182 % -> 55.238087 % (1982848 -> 1983096, +248).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10037 -> 10038.
+`MarDirectorInitECT` matched code 16 -> 264 (+248), Funktionen 1 -> 2 von 5.
+Fuzzy der Unit 94.371185 % -> 94.39624 %.
+Matched code der Unit 0.31323415 % -> 5.1683636 %.
+Matched data der Unit unverändert 100 % (696).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TMarDirector::initECTMir` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `MarDirectorInitECT.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
