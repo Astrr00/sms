@@ -1,6 +1,16 @@
 #include <Strategic/HitActor.hpp>
 #include <math.h>
 
+static inline f32 approxSqrt(f32 x)
+{
+	char trash[0x20];
+	(void)trash;
+	volatile f32 f = x * __frsqrte(x);
+	char trash2[8];
+	(void)trash2;
+	return f;
+}
+
 f32 THitActor::calcEntryRadius()
 {
 	f32 rad;
@@ -16,16 +26,15 @@ f32 THitActor::calcEntryRadius()
 		height = mDamageHeight;
 
 	f32 height2 = height * height;
-	f32 rad2    = rad * rad + height2;
+	rad = rad * rad + height2;
 
-	if (rad2 > 0.0f) {
-		// TODO: some kind of a fast sqrt function?
-		volatile f32 f = rad2 * __frsqrte(rad2);
-		mEntryRadius   = 1.4142135f * f;
-	} else {
-		mEntryRadius = 0.0f;
+	if (rad > 0.0f) {
+		f32 f = approxSqrt(rad);
+		mEntryRadius = 1.4142135f * f;
+		return f;
 	}
 
+	mEntryRadius = 0.0f;
 	return height2;
 }
 

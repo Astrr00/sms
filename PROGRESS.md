@@ -22727,3 +22727,34 @@ Complete code und complete data unverändert.
 Nur `TNerveSmallEnemyFreeze::execute` ist neu matched.
 
 DOL-SHA1 unverändert: `smallEnemy.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R90C (`calcEntryRadius`)
+
+**Vollmatch, strikt.**
+
+`THitActor::calcEntryRadius` war 97.6129 %.
+`rad = rad * rad + height2` überschreibt den Radius in `f2`.
+Der True-Zweig gibt das `frsqrte`-Produkt zurück, der Else-Zweig `height2`.
+`approxSqrt` hält das Produkt in einem `volatile f32`, damit `frsqrte` in `f1` landet.
+`char trash[0x20]` davor setzt den Spill auf `0x30`.
+`char trash2[8]` danach setzt das Frame auf `-0x40`.
+`(void)` auf beiden Arrays, sonst streicht sie der Compiler.
+
+`THitActor::calcEntryRadius`: 0 Abweichungen, 124 Bytes, 31 Instruktionen.
+`validate-symbol-order` `mario/Strategic/HitActor`: PASS.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `cd971d83`: fuzzy 81.13247 % -> 81.13254 %,
+matched code 55.096363 % -> 55.099823 % (1978008 -> 1978132, +124).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10025 -> 10026.
+`HitActor` matched code 544 -> 668 (+124), Funktionen 5 -> 6 von 6.
+Fuzzy der Unit 99.556885 % -> 100 %.
+Matched code der Unit 81.437126 % -> 100 %.
+Matched data der Unit unverändert 100 % (184).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `THitActor::calcEntryRadius` ist neu matched.
+
+DOL-SHA1 unverändert: `HitActor.cpp` bleibt `NonMatching` und wird nicht gelinkt.
