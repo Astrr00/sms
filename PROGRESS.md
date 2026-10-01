@@ -18939,3 +18939,33 @@ Complete units bleiben 416.
 Nur `receiveMessage` hat sich geändert.
 
 DOL-SHA1 unverändert: `bosspakkun.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R29C (`TMirrorModel::initPlaneInfo`)
+
+**Vollmatch, strikt.**
+
+`getVertexData()` liefert eine Referenz auf `J3DVertexData` (0x44, ausgerichtet 0x48).
+Der Rückgabeslot blieb reserviert, obwohl die Loads ihn nie benutzen.
+Direktes `mVertexData` entfernt den Slot.
+Der Rahmen geht von `-0x138` auf `-0xf0`.
+Der Instruktionsrumpf war bereits identisch.
+
+`TMirrorModel::initPlaneInfo`: 0 Abweichungen, 484 Bytes, 121 Instruktionen.
+`validate-symbol-order` `mario/Map/MapMirror`: dieselben vorbestehenden Fehler
+(`scaleAdd` fehlt, `set<f>` Ordnung).
+Kein neuer Fehler.
+`getVertexFormat` bleibt UNUSED mit Größe 0x34.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `d1520e2e`: fuzzy 81.127120 % -> 81.127140 %,
+matched code 53.079254 % -> 53.092735 % (1905592 -> 1906076, +484).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9901 -> 9902.
+`MapMirror` 2172 -> 2656 (+484), Funktionen 17 -> 18.
+Fuzzy der Unit 86.307490 % -> 86.320630 %.
+Matched code der Unit 35.676743 % -> 43.626804 %.
+Complete units bleiben 416.
+Nur `TMirrorModel::initPlaneInfo` hat sich geändert.
+
+DOL-SHA1 unverändert: `MapMirror.cpp` bleibt `NonMatching` und wird nicht gelinkt.
