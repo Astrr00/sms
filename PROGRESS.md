@@ -23145,3 +23145,38 @@ Nur `TGesso::setPolluteGoal` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `gesso.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R640A (`execute`)
+
+**Vollmatch, strikt.**
+
+`TNerveMantaSpawn::execute` war 99.81554 %.
+Die Sound- und Partikeltabellen lagen 8 Bytes zu tief.
+Das Frame war `-0x58` statt `-0x60`.
+Zwei temporäre Inline-Stufen vor `SMSGetMSound` legen je 4 Bytes unter die Tabellen.
+`MantaSoundAccess2().get()` ruft `MantaSoundAccess::get()` und dann `SMSGetMSound`.
+Die Tabellen stehen auf `0x2c` und `0x3c`.
+Das Frame ist `-0x60`.
+
+`TNerveMantaSpawn::execute`: 0 Abweichungen, 412 Bytes, 103 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bossManta` scheitert weiter am ererbten ORDER der `theNerve__*`-Objekte.
+6 ererbte UNUSED-Größenwarnungen bleiben.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TGesso::setPolluteGoal` unberührt.
+
+`ninja changes_all` gegen `b287a52b`: fuzzy 81.13338 % -> 81.1334 %,
+matched code 55.219704 % -> 55.231182 % (1982436 -> 1982848, +412).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10036 -> 10037.
+`bossManta` matched code 7724 -> 8136 (+412), Funktionen 30 -> 31 von 49.
+Fuzzy der Unit 98.16459 % -> 98.16807 %.
+Matched code der Unit 35.35335 % -> 37.23911 %.
+Matched data der Unit unverändert 41.944077 % (1260).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TNerveMantaSpawn::execute` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `bossManta.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.

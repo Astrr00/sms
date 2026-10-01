@@ -35,6 +35,19 @@
 #include <MSound/MSoundBGM.hpp>
 #include <M3DUtil/InfectiousStrings.hpp>
 
+namespace {
+
+// fabricated
+struct MantaSoundAccess {
+	MSound* get() const { return SMSGetMSound(); }
+};
+
+struct MantaSoundAccess2 {
+	MSound* get() const { return MantaSoundAccess().get(); }
+};
+
+} // namespace
+
 f32 TBossManta::sScale[] = { 20.0f, 10.0f, 5.0f, 2.0f, 1.0f, 1.0f };
 int TBossManta::sCenterJointIndex;
 int TBossManta::sBodyJointIndex;
@@ -258,8 +271,8 @@ DEFINE_NERVE(TNerveMantaSpawn, TLiveActor)
 		    = { MSD_SE_BS_MANTA_SEGMENT_1, MSD_SE_BS_MANTA_SEGMENT_2,
 			    MSD_SE_BS_MANTA_SEGMENT_3, MSD_SE_BS_MANTA_SEGMENT_4 };
 		u32 snd = sounds[self->mGeneration];
-		SMSGetMSound()->startSoundActor(snd, &self->mPosition, 0, nullptr, 0,
-		                                4);
+		MantaSoundAccess2().get()->startSoundActor(snd, &self->mPosition, 0,
+		                                           nullptr, 0, 4);
 		self->getManager()->spawn(self->mGeneration + 1, self->mPosition);
 	}
 
