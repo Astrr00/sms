@@ -893,7 +893,8 @@ DEFINE_NERVE(TNerveTamaNokoSink, TLiveActor)
 		// The less tamanokos remain, the faster they get back up
 		f32 fVar1 = 0.0f;
 		for (int i = 0; i < manager->getObjNum(); ++i)
-			if (!manager->getObj(i)->checkLiveFlag(LIVE_FLAG_DEAD))
+			if (!((TLiveActor*)manager->unk18[i])
+			         ->checkLiveFlag(LIVE_FLAG_DEAD))
 				fVar1 += 1.0f;
 		fVar1 /= manager->getObjNum();
 
