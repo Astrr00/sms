@@ -20693,6 +20693,46 @@ Nur `TDrawSyncManager::setCallback` hat sich geändert.
 
 DOL-SHA1 unverändert: `DrawSyncManager.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 
+### R66C (`TApplication::initialize`)
+
+**Vollmatch, strikt.**
+
+`TSlotDrum::moveObject` bleibt.
+Das Frame trifft mit `char trash[8]` (`-0x70`).
+Der frühe Return faltet zu `blt` statt `bge` plus `b`.
+`TObjHitCheck::clearHitNum` hat nicht-einheitliche Iterator-Slots.
+Beides nicht angefasst.
+
+`unk81C |= 1` speichert direkt mit Offset.
+Eine Referenz auf `unk81C` lädt mit Offset, bildet die Adresse und speichert durch den Zeiger.
+`setCallback` lädt die Instanz danach neu.
+
+`TTimeRec::crTimeAry` fehlt sonst in diesem TU, obwohl die Map eine weak Kopie führt.
+`static void keepCrTimeAry()` nimmt die Adresse und emittiert die 24-Byte-Kopie.
+`__sinit_Application_cpp` bleibt 100%.
+
+`TApplication::initialize`: 0 Abweichungen, 1204 Bytes, 301 Instruktionen.
+`TTimeRec::crTimeAry`: 0 Abweichungen, 24 Bytes, 6 Instruktionen.
+`validate-symbol-order` `mario/System/Application`: PASS.
+Schwache Ordnung von `crTimeAry` ist eine Warnung.
+1 geerbte UNUSED-Größenwarnung (`initialize_processMeter`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `17441a5e`: fuzzy 81.12769 % -> 81.12855 %,
+matched code 53.956562 % -> 53.990765 % (1937088 -> 1938316, +1228).
+Matched data unverändert 68.45444 % (438335).
+Funktionen matched 9961 -> 9963.
+`Application` matched code 3860 -> 5088 (+1228), Funktionen 12 -> 14 von 21.
+Fuzzy der Unit 96.98944 % -> 97.3026 %.
+Matched code der Unit 39.195778 % -> 51.665314 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Geändert haben sich nur `TApplication::initialize` und `TTimeRec::crTimeAry`.
+
+DOL-SHA1 unverändert: `Application.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+`9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
 ### R610B (`evForceCloseTalk`)
 
 **Vollmatch, strikt.**
