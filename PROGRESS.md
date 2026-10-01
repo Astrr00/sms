@@ -19331,3 +19331,29 @@ Complete units bleiben 416.
 Nur `evSetTalkMsgID` hat sich geändert.
 
 DOL-SHA1 unverändert: `EventWatcher.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R572A (`MSMainProc::getMonteVillageActorArea`)
+
+**Vollmatch, strikt.**
+
+Die beiden Vecs lagen in der falschen Reihenfolge und der Rahmen war 8 Bytes zu klein (`-0x28`, Ziel `-0x30`).
+`Vec copy` zuerst, dann `char pad[4]; pad[0] = 0;`, dann die angehobene Position.
+Das Pad sitzt zwischen den Vecs, schiebt die Kopie um 8 und die Quelle um 4, und vergrößert den Rahmen auf `-0x30`.
+Der Store des Pads wird wegoptimiert.
+
+`getMonteVillageActorArea`: 0 Abweichungen, 172 Bytes, 43 Instruktionen.
+`validate-symbol-order` `mario/System/MSoundMainSide`: ererbtes MISSING `begin__Q27JGadget38TVector<Pv,Q27JGadget14TAllocator<Pv>>Fv`, sonst Ordnung und Linkage in Ordnung.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `1089663c`: fuzzy 81.127426 % -> 81.12744 %,
+matched code 53.260757 % -> 53.26555 % (1912108 -> 1912280, +172).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9915 -> 9916.
+`MSoundMainSide` 1960 -> 2132 (+172), Funktionen 18 -> 19.
+Fuzzy der Unit 96.58913 % -> 96.59545 %.
+Matched code der Unit 20.648968 % -> 22.46102 %.
+Complete units bleiben 416.
+Nur `getMonteVillageActorArea` hat sich geändert.
+
+DOL-SHA1 unverändert: `MSoundMainSide.cpp` bleibt `NonMatching` und wird nicht gelinkt.

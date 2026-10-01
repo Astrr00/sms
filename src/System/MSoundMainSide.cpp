@@ -44,10 +44,12 @@ int MSMainProc::getMonteVillageActorArea(const Vec& param_1)
 {
 	int result = 4;
 	if (MSGMSound->unkCD == 8) {
-		// inline?
+		Vec copy;
+		char pad[4];
+		pad[0] = 0;
 		Vec local_10 = param_1;
 		local_10.y += 75.0f;
-		Vec copy = local_10;
+		copy = local_10;
 		switch (gpCubeFastC->getInCubeNo(copy)) {
 		case 0:
 			result = 2;
