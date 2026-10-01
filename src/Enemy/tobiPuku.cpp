@@ -850,6 +850,11 @@ DEFINE_NERVE(TNerveTobiPukuFly, TLiveActor)
 
 DEFINE_NERVE(TNerveTobiPukuAttack, TLiveActor)
 {
+	struct Pad {
+		~Pad() { }
+		char c[0xc];
+	};
+	Pad();
 	TTobiPuku* self = (TTobiPuku*)spine->getBody();
 	if (spine->getTime() == 0)
 		self->setAttackAnm();
@@ -859,9 +864,6 @@ DEFINE_NERVE(TNerveTobiPukuAttack, TLiveActor)
 			self->unk194                   = 0;
 			JGeometry::TVec3<f32> velocity = self->mVelocity;
 			JGeometry::TVec3<f32> newVelocity;
-			// TODO: retail frame is 0x50 and these vecs sit 12 bytes
-			// higher. An unused TVec3 here reserves that slot and
-			// matches, but it is only a stack reservation.
 			newVelocity.x   = 0.0f;
 			newVelocity.y   = velocity.y;
 			newVelocity.z   = 0.0f;
@@ -882,6 +884,11 @@ DEFINE_NERVE(TNerveTobiPukuAttack, TLiveActor)
 
 DEFINE_NERVE(TNerveTobiPukuHitWater, TLiveActor)
 {
+	struct Pad {
+		~Pad() { }
+		char c[0x10];
+	};
+	Pad();
 	TTobiPuku* self = (TTobiPuku*)spine->getBody();
 	if (spine->getTime() == 0) {
 		if (self->isAirborne()) {
@@ -909,8 +916,9 @@ DEFINE_NERVE(TNerveTobiPukuHitWater, TLiveActor)
 		self->mPosition.y += 5.0f;
 	}
 
-	if (self->checkCurAnmEnd(0) && self->isAttackBck()) {
-		spine->pushAfterCurrent(&TNerveTobiPukuFall::theNerve());
+	if (self->checkCurAnmEnd(0)) {
+		if (self->isAttackBck())
+			spine->pushAfterCurrent(&TNerveTobiPukuFall::theNerve());
 		return true;
 	}
 	return false;

@@ -18000,3 +18000,34 @@ Nur `graph` hat sich geändert.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R516A (`TNerveTobiPukuAttack::execute`, `TNerveTobiPukuHitWater::execute`)
+
+**Vollmatch, strikt.**
+
+- `TNerveTobiPukuAttack`: nicht-triviales 0xc-Temporary am Funktionsanfang.
+  Die kopierte Velocity liegt auf `r1+0x3c`, die neue Velocity auf `r1+0x30`.
+  Der Rahmen ist `-0x50`.
+  0 Abweichungen, 408 Bytes, 102 Instruktionen.
+- `TNerveTobiPukuHitWater`: nicht-triviales 0x10-Temporary am Funktionsanfang.
+  Der Richtungsvektor liegt auf `r1+0x38`.
+  Der Rahmen ist `-0x50`.
+  Endet die Animation, wird `Fall` nur bei Attack-BCK geschoben, der Nerve gibt danach trotzdem `true` zurück.
+  0 Abweichungen, 592 Bytes, 148 Instruktionen.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`validate-symbol-order` `mario/Enemy/tobiPuku`: PASS gegen die Basis
+(keine neuen Fehler; weak-Order und UNUSED-Größen ererbt).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `bb3288ce`: fuzzy 81.12705 % -> 81.12708 %,
+matched code 52.6757 % -> 52.703552 % (1891104 -> 1892104, +1000).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9864 -> 9866.
+`tobiPuku` 13812 -> 14812 (+1000), Funktionen 104 -> 106.
+Fuzzy der Unit 98.965706 % -> 98.97468 %.
+Matched code der Unit 68.85344 % -> 73.838486 %.
+Complete units bleiben 416.
+Nur `tobiPuku` hat sich geändert.
+
+DOL-SHA1 unverändert: `tobiPuku.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
