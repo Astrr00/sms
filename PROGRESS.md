@@ -18057,3 +18057,29 @@ Nur `enemy` hat sich geändert.
 
 DOL-SHA1 unverändert: `enemy.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 
+### R518A (`TSpineEnemy::setGoalPathFromGraph`)
+
+**Vollmatch, strikt.**
+
+- Nicht-triviales 0x14-Temporary am Funktionsanfang.
+  `TPathNode` liegt auf `r1+0x38`, der Punkt auf `r1+0x48`.
+  Der Rahmen ist `-0x60`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 172 Bytes, 43 Instruktionen.
+`validate-symbol-order` `mario/Enemy/enemy`: keine neuen Fehler
+(ererbtes MISSING `__as__Q29JGeometry8TVec3<f>`, 4 UNUSED-Größen).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `acbe2b58`: fuzzy 81.127106 % -> 81.12712 %,
+matched code 52.717037 % -> 52.72183 % (1892588 -> 1892760, +172).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9867 -> 9868.
+`enemy` 3840 -> 4012 (+172), Funktionen 23 -> 24.
+Fuzzy der Unit 96.63126 % -> 96.63867 %.
+Matched code der Unit 33.874382 % -> 35.391674 %.
+Complete units bleiben 416.
+Nur `setGoalPathFromGraph` hat sich geändert.
+
+DOL-SHA1 unverändert: `enemy.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+

@@ -271,6 +271,11 @@ BOOL TSpineEnemy::isInSight(const JGeometry::TVec3<f32>& pos, f32 length,
 
 void TSpineEnemy::setGoalPathFromGraph()
 {
+	struct Pad {
+		~Pad() { }
+		char c[0x14];
+	};
+	Pad();
 	JGeometry::TVec3<f32> local_48;
 	unk124->getCurrent().getPoint(&local_48);
 	TPathNode local_3c(local_48);
