@@ -1681,6 +1681,11 @@ void TDangoHamuKuri::attackToMario()
 
 MtxPtr TDangoHamuKuri::getTakingMtx()
 {
+	struct Pad {
+		~Pad() { }
+		char c[8];
+	};
+	Pad();
 	mMActor->calc();
 	MtxPtr mtx = mMActor->getModel()->getAnmMtx(unk1AC);
 	f32 fVar2  = 0.0f;

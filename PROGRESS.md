@@ -18141,3 +18141,29 @@ Nur die beiden `setMActorAndKeeper` haben sich als Funktionen geändert.
 
 DOL-SHA1 unverändert: `hamukuri.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 
+### R521A (`TDangoHamuKuri::getTakingMtx`)
+
+**Vollmatch, strikt.**
+
+- Nicht-triviales 8-Byte-Temporary am Anfang.
+  Der Rahmen ist `-0xb0`.
+  `TPosition3f` liegt auf `r1+0x5c`, die Rotationsmatrix auf `r1+0x2c`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 200 Bytes, 50 Instruktionen.
+`validate-symbol-order` `mario/Enemy/hamukuri`: dasselbe ererbte
+`onHaveCap` Linkage-FAIL, keine neuen Fehler.
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `18099605`: fuzzy 81.12719 % -> 81.12721 %,
+matched code 52.7489 % -> 52.754475 % (1893732 -> 1893932, +200).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9871 -> 9872.
+`hamukuri` 28112 -> 28312 (+200), Funktionen 193 -> 194.
+Fuzzy der Unit 92.82399 % -> 92.82557 %.
+Matched code der Unit 61.75747 % -> 62.19684 %.
+Complete units bleiben 416.
+Nur `getTakingMtx` hat sich geändert.
+
+DOL-SHA1 unverändert: `hamukuri.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
