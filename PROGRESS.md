@@ -20024,3 +20024,33 @@ Complete code und complete data unverändert.
 Nur `TNerveBPTumbleOut::execute` hat sich geändert.
 
 DOL-SHA1 unverändert: `bosspakkun.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R57C (`TFruitBasket::touchFruit`)
+
+**Vollmatch, strikt.**
+
+Das Frame war schon `-0x38`.
+Der Roof-Out-Pointer lag bei `0x2c`, Ziel `0x28`.
+`getGroundPlane()` direkt in der Bedingung lässt den Pointer an den Saved-Regs kleben.
+Ein benanntes `groundPlane` reserviert die 4 Bytes dazwischen.
+Der Pointer fällt auf `0x28`, das Frame bleibt `-0x38`.
+
+`TFruitBasket::touchFruit`: 0 Abweichungen, 156 Bytes, 39 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/MapObjHide`: PASS.
+UNUSED-Größe stimmt 1/1.
+Linkage in Ordnung.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `61504bf5`: fuzzy bleibt 81.12708 %,
+matched code 53.64303 % -> 53.647377 % (1925832 -> 1925988, +156).
+Matched data unverändert 68.287025 % (437263).
+Funktionen matched 9938 -> 9939.
+`MapObjHide` matched code 10240 -> 10396 (+156), Funktionen 59 -> 60 von 61.
+Fuzzy der Unit 99.863365 % -> 99.864105 %.
+Matched code der Unit 94.53471 % -> 95.974884 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TFruitBasket::touchFruit` hat sich geändert.
+
+DOL-SHA1 unverändert: `MapObjHide.cpp` bleibt `NonMatching` und wird nicht gelinkt.
