@@ -18499,3 +18499,29 @@ Complete units bleiben 416.
 Nur `xFadeBgmForce` hat sich geändert.
 
 DOL-SHA1 unverändert: `MSModBgm.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R551B (`MSRandPlay::MSRandPlay`)
+
+**Vollmatch, strikt.**
+
+`char pad[8]` im leeren Konstruktor hält den Rahmen bei `-0x48`.
+Gesicherte `f31`/`f30`/`r31`–`r28` rücken um 8 Bytes hoch.
+
+`MSoundSESystem::MSRandPlay::MSRandPlay`: 0 Abweichungen, 160 Bytes, 40 Instruktionen.
+`validate-symbol-order` `mario/MSound/MSoundSE`: PASS.
+Ererbte Weak-Order-Warnung und UNUSED-Size an `getRandomVolume`.
+Kein neuer Fehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `caf2092e`: fuzzy 81.126785 % -> 81.1268 %,
+matched code 52.856644 % -> 52.8611 % (1897600 -> 1897760, +160).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9885 -> 9886.
+`MSoundSE` 3132 -> 3292 (+160), Funktionen 20 -> 21.
+Fuzzy der Unit 98.86838 % -> 98.873436 %.
+Matched code der Unit 26.425919 % -> 27.775902 %.
+Complete units bleiben 416.
+Nur `MSRandPlay::MSRandPlay` hat sich geändert.
+
+DOL-SHA1 unverändert: `MSoundSE.cpp` bleibt `NonMatching` und wird nicht gelinkt.

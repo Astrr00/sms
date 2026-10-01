@@ -131,9 +131,10 @@ MSRandPlay::MSRandPlay(u32 sound_id, s32 wait_min, s32 wait_max,
     , mSoundID(sound_id)
     , mWaitMin(wait_min)
     , mWaitMax(wait_max)
-    , mCurveSlope(curve_slope)
-    , mPlusSlope(plus_slope)
+	, mCurveSlope(curve_slope)
+	, mPlusSlope(plus_slope)
 {
+	char pad[8];
 }
 
 void MSRandPlay::randPlay(u32 vec_idx)
