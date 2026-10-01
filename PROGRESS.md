@@ -22694,3 +22694,36 @@ Complete code und complete data unverändert.
 Nur `TPollutionPos::getEdgeDegree` ist neu matched.
 
 DOL-SHA1 unverändert: `PollutionPos.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R631A (`TNerveSmallEnemyFreeze`)
+
+**Vollmatch, strikt.**
+
+`TNerveSmallEnemyFreeze::execute` war 99.775 %.
+Der Rumpf stimmte.
+Das Frame war `-0x40`, Ziel `-0x38`.
+`getSLFreezeWait()` gibt eine `const`-Referenz zurück und hebt das Frame auf `-0x40`.
+`mSLFreezeWait.value` senkt es auf `-0x30`.
+`char trash[8]` setzt es auf `-0x38`.
+Die Stores auf `trash` fallen weg.
+`freezeTime` bleibt in `r30`.
+
+`TNerveSmallEnemyFreeze::execute`: 0 Abweichungen, 160 Bytes, 40 Instruktionen.
+`validate-symbol-order` `mario/Enemy/smallEnemy`: PASS.
+0 neue Fehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `9d63a884`: fuzzy 81.132454 % -> 81.13247 %,
+matched code 55.09191 % -> 55.096363 % (1977848 -> 1978008, +160).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10024 -> 10025.
+`smallEnemy` matched code 11800 -> 11960 (+160), Funktionen 54 -> 55 von 64.
+Fuzzy der Unit 98.40333 % -> 98.40537 %.
+Matched code der Unit 67.18288 % -> 68.093834 %.
+Matched data der Unit unverändert 66.87631 % (1276).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TNerveSmallEnemyFreeze::execute` ist neu matched.
+
+DOL-SHA1 unverändert: `smallEnemy.cpp` bleibt `NonMatching` und wird nicht gelinkt.

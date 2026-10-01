@@ -1030,8 +1030,9 @@ DEFINE_NERVE(TNerveSmallEnemyDie, TLiveActor)
 DEFINE_NERVE(TNerveSmallEnemyFreeze, TLiveActor)
 {
 	TSmallEnemy* self = (TSmallEnemy*)spine->getBody();
+	char trash[8];
 
-	int freezeTime = self->getSaveParams()->getSLFreezeWait();
+	int freezeTime = self->getSaveParams()->mSLFreezeWait.value;
 
 	if (spine->getTime() == 0)
 		self->setFreezeAnm();
