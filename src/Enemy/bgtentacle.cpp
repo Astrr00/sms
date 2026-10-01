@@ -41,10 +41,10 @@ inline bool TBGTentacle::isAttackable()
 	return false;
 }
 
-const char* tstatestr[] = {
+static const char* tstatestr[] = {
 	"TSTATE_WAIT",     "TSTATE_ATTACK", "TSTATE_REST", "TSTATE_HELD",
 	"TSTATE_AMPUTEE",  "TSTATE_STUN",   "TSTATE_HIDE", "TSTATE_FOLLOWBODY",
-	"TSTATE_SYNCBODY", "TSTATE_GUARD",
+	"TSTATE_SYNCBODY", "TSTATE_GUARD",  nullptr,
 };
 
 TBGTentacle::TTentacleParams::TTentacleParams(const char* path)

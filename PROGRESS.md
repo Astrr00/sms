@@ -19588,3 +19588,32 @@ Complete units bleiben 416.
 Nur `TMarDirector::TMarDirector` hat sich geändert.
 
 DOL-SHA1 unverändert: `MarDirector.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R577A (`TBGTentacleMtxCalc::~TBGTentacleMtxCalc`)
+
+**Vollmatch, strikt.**
+
+Die drei VTable-Addis lagen 4 Bytes zu tief (`0x3ec` / `0x420` / `0x410`, Ziel `0x3f0` / `0x424` / `0x414`).
+`tstatestr` war 4 Bytes zu kurz: zehn Zeiger, Ziel elf.
+Der elfte Eintrag ist `nullptr` und lokal (`static`).
+Damit rückt `__vt__18TBGTentacleMtxCalc` von `0x3ec` auf `0x3f0`.
+
+`TBGTentacleMtxCalc::~TBGTentacleMtxCalc`: 0 Abweichungen, 204 Bytes, 51 Instruktionen.
+`tstatestr`: 44 Bytes, 100 %.
+`validate-symbol-order` `mario/Enemy/bgtentacle`: PASS.
+Fünf ererbte UNUSED-Größenwarnungen leerer Stubs.
+Linkage in Ordnung.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `e24e8af8`: fuzzy bleibt 81.12756 %,
+matched code 53.443928 % -> 53.449608 % (1918684 -> 1918888, +204).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9924 -> 9925.
+`bgtentacle` 4712 -> 4916 (+204), Funktionen 24 -> 25.
+Fuzzy der Unit 95.242905 % -> 95.24344 %.
+Matched code der Unit 21.02445 % -> 21.934677 %.
+Complete units bleiben 416.
+Nur `TBGTentacleMtxCalc::~TBGTentacleMtxCalc` hat sich geändert.
+
+DOL-SHA1 unverändert: `bgtentacle.cpp` bleibt `NonMatching` und wird nicht gelinkt.
