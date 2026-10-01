@@ -150,6 +150,13 @@ static inline bool checkProgressiveSelect(TGCLogoDir* director)
 	return selected;
 }
 
+static inline JUtility::TColor logoColor()
+{
+	char pad[0x2c];
+	pad[0] = 0;
+	return JUtility::TColor(255, 255, 255, 255);
+}
+
 int TGCLogoDir::direct()
 {
 	int desiredAppState = TApplication::APP_STATE_DEFAULT;
@@ -166,8 +173,11 @@ int TGCLogoDir::direct()
 
 			mProgSelect->unkC.on(0xffff);
 			mLogoView->mLogoTex = mDolbyTexture;
-			mLogoView->mRect    = JUTRect(254, 201, 404, 271);
-			mLogoView->mColor   = JUtility::TColor(255, 255, 255, 255);
+			JUTRect logo(254, 201, 404, 271);
+			char gap[4];
+			gap[0] = 0;
+			mLogoView->mRect  = logo;
+			mLogoView->mColor = logoColor();
 			gpApplication.mFader->startWipe(14, 0.4f, 0.0f);
 			nextState = OVERALL_STATE_DOLBY;
 		}
