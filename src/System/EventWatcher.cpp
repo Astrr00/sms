@@ -1124,6 +1124,7 @@ static void evStartSE(TSpcTypedInterp<TEventWatcher>* interp, u32 arg_num)
 	SMSGetMSound()->startSoundSystemSE(interp->pop().getDataInt(), 0, nullptr,
 	                                   0);
 	interp->push();
+	(void)SMSGetMarDirector();
 }
 
 static void evStartEventSE(TSpcTypedInterp<TEventWatcher>* interp, u32 arg_num)
