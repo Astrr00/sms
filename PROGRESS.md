@@ -19931,3 +19931,34 @@ Complete units bleiben 418.
 Nur `TDolpicEventRiccoMammaGate::loadAfter` hat sich geändert.
 
 DOL-SHA1 unverändert: `MapEventDolpic.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R581A (`TNerveHino2Burst::execute`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0x68`, Ziel `-0x90`.
+Der inlinierte `TVec3` aus `emitWaterParticle` lag bei `0x54`, Ziel `0x78`.
+`char trash[0x24]` im Aufrufer sitzt über dem Vektor und hebt nur das Frame.
+Der Body steht direkt in der Nerve, mit `char trash[0x24]` unter dem `TVec3`.
+Dann liegt der Vektor auf `0x78` und das Frame auf `-0x90`.
+`emitWaterParticle` bleibt `0xb8`, passend zur Map.
+
+`TNerveHino2Burst::execute`: 0 Abweichungen, 608 Bytes, 152 Instruktionen.
+`validate-symbol-order` `mario/Enemy/hinokuri2`: PASS.
+6 geerbte UNUSED-Größenwarnungen, alles 4-Byte-Stubs.
+Order und Linkage in Ordnung.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `cb092b27`: fuzzy 81.12703 % -> 81.12705 %,
+matched code 53.592556 % -> 53.609497 % (1924020 -> 1924628, +608).
+Matched data unverändert 68.287025 % (437263).
+Funktionen matched 9935 -> 9936.
+`hinokuri2` matched code 12428 -> 13036 (+608), Funktionen 55 -> 56 von 70.
+Fuzzy der Unit 99.18246 % -> 99.18512 %.
+Matched code der Unit 51.817875 % -> 54.352905 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TNerveHino2Burst::execute` hat sich geändert.
+
+DOL-SHA1 unverändert: `hinokuri2.cpp` bleibt `NonMatching` und wird nicht gelinkt.

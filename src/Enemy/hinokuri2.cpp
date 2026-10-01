@@ -1372,7 +1372,18 @@ DEFINE_NERVE(TNerveHino2Burst, TLiveActor)
 
 	if (spine->getTime() == 0) {
 		self->changeBck(0xA);
-		self->emitWaterParticle();
+		if (self->unk19C) {
+			JGeometry::TVec3<f32> position;
+			char trash[0x24];
+			if (self->mLevel >= 1) {
+				self->getJointTransByIndex(0x19, &position);
+			} else {
+				position = self->mPosition;
+				position.y += self->getSaveParam()->mSLWaterEmitPos.get();
+			}
+			self->unk19C->mPos.value = position;
+			gpModelWaterManager->emitRequest(*self->unk19C);
+		}
 	}
 
 	if (self->getMActor()->curAnmEndsNext()) {
