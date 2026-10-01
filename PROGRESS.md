@@ -22459,3 +22459,36 @@ Complete code und complete data unverändert.
 Nur `TSpcInterp::TSpcInterp` ist neu matched.
 
 DOL-SHA1 unverändert: `spcinterp.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R626A (`TNerveKageMarioModokiWait`)
+
+**Vollmatch, strikt.**
+
+`TNerveKageMarioModokiWait::execute` war 99.81554 %.
+Das Frame war `-0x50`, Ziel `-0x68`.
+Die Saved-Register lagen `0x18` Bytes zu tief.
+`TPathNode` lag nur `0xC` zu tief und saß bündig an den Registern.
+`char gap[0xC]` über dem Node und `char trash[0xC]` darunter heben das Frame auf `-0x68`.
+Der Node landet auf `0x44`.
+Die Stores auf `gap` und `trash` fallen weg.
+
+`TNerveKageMarioModokiWait::execute`: 0 Abweichungen, 412 Bytes, 103 Instruktionen.
+`validate-symbol-order` `mario/Enemy/telesa`: PASS.
+Schwache Reihenfolge war schon vorher offen.
+2 ererbte UNUSED-Größenwarnungen (`resetBaseGround`, `isResetTransY`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `2eb3685f`: fuzzy 81.132095 % -> 81.13211 %,
+matched code 55.02651 % -> 55.037983 % (1975500 -> 1975912, +412).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10017 -> 10018.
+`telesa` matched code 15028 -> 15440 (+412), Funktionen 76 -> 77 von 86.
+Fuzzy der Unit 99.61104 % -> 99.61473 %.
+Matched code der Unit 72.99397 % -> 74.99514 %.
+Matched data der Unit unverändert 100 % (4748).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TNerveKageMarioModokiWait::execute` ist neu matched.
+
+DOL-SHA1 unverändert: `telesa.cpp` bleibt `NonMatching` und wird nicht gelinkt.

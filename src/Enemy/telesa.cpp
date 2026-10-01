@@ -1269,7 +1269,10 @@ DEFINE_NERVE(TNerveKageMarioModokiWait, TLiveActor)
 
 	if (spine->getTime() == 0) {
 		self->getMActor()->setBck("ma_wait");
-		self->setGoalPath(TPathNode(SMS_GetMarioPos()));
+		char gap[0xC];
+		TPathNode node(SMS_GetMarioPos());
+		char trash[0xC];
+		self->setGoalPath(node);
 	}
 
 	if (!self->checkLiveFlag(LIVE_FLAG_DEAD) && self->isFindMario(1.0f)) {
