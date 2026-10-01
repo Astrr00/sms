@@ -76,10 +76,36 @@ MActorAnmData* TObjManager::getMActorAnmData()
 	return unk20;
 }
 
+static inline void startPerformTimer()
+{
+	TTimeRec* inst = TTimeRec::_instance;
+	int pad1       = 0xff;
+	int pad2       = pad1;
+	int pad3       = pad2;
+	int pad4       = pad3;
+	union {
+		u8 asAry[4];
+		u32 asUint;
+	} color;
+
+	color.asAry[0] = pad4;
+	color.asAry[1] = pad4;
+	color.asAry[2] = pad4;
+	color.asAry[3] = pad4;
+	u32 col = color.asUint;
+	if (!inst)
+		return;
+	OSTick tick = OSGetTick();
+	inst->crTimeAry()[0].append(tick, col);
+}
+
 void TObjManager::perform(u32 cue, JDrama::TGraphics* graphics)
 {
-	if (unk30 & 1)
-		TTimeRec::startTimer();
+	if (unk30 & 1) {
+#pragma inline on
+		startPerformTimer();
+#pragma inline off
+	}
 
 	for (int i = 0; i < mObjNum; ++i)
 		unk18[i]->testPerform(cue, graphics);

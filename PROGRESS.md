@@ -17785,3 +17785,29 @@ Nur `objmanager` hat sich geändert.
 
 DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
 
+### R525B (`TObjManager::perform`)
+
+**Vollmatch, strikt.**
+
+- Ein lokales `static inline` kopiert `0xff` über vier `int`.
+  Die Farbe liegt auf `r1+0x34`.
+  Der Rahmen ist `-0x50`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 236 Bytes, 59 Instruktionen.
+`validate-symbol-order` `mario/Strategic/objmanager`: PASS
+(UNUSED-Größe von `initObjArray`, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `bfb35a8c`: fuzzy 81.1268 % -> 81.126816 %,
+matched code 52.586903 % -> 52.593475 % (1887916 -> 1888152, +236).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9855 -> 9856.
+`objmanager` 1304 -> 1540 (+236), Funktionen 13 -> 14.
+Fuzzy der Unit 99.97403 % -> 100 %.
+Matched code der Unit 84.67532 % -> 100 %.
+Complete units bleiben 416.
+Nur `objmanager` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
