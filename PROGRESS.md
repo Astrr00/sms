@@ -23482,3 +23482,43 @@ Nur `TWalkerEnemy::isResignationAttack` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `walkerEnemy.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R648A (`perform`)
+
+**Vollmatch, strikt.**
+
+`TBPPolDrop::perform` war 99.81529 %.
+Nur Stack, plus die Reihenfolge der Radius-Stores.
+Das Frame war `-0xc0`, Ziel `-0xb8`.
+`mSLPollBallStampScale.get()` lässt das Frame 8 Bytes zu groß.
+Direktes `.value` legt es auf `-0xb0`, 8 Bytes zu klein.
+`char trash[4]` hebt das Frame auf `-0xb8`.
+Die benannten Locals bleiben 4 Bytes zu tief.
+`char bump[4]` hinter `TCircleShadowRequest` hebt sie.
+`mRadiusZ` wird vor `mRadiusX` geschrieben.
+Beide sind `400.0f`.
+Die Stores liegen bei `0x7c` und dann `0x78`.
+
+`TBPPolDrop::perform`: 0 Abweichungen, 628 Bytes, 157 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bosspakkun`: PASS mit Warnungen.
+Alle Map-Symbole vorhanden, Reihenfolge und Linkage stimmen.
+Die ererbten UNUSED-Größenwarnungen bleiben (`ignoreWaterCheck`, `vomitFinished`).
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TWalkerEnemy::isResignationAttack` unberührt.
+
+`ninja changes_all` gegen `d9031ea8`: fuzzy 81.13361 % -> 81.133644 %.
+Matched code 55.34048 % -> 55.357975 % (1986772 -> 1987400, +628).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10045 -> 10046.
+`bosspakkun` matched code 21296 -> 21924 (+628), Funktionen 109 -> 110 von 126.
+Fuzzy der Unit 99.20057 % -> 99.20349 %.
+Matched code der Unit 53.76692 % -> 55.352455 %.
+Matched data der Unit unverändert 99.855804 % (5540).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TBPPolDrop::perform` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `bosspakkun.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.

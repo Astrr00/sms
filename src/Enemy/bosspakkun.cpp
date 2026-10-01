@@ -216,6 +216,7 @@ void TBPPolDrop::launch(const JGeometry::TVec3<f32>& position,
 
 void TBPPolDrop::perform(u32 flags, JDrama::TGraphics* graphics)
 {
+	char trash[4];
 	if (unk80 == 0)
 		return;
 
@@ -249,7 +250,7 @@ void TBPPolDrop::perform(u32 flags, JDrama::TGraphics* graphics)
 
 		if (unk80 == 2) {
 			f32 scale
-			    = mOwner->getBossPakkunParams()->mSLPollBallStampScale.get();
+			    = mOwner->getBossPakkunParams()->mSLPollBallStampScale.value;
 			JGeometry::TVec3<f32> stampScale(scale, scale, scale);
 			unk7C->getModel()->setBaseScale(stampScale);
 			MTXCopy(mtx, unk7C->getModel()->getBaseTRMtx());
@@ -261,9 +262,11 @@ void TBPPolDrop::perform(u32 flags, JDrama::TGraphics* graphics)
 
 		if (flags & CUE_CALC_VIEW) {
 			TCircleShadowRequest request;
+			char bump[4];
 			request.mPosition   = mPosition;
-			request.mRadiusX    = 400.0f;
+			// Retail stores the Z radius before the X radius.
 			request.mRadiusZ    = 400.0f;
+			request.mRadiusX    = 400.0f;
 			request.mRotationY  = 0.0f;
 			request.mShadowType = SHADOW_TYPE_CIRCLE;
 			gpBindShadowManager->request(request, 0);
