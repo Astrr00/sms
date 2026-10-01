@@ -22994,3 +22994,38 @@ Complete code und complete data unverändert.
 Nur `TPoiHanaManager::load` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `poihana.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R95C (`doActorToWire`)
+
+**Vollmatch, strikt.**
+
+`TMapWireActorManager::doActorToWire` war 99.4 %.
+Die Kollisionsschleife steht in `TMapWireActor::checkTakingActor` und wird geinlined.
+Das erzeugt `addi r29, r28, 0` statt `li r29, 0`.
+Die Bedingung ist `unk74->unk7C`, nicht `unk0->mHeldObject`.
+`char trash[0x28]` am Anfang setzt das Frame auf `-0x58`.
+
+`TMapWireActorManager::doActorToWire`: 0 Abweichungen, 484 Bytes, 121 Instruktionen.
+`validate-symbol-order` `mario/Map/MapWireManager` scheitert weiter am ererbten fehlenden `__ct__10TTakeActorFPCc`.
+Die Reihenfolge der übrigen Symbole stimmt.
+`checkTakingActor` ist UNUSED und jetzt `0xc0` gegen `0xe8` in der Map.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TPoiHanaManager::load` unberührt.
+`TDolpicEventRiccoMammaGate::load` unberührt.
+`TMirrorCamera::drawSetting` unberührt.
+
+`ninja changes_all` gegen `3ca7f1da`: fuzzy 81.132935 % -> 81.13302 %,
+matched code 55.167896 % -> 55.181377 % (1980576 -> 1981060, +484).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10032 -> 10033.
+`MapWireManager` matched code 3112 -> 3596 (+484), Funktionen 19 -> 20 von 23.
+Fuzzy der Unit 98.868324 % -> 98.93798 %.
+Matched code der Unit 74.23664 % -> 85.78245 %.
+Matched data der Unit unverändert 100 % (476).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TMapWireActorManager::doActorToWire` ist neu matched.
+
+DOL-SHA1 unverändert: `MapWireManager.cpp` bleibt `NonMatching` und wird nicht gelinkt.
