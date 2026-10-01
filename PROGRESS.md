@@ -21920,3 +21920,38 @@ Complete code und complete data unverändert.
 Nur `TBGTentacle::TNode::calcPosition` ist neu matched.
 
 DOL-SHA1 unverändert: `bgtentacle.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R80C (`checkGround`)
+
+**Vollmatch, strikt.**
+
+`TMapCollisionData::checkGround` war 99.73585 %.
+Beide Grid-Listen lasen `getRoofList` (Offset `0x10`).
+Retail liest die Ground-Liste (Offset `4`).
+`getGroundList` gibt `unk0[0].getNext()` zurück.
+`char hi[8]` vor dem ersten Ergebniszeiger und `char lo[4]` nach `local_68` legen die Zeiger auf `0x48`, `0x44` und `0x40`.
+Das Frame bleibt `-0xa8`.
+Die Stores auf `hi` und `lo` fallen weg.
+
+`TMapCollisionData::checkGround`: 0 Abweichungen, 424 Bytes, 106 Instruktionen.
+`checkRoof` bleibt 100 %.
+`validate-symbol-order` `mario/Map/MapCheck`: dieselbe vorbestehende MISSING-Meldung `intersectLineList` (UNUSED).
+Symbolreihenfolge stimmt.
+Linkage stimmt.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `b39f4962`: fuzzy 81.130844 % -> 81.13087 %,
+matched code 54.826176 % -> 54.83799 % (1968308 -> 1968732, +424).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10001 -> 10002.
+`MapCheck` matched code 1112 -> 1536 (+424), Funktionen 2 -> 3 von 9.
+Fuzzy der Unit 86.562996 % -> 86.57788 %.
+Matched code der Unit 14.779372 % -> 20.414673 %.
+Matched data der Unit unverändert 100 % (244).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TMapCollisionData::checkGround` ist neu matched.
+
+DOL-SHA1 unverändert: `MapCheck.cpp` bleibt `NonMatching` und wird nicht gelinkt.
