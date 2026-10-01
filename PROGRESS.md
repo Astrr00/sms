@@ -21888,3 +21888,35 @@ Complete code und complete data unverändert.
 Nur `TMirrorModel::init` ist neu matched.
 
 DOL-SHA1 unverändert: `MapMirror.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R614A (`calcPosition`)
+
+**Vollmatch, strikt.**
+
+`TBGTentacle::TNode::calcPosition` war 99.828575 %.
+Das Frame war `-0x40`, Ziel `-0x60`.
+Die `TVec3<f32>` lag auf `0x24`, Ziel `0x44`.
+`char trash[0x20]` nach der Vec legt sie auf `0x44` und hebt das Frame auf `-0x60`.
+Der Store auf `trash` fällt weg.
+
+`TBGTentacle::TNode::calcPosition`: 0 Abweichungen, 840 Bytes, 210 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bgtentacle`: PASS.
+Symbolreihenfolge stimmt, alle Map-Symbole vorhanden, Linkage stimmt.
+5 ererbte UNUSED-Größenwarnungen (`returnToDefaultState`, `canTake`, `isAttacking`, `disableAttackCheck`, `enableAttackCheck`).
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `bc7a4f2b`: fuzzy 81.13081 % -> 81.130844 %,
+matched code 54.80278 % -> 54.826176 % (1967468 -> 1968308, +840).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10000 -> 10001.
+`bgtentacle` matched code 5660 -> 6500 (+840), Funktionen 26 -> 27 von 39.
+Fuzzy der Unit 95.248085 % -> 95.25451 %.
+Matched code der Unit 25.254328 % -> 29.002321 %.
+Matched data der Unit unverändert 43.28358 % (1044).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TBGTentacle::TNode::calcPosition` ist neu matched.
+
+DOL-SHA1 unverändert: `bgtentacle.cpp` bleibt `NonMatching` und wird nicht gelinkt.

@@ -531,6 +531,7 @@ void TBGTentacle::TNode::calcPosition(TBGTentacle* param_1)
 	}
 
 	JGeometry::TVec3<f32> local_1c = unk18;
+	char trash[0x20];
 	local_1c -= mPosition;
 	f32 len = local_1c.squared();
 	if (len > 0.01f) {
