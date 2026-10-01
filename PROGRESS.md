@@ -20447,3 +20447,37 @@ Complete code und complete data unverändert.
 Nur `TNerveTelesaFreeze::execute` hat sich geändert.
 
 DOL-SHA1 unverändert: `telesa.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R605B (`MSSetSoundTL<MSSetSound>::MSSetSoundTL`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0xc0`, Ziel `-0x128`.
+Alle 31 Abweichungen waren Stack-Offsets um `+0x68`.
+`char pad[0x68];` am Ende des Konstruktors hebt das Frame auf `-0x128`.
+
+`MSSetSoundTL<MSSetSound>::MSSetSoundTL`: 0 Abweichungen, 600 Bytes, 150 Instruktionen.
+`validate-symbol-order` `mario/MSound/MSoundStruct`: PASS.
+Schwache Symbolreihenfolge geerbt.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+Die gemeinsame Vorlage hebt `MSSetSoundTL<MSSetSoundGrp>::MSSetSoundTL` von 48 auf 17 `~`.
+Die Restabweichungen sind Member-Offsets um `+0x20`.
+Die Funktion bleibt nonmatching.
+`validate-symbol-order` `mario/MSound/MSoundSE`: PASS.
+Schwache Symbolreihenfolge und eine UNUSED-Größenwarnung (`getRandomVolume`) geerbt.
+
+`ninja changes_all` gegen `440349b4`: fuzzy 81.12746 % -> 81.12753 %,
+matched code 53.84425 % -> 53.860962 % (1933056 -> 1933656, +600).
+Matched data unverändert 68.45444 % (438335).
+Funktionen matched 9952 -> 9953.
+`MSoundStruct` matched code 2936 -> 3536 (+600), Funktionen 9 -> 10 von 12.
+Fuzzy der Unit 98.99505 % -> 99.0121 %.
+Matched code der Unit 40.37404 % -> 48.624863 %.
+`MSoundSE` fuzzy 98.873436 % -> 98.8839 %, matched code unverändert 3292, Funktionen 21 von 29.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `MSSetSoundTL<MSSetSound>::MSSetSoundTL` ist neu voll matching.
+
+DOL-SHA1 unverändert: `MSoundStruct.cpp` bleibt `NonMatching` und wird nicht gelinkt.
