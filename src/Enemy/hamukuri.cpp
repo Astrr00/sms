@@ -2460,13 +2460,14 @@ DEFINE_NERVE(TNerveHamuKuriBoundFreeze, TLiveActor)
 
 DEFINE_NERVE(TNerveHamuKuriWallDie, TLiveActor)
 {
+	char trash[0x10];
+	Vec local_34;
 	THamuKuri* self = (THamuKuri*)spine->getBody();
 
 	if (spine->getTime() == 0) {
 		self->setCrashAnm();
-		JGeometry::TVec3<f32> local_34;
 		if (self->checkLiveFlag(LIVE_FLAG_CLIPPED_OUT)) {
-			local_34 = self->getPosition();
+			local_34 = *(Vec*)&self->getPosition();
 		} else {
 			MtxPtr mtx = self->getMActor()->getModel()->getAnmMtx(1);
 			local_34.x = mtx[0][3];
@@ -2475,7 +2476,7 @@ DEFINE_NERVE(TNerveHamuKuriWallDie, TLiveActor)
 		}
 
 		if (JPABaseEmitter* emitter = gpMarioParticleManager->emitWithRotate(
-		        PARTICLE_MS_ENM_WALLHIT, &local_34, 0,
+		        PARTICLE_MS_ENM_WALLHIT, (JGeometry::TVec3<f32>*)&local_34, 0,
 		        DEG2SHORTANGLE(self->mRotation.y), 0, 0, nullptr)) {
 			emitter->setGlobalScale(self->mScaling);
 		}

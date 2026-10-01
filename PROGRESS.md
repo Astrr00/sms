@@ -20114,3 +20114,33 @@ Complete code und complete data unverändert.
 Nur `TPinnaShell::TPinnaShell()` hat sich geändert.
 
 DOL-SHA1 unverändert: `MapObjPinna.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R585A (`TNerveHamuKuriWallDie::execute`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0x78`, Ziel `-0x80`.
+Der Wandtreffer-Vektor lag bei `0x50`, Ziel `0x4c`.
+Ein `TVec3` ist 8-aligned und passt nicht auf `0x4c`.
+Ein `Vec` plus `char trash[0x10]` davor legt den Vektor auf `0x4c`.
+Das Frame geht auf `-0x80`, `stfd` der Winkelumrechnung auf `0x68`.
+
+`TNerveHamuKuriWallDie::execute`: 0 Abweichungen, 672 Bytes, 168 Instruktionen.
+`validate-symbol-order` `mario/Enemy/hamukuri`: geerbter Linkage-Fehler an `TDoroHamuKuri::onHaveCap` (Map weak, Objekt global).
+15 geerbte UNUSED-Größenwarnungen.
+Nur weak-Symbole außer der Reihe, unverändert.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `653c0439`: fuzzy 81.12714 % -> 81.127174 %,
+matched code 53.65963 % -> 53.678352 % (1926428 -> 1927100, +672).
+Matched data unverändert 68.287025 % (437263).
+Funktionen matched 9941 -> 9942.
+`hamukuri` matched code 30624 -> 31296 (+672), Funktionen 202 -> 203 von 224.
+Fuzzy der Unit 92.377594 % -> 92.37935 %.
+Matched code der Unit 67.275925 % -> 68.7522 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TNerveHamuKuriWallDie::execute` hat sich geändert.
+
+DOL-SHA1 unverändert: `hamukuri.cpp` bleibt `NonMatching` und wird nicht gelinkt.
