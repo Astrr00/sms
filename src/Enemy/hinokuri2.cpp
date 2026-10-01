@@ -598,6 +598,8 @@ void THinokuri2::emitWaterParticle()
 	if (!unk19C)
 		return;
 
+	char pad[0x10];
+	pad[0] = 0;
 	JGeometry::TVec3<f32> position;
 	if (mLevel >= 1) {
 		getJointTransByIndex(0x19, &position);
@@ -1427,6 +1429,8 @@ DEFINE_NERVE(TNerveHino2Burst, TLiveActor)
 
 DEFINE_NERVE(TNerveHino2Die, TLiveActor)
 {
+	char gap[1];
+	gap[0] = 0;
 	THinokuri2* self = (THinokuri2*)spine->getBody();
 	if (spine->getTime() == 0) {
 		self->changeBck(0xD);

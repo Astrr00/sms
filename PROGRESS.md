@@ -21719,3 +21719,38 @@ Complete code und complete data unverändert.
 Nur `control` ist neu matched.
 
 DOL-SHA1 unverändert: `MapEventDolpic.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R612A (`execute`)
+
+**Vollmatch, strikt.**
+
+`TNerveHino2Die::execute` war 99.84173 %.
+Das Frame war `-0x68`, Ziel `-0x80`.
+Die Item-Vec lag auf `0x50`, Ziel `0x64`.
+Die Water-Vec lag auf `0x44`, Ziel `0x58`.
+`char pad[0x10]` in `emitWaterParticle` vor `position` legt beide Vektoren.
+`char gap[1]` am Anfang von `execute` hebt das Frame von `-0x78` auf `-0x80`.
+Beide Stores fallen weg.
+Die UNUSED-Größe von `emitWaterParticle` bleibt `0xb8`.
+
+`TNerveHino2Die::execute`: 0 Abweichungen, 556 Bytes, 139 Instruktionen.
+`TNerveHino2GraphWander::execute` und `TNerveHino2Pollute::execute` bleiben 100 %.
+`validate-symbol-order` `mario/Enemy/hinokuri2`: PASS.
+6 ererbte UNUSED-Größenwarnungen (`makeQuake`, `shakeCamera`, `updatePolTrans`, `emitPolParticle`, `startDamageMotion`, `breakMask`).
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `bdafe914`: fuzzy 81.13071 % -> 81.13072 %,
+matched code 54.759884 % -> 54.775368 % (1965928 -> 1966484, +556).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 9995 -> 9996.
+`hinokuri2` matched code 15796 -> 16352 (+556), Funktionen 59 -> 60 von 70.
+Fuzzy der Unit 99.1993 % -> 99.20297 %.
+Matched code der Unit 65.86057 % -> 68.17879 %.
+Matched data der Unit unverändert 68.008255 % (2636).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `execute` hat sich geändert.
+
+DOL-SHA1 unverändert: `hinokuri2.cpp` bleibt `NonMatching` und wird nicht gelinkt.
