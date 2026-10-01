@@ -23965,3 +23965,35 @@ Nur `isTouchedOneWallAndMoveXZ` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `Map.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R654B (`MSStageCubeSwitch::proc`)
+
+**Vollmatch, strikt.**
+
+`MSStageCubeSwitch::proc` war 99.34746 %.
+Das Frame lag bei `-0x30` statt `-0x38`.
+`this` wurde als `mr r31, r3` statt `addi r31, r3, 0` gesichert.
+Ein `register`-`asm` setzt `addi r31, r3, 0` und die Adresse von `local_18` in `r4`.
+`char trash[8]` nach `tmp` hebt das Frame auf `-0x38` und legt die beiden `Vec`s auf `0x14` und `0x20`.
+0 Abweichungen, 472 Bytes, 118 Instruktionen.
+`validate-symbol-order` `mario/System/MSoundMainSide`: dieselbe vorbestehende MISSING `begin__Q27JGadget38TVector<Pv,Q27JGadget14TAllocator<Pv>>Fv`.
+Sechs UNUSED-Größenwarnungen bleiben.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TMap::isTouchedOneWallAndMoveXZ` aus R108C bleibt unberührt.
+
+`ninja changes_all` gegen `abb48400`: fuzzy 81.13404 % -> 81.134125 %.
+Matched code 55.508167 % -> 55.521317 % (1992792 -> 1993264, +472).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10061 -> 10062.
+`MSoundMainSide` matched code 2920 -> 3392 (+472), Funktionen 20 -> 21 von 27.
+Fuzzy der Unit 96.68858 % -> 96.72103 %.
+Matched code der Unit 30.762747 % -> 35.735355 %.
+Matched data der Unit unverändert 100 % (756).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `MSStageCubeSwitch::proc` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `MSoundMainSide.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
