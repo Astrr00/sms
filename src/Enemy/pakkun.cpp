@@ -783,6 +783,7 @@ void TStayPakkun::setBehavior()
 
 bool TStayPakkun::isHitValid(u32 message)
 {
+	char trash[8];
 	if (message == HIT_MESSAGE_UNKB) {
 		onLiveFlag(LIVE_FLAG_DEAD);
 		onLiveFlag(LIVE_FLAG_UNK20000);
@@ -794,8 +795,10 @@ bool TStayPakkun::isHitValid(u32 message)
 		mSpine->setNext(&TNerveStayPakkunHide::theNerve());
 		unk1BC = 1;
 
+		TPakkunSaveLoadParams* param = getSaveParam();
+		f32 size = param->mSLPolluteRange.get();
 		gpPollution->clean(mPosition.x, mGroundHeight, mPosition.z,
-		                   32.0f * getSaveParam()->mSLPolluteRange.get());
+		                   32.0f * size);
 		if (unk194->isState(PAKKUN_SEED_STATE_HIDE))
 			unk194->kill();
 		setBckAnm(PAKKUN_ANM_CRUSH_TO_HIDE);

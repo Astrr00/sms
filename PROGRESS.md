@@ -23762,3 +23762,38 @@ Nur `evStartTimer` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `EventWatcher.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R654A (`isHitValid`)
+
+**Vollmatch, strikt.**
+
+`TStayPakkun::isHitValid` war 99.530304 %.
+Die Umwandlung von `mSLPolluteRange` landete in `r4`, `f4`, `f5` und `f0`.
+Ziel ist `lbz r3`, Magic in `f3`, `32.0` in `f0`, das Double in `f2` und `fmuls f4, f0, f4`.
+`TPakkunSaveLoadParams* param` plus `f32 size = param->mSLPolluteRange.get()` und `32.0f * size` im `clean`-Aufruf färbt die Register richtig.
+Diese Trennung allein macht den Frame 8 Bytes zu klein (`-0x60` gegen `-0x68`).
+`char trash[8]` am Funktionsanfang hält Frame und die Slots `0x50`/`0x54`, ohne eine eigene Instruktion.
+0 Abweichungen, 528 Bytes, 132 Instruktionen.
+`validate-symbol-order` `mario/Enemy/pakkun`: PASS mit Warnungen.
+Die ererbte Weak-Order-Warnung bleibt.
+Die beiden UNUSED-Größenwarnungen (`createPakkunSmoke`, `isHideEnd`) bleiben.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TPakkunSeed::moveObject` aus R651A bleibt strikt matched.
+`evStartTimer` aus R651B bleibt unberührt.
+
+`ninja changes_all` gegen `36fb92a1`: fuzzy 81.13391 % -> 81.13399 %.
+Matched code 55.438305 % -> 55.453014 % (1990284 -> 1990812, +528).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10054 -> 10055.
+`pakkun` matched code 11008 -> 11536 (+528), Funktionen 65 -> 66 von 77.
+Fuzzy der Unit 97.38533 % -> 97.39907 %.
+Matched code der Unit 60.97939 % -> 63.904278 %.
+Matched data der Unit unverändert 100 % (2908).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TStayPakkun::isHitValid` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `pakkun.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
