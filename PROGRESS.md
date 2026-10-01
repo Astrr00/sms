@@ -20267,3 +20267,32 @@ Complete code und complete data unverändert.
 Nur `TBossPakkun::rumblePad` hat sich geändert.
 
 DOL-SHA1 unverändert: `bosspakkun.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R589A (`TBGTentacle::decideOwnState`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0xb0`, Ziel `-0xd0`.
+Der Delta-Vektor lag bei `0x8c`, Ziel `0xa8`.
+`char trash[0x1c]` als letzte Deklaration schiebt den Vektor auf `0xa8`.
+Das Frame geht auf `-0xd0`.
+Das Double-Temp der Winkelumrechnung bleibt 8-aligned.
+
+`TBGTentacle::decideOwnState`: 0 Abweichungen, 744 Bytes, 186 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bgtentacle`: PASS.
+5 geerbte UNUSED-Größenwarnungen.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `a56a6e58`: fuzzy 81.12724 % -> 81.12728 %,
+matched code 53.722023 % -> 53.74275 % (1928668 -> 1929412, +744).
+Matched data unverändert 68.287025 % (437263).
+Funktionen matched 9946 -> 9947.
+`bgtentacle` matched code 4916 -> 5660 (+744), Funktionen 25 -> 26 von 39.
+Fuzzy der Unit 95.24344 % -> 95.248085 %.
+Matched code der Unit 21.934677 % -> 25.254328 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TBGTentacle::decideOwnState` hat sich geändert.
+
+DOL-SHA1 unverändert: `bgtentacle.cpp` bleibt `NonMatching` und wird nicht gelinkt.
