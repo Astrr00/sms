@@ -20663,3 +20663,32 @@ Complete code und complete data unverändert.
 Nur `TFireWanwan::behaveToWater` hat sich geändert.
 
 DOL-SHA1 unverändert: `fireWanwan.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R64C (`TDrawSyncManager::setCallback`)
+
+**Vollmatch, strikt.**
+
+Das Frame war bereits `-0x30`.
+Das `TDrawSyncTokenRange`-Temporary lag bei `0x24`, Ziel `0x28`.
+Ein benanntes `range` allein senkt das Frame auf `-0x28` und legt es auf `0x20`.
+`char pad[1]; pad[0] = 0;` nach `range` hält das Frame bei `-0x30` und legt `range` auf `0x28`.
+Der Store wird wegoptimiert, der Slot bleibt.
+
+`TDrawSyncManager::setCallback`: 0 Abweichungen, 52 Bytes, 13 Instruktionen.
+`validate-symbol-order` `mario/System/DrawSyncManager`: PASS.
+2 geerbte UNUSED-Größenwarnungen (`__dt__16TDrawSyncManagerFv`, `end__16TDrawSyncManagerFv`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `d777f849`: fuzzy bleibt 81.12767 %,
+matched code 53.950874 % -> 53.952324 % (1936884 -> 1936936, +52).
+Matched data unverändert 68.45444 % (438335).
+Funktionen matched 9959 -> 9960.
+`DrawSyncManager` matched code 776 -> 828 (+52), Funktionen 7 -> 8 von 10.
+Fuzzy der Unit 99.35068 % -> 99.360306 %.
+Matched code der Unit 37.379574 % -> 39.884396 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TDrawSyncManager::setCallback` hat sich geändert.
+
+DOL-SHA1 unverändert: `DrawSyncManager.cpp` bleibt `NonMatching` und wird nicht gelinkt.
