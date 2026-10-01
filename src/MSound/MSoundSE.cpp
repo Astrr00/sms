@@ -784,6 +784,12 @@ u32 MSoundSE::getNewIDBySurfaceCode(u32 id, JAIActor* actor)
 	return id;
 }
 
+static inline void npcPad()
+{
+	char pad[0xC];
+	pad[0] = 0;
+}
+
 void MSoundSE::startSoundNpcActor(u32 id, const Vec* position, u32 ground_no,
                                   JAISoundHandle* out_handle, u32 fade,
                                   u8 camera_idx)
@@ -791,6 +797,7 @@ void MSoundSE::startSoundNpcActor(u32 id, const Vec* position, u32 ground_no,
 	JAIActor actor(position, position, position, ground_no);
 	checkMonoSound(id, &actor);
 	startSoundActorInner(id, out_handle, &actor, fade, camera_idx);
+	npcPad();
 }
 
 bool MSoundSE::checkMonoSound(u32 id, JAIActor* actor)
