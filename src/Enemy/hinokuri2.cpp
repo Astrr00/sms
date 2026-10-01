@@ -967,6 +967,18 @@ void THinokuri2::moveObject()
 		--unk168;
 }
 
+struct THinoPerformBig {
+	char c[8];
+};
+struct THinoPerformSmall {
+	char c[4];
+};
+static inline THinoPerformSmall hinoPerformPad()
+{
+	THinoPerformBig big;
+	return *(THinoPerformSmall*)(void*)&big;
+}
+
 void THinokuri2::perform(u32 cue, JDrama::TGraphics* graphics)
 {
 	gpCurHinokuri = this;
@@ -1012,6 +1024,7 @@ void THinokuri2::perform(u32 cue, JDrama::TGraphics* graphics)
 
 		if (cue & CUE_CALC_VIEW) {
 			unk150->entryDrawShadow();
+			hinoPerformPad();
 			gpQuestionManager->request(mPosition, mScaledBodyRadius);
 		}
 	}

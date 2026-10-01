@@ -19962,3 +19962,34 @@ Complete code und complete data unverändert.
 Nur `TNerveHino2Burst::execute` hat sich geändert.
 
 DOL-SHA1 unverändert: `hinokuri2.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R582A (`THinokuri2::perform`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0x50`, Ziel `-0x58`.
+Saved-Regs und der By-Value-`TVec3` für `request` lagen 8 Bytes zu tief.
+`char trash[8]` am Anfang hebt nur die Saved-Regs.
+Der Vektor bleibt bei `0x2c`, Ziel `0x34`.
+Ein 8-Byte-Return-Pad direkt vor `request` schiebt den Vektor auf `0x34` und das Frame auf `-0x58`.
+Das Pad wird nicht als Symbol emittiert.
+
+`THinokuri2::perform`: 0 Abweichungen, 568 Bytes, 142 Instruktionen.
+`validate-symbol-order` `mario/Enemy/hinokuri2`: PASS.
+Dieselben 6 geerbten UNUSED-Größenwarnungen.
+Order und Linkage in Ordnung.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `57161bd6`: fuzzy 81.12705 % -> 81.12707 %,
+matched code 53.609497 % -> 53.625317 % (1924628 -> 1925196, +568).
+Matched data unverändert 68.287025 % (437263).
+Funktionen matched 9936 -> 9937.
+`hinokuri2` matched code 13036 -> 13604 (+568), Funktionen 56 -> 57 von 70.
+Fuzzy der Unit 99.18512 % -> 99.18762 %.
+Matched code der Unit 54.352905 % -> 56.721146 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `THinokuri2::perform` hat sich geändert.
+
+DOL-SHA1 unverändert: `hinokuri2.cpp` bleibt `NonMatching` und wird nicht gelinkt.
