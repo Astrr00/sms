@@ -1109,6 +1109,7 @@ void TBGTentacle::decideOwnState()
 	case 10:
 		break;
 	}
+	char trash[0x1c];
 }
 
 void TBGTentacle::checkDamage()
