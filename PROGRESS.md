@@ -18219,3 +18219,29 @@ Nur `TNerveDoroHaneHitWater::execute` hat sich geändert.
 
 DOL-SHA1 unverändert: `hamukuri.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 
+### R524A (`THamuKuri::isResignationAttack`)
+
+**Vollmatch, strikt.**
+
+- `static inline dist` kopiert den Punkt, ruft `sub` und `length`.
+  `unk194` wird aus `mSLGiveUpLength.value` gesetzt.
+- Rahmen `-0x40`, Differenzvektor auf `r1+0x2c`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 236 Bytes, 59 Instruktionen.
+`validate-symbol-order` `mario/Enemy/hamukuri`: dasselbe ererbte
+`onHaveCap` Linkage-FAIL, keine neuen Fehler.
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `22f2d0b2`: fuzzy 81.127266 % -> 81.12728 %,
+matched code 52.776646 % -> 52.783222 % (1894728 -> 1894964, +236).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9874 -> 9875.
+`hamukuri` 29108 -> 29344 (+236), Funktionen 196 -> 197.
+Fuzzy der Unit 92.830055 % -> 92.83154 %.
+Matched code der Unit 63.94552 % -> 64.463974 %.
+Complete units bleiben 416.
+Nur `THamuKuri::isResignationAttack` hat sich geändert.
+
+DOL-SHA1 unverändert: `hamukuri.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
