@@ -506,7 +506,19 @@ void TPinnaShell::control()
 
 TPinnaShell::TPinnaShell(const char* name)
     : THitActor(name)
+    , unk68(0)
+    , unk6C(0.0f)
+    , unk70(0.0f)
+    , unk74(0)
+    , unk78(0)
+    , unk7C(0)
+    , unk80(0)
+    , unk84(0)
+    , unk88(0)
+    , unk8C(0)
 {
+	initHitActor(0x4000013A, 1, 0x80000000, 250.0f, 400.0f, 250.0f,
+	             200.0f);
 }
 
 void TShellCup::control()
