@@ -22925,3 +22925,35 @@ Complete code und complete data unverändert.
 Nur `TWireBinder::init` ist neu matched.
 
 DOL-SHA1 unverändert: `wireBinder.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R94C (`load`)
+
+**Vollmatch, strikt.**
+
+`TDolpicEventRiccoMammaGate::load` war 99.1875 %.
+`u32 flag = unk2C` vor `getBool` setzt `lwz r4` vor `lwz r3`.
+`char trash[4]` nach `f32 unused` setzt das Frame auf `-0x68`.
+`unused` liegt dann auf `0x50`.
+
+`TDolpicEventRiccoMammaGate::load`: 0 Abweichungen, 640 Bytes, 160 Instruktionen.
+`validate-symbol-order` `mario/Map/MapEventDolpic`: PASS.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+25 objekt-only Weak-Symbole bleiben.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TWireBinder::init` unberührt.
+`TMirrorCamera::drawSetting` unberührt.
+
+`ninja changes_all` gegen `c73fed6c`: fuzzy 81.13279 % -> 81.132935 %,
+matched code 55.150066 % -> 55.167896 % (1979936 -> 1980576, +640).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10031 -> 10032.
+`MapEventDolpic` matched code 3000 -> 3640 (+640), Funktionen 13 -> 14 von 14.
+Fuzzy der Unit 99.85714 % -> 100 %.
+Matched code der Unit 82.41759 % -> 100 %.
+Matched data der Unit unverändert 100 % (868).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TDolpicEventRiccoMammaGate::load` ist neu matched.
+
+DOL-SHA1 unverändert: `MapEventDolpic.cpp` bleibt `NonMatching` und wird nicht gelinkt.
