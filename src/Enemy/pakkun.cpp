@@ -269,6 +269,7 @@ void TPakkun::load(JSUMemoryInputStream& stream)
 	TSmallEnemy::load(stream);
 	reset();
 	TPathNode marioNode((THitActor*)gpMarioAddress);
+	char trash[4];
 	setGoalPath(marioNode);
 }
 

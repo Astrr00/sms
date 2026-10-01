@@ -22116,3 +22116,38 @@ Complete code und complete data unverändert.
 Nur `TWalkerEnemy::reset` ist neu matched.
 
 DOL-SHA1 unverändert: `walkerEnemy.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R620A (`load`)
+
+**Vollmatch, strikt.**
+
+`TPakkun::load` war 99.6875 %.
+Das Frame war schon `-0x30`.
+Das `TPathNode` lag auf `0x14`, Ziel `0x18`.
+`char trash[4]` nach `marioNode` schiebt es auf `0x18`.
+Der Store auf `trash` fällt weg.
+Das Frame bleibt `-0x30`.
+`TStayPakkun::load` inlined denselben Body und verwirft das unbenutzte `trash`.
+Es bleibt 99.754715 %.
+
+`TPakkun::load`: 0 Abweichungen, 192 Bytes, 48 Instruktionen.
+`validate-symbol-order` `mario/Enemy/pakkun`: PASS.
+Weak-Reihenfolge und 2 UNUSED-Größen (`createPakkunSmoke`, `isHideEnd`) sind vorbestehend.
+Symbolreihenfolge der nicht-weak Symbole stimmt, Linkage stimmt.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `a7dac4d9`: fuzzy 81.13106 % -> 81.13108 %,
+matched code 54.904835 % -> 54.91019 % (1971132 -> 1971324, +192).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10007 -> 10008.
+`pakkun` matched code 10556 -> 10748 (+192), Funktionen 63 -> 64 von 77.
+Fuzzy der Unit 97.37736 % -> 97.38068 %.
+Matched code der Unit 58.475513 % -> 59.53911 %.
+Matched data der Unit unverändert 100 % (2908).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TPakkun::load` ist neu matched.
+
+DOL-SHA1 unverändert: `pakkun.cpp` bleibt `NonMatching` und wird nicht gelinkt.
