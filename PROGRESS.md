@@ -19025,3 +19025,33 @@ Complete units bleiben 416.
 Nur `TMirrorModelManager::isUpperThanMirrorPlane` hat sich geändert.
 
 DOL-SHA1 unverändert: `MapMirror.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R562A (`TStayPakkun::genRandomItem`)
+
+**Vollmatch, strikt.**
+
+`setGlobalDynamicsScale`/`setGlobalParticleScale` mit je einem `TVec3(1.5f)` reservierten unbenutzten Stack.
+`mGlobalDynamicsScale.setAll(1.5f)` und `mGlobalParticleScale.setAll(1.5f)` schreiben dieselben `stfs`.
+`char trash[0x24]` mit `trash[0] = 0` setzt den Rahmen auf `-0x58`.
+Der Store wird vom Compiler entfernt.
+Im Rumpf gibt es keinen Stack-Zugriff.
+
+`TStayPakkun::genRandomItem`: 0 Abweichungen, 348 Bytes, 87 Instruktionen.
+`validate-symbol-order` `mario/Enemy/pakkun`: PASS.
+Vorbestehende Warnung nur schwache Symbolordnung.
+Vorbestehende UNUSED-Size-Warnungen `createPakkunSmoke__7TPakkunFRQ29JGeometry8TVec3<f>` (0x98 vs 0x4) und `isHideEnd__7TPakkunCFv` (0x20 vs 0x8).
+Kein neuer Fehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `29c572c3`: fuzzy bleibt 81.127174 %,
+matched code 53.116917 % -> 53.12661 % (1906944 -> 1907292, +348).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9904 -> 9905.
+`pakkun` 10208 -> 10556 (+348), Funktionen 62 -> 63.
+Fuzzy der Unit 97.3758 % -> 97.37736 %.
+Matched code der Unit 56.54775 % -> 58.475513 %.
+Complete units bleiben 416.
+Nur `genRandomItem` hat sich geändert.
+
+DOL-SHA1 unverändert: `pakkun.cpp` bleibt `NonMatching` und wird nicht gelinkt.
