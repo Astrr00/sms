@@ -18997,3 +18997,31 @@ Complete units bleiben 416.
 Nur `receiveMessage` hat sich geändert.
 
 DOL-SHA1 unverändert: `fireWanwan.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R32C (`TMirrorModelManager::isUpperThanMirrorPlane`)
+
+**Vollmatch, strikt.**
+
+Die beiden Aufruf-Ternaries werden als `if`/`else` übersetzt, behalten aber je ein totes Temporary.
+Ausgeschriebenes `if`/`else` entfernt den Slot.
+Der Rahmen geht von `-0x30` auf `-0x28`.
+Der Instruktionsrumpf war bereits identisch, inklusive `fadds f1, f2, f1`.
+
+`TMirrorModelManager::isUpperThanMirrorPlane`: 0 Abweichungen, 224 Bytes, 56 Instruktionen.
+`validate-symbol-order` `mario/Map/MapMirror`: dieselben vorbestehenden Fehler
+(`scaleAdd` fehlt, `set<f>` Ordnung).
+Kein neuer Fehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `0f9ff546`: fuzzy 81.127160 % -> 81.127174 %,
+matched code 53.110676 % -> 53.116917 % (1906720 -> 1906944, +224).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9903 -> 9904.
+`MapMirror` 2656 -> 2880 (+224), Funktionen 18 -> 19.
+Fuzzy der Unit 86.320630 % -> 86.326546 %.
+Matched code der Unit 43.626804 % -> 47.306175 %.
+Complete units bleiben 416.
+Nur `TMirrorModelManager::isUpperThanMirrorPlane` hat sich geändert.
+
+DOL-SHA1 unverändert: `MapMirror.cpp` bleibt `NonMatching` und wird nicht gelinkt.
