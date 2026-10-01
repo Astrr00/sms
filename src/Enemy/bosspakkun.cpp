@@ -155,6 +155,9 @@ void TBPPolDrop::move()
 	}
 
 	JGeometry::TVec3<f32> nextPosition = mPosition;
+	const TBGCheckData* ground;
+	char pad[0x30];
+	pad[0] = 0;
 	nextPosition += unk6C;
 
 	if (unk80 == 1) {
@@ -163,7 +166,6 @@ void TBPPolDrop::move()
 
 		unk6C.y -= 0.1f;
 		if (unk84 >= 60 || mOwner->is2ndFightNow()) {
-			const TBGCheckData* ground;
 			f32 groundHeight = gpMap->checkGround(nextPosition.x, mPosition.y,
 			                                      nextPosition.z, &ground);
 			groundHeight += 1.0f;

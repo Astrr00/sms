@@ -21518,3 +21518,34 @@ Complete code und complete data unverändert.
 Nur die beiden Spin-`execute` haben sich geändert.
 
 DOL-SHA1 unverändert: `bosseel.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R609A (`move`)
+
+**Vollmatch, strikt.**
+
+`TBPPolDrop::move` legt `ground` neben `nextPosition`.
+`char pad[0x30]` darunter hebt das Frame.
+Das Frame war `-0x40`, Ziel `-0x70`.
+`nextPosition` lag auf `0x20`, Ziel `0x54`.
+`ground` lag auf `0x1c`, Ziel `0x50`.
+Der Store auf `pad` fällt weg.
+
+`TBPPolDrop::move`: 0 Abweichungen, 780 Bytes, 195 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bosspakkun`: PASS.
+2 ererbte UNUSED-Größenwarnungen (`ignoreWaterCheck`, `vomitFinished`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `77b286d6`: fuzzy 81.13049 % -> 81.13052 %,
+matched code 54.66618 % -> 54.687904 % (1962564 -> 1963344, +780).
+Matched data unverändert 69.22779 % (443287).
+Funktionen matched 9989 -> 9990.
+`bosspakkun` matched code 19608 -> 20388 (+780), Funktionen 106 -> 107 von 126.
+Fuzzy der Unit 99.19067 % -> 99.193695 %.
+Matched code der Unit 49.50515 % -> 51.474453 %.
+Matched data der Unit unverändert 99.855804 % (5540).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `move` hat sich geändert.
+
+DOL-SHA1 unverändert: `bosspakkun.cpp` bleibt `NonMatching` und wird nicht gelinkt.
