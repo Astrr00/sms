@@ -23217,3 +23217,41 @@ Nur `TMarDirector::initECTMir` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `MarDirectorInitECT.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R641A (`tryTake`)
+
+**Vollmatch, strikt.**
+
+`TEnemyMario::tryTake` war 99.85 %.
+`getCollision` und `getActorType` sind je eine tote Inline-Stufe.
+Zusammen mit `getColNum` war das Frame `-0x38` statt `-0x28`.
+Die Kollision kommt aus `mCollisions[i]`.
+Der Typ kommt aus `mActorType`.
+`getColNum` bleibt.
+Das Frame ist `-0x28`.
+
+`TEnemyMario::tryTake`: 0 Abweichungen, 240 Bytes, 60 Instruktionen.
+`emWaiting` bleibt 100 %.
+`validate-symbol-order` `mario/Enemy/enemyMario`: ererbtes MISSING `getPoint__9TPathNodeCFv`.
+Ordnung und Linkage stimmen.
+6 ererbte UNUSED-Größenwarnungen bleiben.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TMarDirector::initECTMir` unberührt.
+`TNerveMantaSpawn::execute` unberührt.
+
+`ninja changes_all` gegen `926cbe2d`: fuzzy bleibt 81.13343 %.
+Matched code 55.238087 % -> 55.244774 % (1983096 -> 1983336, +240).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10038 -> 10039.
+`enemyMario` matched code 4988 -> 5228 (+240), Funktionen 21 -> 22 von 36.
+Fuzzy der Unit 97.132645 % -> 97.13425 %.
+Matched code der Unit 22.232128 % -> 23.301836 %.
+Matched data der Unit unverändert 62.927414 % (4196).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TEnemyMario::tryTake` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `enemyMario.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.

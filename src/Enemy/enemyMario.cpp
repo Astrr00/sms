@@ -647,8 +647,8 @@ bool TEnemyMario::tryTake()
 		return TRUE;
 
 	for (int i = 0; i < mEMario->getColNum(); ++i) {
-		THitActor* actor = mEMario->getCollision(i);
-		u32 actorType    = actor->getActorType();
+		THitActor* actor = mEMario->mCollisions[i];
+		u32 actorType    = actor->mActorType;
 		if (actorType == 0x04000018 || actorType == 0x2000002A
 		    || actorType == 0x20000022 || actorType == 0x20000009) {
 			if (actorType == 0x04000018) {
