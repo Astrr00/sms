@@ -20599,3 +20599,34 @@ Complete code und complete data unverändert.
 Nur `warpPosAndAt(float, short)` hat sich geändert.
 
 DOL-SHA1 unverändert: `CameraWarp.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R594A (`TNerveBPVomit::execute`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0xd8`, Ziel `-0x110`.
+Das Return-Temporary von `fromPolar` klebte bei `0x98`, Ziel `0xc8`.
+`char trash[0x30]` im Aufrufer hebt Wind und Offset, das Temporary bleibt unten.
+`static inline fromPolarV` mit `char trash[0x2c]; trash[0] = 0;` legt das Loch unter das Temporary (`0xc8`).
+`char trash[4]` vor `wind` öffnet die Lücke nach `0xd4`.
+Die Hilfe wird nicht emittiert.
+`fromPolar` bleibt für `launchPolDrop` unverändert.
+
+`TNerveBPVomit::execute`: 0 Abweichungen, 864 Bytes, 216 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bosspakkun`: PASS.
+2 geerbte UNUSED-Größenwarnungen (`ignoreWaterCheck`, `vomitFinished`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `79548a5b`: fuzzy 81.12762 % -> 81.127655 %,
+matched code 53.90163 % -> 53.925697 % (1935116 -> 1935980, +864).
+Matched data unverändert 68.45444 % (438335).
+Funktionen matched 9957 -> 9958.
+`bosspakkun` matched code 18744 -> 19608 (+864), Funktionen 105 -> 106 von 126.
+Fuzzy der Unit 99.18754 % -> 99.19067 %.
+Matched code der Unit 47.323772 % -> 49.50515 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TNerveBPVomit::execute` hat sich geändert.
+
+DOL-SHA1 unverändert: `bosspakkun.cpp` bleibt `NonMatching` und wird nicht gelinkt.
