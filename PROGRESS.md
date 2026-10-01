@@ -20054,3 +20054,32 @@ Complete code und complete data unverändert.
 Nur `TFruitBasket::touchFruit` hat sich geändert.
 
 DOL-SHA1 unverändert: `MapObjHide.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R598B (`MSBgmXFade::xFadeBgm`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0x30`, Ziel `-0x38`.
+`char pad[8]` hebt `f31`/`r31`/`r30`/`r29` um 8 Bytes.
+`unk0` geht als `prev` in eine Inline-Suche, damit es in `f1` bleibt und `scTiming` in `f0`.
+Beide Kreuz-Tests lassen `prev` links stehen, die Vergleiche bleiben `fcmpo f1, f0`.
+
+`MSBgmXFade::xFadeBgm`: 0 Abweichungen, 272 Bytes, 68 Instruktionen.
+`validate-symbol-order` `mario/MSound/MSModBgm`: PASS.
+Ererbte UNUSED-Size-Warnung an `getTiming` (Map `0x94`, Objekt `0x60`).
+Kein neuer Fehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `4a0225f9`: fuzzy 81.12708 % -> 81.12714 %,
+matched code 53.647377 % -> 53.65495 % (1925988 -> 1926260, +272).
+Matched data unverändert 68.287025 % (437263).
+Funktionen matched 9939 -> 9940.
+`MSModBgm` matched code 1180 -> 1452 (+272), Funktionen 4 -> 5 von 6.
+Fuzzy der Unit 99.38732 % -> 99.48357 %.
+Matched code der Unit 69.248825 % -> 85.211266 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `xFadeBgm` hat sich geändert.
+
+DOL-SHA1 unverändert: `MSModBgm.cpp` bleibt `NonMatching` und wird nicht gelinkt.
