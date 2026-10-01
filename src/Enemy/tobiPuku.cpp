@@ -303,14 +303,13 @@ void TTobiPuku::hitWall()
 	                          0);
 
 	if (gpMap->isTouchedWallsAndMoveXZ(&record)) {
-		f32 dot = mVelocity.x * record.mResultWalls[0]->mNormal.x
-		          + mVelocity.y * record.mResultWalls[0]->mNormal.y
-		          + mVelocity.z * record.mResultWalls[0]->mNormal.z;
-		f32 bounce = -(2.0f * dot);
+		TBGCheckData* wall = record.mResultWalls[0];
+		f32 dot            = mVelocity.dot(wall->getNormal());
+		f32 bounce         = -(2.0f * dot);
 
-		mVelocity.x += bounce * record.mResultWalls[0]->mNormal.x;
+		mVelocity.x += bounce * wall->getNormal().x;
 		mVelocity.y *= 0.5f;
-		mVelocity.z += bounce * record.mResultWalls[0]->mNormal.z;
+		mVelocity.z += bounce * record.mResultWalls[0]->getNormal().z;
 
 		unk1D0 = mVelocity;
 		unk1B0 = mPosition.y;
@@ -323,6 +322,7 @@ void TTobiPuku::hitWall()
 				mVelocity.y = 0.0f;
 		}
 	}
+	char trash[0x28];
 }
 
 void TTobiPuku::bound() { }

@@ -18382,3 +18382,20 @@ Nur `__ct__14TCameraMapToolFRC14TCameraMapTool` hat sich geändert.
 DOL-SHA1 unverändert: `MarNameRefGen.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 `CameraMapTool.cpp` und `CubeMapTool.cpp` bleiben vollständig matched.
 
+### R528A (`TTobiPuku::hitWall`)
+
+**Vollmatch, strikt.**
+
+`mVelocity.dot(wall->getNormal())` und `-(2.0f * dot)`.
+`mVelocity.y *= 0.5f`.
+`mVelocity.z` liest die Wand neu aus `record.mResultWalls[0]`.
+`char trash[0x28]` am Ende hält den Rahmen bei `-0x90`.
+
+`TTobiPuku::hitWall`: 0 Abweichungen, 348 Bytes, 87 Instruktionen.
+`validate-symbol-order` `mario/Enemy/tobiPuku`: PASS.
+Dieselben ererbten Weak-Order- und UNUSED-Size-Warnungen.
+Kein neuer Fehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+DOL-SHA1 unverändert: `tobiPuku.cpp` wird nicht gelinkt.
+
