@@ -18431,3 +18431,20 @@ Die TU bleibt `NonMatching`.
 `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
 DOL-SHA1 unverändert: `hamukuri.cpp` wird nicht gelinkt.
 
+### R531A (`THamuKuri::jumpToSearchActor`)
+
+**Vollmatch, strikt.**
+
+`TNerveTobiPukuGenerate::execute` bleibt beim const-Ref-Versuch bei 96,2 % und wurde verworfen.
+`char pad[8]` oben und `char trash[0xc]` unten halten den Rahmen bei `-0x68`.
+Der alte `(void)0`-Hack fällt weg.
+
+`THamuKuri::jumpToSearchActor`: 0 Abweichungen, 436 Bytes, 109 Instruktionen.
+`THamuKuri::getTakingMtx` bleibt 100 %.
+`validate-symbol-order` `mario/Enemy/hamukuri`: ererbter `onHaveCap` Linkage-FAIL.
+Dieselben ererbten Weak-Order- und UNUSED-Size-Warnungen.
+Kein neuer Fehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+DOL-SHA1 unverändert: `hamukuri.cpp` wird nicht gelinkt.
+

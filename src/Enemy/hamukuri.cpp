@@ -811,7 +811,7 @@ bool THamuKuri::isGiveUpSearchActor()
 
 void THamuKuri::jumpToSearchActor()
 {
-	(void)0; // TODO: hack, need to figure out canGoForSearchActor?
+	char pad[8];
 	TLiveActor* pTVar5 = (TLiveActor*)unk1F8;
 	if (pTVar5) {
 		JGeometry::TVec3<f32> local_1C = mPosition;
@@ -832,6 +832,7 @@ void THamuKuri::jumpToSearchActor()
 		SMSGetMSound()->startSoundActor(MSD_SE_EN_DOROKURI_JUMP, &mPosition, 0,
 		                                nullptr, 0, 4);
 	}
+	char trash[0xc];
 }
 
 void THamuKuri::canGoForSearchActor() { }
