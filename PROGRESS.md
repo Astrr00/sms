@@ -21421,3 +21421,33 @@ Complete code und complete data unverändert.
 Nur `evSetAttentionTime` ist neu matched.
 
 DOL-SHA1 unverändert: `EventWatcher.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R75C (`checkRoof`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0x80`, Ziel `-0x90`.
+Die Dach-Pointer lagen auf `0x3c` und `0x38`, Ziel `0x44` und `0x40`.
+Die Grid-Spills lagen 8 Bytes zu tief.
+`char trash[1]` nach `gridZ` und `char low[1]` nach `local_50` legen Frame, Pointer und Spills.
+Die Stores fallen weg.
+
+`TMapCollisionData::checkRoof`: 0 Abweichungen, 348 Bytes, 87 Instruktionen.
+`validate-symbol-order` `mario/Map/MapCheck` meldet das ererbte MISSING `intersectLineList` (UNUSED).
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `67c669f0`: fuzzy 81.13039 % -> 81.1304 %,
+matched code 54.599888 % -> 54.609577 % (1960184 -> 1960532, +348).
+Matched data unverändert 69.22779 % (443287).
+Funktionen matched 9985 -> 9986.
+`MapCheck` matched code 764 -> 1112 (+348), Funktionen 1 -> 2 von 9.
+Fuzzy der Unit 86.552895 % -> 86.562996 %.
+Matched code der Unit 10.154174 % -> 14.779372 %.
+Matched data der Unit bleibt 100 % (244).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `checkRoof` hat sich geändert.
+
+DOL-SHA1 unverändert: `MapCheck.cpp` bleibt `NonMatching` und wird nicht gelinkt.
