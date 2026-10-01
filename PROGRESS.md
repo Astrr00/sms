@@ -21988,3 +21988,35 @@ Complete code und complete data unverändert.
 Nur `TNerveFireWanwanHungTail::execute` ist neu matched.
 
 DOL-SHA1 unverändert: `fireWanwan.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R616A (`throwActor`)
+
+**Vollmatch, strikt.**
+
+`TBPHeadHit::throwActor` war 99.64189 %.
+Das Frame war `-0x58`, Ziel `-0x60`.
+Beide `TVec3<f32>` und die gesicherten Register lagen 8 Bytes zu tief.
+`char trash[8]` nach `perpendicular` hebt alles um 8 und das Frame auf `-0x60`.
+Der Store auf `trash` fällt weg.
+
+`TBPHeadHit::throwActor`: 0 Abweichungen, 592 Bytes, 148 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bosspakkun`: PASS.
+2 ererbte UNUSED-Größenwarnungen (`ignoreWaterCheck`, `vomitFinished`).
+Symbolreihenfolge stimmt, Linkage stimmt.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `5b9f86a3`: fuzzy 81.1309 % -> 81.13095 %,
+matched code 54.855145 % -> 54.871635 % (1969348 -> 1969940, +592).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10003 -> 10004.
+`bosspakkun` matched code 20388 -> 20980 (+592), Funktionen 107 -> 108 von 126.
+Fuzzy der Unit 99.193695 % -> 99.19905 %.
+Matched code der Unit 51.474453 % -> 52.969097 %.
+Matched data der Unit unverändert 99.855804 % (5540).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TBPHeadHit::throwActor` ist neu matched.
+
+DOL-SHA1 unverändert: `bosspakkun.cpp` bleibt `NonMatching` und wird nicht gelinkt.

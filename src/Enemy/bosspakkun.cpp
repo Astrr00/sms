@@ -537,6 +537,7 @@ void TBPHeadHit::throwActor(THitActor* actor)
 		PSVECNormalize(&direction, &direction);
 
 	JGeometry::TVec3<f32> perpendicular;
+	char trash[8];
 	perpendicular.cross(up, direction);
 	if (perpendicular.isZero())
 		perpendicular.set(1.0f, 0.0f, 0.0f);
