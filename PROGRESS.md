@@ -20388,3 +20388,33 @@ Complete code und complete data unverändert.
 Nur `TNerveBPPreDie::execute` hat sich geändert.
 
 DOL-SHA1 unverändert: `bosspakkun.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R604B (`TGCLogoDir::direct`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0x48`, Ziel `-0x78`.
+Das `JUTRect` lag bei `0x24`, Ziel `0x58`.
+Die `TColor` lag bei `0x20`, Ziel `0x50`.
+Ein Pad am Funktionsende hebt nur die gesicherten Register.
+`JUTRect logo` plus `char gap[4]; gap[0] = 0;` legt das Rect auf `0x58`.
+`static inline logoColor` mit `char pad[0x2c]; pad[0] = 0;` legt die Farbe auf `0x50`.
+Die Hilfe wird nicht emittiert.
+
+`TGCLogoDir::direct`: 0 Abweichungen, 356 Bytes, 89 Instruktionen.
+`validate-symbol-order` `mario/System/GCLogoDir`: PASS.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `b5a1dc72`: fuzzy 81.1274 % -> 81.12744 %,
+matched code 53.81918 % -> 53.829098 % (1932156 -> 1932512, +356).
+Matched data unverändert 68.45444 % (438335).
+Funktionen matched 9950 -> 9951.
+`GCLogoDir` matched code 1720 -> 2076 (+356), Funktionen 7 -> 8 von 11.
+Fuzzy der Unit 99.670815 % -> 99.6856 %.
+Matched code der Unit 33.463036 % -> 40.389107 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `direct` hat sich geändert.
+
+DOL-SHA1 unverändert: `GCLogoDir.cpp` bleibt `NonMatching` und wird nicht gelinkt.
