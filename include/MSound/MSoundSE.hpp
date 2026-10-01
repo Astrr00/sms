@@ -82,6 +82,8 @@ namespace SeInfo {
 		    : unk0(param_1)
 		    , unk4(param_2)
 		{
+			char pad[0x20];
+			pad[0] = 0;
 		}
 
 		/* 0x0 */ f32 unk0;

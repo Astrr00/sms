@@ -21085,3 +21085,32 @@ Complete code und complete data unverändert.
 Nur `startControl` hat sich geändert.
 
 DOL-SHA1 unverändert: `MapEventSink.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R618B (`__sinit_MSoundSE_cpp`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0x10`, Ziel `-0x38`.
+`char pad[0x20]; pad[0] = 0;` im inlinen `SeInfo::Setting`-Konstruktor hebt das Frame.
+Der Store fällt weg.
+Der Rest von `__sinit_MSoundSE_cpp` war schon identisch.
+
+`__sinit_MSoundSE_cpp`: 0 Abweichungen, 856 Bytes, 214 Instruktionen.
+`validate-symbol-order` `mario/MSound/MSoundSE`: PASS.
+Ererbte Weak-Order-Warnungen.
+1 ererbte UNUSED-Größenwarnung (`getRandomVolume`, Map `0x68`, Objekt `0x4`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `3c326730`: fuzzy 81.129776 % -> 81.1298 %,
+matched code 54.287697 % -> 54.31154 % (1948976 -> 1949832, +856).
+Matched data unverändert 68.45444 % (438335).
+Funktionen matched 9974 -> 9975.
+`MSoundSE` matched code 4524 -> 5380 (+856), Funktionen 23 -> 24 von 29.
+Fuzzy der Unit 98.9595 % -> 98.96186 %.
+Matched code der Unit 38.170773 % -> 45.393185 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `__sinit_MSoundSE_cpp` hat sich geändert.
+
+DOL-SHA1 unverändert: `MSoundSE.cpp` bleibt `NonMatching` und wird nicht gelinkt.
