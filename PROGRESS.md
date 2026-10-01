@@ -21582,3 +21582,34 @@ Complete code und complete data unverändert.
 Nur `evStartAppearJetBalloon` ist neu matched.
 
 DOL-SHA1 unverändert: `EventWatcher.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R76C (`appear`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0x80`, Ziel `-0x78`.
+Die beiden `TVec3` lagen 8 Bytes zu hoch.
+`char gap[9]` zwischen Translation und Rotation legt Frame und Slots.
+Der Store fällt weg.
+`#pragma dont_inline` hält den Aufruf in `movement` als `bl appear`.
+
+`TMareWallRock::appear`: 0 Abweichungen, 408 Bytes, 102 Instruktionen.
+`validate-symbol-order` `mario/Map/MapEventMare`: PASS mit 6 ererbten UNUSED-Größenwarnungen.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+`movement` bleibt 100 %.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `a1e0a9e9`: fuzzy 81.13056 % -> 81.1306 %,
+matched code 54.70473 % -> 54.7161 % (1963948 -> 1964356, +408).
+Matched data unverändert 69.22779 % (443287).
+Funktionen matched 9991 -> 9992.
+`MapEventMare` matched code 5032 -> 5440 (+408), Funktionen 24 -> 25 von 34.
+Fuzzy der Unit 99.25104 % -> 99.260445 %.
+Matched code der Unit 47.34663 % -> 51.185547 %.
+Matched data der Unit bleibt 100 % (1284).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `appear` ist neu matched.
+
+DOL-SHA1 unverändert: `MapEventMare.cpp` bleibt `NonMatching` und wird nicht gelinkt.
