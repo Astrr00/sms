@@ -463,6 +463,8 @@ static void evSetEventEnd(TSpcTypedInterp<TEventWatcher>* interp, u32 arg_num)
 
 static void evSetNextStage(TSpcTypedInterp<TEventWatcher>* interp, u32 arg_num)
 {
+	char pad[4];
+	pad[0] = 0;
 	interp->verifyArgNum(2, &arg_num);
 	int scenario = TSpcSlice(interp->pop()).getDataInt();
 	int stage    = TSpcSlice(interp->pop()).getDataInt();
