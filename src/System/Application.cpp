@@ -244,7 +244,10 @@ void TApplication::initialize()
 	                       SMSGetGCLogoRenderHeight());
 	TFlagManager::start(JKRGetCurrentHeap());
 	TTimeRec::start(0xDFC0);
-	TTimeRec::instance()->unk81C |= 1;
+	// Reference so the OR stores through &unk81C.
+	TTimeRec* rec = TTimeRec::instance();
+	u16& slot     = rec->unk81C;
+	slot |= 1;
 	TDrawSyncManager::smInstance->setCallback(0, 0xDFC0, 0xDFFF,
 	                                          TTimeRec::instance());
 	mMeter = new TProcessMeter(2);
@@ -825,3 +828,6 @@ JKRMemArchive* TApplication::mountStageArchive()
 
 	return result;
 }
+
+// Map records a weak crTimeAry in this TU. Taking its address emits that copy.
+static void keepCrTimeAry() { (void)&TTimeRec::crTimeAry; }
