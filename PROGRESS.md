@@ -20144,3 +20144,37 @@ Complete code und complete data unverändert.
 Nur `TNerveHamuKuriWallDie::execute` hat sich geändert.
 
 DOL-SHA1 unverändert: `hamukuri.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R600B (`CPolarSubCamera::ctrlLButtonCamera_`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0x40`, Ziel `-0x70`.
+Der inlined Richtungsvektor lag bei `0x10`, Ziel `0x34`.
+`getNozzleTopPos_` bleibt mit `char trash[0x18]` ein Vollmatch.
+Ein benutztes `char low[0x20]` darin würde sein Frame von `-0x58` auf `-0x68` heben.
+Ein `static inline` `fillNozzleTop` trägt `low[0x20]` mit `low[0] = 0` und die gleiche Nozzle-Logik.
+Der Vektor landet auf `0x34`.
+`char pad[0xC]` im Aufrufer hebt das Frame auf `-0x70`, ohne den Vektor zu verschieben.
+Die Hilfe wird vollständig inlined und nicht emittiert.
+`getNozzleTopPos_` bleibt unangetastet.
+
+`CPolarSubCamera::ctrlLButtonCamera_`: 0 Abweichungen, 528 Bytes, 132 Instruktionen.
+`getNozzleTopPos_` bleibt 100 %.
+`validate-symbol-order` `mario/Camera/CameraNotice`: PASS.
+8 object-only weak/inline Helfer, unverändert.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `39ca6115`: fuzzy 81.127174 % -> 81.12719 %,
+matched code 53.678352 % -> 53.693054 % (1927100 -> 1927628, +528).
+Matched data unverändert 68.287025 % (437263).
+Funktionen matched 9942 -> 9943.
+`CameraNotice` matched code 1080 -> 1608 (+528), Funktionen 3 -> 4 von 6.
+Fuzzy der Unit 90.71371 % -> 90.75169 %.
+Matched code der Unit 36.635006 % -> 54.545456 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `ctrlLButtonCamera_` hat sich geändert.
+
+DOL-SHA1 unverändert: `CameraNotice.cpp` bleibt `NonMatching` und wird nicht gelinkt.
