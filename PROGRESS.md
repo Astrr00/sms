@@ -19842,3 +19842,34 @@ Nur `TPollutionLayer::action` hat sich im Code geändert.
 Der Link zieht die ganze TU.
 
 DOL-SHA1 unverändert: `build/GMSJ01/mario.dol` prüft gegen `build.sha1`.
+
+### R593B (`SMS_IsInSameCameraCube`)
+
+**Vollmatch, strikt.**
+
+Der Body stimmte schon.
+Das Frame war `-0xa0`, Ziel `-0x98`.
+Die kopierte `Vec` lag 4 Bytes zu hoch (`0x78`, Ziel `0x74`).
+`SMS_GetMarioPos()` ist eine Inline-Ebene und lässt ein totes 4-Byte-Temporary.
+`*gpMarioPos` nimmt das weg.
+Frame `-0x98`, `Vec` auf `0x74`.
+
+`SMS_IsInSameCameraCube`: 0 Abweichungen, 280 Bytes, 70 Instruktionen.
+`validate-symbol-order` `mario/Camera/CubeManagerBase`: FAIL wie am Tip.
+Zwei UNUSED fehlen (`isInOtherCube`, `isInCube` mit `const char*`).
+`TVec3<f>::set` steht in der Objekt-Reihenfolge vor dem zweiten Ctor, in der Map dahinter.
+Linkage der gelinkten Symbole in Ordnung.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `2c1522b8`: fuzzy 81.127 % -> 81.127014 %,
+matched code 53.570946 % -> 53.57874 % (1923244 -> 1923524, +280).
+Matched data unverändert 68.287025 % (437263).
+Funktionen matched 9932 -> 9933.
+`CubeManagerBase` 1336 -> 1616 (+280), Funktionen 10 -> 11 von 12.
+Fuzzy der Unit 91.12329 % -> 91.14481 %.
+Matched code der Unit 65.36204 % -> 79.06067 %.
+Complete units bleiben 418.
+Nur `SMS_IsInSameCameraCube` hat sich geändert.
+
+DOL-SHA1 unverändert: `CubeManagerBase.cpp` bleibt `NonMatching` und wird nicht gelinkt.
