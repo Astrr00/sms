@@ -18473,3 +18473,29 @@ Complete units bleiben 416.
 Nur `updateDepthMap` hat sich geändert.
 
 DOL-SHA1 unverändert: `PollutionObj.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R550B (`MSBgmXFade::xFadeBgmForce`)
+
+**Vollmatch, strikt.**
+
+`char pad[8]` hält den Rahmen bei `-0x30`.
+Gesicherte `f31`/`r31`/`r30`/`r29` rücken um 8 Bytes hoch.
+
+`MSBgmXFade::xFadeBgmForce`: 0 Abweichungen, 220 Bytes, 55 Instruktionen.
+`validate-symbol-order` `mario/MSound/MSModBgm`: PASS.
+Ererbte UNUSED-Size-Warnung an `getTiming`.
+Kein neuer Fehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `9ddb7fb1`: fuzzy 81.12676 % -> 81.126785 %,
+matched code 52.850513 % -> 52.856644 % (1897380 -> 1897600, +220).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9884 -> 9885.
+`MSModBgm` 960 -> 1180 (+220), Funktionen 3 -> 4.
+Fuzzy der Unit 99.3615 % -> 99.38732 %.
+Matched code der Unit 56.33803 % -> 69.248825 %.
+Complete units bleiben 416.
+Nur `xFadeBgmForce` hat sich geändert.
+
+DOL-SHA1 unverändert: `MSModBgm.cpp` bleibt `NonMatching` und wird nicht gelinkt.
