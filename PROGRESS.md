@@ -20418,3 +20418,32 @@ Complete code und complete data unverändert.
 Nur `direct` hat sich geändert.
 
 DOL-SHA1 unverändert: `GCLogoDir.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R592A (`TNerveTelesaFreeze::execute`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0x38`, Ziel `-0x40`.
+Der `TPathNode` lag bei `0x20`, Ziel `0x24`.
+Ein benannter `TPathNode` mit `char trash[4]` dahinter legt den Knoten auf `0x24`.
+Das Frame geht auf `-0x40`.
+
+`TNerveTelesaFreeze::execute`: 0 Abweichungen, 544 Bytes, 136 Instruktionen.
+`validate-symbol-order` `mario/Enemy/telesa`: PASS.
+2 geerbte UNUSED-Größenwarnungen (`resetBaseGround`, `isResetTransY`).
+Schwache Symbolreihenfolge geerbt.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `0a5e06e4`: fuzzy 81.12744 % -> 81.12746 %,
+matched code 53.829098 % -> 53.84425 % (1932512 -> 1933056, +544).
+Matched data unverändert 68.45444 % (438335).
+Funktionen matched 9951 -> 9952.
+`telesa` matched code 14484 -> 15028 (+544), Funktionen 75 -> 76 von 86.
+Fuzzy der Unit 99.60715 % -> 99.61104 %.
+Matched code der Unit 70.35166 % -> 72.99397 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TNerveTelesaFreeze::execute` hat sich geändert.
+
+DOL-SHA1 unverändert: `telesa.cpp` bleibt `NonMatching` und wird nicht gelinkt.
