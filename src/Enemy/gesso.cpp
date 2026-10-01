@@ -535,6 +535,8 @@ void TGesso::pollute()
 	mPolluteObj->mPosition.x = mtx[0][3] + local_2c.x;
 	mPolluteObj->mPosition.y = mtx[1][3];
 	mPolluteObj->mPosition.z = mtx[2][3] + local_2c.z;
+
+	char trash[0x10];
 }
 
 void TGesso::isUseBodyCallBack() const { }
