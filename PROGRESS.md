@@ -21955,3 +21955,36 @@ Complete code und complete data unverändert.
 Nur `TMapCollisionData::checkGround` ist neu matched.
 
 DOL-SHA1 unverändert: `MapCheck.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R615A (`execute`)
+
+**Vollmatch, strikt.**
+
+`TNerveFireWanwanHungTail::execute` war 99.818184 %.
+Das Frame war `-0x68`, Ziel `-0x70`.
+Die `TVec3<f32>` lag auf `0x44`, Ziel `0x4c`.
+`char trash[8]` nach der Vec legt sie auf `0x4c` und hebt das Frame auf `-0x70`.
+Der Store auf `trash` fällt weg.
+
+`TNerveFireWanwanHungTail::execute`: 0 Abweichungen, 616 Bytes, 154 Instruktionen.
+`validate-symbol-order` `mario/Enemy/fireWanwan`: dieselben vorbestehenden Fehler.
+MISSING `TVec4`-Ctor, `isTaken`, `ArrayWrapper` `operator[]` / `size`.
+Symbolreihenfolge stimmt, Linkage stimmt.
+27 ererbte UNUSED-Größenwarnungen.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `bed227d6`: fuzzy 81.13087 % -> 81.1309 %,
+matched code 54.83799 % -> 54.855145 % (1968732 -> 1969348, +616).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10002 -> 10003.
+`fireWanwan` matched code 14168 -> 14784 (+616), Funktionen 61 -> 62 von 95.
+Fuzzy der Unit 94.352196 % -> 94.355064 %.
+Matched code der Unit 36.305862 % -> 37.884377 %.
+Matched data der Unit unverändert 90.77341 % (2676).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TNerveFireWanwanHungTail::execute` ist neu matched.
+
+DOL-SHA1 unverändert: `fireWanwan.cpp` bleibt `NonMatching` und wird nicht gelinkt.
