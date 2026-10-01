@@ -179,9 +179,12 @@ void TObjHitCheck::checkAndEntryGroup(TIdxGroupObj* group)
 
 void TObjHitCheck::entryGroup(TIdxGroupObj* group)
 {
-	TIdxGroupObj::iterator end = group->getChildren().end();
-	for (TIdxGroupObj::iterator it = group->getChildren().begin(); it != end;
-	     ++it) {
+	JGadget::TList_pointer<THitActor*>& children = group->getChildren();
+	TIdxGroupObj::iterator end                   = children.end();
+	TIdxGroupObj::iterator it                    = children.begin();
+	char trash2[0xc];
+	(void)trash2;
+	for (; it != end; ++it) {
 		(*it)->mColCount = 0;
 
 		if ((*it)->checkHitFlag(HIT_FLAG_NO_COLLISION))

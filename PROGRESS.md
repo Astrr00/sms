@@ -23409,3 +23409,39 @@ Nur `TObjHitCheck::checkAndEntryGroup` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `ObjHitCheck.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R646A (`entryGroup`)
+
+**Vollmatch, strikt.**
+
+`TObjHitCheck::entryGroup` war 99.66102 %.
+Nur Stack.
+Das Frame war `-0xd8`, Ziel `-0xe0`.
+Die Iterator-Temps lagen 4 Bytes zu hoch, die benannten Iteratoren 8 Bytes zu tief.
+`getChildren()` einmal in eine Referenz zu ziehen setzt die Temps.
+`end` und `it` stehen vor der Schleife.
+`char trash2[0xc]` hebt die Iteratoren und das Frame auf `-0xe0`.
+
+`TObjHitCheck::entryGroup`: 0 Abweichungen, 472 Bytes, 118 Instruktionen.
+`validate-symbol-order` `mario/Strategic/ObjHitCheck`: PASS mit Warnungen.
+Alle Map-Symbole vorhanden, Reihenfolge und Linkage stimmen.
+Die ererbte `checkGroup`-Größenwarnung bleibt (`0x274` gegen `0x4`).
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TObjHitCheck::checkAndEntryGroup` und `checkActorsHit` bleiben strikt matched.
+
+`ninja changes_all` gegen `6464e24a`: fuzzy 81.13354 % -> 81.13359 %.
+Matched code 55.321205 % -> 55.334354 % (1986080 -> 1986552, +472).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10043 -> 10044.
+`ObjHitCheck` matched code 2248 -> 2720 (+472), Funktionen 7 -> 8 von 10.
+Fuzzy der Unit 99.75166 % -> 99.78973 %.
+Matched code der Unit 53.47288 % -> 64.70029 %.
+Matched data der Unit unverändert 100 % (16).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TObjHitCheck::entryGroup` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `ObjHitCheck.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
