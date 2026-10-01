@@ -24120,3 +24120,38 @@ Nur `TMirrorModelManager::load` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `MapMirror.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R656A (`getManagerByName`)
+
+**Vollmatch, strikt.**
+
+`TConductor::getManagerByName` war 99.59574 %.
+Das Frame lag bei `-0x48` statt `-0x58`.
+Die Iteratoren lagen 16 Bytes zu tief, die `operator!=`-Kopien 8 Bytes zu tief.
+`while (it != e)` mit getrennten `begin()`/`end()` setzt Frame und beide Slots.
+0 Abweichungen, 188 Bytes, 47 Instruktionen.
+`validate-symbol-order` `mario/Enemy/conductor`: PASS mit Warnungen.
+Vier ererbte UNUSED-Größenwarnungen bleiben (`clipGenerators`, `maskNFlagOfChildren`, `conduct`, `polluterExterminated`).
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TMirrorModelManager::load` aus R110C bleibt unberührt.
+Dieselbe Schleife ist in `makeEnemyAppear` und `makeOneEnemyAppear` inlined.
+Deren Fuzzy geht von 99.913666 % auf 99.8777 % bzw. von 99.178215 % auf 99.28713 %.
+Beide bleiben nonmatching.
+Matched code zählt nur die neuen 188 Bytes von `getManagerByName`.
+
+`ninja changes_all` gegen `c7549caa`: fuzzy 81.13423 % -> 81.134254 %.
+Matched code 55.57769 % -> 55.582928 % (1995288 -> 1995476, +188).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10066 -> 10067.
+`conductor` matched code 5140 -> 5328 (+188), Funktionen 42 -> 43 von 50.
+Fuzzy der Unit 99.7842 % -> 99.79499 %.
+Matched code der Unit 55.45965 % -> 57.488132 %.
+Matched data der Unit unverändert 98.61111 % (568).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TConductor::getManagerByName` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `conductor.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
