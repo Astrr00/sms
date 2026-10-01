@@ -21613,3 +21613,39 @@ Complete code und complete data unverändert.
 Nur `appear` ist neu matched.
 
 DOL-SHA1 unverändert: `MapEventMare.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R611A (`perform`)
+
+**Vollmatch, strikt.**
+
+`TBEelTears::perform` ruft `moveObject` und `updateAnmSound`.
+Vorher standen dort `control` und `requestShadow`.
+`control` traf Slot `0xc8`, Ziel `0xd0` (`moveObject`).
+`requestShadow` traf Slot `0xd4`, Ziel `0xf4` (`updateAnmSound`).
+Das Frame war `-0x80`, Ziel `-0x90`.
+Die Effektmatrix lag schon auf `0x40`.
+Ein loses `char pad` schiebt die Matrix um 4.
+`struct { Mtx m; char pad[0x10]; }` hält die Matrix und hebt das Frame.
+Der Pad-Store entfällt.
+
+`TBEelTears::perform`: 0 Abweichungen, 332 Bytes, 83 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bosseel`: PASS.
+Ererbte Weak-Order-Warnungen.
+5 ererbte UNUSED-Größenwarnungen (`quickBack`, `isEyeBlurOn`, `TBossEelEye::setBckAnm`, `setRecoverTears`, `TBEelTearsDrop::generate`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TNerveBossEelFirstSpin::execute`, `TNerveBossEelSecondSpin::execute` und `TNerveBossEelMouthOpenWait::execute` bleiben 100 %.
+
+`ninja changes_all` gegen `e10546b9`: fuzzy 81.1306 % -> 81.130615 %,
+matched code 54.7161 % -> 54.72534 % (1964356 -> 1964688, +332).
+Matched data unverändert 69.22779 % (443287).
+Funktionen matched 9992 -> 9993.
+`bosseel` matched code 26408 -> 26740 (+332), Funktionen 124 -> 125 von 142.
+Fuzzy der Unit 99.18542 % -> 99.18656 %.
+Matched code der Unit 57.851387 % -> 58.57869 %.
+Matched data der Unit unverändert 55.96121 % (3924).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `perform` hat sich geändert.
+
+DOL-SHA1 unverändert: `bosseel.cpp` bleibt `NonMatching` und wird nicht gelinkt.

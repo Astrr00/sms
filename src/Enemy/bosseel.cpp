@@ -399,18 +399,21 @@ void TBEelTears::perform(u32 cue, JDrama::TGraphics* graphics)
 		return;
 
 	if (cue & CUE_MOVE)
-		control();
+		moveObject();
 
 	if (cue & CUE_CALC_ANIM) {
-		Mtx effectMtx;
-		SMS_GetLightPerspectiveForEffectMtx(effectMtx);
+		struct {
+			Mtx m;
+			char pad[0x10];
+		} effect;
+		SMS_GetLightPerspectiveForEffectMtx(effect.m);
 		mMActor->getModel()
 		    ->getModelData()
 		    ->getMaterialNodePointer(0)
 		    ->getTexGenBlock()
 		    ->getTexMtx(1)
-		    ->setEffectMtx(effectMtx);
-		requestShadow();
+		    ->setEffectMtx(effect.m);
+		updateAnmSound();
 	}
 
 	if (cue & CUE_CALC_ANIM)
