@@ -706,6 +706,7 @@ void MSound::setCategoryVOLsDefault(u16 mask)
 
 void MSound::setCategoryVOLs(u16 param_1, f32 param_2)
 {
+	char pad[8];
 	u8 tmp = param_2 * 127.0f;
 	u8 uVar2;
 	if (tmp > 127)

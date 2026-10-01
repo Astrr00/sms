@@ -18525,3 +18525,29 @@ Complete units bleiben 416.
 Nur `MSRandPlay::MSRandPlay` hat sich geändert.
 
 DOL-SHA1 unverändert: `MSoundSE.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R553B (`MSound::setCategoryVOLs`)
+
+**Vollmatch, strikt.**
+
+`char pad[8]` hält den Rahmen bei `-0x40`.
+Gesicherte `r31`–`r29` und die beiden `stfd f0` rücken um 8 Bytes hoch.
+
+`MSound::setCategoryVOLs`: 0 Abweichungen, 188 Bytes, 47 Instruktionen.
+`validate-symbol-order` `mario/MSound/MSound`: PASS.
+Ererbte Weak-Order-Warnung und UNUSED-Size-Warnungen.
+Kein neuer Fehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `bc3adc44`: fuzzy 81.1268 % -> 81.126816 %,
+matched code 52.8611 % -> 52.866333 % (1897760 -> 1897948, +188).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9886 -> 9887.
+`MSound` 7428 -> 7616 (+188), Funktionen 42 -> 43.
+Fuzzy der Unit 99.19231 % -> 99.19647 %.
+Matched code der Unit 59.51923 % -> 61.025642 %.
+Complete units bleiben 416.
+Nur `setCategoryVOLs` hat sich geändert.
+
+DOL-SHA1 unverändert: `MSound.cpp` bleibt `NonMatching` und wird nicht gelinkt.
