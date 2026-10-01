@@ -21327,3 +21327,32 @@ Complete code und complete data unverändert.
 Nur `watch` hat sich geändert.
 
 DOL-SHA1 unverändert: `MapEventDolpic.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R74C (`load`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0x40`, Ziel `-0x50`.
+Das `s32 val` lag auf `0x2c`, Ziel auf `0x34`.
+`char gap[4]` am Anfang und `char trash[1]` nach `s32 val` legen beides.
+Die Stores fallen weg.
+
+`TMapWireManager::load`: 0 Abweichungen, 432 Bytes, 108 Instruktionen.
+`validate-symbol-order` `mario/Map/MapWireManager` meldet das ererbte MISSING `__ct__10TTakeActorFPCc` (UNUSED) und fünf UNUSED-Größenwarnungen.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `94066084`: fuzzy 81.130295 % -> 81.13033 %,
+matched code 54.547966 % -> 54.56 % (1958320 -> 1958752, +432).
+Matched data unverändert 69.22779 % (443287).
+Funktionen matched 9982 -> 9983.
+`MapWireManager` matched code 2680 -> 3112 (+432), Funktionen 18 -> 19 von 23.
+Fuzzy der Unit 98.846375 % -> 98.868324 %.
+Matched code der Unit 63.931297 % -> 74.23664 %.
+Matched data der Unit bleibt 100 % (476).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `load` hat sich geändert.
+
+DOL-SHA1 unverändert: `MapWireManager.cpp` bleibt `NonMatching` und wird nicht gelinkt.
