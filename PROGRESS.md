@@ -21262,3 +21262,37 @@ Complete code und complete data unverändert.
 Nur der Konstruktor ist neu matched.
 
 DOL-SHA1 unverändert: `MSoundSE.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R621B (`construct`)
+
+**Vollmatch, strikt.**
+
+Der Möwen-Shift war `13`, Ziel `19`.
+Die neun Member nutzten alle `MSD_SE_OBJ_KAMOME_SOLO` mit `60`.
+Ziel ist `0x3813` bis `0x3818` mit `60`, dann `0x3819` bis `0x381B` mit `180`.
+Das Frame war `-0x60`, Ziel `-0xa0`.
+Der Spill lag auf `0x4c`, Ziel `0x50`.
+`char pad[0x38]; pad[0] = 0;` im Möwen-Block legt beides.
+Der Store fällt weg.
+
+`MSoundSE::construct`: 0 Abweichungen, 4776 Bytes, 1194 Instruktionen.
+`validate-symbol-order` `mario/MSound/MSoundSE`: PASS.
+Ererbte Weak-Order-Warnungen.
+1 ererbte UNUSED-Größenwarnung (`getRandomVolume`, Map `0x68`, Objekt `0x4`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`startSoundActorInner`, `__sinit_MSoundSE_cpp` und `MSSetSoundTL<MSSetSoundGrp>::MSSetSoundTL` bleiben 100 %.
+
+`ninja changes_all` gegen `66c48884`: fuzzy 81.13026 % -> 81.13028 %,
+matched code 54.401337 % -> 54.534374 % (1953056 -> 1957832, +4776).
+Matched data 69.16782 % -> 69.22779 % (442903 -> 443287, +384).
+Funktionen matched 9980 -> 9981.
+`MSoundSE` matched code 5980 -> 10756 (+4776), Funktionen 25 -> 26 von 29.
+Matched data der Unit 1788 -> 2172 (100 %).
+Fuzzy der Unit 99.07695 % -> 99.0837 %.
+Matched code der Unit 50.45562 % -> 90.75262 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `construct` ist neu matched.
+
+DOL-SHA1 unverändert: `MSoundSE.cpp` bleibt `NonMatching` und wird nicht gelinkt.
