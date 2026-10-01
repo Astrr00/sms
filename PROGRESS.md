@@ -20791,3 +20791,32 @@ Complete code und complete data unverändert.
 Nur `evIsInsideCube` hat sich geändert.
 
 DOL-SHA1 unverändert: `EventWatcher.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R612B (`evInvalidatePad`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0x60`, Ziel `-0x68`.
+Slices, `stfd` und Frame lagen einheitlich 8 Bytes zu tief.
+`char pad[4]; pad[0] = 0;` am Anfang hält das Frame bei `-0x68` und das `stfd` bei `0x58`.
+`getGamePad()->invalidate(frames)` legt die Pop-Slices auf `0x48` und das leere `push` auf `0x38`.
+Ein direktes `mDisabledFrames = frames` lässt das `push`-Slice bei `0x34`.
+
+`evInvalidatePad`: 0 Abweichungen, 324 Bytes, 81 Instruktionen.
+`validate-symbol-order` `mario/System/EventWatcher`: ererbtes MISSING `set__Q29JGeometry8TVec3<f>FRC3Vec`, sonst nur schwache Ordnung.
+2 geerbte UNUSED-Größenwarnungen (`evSetEventEnd`, `evSetEventStart`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `22405e6d`: fuzzy 81.12856 % -> 81.128586 %,
+matched code 54.001575 % -> 54.0106 % (1938704 -> 1939028, +324).
+Matched data unverändert 68.45444 % (438335).
+Funktionen matched 9964 -> 9965.
+`EventWatcher` matched code 26960 -> 27284 (+324), Funktionen 71 -> 72 von 105.
+Fuzzy der Unit 98.90501 % -> 98.906715 %.
+Matched code der Unit 63.8318 % -> 64.598915 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `evInvalidatePad` hat sich geändert.
+
+DOL-SHA1 unverändert: `EventWatcher.cpp` bleibt `NonMatching` und wird nicht gelinkt.
