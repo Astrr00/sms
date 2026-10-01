@@ -22318,3 +22318,39 @@ Complete code und complete data unverändert.
 Nur `MSStage::init` ist neu matched.
 
 DOL-SHA1 unverändert: `MSoundMainSide.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R623A (`execute`)
+
+**Vollmatch, strikt.**
+
+`TNerveBPStompReact::execute` war 99.81013 %.
+Das Frame war `-0x48`, Ziel `-0x68`.
+Die gespeicherten Register lagen `0x20` Bytes zu tief.
+Der `TVec3` aus `resetWaterMark` lag nur `0x1c` zu tief.
+Ein unbenutztes Pad in `resetWaterMark` fällt beim Inlinen weg.
+Der Rumpf steht deshalb direkt in der Nerve.
+`char gap[8]` über dem Vektor und `char trash[0x18]` darunter heben das Frame auf `-0x68`.
+Der Vektor landet auf `0x44`.
+Die Stores auf `gap` und `trash` fallen weg.
+`resetWaterMark` bleibt `0xa4` Bytes und UNUSED.
+
+`TNerveBPStompReact::execute`: 0 Abweichungen, 316 Bytes, 79 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bosspakkun`: PASS.
+2 ererbte UNUSED-Größenwarnungen (`ignoreWaterCheck`, `vomitFinished`).
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `19a8b113`: fuzzy 81.13172 % -> 81.13174 %,
+matched code 54.98929 % -> 54.998093 % (1974164 -> 1974480, +316).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10013 -> 10014.
+`bosspakkun` matched code 20980 -> 21296 (+316), Funktionen 108 -> 109 von 126.
+Fuzzy der Unit 99.19905 % -> 99.20057 %.
+Matched code der Unit 52.969097 % -> 53.76692 %.
+Matched data der Unit unverändert 99.855804 % (5540).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TNerveBPStompReact::execute` ist neu matched.
+
+DOL-SHA1 unverändert: `bosspakkun.cpp` bleibt `NonMatching` und wird nicht gelinkt.

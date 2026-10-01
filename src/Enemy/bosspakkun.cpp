@@ -1789,8 +1789,21 @@ DEFINE_NERVE(TNerveBPStompReact, TLiveActor)
 		boss->mHeadHit->onHitFlag(HIT_FLAG_NO_COLLISION);
 	}
 
-	if (spine->getTime() == 30)
-		boss->resetWaterMark();
+	if (spine->getTime() == 30 && boss->unk17C == 0) {
+		boss->unk17C = 1;
+		boss->unk174 = 0;
+		boss->unk170 = 0;
+		boss->unk1B8 = 50;
+		if (boss->unk18C != nullptr) {
+			char gap[8];
+			JGeometry::TVec3<f32> position;
+			char trash[0x18];
+			boss->getJointTransByIndex(18, &position);
+			position.y += 250.0f;
+			boss->unk18C->mPos.value = position;
+			gpModelWaterManager->emitRequest(*boss->unk18C);
+		}
+	}
 
 	if (spine->getTime() == 50)
 		boss->unk1BC = 1;
