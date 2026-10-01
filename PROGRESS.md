@@ -19873,3 +19873,32 @@ Complete units bleiben 418.
 Nur `SMS_IsInSameCameraCube` hat sich geändert.
 
 DOL-SHA1 unverändert: `CubeManagerBase.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R594B (`CPolarSubCamera::startGateDemoCamera`)
+
+**Vollmatch, strikt.**
+
+Der Body stimmte schon.
+Das Frame war `-0x98`, Ziel `-0xa0`.
+Der `snprintf`-Puffer lag auf `0x10`, Ziel `0x14`.
+`char trash[4]` hinter `buf` hebt den Puffer um 4 und das Frame um 8.
+`search()` statt `searchF` legt zu viel an und zieht `gpCamMapToolTable` nach vorn.
+
+`CPolarSubCamera::startGateDemoCamera`: 0 Abweichungen, 280 Bytes, 70 Instruktionen.
+`validate-symbol-order` `mario/Camera/CameraDemo`: PASS.
+UNUSED-Größe von `restartReproduceDemoCamera_` weicht wie am Tip (Map `0x44`, Objekt `0x4`).
+Linkage in Ordnung.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `e028a5f3`: fuzzy 81.127014 % -> 81.12703 %,
+matched code 53.57874 % -> 53.586544 % (1923524 -> 1923804, +280).
+Matched data unverändert 68.287025 % (437263).
+Funktionen matched 9933 -> 9934.
+`CameraDemo` 1684 -> 1964 (+280), Funktionen 9 -> 10 von 11.
+Fuzzy der Unit 85.818184 % -> 85.83665 %.
+Matched code der Unit 59.801136 % -> 69.744316 %.
+Complete units bleiben 418.
+Nur `CPolarSubCamera::startGateDemoCamera` hat sich geändert.
+
+DOL-SHA1 unverändert: `CameraDemo.cpp` bleibt `NonMatching` und wird nicht gelinkt.

@@ -137,6 +137,7 @@ void CPolarSubCamera::updateGateDemoCamera_()
 void CPolarSubCamera::startGateDemoCamera(const JDrama::TActor* actor)
 {
 	char buf[0x80];
+	char trash[4];
 
 	snprintf(buf, 0x80, "%s前カメラ", actor->getName());
 	TCameraMapTool* tool = (TCameraMapTool*)gpCamMapToolTable->searchF(
