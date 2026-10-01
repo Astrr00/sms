@@ -478,6 +478,8 @@ static void evSetNextStage(TSpcTypedInterp<TEventWatcher>* interp, u32 arg_num)
 
 static void evRegisterMovie(TSpcTypedInterp<TEventWatcher>* interp, u32 arg_num)
 {
+	char pad[4];
+	pad[0] = 0;
 	interp->verifyArgNum(1, &arg_num);
 	int movieId = TSpcSlice(interp->pop()).getDataInt();
 	SMSGetMarDirector()->fireStreamingMovie(movieId);
