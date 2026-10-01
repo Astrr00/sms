@@ -262,6 +262,8 @@ void TApplication::initialize()
 #pragma dont_inline on
 void* TApplication::setupThreadFuncLogo()
 {
+	char pad[4];
+	pad[0] = 0;
 	while (!SMSGetMSound()->checkWaveOnAram(MS_WAVE_UNK0))
 		OSYieldThread();
 	while (!SMSGetMSound()->checkWaveOnAram(MS_WAVE_UNK210))

@@ -18579,3 +18579,32 @@ Complete units bleiben 416.
 Nur `drawRevivalTexStamp` hat sich geändert.
 
 DOL-SHA1 unverändert: `PollutionCount.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R17C (`TApplication::setupThreadFuncLogo`)
+
+**Vollmatch, strikt.**
+
+`char pad[4]` mit `pad[0] = 0` vergrößert den Rahmen von `-0x138` auf `-0x140`.
+Der Store wird vom Compiler entfernt.
+Die Pfadpuffer rücken um 4 Bytes hoch.
+Gesicherte Register rücken um 8 Bytes hoch.
+
+`TApplication::setupThreadFuncLogo`: 0 Abweichungen, 804 Bytes, 201 Instruktionen.
+`validate-symbol-order` `mario/System/Application`: FAIL.
+Fehlendes `crTimeAry__8TTimeRecFv` bestand schon vorher.
+Ererbte UNUSED-Size-Warnung für `initialize_processMeter`.
+Kein neuer Fehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `3a7121e7`: fuzzy 81.126816 % -> 81.126854 %,
+matched code 52.887173 % -> 52.909565 % (1898696 -> 1899500, +804).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9888 -> 9889.
+`Application` 3056 -> 3860 (+804), Funktionen 11 -> 12.
+Fuzzy der Unit 96.97847 % -> 96.98944 %.
+Matched code der Unit 31.031681 % -> 39.195778 %.
+Complete units bleiben 416.
+Nur `setupThreadFuncLogo` hat sich geändert.
+
+DOL-SHA1 unverändert: `Application.cpp` bleibt `NonMatching` und wird nicht gelinkt.
