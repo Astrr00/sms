@@ -20328,3 +20328,34 @@ Complete code und complete data unverändert.
 Nur `TTamaNokoManager::load` und die `.rodata` der Unit haben sich geändert.
 
 DOL-SHA1 unverändert: `tamaNoko.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R603B (`MSound::startMarioVoice`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0x70`, Ziel `-0xa0`.
+Beide `JAIActor` lagen 0x28 zu tief, die gesicherten Register 0x30.
+Der Kamera-Index landete in `r28` statt `r30`, das Bit in `r30` statt `r29`.
+`static inline asU32(u8)` legt den zweiten Index über `r3` in `r30`.
+`char pad[0x28]` direkt nach `local_48` hebt beide Actors und das Frame.
+Die Hilfe wird nicht emittiert.
+
+`MSound::startMarioVoice`: 0 Abweichungen, 1740 Bytes, 435 Instruktionen.
+`exitStage` und `startSoundActorSpecial` bleiben 100 %.
+`validate-symbol-order` `mario/MSound/MSound`: PASS.
+Geerbte weak-Order-Warnung und 6 UNUSED-Größenwarnungen, unverändert.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `5eed9d83`: fuzzy 81.1273 % -> 81.12739 %,
+matched code 53.757565 % -> 53.806038 % (1929944 -> 1931684, +1740).
+Matched data unverändert 68.45444 % (438335).
+Funktionen matched 9948 -> 9949.
+`MSound` matched code 8304 -> 10044 (+1740), Funktionen 45 -> 46 von 49.
+Fuzzy der Unit 99.20898 % -> 99.23462 %.
+Matched code der Unit 66.53846 % -> 80.48077 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `startMarioVoice` hat sich geändert.
+
+DOL-SHA1 unverändert: `MSound.cpp` bleibt `NonMatching` und wird nicht gelinkt.
