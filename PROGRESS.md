@@ -20538,3 +20538,33 @@ Complete code und complete data unverändert.
 Nur `startSoundNpcActor` hat sich geändert.
 
 DOL-SHA1 unverändert: `MSoundSE.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R607B (`MSLoadWave::loadWaveBackword`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0x120`, Ziel `-0x128`.
+`filePath` lag bei `0xc`, Ziel `0x18`.
+`char pad[0xC]` vor dem letzten `return` hebt den Puffer und das Frame.
+`u32 addr = (u32)root->mBase; addr += root->unk10; addr -= extent;`
+hält das `add` in `r6`.
+
+`loadWaveBackword`: 0 Abweichungen, 320 Bytes, 80 Instruktionen.
+`validate-symbol-order` `mario/MSound/MSound`: PASS.
+Schwache Symbolreihenfolge geerbt.
+6 geerbte UNUSED-Größenwarnungen.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `8b9f8d04`: fuzzy 81.12756 % -> 81.12759 %,
+matched code 53.87656 % -> 53.88548 % (1934216 -> 1934536, +320).
+Matched data unverändert 68.45444 % (438335).
+Funktionen matched 9955 -> 9956.
+`MSound` matched code 10044 -> 10364 (+320), Funktionen 46 -> 47 von 49.
+Fuzzy der Unit 99.23462 % -> 99.24199 %.
+Matched code der Unit 80.48077 % -> 83.044876 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `loadWaveBackword` hat sich geändert.
+
+DOL-SHA1 unverändert: `MSound.cpp` bleibt `NonMatching` und wird nicht gelinkt.
