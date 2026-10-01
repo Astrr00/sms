@@ -81,6 +81,15 @@ static inline JGeometry::TVec3<f32> fromPolar(s16 angle, f32 radius)
 	                             radius * JMASCos(angle));
 }
 
+// fabricated
+static inline JGeometry::TVec3<f32> fromPolarV(s16 angle, f32 radius)
+{
+	char trash[0x2c];
+	trash[0] = 0;
+	return JGeometry::TVec3<f32>(radius * JMASSin(angle), 0.0f,
+	                             radius * JMASCos(angle));
+}
+
 TBossPakkunParams::TBossPakkunParams(const char* path)
     : TSpineEnemyParams(path)
     , PARAM_INIT(mSLWaitFrameStg0, 400)
@@ -1510,8 +1519,9 @@ DEFINE_NERVE(TNerveBPVomit, TLiveActor)
 	if (actor->checkCurBckFromIndex(20) && rand() * (1.0f / 32768.0f) < 0.2f
 	    && spine->getTime() == 500) {
 		JGeometry::TVec3<f32> offset;
-		offset = fromPolar(static_cast<s16>(DEG2SHORTANGLE(boss->mRotation.y)),
-		                   700.0f);
+		offset
+		    = fromPolarV(static_cast<s16>(DEG2SHORTANGLE(boss->mRotation.y)),
+		                 700.0f);
 		gpItemManager->makeObjAppear(
 		    boss->mPosition.x + offset.x, boss->mPosition.y + 1.0f,
 		    boss->mPosition.z + offset.z, 0x20000002, false);
@@ -1535,6 +1545,7 @@ DEFINE_NERVE(TNerveBPVomit, TLiveActor)
 	}
 
 	if (actor->checkCurBckFromIndex(20)) {
+		char trash[4];
 		JGeometry::TVec3<f32> wind(MsSin(boss->mRotation.y), 0.0f,
 		                           MsCos(boss->mRotation.y));
 		gpModelWaterManager->wind(wind);
