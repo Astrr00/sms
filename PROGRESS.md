@@ -18354,3 +18354,31 @@ Nur diese beiden Funktionen haben sich geändert.
 
 DOL-SHA1 unverändert: `hamukuri.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 
+### R538B (`TCameraMapTool::TCameraMapTool`)
+
+**Vollmatch, strikt.**
+
+- Copy-Ctor, 116 Bytes, 29 Instruktionen.
+  0 `~`, 0 `|`, 0 `<`, 0 `>`.
+- `mPitchYaw` ist ein Wortpaar.
+  Der implizite `TVec2<f32>`-Copy schreibt `lfs`/`stfs`.
+  Das Retail-Objekt kopiert `0x18`/`0x1c` per `lwz`/`stw`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`validate-symbol-order` `mario/System/MarNameRefGen`: ererbte MISSING-, ORDER- und BINDING-Fails.
+Kein neuer Fehler an diesem Copy-Ctor.
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `17204e6a`: fuzzy 81.13179 % -> 81.13206 %,
+matched code 52.827454 % -> 52.830685 % (1896552 -> 1896668, +116).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9880 -> 9881.
+`MarNameRefGen` 15092 -> 15208 (+116), Funktionen 75 -> 76.
+Fuzzy der Unit 97.8259 % -> 97.866 %.
+Matched code der Unit 63.040936 % -> 63.52548 %.
+Complete units bleiben 416.
+Nur `__ct__14TCameraMapToolFRC14TCameraMapTool` hat sich geändert.
+
+DOL-SHA1 unverändert: `MarNameRefGen.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+`CameraMapTool.cpp` und `CubeMapTool.cpp` bleiben vollständig matched.
+
