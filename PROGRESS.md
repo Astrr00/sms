@@ -23109,3 +23109,39 @@ Complete code und complete data unverändert.
 Nur `TEnemyMario::emWaiting` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `enemyMario.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R639A (`setPolluteGoal`)
+
+**Vollmatch, strikt.**
+
+`TGesso::setPolluteGoal` war 99.67227 %.
+`calcVelocityToJumpToY` bekam ein uninitialisiertes Stack-`local`.
+Der Rückgabewert wurde verworfen.
+Das Ziel ist `mPolluteVelocity`.
+Die Zuweisung des Rückgabewerts kopiert von `0x50`.
+`r5` ist `r31+0x1b8`.
+Das Frame ist `-0xa8`.
+
+`TGesso::setPolluteGoal`: 0 Abweichungen, 476 Bytes, 119 Instruktionen.
+`validate-symbol-order` `mario/Enemy/gesso`: PASS.
+Weak-Order-Warnung bleibt.
+2 ererbte UNUSED-Größenwarnungen bleiben (`modifyRotate` `0x4` gegen `0x38`, `isUseBodyCallBack` `0x4` gegen `0x1c`).
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TEnemyMario::emWaiting` unberührt.
+
+`ninja changes_all` gegen `7764b87b`: fuzzy 81.13332 % -> 81.13338 %,
+matched code 55.206448 % -> 55.219704 % (1981960 -> 1982436, +476).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10035 -> 10036.
+`gesso` matched code 13460 -> 13936 (+476), Funktionen 80 -> 81 von 91.
+Fuzzy der Unit 98.31871 % -> 98.326706 %.
+Matched code der Unit 68.969055 % -> 71.40807 %.
+Matched data der Unit unverändert 100 % (3980).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TGesso::setPolluteGoal` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `gesso.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
