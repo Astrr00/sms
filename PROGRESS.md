@@ -21451,3 +21451,36 @@ Complete code und complete data unverändert.
 Nur `checkRoof` hat sich geändert.
 
 DOL-SHA1 unverändert: `MapCheck.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R623B (`evSetPollutionIncreaseCount`)
+
+**Vollmatch, strikt.**
+
+`evSetPollutionIncreaseCount` verwirft das Argument und pusht eine leere `TSpcSlice`.
+Das Frame war `-0x58`, Ziel `-0x70`.
+Die Slice lag auf `0x30`, Ziel `0x40`.
+Eine benannte `TSpcSlice` legt den Slot auf `0x40`.
+Drei `long long` heben nur das Frame auf `-0x70`.
+Die Stores auf die `long long` fallen weg.
+
+`evSetPollutionIncreaseCount`: 0 Abweichungen, 184 Bytes, 46 Instruktionen.
+`validate-symbol-order` `mario/System/EventWatcher`: dieselbe vorbestehende MISSING-Meldung `set__Q29JGeometry8TVec3<f>FRC3Vec`.
+Ererbte Weak-Order-Warnungen.
+2 ererbte UNUSED-Größenwarnungen (`evSetEventStart`, `evSetEventEnd`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`evSetAttentionTime` bleibt 100 %.
+
+`ninja changes_all` gegen `98e9c71c`: fuzzy 81.1304 % -> 81.13042 %,
+matched code 54.609577 % -> 54.614704 % (1960532 -> 1960716, +184).
+Matched data unverändert 69.22779 % (443287).
+Funktionen matched 9986 -> 9987.
+`EventWatcher` matched code 29120 -> 29304 (+184), Funktionen 74 -> 75 von 105.
+Fuzzy der Unit 98.92888 % -> 98.929726 %.
+Matched code der Unit 68.94592 % -> 69.38157 %.
+Matched data der Unit bleibt 100 % (2508).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `evSetPollutionIncreaseCount` ist neu matched.
+
+DOL-SHA1 unverändert: `EventWatcher.cpp` bleibt `NonMatching` und wird nicht gelinkt.
