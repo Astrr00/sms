@@ -20178,3 +20178,32 @@ Complete code und complete data unverändert.
 Nur `ctrlLButtonCamera_` hat sich geändert.
 
 DOL-SHA1 unverändert: `CameraNotice.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R601B (`MSound::startSoundActorSpecial`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0x70`, Ziel `-0x78`.
+Jeder Stack-Slot und jedes gesicherte Register lag 8 Bytes zu tief.
+`char trash[8]` am Anfang schiebt nur die gesicherten Register.
+Als letzte Deklaration liegt das Array unter dem Actor und den beiden Floats.
+Dann rutscht der ganze Frame einheitlich auf `-0x78`.
+
+`MSound::startSoundActorSpecial`: 0 Abweichungen, 368 Bytes, 92 Instruktionen.
+`validate-symbol-order` `mario/MSound/MSound`: PASS.
+Geerbte weak-Order-Warnung und 6 UNUSED-Größenwarnungen, unverändert.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `c74440be`: fuzzy 81.12719 % -> 81.12721 %,
+matched code 53.693054 % -> 53.703310 % (1927628 -> 1927996, +368).
+Matched data unverändert 68.287025 % (437263).
+Funktionen matched 9943 -> 9944.
+`MSound` matched code 7616 -> 7984 (+368), Funktionen 43 -> 44 von 49.
+Fuzzy der Unit 99.19647 % -> 99.20288 %.
+Matched code der Unit 61.025642 % -> 63.974358 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `startSoundActorSpecial` hat sich geändert.
+
+DOL-SHA1 unverändert: `MSound.cpp` bleibt `NonMatching` und wird nicht gelinkt.
