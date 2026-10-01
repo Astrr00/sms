@@ -23902,3 +23902,35 @@ Nur `evStartSE` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `EventWatcher.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R107C (`moveSRT`)
+
+**Vollmatch, strikt.**
+
+`TMapCollisionMove::moveSRT` war 99.9322 %.
+Das Frame war schon `-0x38`.
+Der inlined `TVec3` aus `move()` lag 4 Bytes zu tief (`0x20` gegen `0x24`).
+`(void)collisionMovePad()` nach `move()` hebt nur den Vektor um 4, ohne eine eigene Instruktion.
+`collisionMovePad` ist `return gpMarDirector` und wird wegoptimiert.
+0 Abweichungen, 236 Bytes, 59 Instruktionen.
+`TMapCollisionMove::move` bleibt strikt.
+`validate-symbol-order` `mario/Map/MapCollisionEntry`: dieselbe vorbestehende MISSING `__ct__17TMapCollisionBaseFv`.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`evStartSE` aus R653B bleibt unberührt.
+
+`ninja changes_all` gegen `c95d4e9b`: fuzzy bleibt 81.13404 %.
+Matched code 55.4968 % -> 55.503376 % (1992384 -> 1992620, +236).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10059 -> 10060.
+`MapCollisionEntry` matched code 2592 -> 2828 (+236), Funktionen 20 -> 21 von 21.
+Fuzzy der Unit 99.99434 % -> 100 %.
+Matched code der Unit 91.65488 % -> 100 %.
+Matched data der Unit unverändert 100 % (264).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TMapCollisionMove::moveSRT` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `MapCollisionEntry.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
