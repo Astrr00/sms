@@ -37,6 +37,9 @@
 #include <MSound/MSoundBGM.hpp>
 #include <M3DUtil/InfectiousStrings.hpp>
 
+static const char rogueRodata2697[0xc] = { 0 };
+static const f32 rogueRodata2699[3]    = { 1.0f, 1.0f, 1.0f };
+
 extern OSThread gSetupThread;
 
 int TMarDirector::direct()
@@ -458,6 +461,8 @@ int TMarDirector::changeState()
 
 void TMarDirector::currentStateFinalize(u8 next_state)
 {
+	char pad[0x78];
+	pad[0] = 0;
 	switch (mState) {
 	case STATE_UNK0:
 		static_cast<JDrama::TViewObj*>(JDrama::TNameRefGen::search("Group 2D"))
@@ -475,8 +480,9 @@ void TMarDirector::currentStateFinalize(u8 next_state)
 		unk18[0]->offFlag(TMarioGamePad::PAD_FLAG_MENU_INPUT);
 		gpCamera->endDemoCamera();
 		mConsole->unk94->startOpenWipe();
+		u8 scenario = gpApplication.mCurrArea.unk1;
 		MSMainProc::endStageEntranceDemo(gpApplication.mCurrArea.unk0,
-		                                 gpApplication.mCurrArea.unk1);
+		                                 scenario);
 		break;
 
 	case STATE_UNK4:

@@ -21649,3 +21649,40 @@ Complete code und complete data unverändert.
 Nur `perform` hat sich geändert.
 
 DOL-SHA1 unverändert: `bosseel.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R625B (`currentStateFinalize`)
+
+**Vollmatch, strikt.**
+
+`currentStateFinalize` räumt den alten Director-State ab.
+Das Frame war `-0xa8`, Ziel `-0x120`.
+`char pad[0x78]` hebt das Frame.
+Der Store fällt weg.
+`"Group 2D"` lag auf Rodata `0x1b4`, Ziel `0x1cc`.
+`rogueRodata2697` und `rogueRodata2699` schließen das 24-Byte-Loch vor `cam_int1`.
+`endStageEntranceDemo` lud `unk1` vor `unk0`.
+Ein benanntes `scenario` stellt die Reihenfolge her.
+
+`currentStateFinalize`: 0 Abweichungen, 744 Bytes, 186 Instruktionen.
+`.rodata` der Unit ist 100 % (528 Bytes).
+`validate-symbol-order` `mario/System/MarDirectorDirect`: dieselbe vorbestehende MISSING-Meldung `__ct__Q26JDrama10TFlagT<Us>`.
+Ererbte Weak-Order-Warnungen.
+2 ererbte UNUSED-Größenwarnungen (`checkDefeatShadowMarioAll`, `decideNextStageOfMiss`).
+`__sinit_MarDirectorDirect_cpp`, `TGameSequence::set` und `TFlagT::set` bleiben 100 %.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `1920dea8`: fuzzy 81.130615 % -> 81.13067 %,
+matched code 54.72534 % -> 54.746067 % (1964688 -> 1965432, +744).
+Matched data 69.22779 % -> 69.31025 % (443287 -> 443815, +528).
+Funktionen matched 9993 -> 9994.
+`MarDirectorDirect` matched code 792 -> 1536 (+744), Funktionen 3 -> 4 von 14.
+Fuzzy der Unit 91.77506 % -> 91.794464 %.
+Matched code der Unit 7.114624 % -> 13.798059 %.
+Matched data der Unit 27.34694 % -> 81.22449 % (268 -> 796, +528).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `currentStateFinalize` ist neu matched.
+Die ganze `.rodata` der Unit ist neu matched.
+
+DOL-SHA1 unverändert: `MarDirectorDirect.cpp` bleibt `NonMatching` und wird nicht gelinkt.
