@@ -199,6 +199,8 @@ int TGCLogoDir::direct()
 
 bool TGCLogoDir::direct_nlogo()
 {
+	char pad[0x98];
+	pad[0] = 0;
 	bool ended    = false;
 	int nextState = mState;
 	switch (mState) {
@@ -249,7 +251,7 @@ bool TGCLogoDir::direct_nlogo()
 	if (mState != STATE_FADE_OUT && mGamePad->isSomethingPushed())
 		nextState = STATE_FADE_OUT;
 
-	if (nextState != mState) {
+	if (nextState != *(volatile int*)&mState) {
 		switch (nextState) {
 		case STATE_FADE_OUT:
 			gpApplication.mFader->startWipe(15, 0.4f, 0.0f);
