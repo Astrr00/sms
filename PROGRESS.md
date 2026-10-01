@@ -18608,3 +18608,29 @@ Complete units bleiben 416.
 Nur `setupThreadFuncLogo` hat sich geändert.
 
 DOL-SHA1 unverändert: `Application.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R18C (`TMapCollisionBase::initAllCheckData`)
+
+**Vollmatch, strikt.**
+
+`char pad[4]` mit `pad[0] = 0` vergrößert den Rahmen von `-0xc8` auf `-0xd0`.
+Der Store wird vom Compiler entfernt.
+Die Vektor-Locals rücken um 4 Bytes hoch.
+Gesicherte Register rücken um 8 Bytes hoch.
+
+`TMapCollisionBase::initAllCheckData`: 0 Abweichungen, 572 Bytes, 143 Instruktionen.
+`validate-symbol-order` `mario/Map/MapMakeData`: PASS.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `08d09d9d`: fuzzy 81.126854 % -> 81.126890 %,
+matched code 52.909565 % -> 52.925500 % (1899500 -> 1900072, +572).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9889 -> 9890.
+`MapMakeData` 1648 -> 2220 (+572), Funktionen 5 -> 6.
+Fuzzy der Unit 96.419754 % -> 96.455560 %.
+Matched code der Unit 50.864197 % -> 68.518520 %.
+Complete units bleiben 416.
+Nur `initAllCheckData` hat sich geändert.
+
+DOL-SHA1 unverändert: `MapMakeData.cpp` bleibt `NonMatching` und wird nicht gelinkt.
