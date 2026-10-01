@@ -20296,3 +20296,35 @@ Complete code und complete data unverändert.
 Nur `TBGTentacle::decideOwnState` hat sich geändert.
 
 DOL-SHA1 unverändert: `bgtentacle.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R590A (`TTamaNokoManager::load`)
+
+**Vollmatch, strikt.**
+
+Jeder String-Offset im Param-Pool lag 4 Bytes zu tief.
+Der Blumename war ASCII `TamaNokoFlower`.
+Das Original ist Shift-JIS `タマノコフラワー` und 4 Bytes länger.
+Danach liegt `/enemy/tamanoko.prm` bei `0x384`.
+
+`TTamaNokoManager::load`: 0 Abweichungen, 532 Bytes, 133 Instruktionen.
+`.rodata` der Unit 98.591545 % -> 100 %.
+`loadAfter` bleibt 100 %.
+`validate-symbol-order` `mario/Enemy/tamaNoko`: PASS.
+Nur weak-Symbole außer der Reihe, unverändert.
+2 geerbte UNUSED-Größenwarnungen.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `998e7032`: fuzzy 81.12728 % -> 81.1273 %,
+matched code 53.74275 % -> 53.757565 % (1929412 -> 1929944, +532).
+Matched data 68.287025 % -> 68.45444 % (437263 -> 438335, +1072).
+Funktionen matched 9947 -> 9948.
+`tamaNoko` matched code 10100 -> 10632 (+532), Funktionen 49 -> 50 von 58.
+Fuzzy der Unit 97.428505 % -> 97.4331 %.
+Matched code der Unit 61.093636 % -> 64.31164 %.
+Matched data der Unit 1148 -> 2220 (+1072).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TTamaNokoManager::load` und die `.rodata` der Unit haben sich geändert.
+
+DOL-SHA1 unverändert: `tamaNoko.cpp` bleibt `NonMatching` und wird nicht gelinkt.
