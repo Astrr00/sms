@@ -19357,3 +19357,29 @@ Complete units bleiben 416.
 Nur `getMonteVillageActorArea` hat sich geändert.
 
 DOL-SHA1 unverändert: `MSoundMainSide.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R572A (`TSplineRail::getPosAndRot`)
+
+**Vollmatch, strikt.**
+
+Der Rahmen `-0xf8` stimmte schon.
+Die drei Rückgabekopien von `getPoint` und `MsGetRotFromZaxis` lagen 12 Bytes zu tief (`0x8c` statt `0x98`).
+Ein totes `TVec3`-großes Temporär unter den Return-Slots schiebt genau diese drei Kopien.
+`point`, `dir` und der Rahmen bleiben liegen.
+
+`TSplineRail::getPosAndRot`: 0 Abweichungen, 564 Bytes, 141 Instruktionen.
+`validate-symbol-order` `mario/Enemy/graph`: PASS, acht ererbte UNUSED-Größenwarnungen.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `4e3e6df1`: fuzzy bleibt 81.12744 %,
+matched code 53.26555 % -> 53.281258 % (1912280 -> 1912844, +564).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9916 -> 9917.
+`graph` 5952 -> 6516 (+564), Funktionen 24 -> 25.
+Fuzzy der Unit 95.18551 % -> 95.18929 %.
+Matched code der Unit 46.866142 % -> 51.307087 %.
+Complete units bleiben 416.
+Nur `TSplineRail::getPosAndRot` hat sich geändert.
+
+DOL-SHA1 unverändert: `graph.cpp` bleibt `NonMatching` und wird nicht gelinkt.
