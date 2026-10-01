@@ -23070,3 +23070,42 @@ Nur `TCardManager::readBlock_` ist neu matched.
 
 DOL-SHA1 unverändert: `CardManager.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R638A (`emWaiting`)
+
+**Vollmatch, strikt.**
+
+`TEnemyMario::emWaiting` war 99.59 % im Report.
+`getStickPower` gibt `0.0f` zurück und ist 8 Bytes, passend zur Map.
+`setStickToAngle` multipliziert mit diesem Wert statt mit `64.0f`.
+`changeEMWalkGraph` setzt den Tracer über `unk124->reset()`.
+`getTracer()` lässt ein Inline-Temporary und macht das Frame von `emWaiting` 8 Bytes zu groß.
+`TEnemyMario::emWaiting`: 0 Abweichungen, 280 Bytes, 70 Instruktionen.
+`changeEMDoing` bleibt 100 %.
+`changeEMWalkGraph` bleibt UNUSED mit 76 Bytes (`0x4c`).
+`setStickToAngle` bleibt UNUSED mit 120 Bytes (`0x78`).
+`validate-symbol-order` `mario/Enemy/enemyMario`: ererbtes MISSING `getPoint__9TPathNodeCFv`, sonst Ordnung und Linkage in Ordnung.
+`getStickPower` ist nicht mehr in den UNUSED-Größenwarnungen (`0x8` gegen vorher `0x4`).
+6 ererbte UNUSED-Größenwarnungen bleiben.
+Das sind `emDrawStamp`, `emEnforceTake`, `emWalkGraph`, `setStickAgainstMario`, `kill` und `canJumpToNode`.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TPoiHanaManager::load` unberührt.
+`TMapWireActorManager::doActorToWire` unberührt.
+`TCardManager::readBlock_` unberührt.
+
+`ninja changes_all` gegen `e248a437`: fuzzy 81.13316 % -> 81.13332 %,
+matched code 55.198647 % -> 55.206448 % (1981680 -> 1981960, +280).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10034 -> 10035.
+`enemyMario` matched code 4708 -> 4988 (+280), Funktionen 20 -> 21 von 36.
+Fuzzy der Unit 97.10768 % -> 97.132645 %.
+Matched code der Unit 20.984133 % -> 22.232128 %.
+Matched data der Unit unverändert 62.927414 % (4196).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+`emJumping`, `emWalkAround` und `consider` steigen nur im Fuzzy und sind nicht neu matched.
+Nur `TEnemyMario::emWaiting` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `enemyMario.cpp` bleibt `NonMatching` und wird nicht gelinkt.

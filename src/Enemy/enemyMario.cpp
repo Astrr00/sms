@@ -578,14 +578,14 @@ void TEnemyMario::initEnemyValues()
 
 void TEnemyMario::kill() { }
 
-f32 TEnemyMario::getStickPower() { }
+f32 TEnemyMario::getStickPower() { return 0.0f; }
 
 void TEnemyMario::setStickAgainstMario() { }
 
 void TEnemyMario::setStickToAngle(s16 angle, f32 power)
 {
-	unk108->mStickHS16 = (JMASSin(angle) * 64.0f) * power;
-	unk108->mStickVS16 = (-JMASCos(angle) * 64.0f) * power;
+	unk108->mStickHS16 = (JMASSin(angle) * getStickPower()) * power;
+	unk108->mStickVS16 = (-JMASCos(angle) * getStickPower()) * power;
 }
 
 void TEnemyMario::resetReplayStatus()
@@ -635,7 +635,8 @@ void TEnemyMario::changeEMJumping()
 void TEnemyMario::changeEMWalkGraph()
 {
 	TEMario* emario = mEMario;
-	emario->getTracer()->reset();
+	// getTracer() leaves a dead inline temp and grows emWaiting by 8.
+	emario->unk124->reset();
 	emario->goToShortestNextGraphNode();
 	changeEMDoing(EM_DOING_WALK_GRAPH);
 }
