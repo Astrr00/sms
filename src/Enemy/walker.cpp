@@ -10,7 +10,9 @@ static f32 calcFarthestVertex(const TBGCheckData* param_1,
                               const JGeometry::TVec3<f32>& param_2,
                               const JGeometry::TVec3<f32>& param_3)
 {
+	char gapTop[4];
 	JGeometry::TVec3<f32> diffs[3];
+	char gapMid[0x10];
 	diffs[0].set(param_1->mPoint1.x - param_2.x, 0.0f,
 	             param_1->mPoint1.z - param_2.z);
 	diffs[1].set(param_1->mPoint2.x - param_2.x, 0.0f,
@@ -36,7 +38,8 @@ static f32 calcFarthestVertex(const TBGCheckData* param_1,
 		// TODO: yet another copy of the standard sqrt
 		// but without the newton iterations...
 		volatile f32 tmp = f7 * __frsqrte(f7);
-		f7               = tmp;
+		char trash[4];
+		f7 = tmp;
 	}
 	return f7;
 }

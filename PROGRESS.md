@@ -22558,3 +22558,36 @@ Complete code und complete data unverändert.
 Nur `TBossMantaManager::TMantaMessageState::update` ist neu matched.
 
 DOL-SHA1 unverändert: `bossManta.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R628A (`calcFarthestVertex`)
+
+**Vollmatch, strikt.**
+
+`calcFarthestVertex` war 99.807014 %.
+Das Frame war `-0x58`, Ziel `-0x70`.
+`diffs[3]` lag `0x14` Bytes zu tief und klebte an den gesicherten Registern.
+Retail hat dort 4 Bytes Luft.
+`volatile f32 tmp` lag 4 Bytes zu tief und klebte an `diffs`.
+Retail hat dazwischen `0x10` Bytes Luft.
+`char gapTop[4]` vor `diffs`, `char gapMid[0x10]` dahinter und `char trash[4]` nach `tmp` heben Frame, Array und `tmp` auf die Zielslots.
+Die Stores auf die Pads fallen weg.
+Die Schleife und das `volatile`-Sqrt bleiben unverändert.
+
+`calcFarthestVertex`: 0 Abweichungen, 456 Bytes, 114 Instruktionen.
+`validate-symbol-order` `mario/Enemy/walker`: PASS.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `bb6f9c9c`: fuzzy 81.13219 % -> 81.1322 %,
+matched code 55.053913 % -> 55.066616 % (1976484 -> 1976940, +456).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10020 -> 10021.
+`walker` matched code 524 -> 980 (+456), Funktionen 5 -> 6 von 7.
+Fuzzy der Unit 92.41618 % -> 92.43738 %.
+Matched code der Unit 12.620423 % -> 23.603083 %.
+Matched data der Unit unverändert 100 % (56).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `calcFarthestVertex` ist neu matched.
+
+DOL-SHA1 unverändert: `walker.cpp` bleibt `NonMatching` und wird nicht gelinkt.
