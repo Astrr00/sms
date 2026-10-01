@@ -425,11 +425,14 @@ void TApplication::finalize()
 
 bool TApplication::checkAdditionalMovie()
 {
+	char pad[0x38];
+	pad[0] = 0;
 	bool result = false;
 
 	const TGameSequence& currArea = gpApplication.mCurrArea;
 
-	u8 uVar1 = SMS_getShineIDofExStage(currArea.unk0);
+	u8 stage = currArea.unk0;
+	u8 uVar1 = SMS_getShineIDofExStage(stage);
 	if (uVar1 != 0xFF) {
 		if (!TFlagManager::getInstance()->getShineFlag(uVar1)) {
 			if (!TFlagManager::getInstance()->getBool(0x3000D)) {

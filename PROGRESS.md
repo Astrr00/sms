@@ -22219,3 +22219,35 @@ Complete code und complete data unverändert.
 Nur `TMapWire::drawUpper` ist neu matched.
 
 DOL-SHA1 unverändert: `MapWire.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R630B (`checkAdditionalMovie`)
+
+**Vollmatch, strikt.**
+
+`TApplication::checkAdditionalMovie` war 99.05785 %.
+Das Frame war `-0x20`, Ziel `-0x58`.
+Jeder Stack-Slot lag `0x38` Bytes zu tief.
+`char pad[0x38]` am Anfang hebt das Frame auf `-0x58`.
+Der Store auf `pad` fällt weg.
+`SMS_getShineIDofExStage` bekam das Stage-Byte direkt in `r3`.
+Ein benanntes `u8 stage` erzeugt `lbz r0` plus `mr r3, r0`.
+
+`TApplication::checkAdditionalMovie`: 0 Abweichungen, 484 Bytes, 121 Instruktionen.
+`validate-symbol-order` `mario/System/Application`: PASS.
+Alle Map-Symbole vorhanden, Reihenfolge der nicht-weak Symbole stimmt, Linkage stimmt.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `0ff6dd44`: fuzzy 81.131294 % -> 81.13142 %,
+matched code 54.92857 % -> 54.942055 % (1971984 -> 1972468, +484).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10010 -> 10011.
+`Application` matched code 5088 -> 5572 (+484), Funktionen 14 -> 15 von 21.
+Fuzzy der Unit 97.3026 % -> 97.3489 %.
+Matched code der Unit 51.665314 % -> 56.580017 %.
+Matched data der Unit unverändert 95.32164 % (1956).
+Complete code und complete data unverändert.
+Nur `TApplication::checkAdditionalMovie` ist neu matched.
+
+DOL-SHA1 unverändert: `Application.cpp` bleibt `NonMatching` und wird nicht gelinkt.
