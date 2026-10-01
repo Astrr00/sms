@@ -19055,3 +19055,31 @@ Complete units bleiben 416.
 Nur `genRandomItem` hat sich geändert.
 
 DOL-SHA1 unverändert: `pakkun.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R34C (`initStage`)
+
+**Vollmatch, strikt.**
+
+`char trash[0x38]` mit `trash[0] = 0` am Funktionsanfang.
+Der Store wird vom Compiler entfernt.
+Der Rahmen geht von `-0x38` auf `-0x70`.
+Im Rumpf gibt es keinen Stack-Zugriff.
+
+`initStage`: 0 Abweichungen, 432 Bytes, 108 Instruktionen.
+`validate-symbol-order` `mario/Map/Map`: dieselben vorbestehenden Fehler
+(7 UNUSED fehlen, `__dt__4TMapFv` weak statt global).
+Kein neuer Fehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `dbacb843`: fuzzy 81.127174 % -> 81.12719 %,
+matched code 53.12661 % -> 53.138645 % (1907292 -> 1907724, +432).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9905 -> 9906.
+`Map` 2560 -> 2992 (+432), Funktionen 23 -> 24.
+Fuzzy der Unit 99.38936 % -> 99.39426 %.
+Matched code der Unit 44.81793 % -> 52.380955 %.
+Complete units bleiben 416.
+Nur `initStage` hat sich geändert.
+
+DOL-SHA1 unverändert: `Map.cpp` bleibt `NonMatching` und wird nicht gelinkt.
