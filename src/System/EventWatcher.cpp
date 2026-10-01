@@ -628,6 +628,8 @@ static void evRaiseBuilding(TSpcTypedInterp<TEventWatcher>* interp, u32 arg_num)
 static void evForceCloseTalk(TSpcTypedInterp<TEventWatcher>* interp,
                              u32 arg_num)
 {
+	char pad[4];
+	pad[0] = 0;
 	interp->verifyArgNum(0, &arg_num);
 
 	gpTalk2D->forceCloseTalk();
