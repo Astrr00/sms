@@ -20692,3 +20692,32 @@ Complete code und complete data unverändert.
 Nur `TDrawSyncManager::setCallback` hat sich geändert.
 
 DOL-SHA1 unverändert: `DrawSyncManager.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R610B (`evForceCloseTalk`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0x20`, Ziel `-0x28`.
+Das leere `push`-Slice lag bei `0x10`, Ziel `0x14`.
+`char pad[4]; pad[0] = 0;` am Anfang hält das Frame bei `-0x28` und legt das Slice auf `0x14`.
+Der Store wird wegoptimiert, der Slot bleibt.
+`evEggYoshiStartFruit` bleibt bei 99,9 %: derselbe Pad schiebt die Slices, das `stfd` und das Frame aber um 8.
+
+`evForceCloseTalk`: 0 Abweichungen, 152 Bytes, 38 Instruktionen.
+`validate-symbol-order` `mario/System/EventWatcher`: ererbtes MISSING `set__Q29JGeometry8TVec3<f>FRC3Vec`, sonst nur schwache Ordnung.
+2 geerbte UNUSED-Größenwarnungen (`evSetEventEnd`, `evSetEventStart`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `6ee0d69e`: fuzzy 81.12767 % -> 81.12769 %,
+matched code 53.952324 % -> 53.956562 % (1936936 -> 1937088, +152).
+Matched data unverändert 68.45444 % (438335).
+Funktionen matched 9960 -> 9961.
+`EventWatcher` matched code 26420 -> 26572 (+152), Funktionen 69 -> 70 von 105.
+Fuzzy der Unit 98.90255 % -> 98.9034 %.
+Matched code der Unit 62.553276 % -> 62.913155 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `evForceCloseTalk` hat sich geändert.
+
+DOL-SHA1 unverändert: `EventWatcher.cpp` bleibt `NonMatching` und wird nicht gelinkt.
