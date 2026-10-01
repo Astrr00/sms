@@ -534,6 +534,12 @@ void TTobiPuku::hitWater()
 	unk1D0      = velocity;
 	unk1B0      = mPosition.y;
 	mRotation.y = 180.0f - 0.005493164f * *gpMarioAngleY;
+
+	struct Pad {
+		~Pad() { }
+		char c[0x1c];
+	};
+	Pad();
 }
 
 void TTobiPuku::kill()

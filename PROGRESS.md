@@ -17896,3 +17896,28 @@ Nur `namekuri` hat sich geändert.
 
 DOL-SHA1 unverändert: `namekuri.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 
+### R513A (`TTobiPuku::hitWater`)
+
+**Vollmatch, strikt.**
+
+- Ein nicht-triviales 0x1c-Temporary am Funktionsende.
+  Die Richtung liegt auf `r1+0x38`, die Velocity auf `r1+0x44`.
+  Der Rahmen ist `-0x60`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 340 Bytes, 85 Instruktionen.
+`validate-symbol-order` `mario/Enemy/tobiPuku`: PASS gegen die Basis
+(keine neuen Fehler; weak-Order und UNUSED-Größen ererbt).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `e5aa9455`: fuzzy 81.12687 % -> 81.12691 %,
+matched code 52.62835 % -> 52.637817 % (1889404 -> 1889744, +340).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9860 -> 9861.
+`tobiPuku` 12964 -> 13304 (+340), Funktionen 102 -> 103.
+Fuzzy der Unit 98.955536 % -> 98.961716 %.
+Complete units bleiben 416.
+Nur `tobiPuku` hat sich geändert.
+
+DOL-SHA1 unverändert: `tobiPuku.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
