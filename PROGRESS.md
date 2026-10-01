@@ -21686,3 +21686,36 @@ Nur `currentStateFinalize` ist neu matched.
 Die ganze `.rodata` der Unit ist neu matched.
 
 DOL-SHA1 unverändert: `MarDirectorDirect.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R77C (`control`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0x70`, Ziel `-0x78`.
+Die Matrix lag auf `0x30`, Ziel `0x38`.
+`fadds` hatte die Operanden vertauscht.
+`char gap[1]` am Anfang von `rising` legt Frame und Matrix.
+`scale += unk34` stellt `fadds f31, f1, f0` her.
+Der Store fällt weg.
+
+`TDolpicEventRiccoMammaGate::control`: 0 Abweichungen, 496 Bytes, 124 Instruktionen.
+`watch` und `loadAfter` bleiben 100 %.
+`validate-symbol-order` `mario/Map/MapEventDolpic`: PASS.
+Die UNUSED-Größe von `rising` stimmt.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `a02722f5`: fuzzy 81.13067 % -> 81.13071 %,
+matched code 54.746067 % -> 54.759884 % (1965432 -> 1965928, +496).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 9994 -> 9995.
+`MapEventDolpic` matched code 2504 -> 3000 (+496), Funktionen 12 -> 13 von 14.
+Fuzzy der Unit 99.821976 % -> 99.85714 %.
+Matched code der Unit 68.791214 % -> 82.41759 %.
+Matched data der Unit bleibt 100 % (868).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `control` ist neu matched.
+
+DOL-SHA1 unverändert: `MapEventDolpic.cpp` bleibt `NonMatching` und wird nicht gelinkt.
