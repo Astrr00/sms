@@ -23606,3 +23606,33 @@ Nur die beiden Death-Nerves sind neu strikt matched.
 
 DOL-SHA1 unverändert: `BathtubKiller.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R651A (`moveObject`)
+
+**Vollmatch, strikt.**
+
+`TPakkunSeed::moveObject` war 99.6769 %.
+Der Frame war 8 Bytes zu klein (`-0x38` gegen `-0x40`).
+Eine benannte `mVelocity`-Kopie legte sret und Argument 8 Bytes zu tief und vertauschte `addi r3`/`r4`.
+`MsGetRotFromZaxis(TVec3<f32>(mVelocity))` setzt `r4` vor `r3`.
+`seedPad()` davor hebt sret und Argument um 8 Bytes, ohne eine Instruktion im Diff.
+0 Abweichungen, 260 Bytes, 65 Instruktionen.
+`validate-symbol-order` `mario/Enemy/pakkun`: PASS mit Warnungen.
+Die ererbten Weak-Order- und UNUSED-Größenwarnungen bleiben.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+Die Death-Nerves aus R650A bleiben unberührt.
+
+`ninja changes_all` gegen `af53cd63`: fuzzy 81.133804 % -> 81.133830 %.
+Matched code 55.386723 % -> 55.393963 % (1988432 -> 1988692, +260).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10049 -> 10050.
+`pakkun` matched code 10748 -> 11008 (+260), Funktionen 64 -> 65 von 77.
+Fuzzy der Unit 97.38068 % -> 97.38533 %.
+Matched code der Unit 59.53911 % -> 60.97939 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TPakkunSeed::moveObject` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `pakkun.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.

@@ -495,6 +495,19 @@ void TPakkunSeed::loadInit(TSpineEnemy* host, const char* model_name)
 	    PakkunSeedCallback);
 }
 
+
+struct SeedPadBig {
+	char c[8];
+};
+struct SeedPadSmall {
+	char c[4];
+};
+static inline SeedPadSmall seedPad()
+{
+	SeedPadBig big;
+	return *(SeedPadSmall*)(void*)&big;
+}
+
 void TPakkunSeed::moveObject()
 {
 	TEnemyAttachment::moveObject();
@@ -502,8 +515,8 @@ void TPakkunSeed::moveObject()
 	if (!unk168) {
 		unk170 = MsWrap(unk170 + 5.0f, 0.0f, 360.0f);
 		if (mPosition.y > mGroundHeight + 20.0f) {
-			JGeometry::TVec3<f32> velocity = mVelocity;
-			mRotation.x                    = MsGetRotFromZaxis(velocity).x;
+			seedPad();
+			mRotation.x = MsGetRotFromZaxis(JGeometry::TVec3<f32>(mVelocity)).x;
 		}
 	} else {
 		unk170 = MsClamp(unk170 + 5.0f, 0.0f, 360.0f);
