@@ -20940,3 +20940,31 @@ Complete units bleiben 418.
 Complete code und complete data unverändert.
 
 DOL-SHA1 unverändert: `PollutionCount.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R615B (`TGCLogoDir::direct_nlogo`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0x98`, Ziel `-0x130`.
+`char pad[0x98]; pad[0] = 0;` hebt `stmw r27` von `0x84` auf `0x11c`, der Store fällt weg.
+Die Float-Spills rutschen von `0x78` auf `0x110`.
+`isSomethingPushed` überschreibt `r0` mit `lha`, deshalb blieb `mState` in `r6`.
+Der zweite Vergleich liest `mState` volatile, damit `lwz r0, 0x1c` neu kommt.
+
+`TGCLogoDir::direct_nlogo`: 0 Abweichungen, 900 Bytes, 225 Instruktionen.
+`validate-symbol-order` `mario/System/GCLogoDir`: PASS.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `278ad646`: fuzzy 81.1291 % -> 81.12926 %,
+matched code 54.17093 % -> 54.196 % (1944784 -> 1945684, +900).
+Matched data unverändert 68.45444 % (438335).
+Funktionen matched 9969 -> 9970.
+`GCLogoDir` matched code 2076 -> 2976 (+900), Funktionen 8 -> 9 von 11.
+Fuzzy der Unit 99.6856 % -> 99.78833 %.
+Matched code der Unit 40.389107 % -> 57.89883 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `direct_nlogo` hat sich geändert.
+
+DOL-SHA1 unverändert: `GCLogoDir.cpp` bleibt `NonMatching` und wird nicht gelinkt.
