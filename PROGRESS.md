@@ -24188,3 +24188,39 @@ Nur `TPollutionCounterLayer::countTexDegree` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `PollutionCount.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R657A (`TNerveBPTouchDown::execute`)
+
+**Vollmatch, strikt.**
+
+`TNerveBPTouchDown::execute` war 99,87 %.
+`getPoint()` zieht das fabrizierte `getPosition()` mit, und das hält ein 8-Byte-Phantom.
+Das Frame lag bei `-0x50` statt `-0x48`, der Ziel-`TVec3` acht Bytes zu tief.
+Ein lokales `Pt::get` gibt `mPosition` mit derselben Nullprüfung zurück.
+Das Frame trifft `-0x48`.
+Der Vektor liegt danach bei `0x28` statt `0x2c`.
+`char trash[4]` mit `(void)&trash` direkt nach der Kopie hebt ihn auf `0x2c`, ohne eine Instruktion.
+0 Abweichungen, 400 Bytes, 100 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bosspakkun`: PASS mit Warnungen.
+Zwei ererbte UNUSED-Größenwarnungen bleiben (`ignoreWaterCheck`, `vomitFinished`).
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TPollutionCounterLayer::countTexDegree` aus R111C bleibt unberührt.
+`TPathNode::getPoint` bleibt unverändert.
+Dieselbe Rückgabe von `mPosition` an den anderen Call-Sites verschiebt bereits passende Funktionen.
+
+`ninja changes_all` gegen `8acee7c2`: fuzzy 81.13427 % -> 81.134285 %.
+Matched code 55.59953 % -> 55.61067 % (1996072 -> 1996472, +400).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10068 -> 10069.
+`bosspakkun` matched code 21924 -> 22324 (+400), Funktionen 110 -> 111 von 126.
+Fuzzy der Unit 99.20349 % -> 99.2048 %.
+Matched code der Unit 55.352455 % -> 56.36235 %.
+Matched data der Unit unverändert 99.855804 % (5540).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TNerveBPTouchDown::execute` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `bosspakkun.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
