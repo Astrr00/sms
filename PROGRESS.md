@@ -18634,3 +18634,31 @@ Complete units bleiben 416.
 Nur `initAllCheckData` hat sich geändert.
 
 DOL-SHA1 unverändert: `MapMakeData.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R19C (`TMap::isTouchedOneWall`)
+
+**Vollmatch, strikt.**
+
+`char pad[4]` mit `pad[0] = 0` vergrößert den Rahmen von `-0x60` auf `-0x68`.
+Der Store wird vom Compiler entfernt.
+Die Wandprüfung rutscht um 4 Bytes hoch.
+Gesicherte Register rücken um 8 Bytes hoch.
+
+`TMap::isTouchedOneWall`: 0 Abweichungen, 144 Bytes, 36 Instruktionen.
+`validate-symbol-order` `mario/Map/Map`: FAIL.
+Sieben fehlende UNUSED-Symbole und die globale `TMap`-Dtor-Bindung bestanden schon vorher.
+Kein neuer Fehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `15d7a710`: fuzzy 81.126890 % -> 81.126910 %,
+matched code 52.925500 % -> 52.929510 % (1900072 -> 1900216, +144).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9890 -> 9891.
+`Map` 2416 -> 2560 (+144), Funktionen 22 -> 23.
+Fuzzy der Unit 99.378150 % -> 99.389360 %.
+Matched code der Unit 42.296920 % -> 44.817930 %.
+Complete units bleiben 416.
+Nur `isTouchedOneWall` hat sich geändert.
+
+DOL-SHA1 unverändert: `Map.cpp` bleibt `NonMatching` und wird nicht gelinkt.

@@ -299,6 +299,8 @@ const TBGCheckData* TMap::intersectLine(const JGeometry::TVec3<f32>& param_1,
 
 bool TMap::isTouchedOneWall(f32 x, f32 y, f32 z, f32 radius) const
 {
+	char pad[4];
+	pad[0] = 0;
 	return isTouchedOneWallAndMoveXZ(&x, y, &z, radius);
 }
 
