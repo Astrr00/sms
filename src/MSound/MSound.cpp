@@ -844,13 +844,15 @@ void MSound::playTimer(u32 time)
 	}
 }
 
+static inline u32 asU32(u8 v) { return v; }
+
 u32 MSound::startMarioVoice(u32 param_1, s16 param_2, u8 param_3)
 {
 	if (((param_3 & 0x1) ? true : false) == 1)
 		return 0;
 
 	bool iVar6 = param_3 & 0x2 ? true : false;
-	u32 iVar3  = param_3 & 0x2 ? true : false;
+	u32 iVar3  = asU32(param_3 & 0x2 ? true : false);
 
 	bool r3 = 1;
 
@@ -1032,6 +1034,7 @@ u32 MSound::startMarioVoice(u32 param_1, s16 param_2, u8 param_3)
 
 	JAIActor local_48(unkAC[iVar3].mPosition, unkAC[iVar3].mPosition,
 	                  unkAC[iVar3].mPosition, 0);
+	char pad[0x28];
 	MSoundSESystem::MSoundSE::startSoundActorInner(param_1, unk8C + iVar6,
 	                                               &local_48, 1, 4);
 	if (unk8C[iVar6] != nullptr) {
