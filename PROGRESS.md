@@ -24564,3 +24564,37 @@ Nur `JGeometry::TQuat4<float>::slerp` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `fireWanwan.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R120C (`TMirrorModelObj::setPlane`)
+
+**Vollmatch, strikt.**
+
+`TMirrorModelObj::setPlane` war 99,78 %.
+`getVertexData()` hielt das Frame bei `-0x68` statt `-0x58`.
+`getModelData()->getVtxPosArray()` setzt das Frame auf `-0x58`.
+Ein benanntes `J3DModelData*` legt den Vektor auf `r1+0x3c`.
+`(void)planePad()` schiebt ihn auf `r1+0x40`, ohne neue Instruktion.
+0 Abweichungen, 180 Bytes, 45 Instruktionen.
+`validate-symbol-order` `mario/Map/MapMirror` FAIL ist vorbestehend:
+MISSING UNUSED `TVec3::scaleAdd` und ORDER von `TVec3::set`.
+`planePad` wird nicht emittiert.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`JGeometry::TQuat4<float>::slerp` aus R667A bleibt unberührt.
+`TApplication::initialize_bootAfter` aus R662B bleibt unberührt.
+
+`ninja changes_all` gegen `f9deb823`: fuzzy bleibt 81.13491 %.
+Matched code 55.72866 % -> 55.733673 % (2000708 -> 2000888, +180).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10079 -> 10080.
+`MapMirror` matched code 3760 -> 3940 (+180), Funktionen 22 -> 23 von 27.
+Fuzzy der Unit 86.383705 % -> 86.390274 %.
+Matched code der Unit 61.76084 % -> 64.717476 %.
+Matched data der Unit unverändert 100 % (932).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TMirrorModelObj::setPlane` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `MapMirror.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
