@@ -1084,6 +1084,7 @@ s8 TCardSave::waitForSelectOver()
 		break;
 	}
 
+	char trash[0x20];
 	return result;
 }
 

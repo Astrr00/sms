@@ -24978,34 +24978,35 @@ Nur `TCardSave::waitForSelect2` ist neu strikt matched.
 DOL-SHA1 unverändert: `CardSave.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
 
-### R677B (`TCardSave::waitForSelect2`)
+### R678B (`TCardSave::waitForSelectOver`)
 
 **Vollmatch, strikt.**
 
-`TCardSave::waitForSelect2` war 99,82 %.
-Das Frame lag bei `-0x128` statt `-0x148`.
+`TCardSave::waitForSelectOver` war 99,79 %.
+Das Frame lag bei `-0x118` statt `-0x138`.
 Alle Stack-Slots lagen einheitlich `0x20` zu tief.
 `char trash[0x20]` als letztes Lokales schiebt Frame und Slots auf Retail.
-0 Abweichungen, 1784 Bytes, 446 Instruktionen.
+0 Abweichungen, 1560 Bytes, 390 Instruktionen.
 `validate-symbol-order` `mario/GC2D/CardSave` PASS.
 Eine vorbestehende UNUSED-Größenwarnung bleibt (`changePattern`).
 Keine neuen Symbolfehler.
 Die TU bleibt `NonMatching`.
 `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TCardSave::waitForSelect2` aus R677B bleibt unberührt.
 `TCardSave::drawMessageBM` aus R676B bleibt unberührt.
 `TFireWanwanTailHit::moveRequest` aus R676A bleibt unberührt.
 `TPauseMenu2::loadAfter` aus R675B bleibt unberührt.
 `TSunShine::perform` aus R674B bleibt unberührt.
 `TGCConsole2::processDrawTelop` aus R673B bleibt unberührt.
 
-Matched code der Unit 4440 -> 6224 (+1784), Funktionen 9 -> 10 von 20.
-Matched code der Unit 9.770267 % -> 13.695977 %.
-Gegen R676B gerechnet: matched code 55.94682 % -> 55.996513 % (2008540 -> 2010324, +1784).
-Funktionen matched 10091 -> 10092.
-Fuzzy 81.13559 % -> 81.13568 %.
+Matched code der Unit 6224 -> 7784 (+1560), Funktionen 10 -> 11 von 20.
+Matched code der Unit 13.695977 % -> 17.128775 %.
+Gegen R677B gerechnet: matched code 55.996513 % -> 56.039967 % (2010324 -> 2011884, +1560).
+Funktionen matched 10092 -> 10093.
+Fuzzy 81.13568 % -> 81.135765 %.
 Matched data unverändert 69.31899 % (443871).
 Complete units bleiben 418.
-Nur `TCardSave::waitForSelect2` ist neu strikt matched.
+Nur `TCardSave::waitForSelectOver` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `CardSave.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
