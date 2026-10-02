@@ -24396,3 +24396,35 @@ Nur `TSpineEnemy::calcTurnSpeedToReach` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `enemy.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R660B (`CPolarSubCamera::isNeedGroundCheck_`)
+
+**Vollmatch, strikt.**
+
+`CPolarSubCamera::isNeedGroundCheck_` war 99,34 %.
+`mDistMin` landete in `f1` und `mDistMax` in `f2`.
+Das Original hält `mDistMin` in `f2`, `mDistMax` in `f1`, und `distY` überschreibt `f2`.
+`f32 b` wird vor `distY` deklariert und erst danach zugewiesen.
+Damit bleibt `b` in `f1` und `fsubs` schreibt `distY` nach `f2`.
+0 Abweichungen, 364 Bytes, 91 Instruktionen.
+`validate-symbol-order` `mario/Camera/CameraBGCheck`: PASS.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TSpineEnemy::calcTurnSpeedToReach` aus R662A bleibt unberührt.
+`calcInHouseNo_` bleibt unberührt.
+
+`ninja changes_all` gegen `8e583bc5`: fuzzy 81.13443 % -> 81.13448 %.
+Matched code 55.650337 % -> 55.660473 % (1997896 -> 1998260, +364).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10074 -> 10075.
+`CameraBGCheck` matched code 1608 -> 1972 (+364), Funktionen 5 -> 6 von 7.
+Fuzzy der Unit 88.11422 % -> 88.18141 %.
+Matched code der Unit 45.0168 % -> 55.20717 %.
+Matched data der Unit unverändert 100 % (56).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `CPolarSubCamera::isNeedGroundCheck_` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `CameraBGCheck.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
