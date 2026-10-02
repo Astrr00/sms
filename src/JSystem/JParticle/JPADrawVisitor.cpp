@@ -1084,6 +1084,7 @@ void JPADrawExecRotationCross::exec(const JPADrawContext* dc,
 	GXPosition3f32(pt[7].x + pos.x, pt[7].y + pos.y, pt[7].z + pos.z);
 	GXTexCoord2f32(dc->pcb->mTexCoords[3].x, dc->pcb->mTexCoords[3].y);
 	GXEnd();
+	char trash[4];
 }
 
 void JPADrawExecPoint::exec(const JPADrawContext* dc, JPABaseParticle* particle)

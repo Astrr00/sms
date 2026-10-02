@@ -25479,3 +25479,44 @@ Nur `JASystem::Driver::__UpdateJcToDSPInit` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `JASChannel.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R689A (`JPADrawExecRotationCross::exec`)
+
+**Vollmatch, strikt.**
+
+`JPADrawExecRotationCross::exec` war 99,7 %.
+Das Frame lag bei `-0x130` statt `-0x138`.
+Die Float-Locals lagen einheitlich `0x4` zu tief, die gesicherten Register `0x8`.
+`char trash[4]` als letztes Lokales schiebt Locals um 4 und das Frame durch Ausrichtung um 8 auf Retail.
+0 Abweichungen, 876 Bytes, 219 Instruktionen.
+`validate-symbol-order` `mario/JSystem/JParticle/JPADrawVisitor` PASS.
+Keine neuen Symbolfehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`JASystem::Driver::__UpdateJcToDSPInit` aus R686C bleibt unberührt.
+`JPADrawExecRotYBillBoard::exec` aus R684B bleibt unberührt.
+`JPADrawExecGenPrjTexMtx::exec` aus R688A bleibt unberührt.
+`JPADrawExecRotBillBoard::exec` aus R687A bleibt unberührt.
+`JAInter::StreamLib::callBack` aus R685C bleibt unberührt.
+`JASystem::Driver::__UpdateJcToDSP` aus R684C bleibt unberührt.
+`JPADrawExecYBillBoard::exec` aus R683B bleibt unberührt.
+`JPADrawExecBillBoard::exec` aus R682B bleibt unberührt.
+`JASystem::TChannel::stopLogicalChannel` aus R683C bleibt unberührt.
+`JASystem::HardStream::TControl::volFloatToU8` aus R682C bleibt unberührt.
+`JPADrawCalcScaleXBySpeed::calc` aus R681B bleibt unberührt.
+`JPADrawCalcScaleYBySpeed::calc` aus R680B bleibt unberührt.
+`JDrama::TLookAtCamera::perform` aus R679B bleibt unberührt.
+`TTelesa::init` aus R679A bleibt unberührt.
+
+`ninja changes_all` gegen `74f0bc48`: fuzzy 81.13616 % -> 81.13623 %.
+Matched code 56.23684 % -> 56.261242 % (2018952 -> 2019828, +876).
+Funktionen matched 10107 -> 10108.
+Matched data unverändert 69.31899 % (443871).
+`JPADrawVisitor` matched code 13136 -> 14012 (+876), Funktionen 111 -> 112 von 121.
+Fuzzy der Unit 99.340004 % -> 99.35168 %.
+Matched code der Unit 54.76071 % -> 58.41254 %.
+Complete units bleiben 418.
+Nur `JPADrawExecRotationCross::exec` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `JPADrawVisitor.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
