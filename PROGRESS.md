@@ -24598,3 +24598,36 @@ Nur `TMirrorModelObj::setPlane` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `MapMirror.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R670A (`TFireWanwanManager::perform`)
+
+**Vollmatch, strikt.**
+
+`TFireWanwanManager::perform` war 99,6 %.
+Der Retail-Aufruf ist virtuelles `reset` an vtable `0xfc`, nicht `kill` an `0xe4`.
+`TFireWanwan*` vor der Schleife legt den Index auf r28 und den Zeiger auf r29.
+Der Boss-22-Block steht direkt in `perform`, damit `diff` ein Local des Aufrufers ist.
+`char trash[0x44]` setzt den Vektor auf `r1+0xe8` und das Frame auf `-0x110`.
+0 Abweichungen, 680 Bytes, 170 Instruktionen.
+`validate-symbol-order` `mario/Enemy/fireWanwan`: dieselben vier vorbestehenden MISSING-Symbole.
+Symbolreihenfolge und Bindung stimmen.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`JGeometry::TQuat4<float>::slerp` aus R667A bleibt unberührt.
+`TMirrorModelObj::setPlane` aus R120C bleibt unberührt.
+
+Report gegen `cd7eea26`: fuzzy 81.13495 % -> 81.13503 %.
+Matched code 55.733673 % -> 55.752617 % (2000888 -> 2001568, +680).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10080 -> 10081.
+`fireWanwan` matched code 15368 -> 16048 (+680), Funktionen 63 -> 64 von 95.
+Fuzzy der Unit 94.35824 % -> 94.36521 %.
+Matched code der Unit 39.380894 % -> 41.12341 %.
+Matched data der Unit unverändert 90.77341 % (2676).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TFireWanwanManager::perform` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `fireWanwan.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.

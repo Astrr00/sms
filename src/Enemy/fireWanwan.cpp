@@ -343,17 +343,33 @@ void TFireWanwanManager::perform(u32 cue, JDrama::TGraphics* graphics)
 {
 	TEnemyManager::perform(cue, graphics);
 
+	TFireWanwan* wanwan;
 	for (int i = 0; i < mObjNum; ++i) {
-		TFireWanwan* wanwan = (TFireWanwan*)unk18[i];
+		wanwan = (TFireWanwan*)unk18[i];
 		if (!gpMap->isInArea(wanwan->mPosition.x, wanwan->mPosition.z)
 		    || (wanwan->getGroundPlane()
 		        && wanwan->getGroundPlane()->isDeathPlane())) {
-			wanwan->kill();
+			wanwan->reset();
 		}
 	}
 
 	if (cue & CUE_MOVE) {
-		checkBalloonHelpBoss22();
+		if (!mBoss22BalloonWasShown) {
+			TFireWanwan* nearest
+			    = (TFireWanwan*)getNearestEnemy(SMS_GetMarioPos());
+			if (nearest) {
+				JGeometry::TVec3<f32> diff = SMS_GetMarioPos();
+				char trash[0x44];
+				diff -= nearest->getPosition();
+				f32 helpRange22
+				    = getWanwanParams()->mBoss22HelpRange.get();
+				if (diff.squared() < helpRange22 * helpRange22) {
+					mBoss22BalloonWasShown = true;
+					gpMarDirector->getConsole()->startAppearBalloon(0xE0016,
+					                                               true);
+				}
+			}
+		}
 		checkBalloonHelpBoss23();
 		checkBalloonHelpBoss24();
 		checkShineAppear();
