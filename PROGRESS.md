@@ -24694,3 +24694,41 @@ Nur `TMapStaticObj::perform` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `MapStaticObject.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R673A (`TBossPakkun::perform`)
+
+**Vollmatch, strikt.**
+
+`TBossPakkun::perform` war 99,58 %.
+`unk1BC` ist `s8`, damit der Test `extsb.` statt `cmplwi` erzeugt.
+`bpIsLatestNerve` vergleicht `getLatestNerve()` links und legt `cmplw r3, r0`.
+Ein benannter Nerve-Zeiger färbt `pushNerve` auf r5 und die Spine auf r6.
+`step /= 100` lädt den Dividenden nach r3 für `mulhw r0, r0, r3`.
+`bpPerformSwapped` hält den alten `MActor*` in r30 über `TSpineEnemy::perform`.
+`char trash[0x60]` setzt `pos` auf `r1+0x148` und das Frame auf `-0x178`.
+0 Abweichungen, 2000 Bytes, 500 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bosspakkun` PASS.
+Zwei vorbestehende UNUSED-Größenwarnungen bleiben (`ignoreWaterCheck`, `vomitFinished`).
+Die Inlines werden nicht emittiert.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TMapStaticObj::perform` aus R122C bleibt unberührt.
+`TMapObjBase::rotateVecByAxisY` aus R121C bleibt unberührt.
+`TFireWanwanManager::perform` aus R670A bleibt unberührt.
+`JGeometry::TQuat4<float>::slerp` aus R667A bleibt unberührt.
+`TMirrorModelObj::setPlane` aus R120C bleibt unberührt.
+
+`ninja changes_all` gegen `ff2f3611`: fuzzy 81.13498 % -> 81.135216 %.
+Matched code 55.779583 % -> 55.83529 % (2002536 -> 2004536, +2000).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10083 -> 10084.
+`bosspakkun` matched code 22876 -> 24876 (+2000), Funktionen 112 -> 113 von 126.
+Fuzzy der Unit 99.20612 % -> 99.22743 %.
+Matched code der Unit 57.75601 % -> 62.805492 %.
+Matched data der Unit unverändert 99.855804 % (5540).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TBossPakkun::perform` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `bosspakkun.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.

@@ -1174,6 +1174,21 @@ BOOL TBossPakkun::receiveMessage(THitActor* sender, u32)
 	return false;
 }
 
+static inline bool bpIsLatestNerve(TBossPakkun* self,
+                                   const TNerveBase<TLiveActor>& nerve)
+{
+	return self->mSpine->getLatestNerve() == &nerve;
+}
+
+static inline void bpPerformSwapped(TBossPakkun* self, MActor* actor, u32 cue,
+                                     JDrama::TGraphics* graphics)
+{
+	MActor* origActor = self->mMActor;
+	self->mMActor     = actor;
+	self->TSpineEnemy::perform(cue, graphics);
+	self->mMActor = origActor;
+}
+
 void TBossPakkun::perform(u32 cue, JDrama::TGraphics* graphics)
 {
 	if (mPolDrop != nullptr)
@@ -1200,7 +1215,8 @@ void TBossPakkun::perform(u32 cue, JDrama::TGraphics* graphics)
 				unk17C = 0;
 				unk178 = 0;
 			} else {
-				s32 step = getBossPakkunParams()->mSLWaterMarkLimit.get() / 100;
+				s32 step = getBossPakkunParams()->mSLWaterMarkLimit.get();
+				step /= 100;
 				if (step == 0)
 					step = 1;
 				unk178 -= step;
@@ -1226,8 +1242,10 @@ void TBossPakkun::perform(u32 cue, JDrama::TGraphics* graphics)
 		}
 
 		if (mWeakPoint == WEAK_POINT_NAVEL && checkMarioRiding()) {
-			if (&TNerveBPJumpReact::theNerve() != mSpine->getLatestNerve()) {
-				mSpine->pushNerve(&TNerveBPJumpReact::theNerve());
+			if (!bpIsLatestNerve(this, TNerveBPJumpReact::theNerve())) {
+				const TNerveBase<TLiveActor>* nerve
+				    = &TNerveBPJumpReact::theNerve();
+				mSpine->pushNerve(nerve);
 			}
 		}
 	}
@@ -1274,11 +1292,8 @@ void TBossPakkun::perform(u32 cue, JDrama::TGraphics* graphics)
 	}
 
 	if (static_cast<TBossPakkunManager*>(mManager)->unk54 == 0) {
-		if (&TNerveBPDie::theNerve() == mSpine->getLatestNerve()) {
-			MActor* origActor = mMActor;
-			mMActor           = unk180;
-			TSpineEnemy::perform(cue, graphics);
-			mMActor = origActor;
+		if (bpIsLatestNerve(this, TNerveBPDie::theNerve())) {
+			bpPerformSwapped(this, unk180, cue, graphics);
 			return;
 		}
 	}
@@ -1294,6 +1309,7 @@ void TBossPakkun::perform(u32 cue, JDrama::TGraphics* graphics)
 	    && (cue & CUE_CALC_ANIM)) {
 		if (mWeakPoint == WEAK_POINT_NAVEL) {
 			JGeometry::TVec3<f32> pos = mNavel->mPosition;
+			char trash[0x60];
 			pos.y += 100.0f;
 			gpTargetArrow->unk14 = 1;
 			gpTargetArrow->setPos(pos);
@@ -1304,8 +1320,8 @@ void TBossPakkun::perform(u32 cue, JDrama::TGraphics* graphics)
 
 	if (static_cast<TBossPakkunManager*>(mManager)->unk54 == 0
 	    && (cue & CUE_ENTRY)) {
-		if (&TNerveBPPreDie::theNerve() == mSpine->getLatestNerve()
-		    || &TNerveBPStompReact::theNerve() == mSpine->getLatestNerve()) {
+		if (bpIsLatestNerve(this, TNerveBPPreDie::theNerve())
+		    || bpIsLatestNerve(this, TNerveBPStompReact::theNerve())) {
 			mMActor->offMakeDL();
 			SMS_AddDamageFogEffect(mMActor->getModel()->getModelData(),
 			                       mPosition, graphics);
