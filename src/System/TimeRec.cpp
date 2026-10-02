@@ -45,12 +45,11 @@ void TTimeRec::flip()
 		int i    = size - 1;
 		u32 curr = array.mEntries[i].time;
 		while (i > 0) {
-			--i;
-			if (array.mEntries[i].time == 0) {
-				array.mEntries[i].time = curr;
-			} else {
-				curr = array.mEntries[i].time;
-			}
+			TTimeArray::Entry& entry = array.mEntries[--i];
+			if (entry.time == 0)
+				entry.time = curr;
+			else
+				curr = entry.time;
 		}
 	}
 

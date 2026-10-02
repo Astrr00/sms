@@ -38,10 +38,19 @@ f32 TMapWire::mFootLength     = 26.0f;
 f32 TMapWire::mDrawWidth      = 5.0f;
 f32 TMapWire::mDrawHeight     = 6.0f;
 
+// Inlined so the loop fadds keeps base + offset order.
+static inline f32 addf(f32 a, f32 b) { return a + b; }
+
 void TMapWire::drawLower() const
 {
-	f32 xOffset = mDrawAxes.x * mDrawWidth;
-	f32 zOffset = mDrawAxes.y * mDrawWidth;
+	char gap[1];
+	gap[0] = 0;
+
+	f32 width   = mDrawWidth;
+	f32 xOffset = mDrawAxes.x;
+	f32 zOffset = mDrawAxes.y;
+	xOffset *= width;
+	zOffset *= width;
 
 	GXBegin(GX_TRIANGLESTRIP, GX_VTXFMT0, (mNumActiveMapWirePoints + 2) * 2);
 
@@ -73,9 +82,9 @@ void TMapWire::drawLower() const
 		GXPosition3f32(mMapWirePoints[i].mPosition.x,
 		               mMapWirePoints[i].mPosition.y - mDrawHeight,
 		               mMapWirePoints[i].mPosition.z);
-		GXPosition3f32(mMapWirePoints[i].mPosition.x + xOffset,
+		GXPosition3f32(addf(mMapWirePoints[i].mPosition.x, xOffset),
 		               mMapWirePoints[i].mPosition.y,
-		               mMapWirePoints[i].mPosition.z + zOffset);
+		               addf(mMapWirePoints[i].mPosition.z, zOffset));
 	}
 
 	GXPosition3f32(mEndPoint.x, mEndPoint.y - mDrawHeight, mEndPoint.z);
@@ -86,8 +95,11 @@ void TMapWire::drawLower() const
 
 void TMapWire::drawUpper() const
 {
-	f32 xOffset = mDrawAxes.x * mDrawWidth;
-	f32 zOffset = mDrawAxes.y * mDrawWidth;
+	f32 width   = mDrawWidth;
+	f32 xOffset = mDrawAxes.x;
+	f32 zOffset = mDrawAxes.y;
+	xOffset *= width;
+	zOffset *= width;
 
 	GXBegin(GX_TRIANGLESTRIP, GX_VTXFMT0, (mNumActiveMapWirePoints + 2) * 2);
 
@@ -97,9 +109,9 @@ void TMapWire::drawUpper() const
 	               mStartPoint.z - zOffset);
 
 	for (int index = 0; index < mNumActiveMapWirePoints; index++) {
-		GXPosition3f32(mMapWirePoints[index].mPosition.x + xOffset,
+		GXPosition3f32(addf(mMapWirePoints[index].mPosition.x, xOffset),
 		               mMapWirePoints[index].mPosition.y,
-		               mMapWirePoints[index].mPosition.z + zOffset);
+		               addf(mMapWirePoints[index].mPosition.z, zOffset));
 		GXPosition3f32(mMapWirePoints[index].mPosition.x - xOffset,
 		               mMapWirePoints[index].mPosition.y,
 		               mMapWirePoints[index].mPosition.z - zOffset);

@@ -206,7 +206,9 @@ void TSmallEnemy::init(TLiveManager* param_1)
 	if (!unk124->getGraph() || unk124->getGraph()->isDummy())
 		unk124->init(gpConductor->getGraphByName("main"));
 
-	setGoalPath(TPathNode((THitActor*)gpMarioAddress));
+	TPathNode marioNode((THitActor*)gpMarioAddress);
+	char trash[0x1c];
+	setGoalPath(marioNode);
 	initAnmSound();
 }
 
@@ -819,9 +821,11 @@ bool TSmallEnemy::isFindMarioFromParam(float param_1) const
 		f32 searchLength = prms->mSLSearchLength.get();
 		f32 searchAngle  = prms->mSLSearchAngle.get();
 		f32 searchAware  = prms->mSLSearchAware.get();
+		searchLength *= param_1;
+		searchAngle *= param_1;
+		searchAware *= param_1;
 
-		if (isInSight(marioPos, searchLength * param_1, searchAngle * param_1,
-		              searchAware * param_1))
+		if (isInSight(marioPos, searchLength, searchAngle, searchAware))
 			return true;
 		else
 			return false;
@@ -894,6 +898,7 @@ bool TSmallEnemy::isHitWallInBound()
 	TBGWallCheckRecord local_3C(mPosition.x, mPosition.y + mHeadHeight,
 	                            mPosition.z, mWallRadius * mBodyScale * 1.1f, 1,
 	                            0);
+	char trash[0x28];
 
 	if (gpMap->isTouchedWallsAndMoveXZ(&local_3C)) {
 		f32 sVar2 = matan(local_3C.mResultWalls[0]->mNormal.z,
@@ -1025,8 +1030,9 @@ DEFINE_NERVE(TNerveSmallEnemyDie, TLiveActor)
 DEFINE_NERVE(TNerveSmallEnemyFreeze, TLiveActor)
 {
 	TSmallEnemy* self = (TSmallEnemy*)spine->getBody();
+	char trash[8];
 
-	int freezeTime = self->getSaveParams()->getSLFreezeWait();
+	int freezeTime = self->getSaveParams()->mSLFreezeWait.value;
 
 	if (spine->getTime() == 0)
 		self->setFreezeAnm();

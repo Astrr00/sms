@@ -3319,6 +3319,7 @@ bool TGCConsole2::processDrawTelop(u32)
 
 	JUTRect paneBounds(unk524->getPane()->mGlobalBounds);
 	JUTRect textBounds(unk528->mBounds);
+	char trash[0x18]; // unused; matches retail stack layout
 
 	if (unk534.x1 < paneBounds.x1 - mTelopTextWidth) {
 		isFinished = true;

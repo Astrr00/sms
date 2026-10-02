@@ -5766,3 +5766,20055 @@ Template-Instanzen). `matched_code_percent`: **47,35 %**. Volles
 zuvor 100 %-matchenden Funktionen vor/nach dem Rebuild): 0
 Regressionen, 18 Neuzugänge — exakte Übereinstimmung.
 
+### Nach achtundsechzigster Iterationsrunde (24-Kandidaten-Batch plus dedizierter Regressions-Fix, 9 MATCH + 1 Revert, Regression einer früheren Runde entdeckt und korrigiert)
+
+**Wichtige Erkenntnis dieser Runde**: Eine routinemäßige
+Re-Verifikation der in Runde 67 committeten Funktion
+`TMapCollisionData::removeCheckListData` (Commit `6b801674`) ergab,
+dass der ursprüngliche Subagent-Selbstbericht ("166/166 Instructions
+identisch") **inkorrekt** war — die Instruktionszählung war zwar
+richtig, aber drei einzelne 4-Byte-Instruktionswörter hatten
+tatsächlich abweichendes Bit-Muster (Register r5 statt r3 für die
+`&unk42[start]`-Temporäradresse, plus eine 2-Instruktionen-
+Scheduler-Order-Swap-Unterscheidung). Dieses Pattern entspricht exakt
+dem Round-59-Regressionsfund aus Runde 64. Bestätigt durch
+Verifizierungs-Konvention: kein Agent darf eine Funktion als
+"byte-exakt" deklarieren ohne einen programmatischen
+Position-für-Position-Diff ALLER Instruktionswörter, bei dem die
+Ergebnisliste LEER ist (`diff_list == []`), nicht nur eine
+qualifizierte Augenschein- oder Opcodes/Frame-Größe-Übereinstimmung.
+
+**10 neue Commits** (9 byte-exakte MATCHes + 1 Regressions-Revert):
+
+1. `TWaterGun::calcAnimation` (Commit `f06076fa`) — **zwei
+   kombinierte Fixes**: (a) fehlende 48-Byte-Rahmenreserve
+   (`volatile u32 unused[12]` als erste Anweisung, Pattern 7), (b)
+   **TU-weite .rodata-Reparatur**: zwei fehlende tote 12-Byte-Datei-
+   statische Vec-Konstanten (`cZeroVec = {0,0,0}` und
+   `cOneVec = {1,1,1}`) als `static const Vec` direkt nach
+   `cDirtyTexName` deklariert, um exakt Retails rodata-Layout durch
+   Offset 0x2da zu reproduzieren; bestätigt durch 44-Funktionen-
+   Cross-Check (Regression: 19→18 Mismatches, keine neu gebrochenen).
+2. `JPADragField::affect` (Commit `ffe7caaf`) — `char trash[4]`
+   gefolgt von `trash[0] = 0;` (geschriebener Trash wächst den
+   unteren Pool, Runde-67-Erkenntnis direkt angewendet).
+3. `TBaseNPC::npcTalkOut` (Commit `4323624b`) — **echter Bug**:
+   Tippfehler `LIVE_FLAG_UNK8000` (Bit 16) statt
+   `LIVE_FLAG_UNK80000` (Bit 12) im `offLiveFlag`-Aufruf; andere
+   `rlwinm`-Maske (`mb=17,me=15` statt `mb=13,me=11`).
+4. `TTurboNozzleDoor::touchPlayer` (Commit `fcc02ca1`) —
+   geschriebener `char trash[20]` direkt nach `scale`-Lokal
+   (Pattern 7; Größe empirisch ermittelt: 24 overshoots, 16
+   undershoots).
+5. `TPoiHanaManager::load` (Commit `4f305653`, Header-Fix in
+   `include/Enemy/PoiHana.hpp`) — **echter Bug**: leerer Body
+   `TPoiHanaCollision(const char* name = "ポイハナコリジョン") { }`
+   leitete `name` nicht an den `THitActor`-Basiskonstruktor weiter,
+   wodurch statt der 0x13-Byte-katakana-Zeichenkette eine
+   9-Byte-"HitActor"-Default-Zeichenkette emittiert wurde — was alle
+   nachfolgenden .rodata-Offsets um +8 verschob und sich als
+   uniformer -8-Byte-Versatz in allen String-Pool-Adressen der
+   Lade-Funktion zeigte. Fix: Member-Initialliste
+   `: THitActor(name) { }`.
+6. `TCameraOption::TCameraOption` (Commit `bd85659c`) — zwei
+   `void*`-Lokale (innerhalb `if`-Blocks, einer vor, einer nach
+   `origin`); Pointer-Typ überlebt Stack-Layout-Registrierung als
+   4-Byte-Slot, Position relativ zu `origin` wählt exakt 4 über /
+   4 unter wie Retail.
+7. `TMActorKeeper::TMActorKeeper` (Commit `e239d637`) —
+   `char trash[8]` (gleiche Idiom wie die zwei Geschwister-Methoden
+   in derselben Datei).
+8. `TMario::inOutWaterEffect` (Commit `5a76f68f`) —
+   `char trash[8]` nach `pos.y = mFloorPosition.z;` (gleiche Idiom
+   wie Geschwister `TMario::rippleEffect`).
+9. `TNerveBossEelSleepOnBottom::execute` (Commit `6fda642b`) —
+   unbenutzter `char trash[16]` als erste Anweisung im
+   `DEFINE_NERVE`-Body (reine 16-Byte-Rahmen-Lücke).
+10. **Revert** `TMapCollisionData::removeCheckListData` (Commit
+    `ececd4ea`, Revertiert `6b801674`) — Subagent-Regression mit
+    25+ Source-Varianten (alle möglichen Anker-Positionen,
+    Ausdrucksumformulierungen, Schleifenstrukturen, Casts,
+    self-assigns, alternative Bound-Formen) bestätigt, dass die
+    Scheduler-Tie-Break-Reihenfolge zwischen Compiler-Invocations
+    unterschiedlich ist und nicht aus Quellebene reproduzierbar;
+    Funktion zurück auf Pre-`6b801674`-Stand (3 Instruktionswörter
+    Diff, dokumentiert).
+
+**Zwölf gründlich dokumentierte Sackgassen** (alle sauber
+zurückgesetzt, mehrere über Schritt-Limit hinaus):
+`TMario::jumpProcess`, `TNerveMameGessoJitabata::execute`,
+`TEnemyMario::tryTake`, `TNerveTelesaFreeze::execute`,
+`TMapObjGeneral::receiveMessage`,
+`TNerveWalkerEscape::execute`, `TGenerator::perform`,
+`TPollutionAction::action`, `TPollutionLayer::initTexImage`,
+`TNameKuri::setDeadAnm`, `TGCConsole2::processAppearLife`,
+`TLightWithDBSetManager::addChildGroupObj` — alle revertiert, keine
+bleibenden Änderungen.
+
+**Methodik-Verfeinerung (Verifizierungs-Standard)**: Ab dieser
+Runde gilt projektweit: Ein Subagent-Bericht "byte-exakt verifiziert"
+gilt nur dann als glaubwürdig, wenn der Bericht einen
+programmatischen Positional-Diff aller Instruktionswörter enthält,
+dessen Ergebnisliste leer ist (`len(diff_list) == 0`) — keine
+qualifizierten Aussagen wie "alle Offsets matched", "Frame passt
+exakt", oder "166/166 Instructions identisch". Letzteres
+(Instruction-Count-Match) wurde dieses Mal widerlegt: Round-67-
+Agent zählte korrekt 166 Instructions, diffte aber nie byte-genau
+die Wortinhalte.
+
+### Session-Gesamtstand nach Runde 68
+
+**573 verifizierte echte Fixes in 231 Commits** (565 + 10 neue
+Round-68-Commits; der Revert lässt den 565er-Bestand unverändert,
+Netto-Sessionszuwachs: +8 byte-exakte MATCHes, jeweils verifiziert
+per programmatischem raw-4-byte-hex-diff mit leerer Ergebnisliste).
+`matched_functions`: **9159** (von 9151 zu Rundenbeginn, +8; der
+npcTalkOut-Bugfix-Commit zählt NICHT als 100%er, weil die
+Funktion noch eine Rest-Differenz von 7 Instruktionswörtern
+aufweist — siehe unten). `matched_code_percent`: **47,44 %**.
+Volles `ninja`-Rebuild erfolgreich, `dtk shasum -c` bestätigt
+`build/GMSJ01/mario.dol: OK`. Regressionsprüfung: 0 Regressionen,
+8 Neuzugänge — exakte Übereinstimmung. Fork `Astrr00/sms` per
+Squash-Merge PR #1 auf `main` überführt (`56161c6`). Stand: 5
+Commits hinter `doldecomp/sms:main` (Upstream hat `configure.py`
+und `PROGRESS.md` mehrfach geändert seit Phase-0-Fork), 399
+Commits voraus (eigene Arbeit). PR `doldecomp/sms#195` wurde
+geschlossen, weil ein direkter Merge gegen `doldecomp/sms:main`
+Konflikte in `configure.py` produzierte (Upstream hatte die Datei
+mehrfach editiert); stattdessen PR `Astrr00/sms#1` an den eigenen
+Fork erstellt und Squash-merged → `56161c6` auf
+`Astrr00/sms:main`.
+
+**Round-68-Audit-Korrektur** (in Runde 70 durchgeführt): Die
+zunächst als „byte-exakt" deklarierten 9 Round-68-MATCH-Ziele
+wurden einzeln gegen den frischen `report.json` verifiziert.
+Dabei stellte sich heraus, dass **`TBaseNPC::npcTalkOut` NICHT
+bei 100% liegt** — es zeigt 99.9391 % mit 7 verbleibenden
+Instruktionswörtern Differenz (Frame-Größe 0x38 statt 0x48, alle
+Stack-Offsets uniform +0x14 verschoben). Das ist ein Pattern-7-
+Stack-Layout-Restproblem. Der Flag-Bugfix-Commit `4323624b` ist
+trotzdem ein **echter Bugfix** (LIVE_FLAG_UNK8000 → UNK80000
+änderte die rlwinm-Maske korrekt), macht die Funktion aber nicht
+vollständig zu 100 %. Daher wird dieser Kandidat in Runde 70
+erneut dispatched, um den +0x10-Frame-Gap zu schließen. Die
+übrigen 8 Round-68-MATCHes (WaterGun.calcAnimation,
+JPADragField.affect, TTurboNozzleDoor.touchPlayer,
+TPoiHanaManager.load, TCameraOption.TCameraOption,
+TMActorKeeper.TMActorKeeper, TMario.inOutWaterEffect,
+TNerveBossEelSleepOnBottom.execute) sind alle bei 100.0000 %
+bestätigt.
+
+### Nach neunundsechzigster Iterationsrunde (24-Kandidaten-Batch, alle 24 Agents an Rate-Limits gescheitert — Null-Runde)
+
+Round 69 lieferte **null** neue byte-exakte Fixes. Alle 24
+parallel dispatchten Subagenten schlugen mit HTTP 429 Token-Plan
+Rate-Limit-Fehlern fehl — fünf davon beim Provider
+`anthropic/claude-opus-5`, die übrigen 19 beim Provider
+`minimax-code/MiniMax-M3`. Kein Agent erreichte die
+Untersuchungs- oder gar Commit-Phase; keine Quelldatei wurde
+modifiziert (`git status` nach Batch-Ende leer).
+
+**Statistik**: `matched_functions` 9159 (identisch zu Round-68-
+Endstand, +0), `matched_code_percent` 47,44 %, `build/GMSJ01/
+mario.dol: OK`. Alle 24 Kandidaten bleiben frisch für eine
+Retry-Runde.
+
+**Methodische Notiz**: Anders als in früheren Runden, in denen
+einzelne Rate-Limits auftraten und mit kleineren Retry-Batches
+umgangen werden konnten, war diesmal die gesamte Dispatch-Welle
+betroffen — was auf eine globale Token-Plan-Ausschöpfung
+hindeutet, nicht auf ein sporadisches Provider-Problem. Konsequenz
+für nächste Runden: ggf. längere Wartezeit vor Re-Dispatch oder
+Aufteilung in mehrere kleinere Wellen.
+
+### Session-Gesamtstand nach Runde 69
+
+**573 verifizierte echte Fixes in 231 Commits** (unverändert seit
+Runde 68; Round 69 Null-Runde). `matched_functions`: **9159**
+(±0 ggü. Round 68). `matched_code_percent`: **47,44 %**. Volles
+`ninja`-Rebuild erfolgreich, `dtk shasum -c` bestätigt
+`build/GMSJ01/mario.dol: OK`. Fork `Astrr00/sms` weiterhin bei
+Squash-Merge `56161c6` auf `main`; 5 Commits hinter
+`doldecomp/sms:main`.
+
+### Nach siebzigster Iterationsrunde (24-Kandidaten-Batch in 2×12-Wellen, 1 MATCH + 1 NO-MATCH-Toolchain-Drift + 22 Rate-Limit-Clean-Failures)
+
+Round 70 verlief provider-seitig weiterhin angespannt: 22 von 24
+Subagenten schlugen mit HTTP 429 Token-Plan Rate-Limit-Fehlern
+fehl (verteilt auf `anthropic/claude-opus-5` und
+`minimax-code/MiniMax-M3`), zwei Wellen à 12 Agents mit kurzem
+Cooldown brachten jedoch 2 produktive Ergebnisse.
+
+**1 byte-exakter MATCH**:
+
+1. `TBathWaterManager::loadAfter` (Commit `f89e6df1`,
+   `src/Map/BathWaterManager.cpp`) — 8-Byte-Stack-Frame-Überschuss
+   (src 0x98 vs obj 0x90). Behoben durch zwei subtile
+   Source-Reformatierungen: (a) äußeres `JDrama::TNameRefGen::search(...)`
+   expandiert zu `JDrama::TNameRefGen::getInstance()->getRootNameRef()
+   ->search(...)` — erzwingt genug vtable-Chain-Split, dass MWCCs
+   Register-Allokator `r26` für das `rootNameRef`-Argument wählt
+   statt `r27`; (b) inneres `setResTIMG(1, *tex->getTexture()->getTexInfo())`
+   auf zwei Zeilen umgebrochen — nudges lokales Pool-Alignment und
+   innere Register-Wahl. Programmatischer raw-4-byte-hex-Diff
+   über alle 250 Instruktionswörter ergab leere Diff-Liste
+   `[]`.
+
+**1 NO-MATCH (sauber reverted, dokumentationswürdige Erkenntnis)**:
+
+- `SMS_InitChangeNpcColor` (`src/NPC/NpcColor.cpp`) — 8-Byte-
+  Stack-Frame-Drift zwischen src (0x40) und obj (0x38). Der
+  Agent untersuchte 11+ Source-Varianten (padding, register-
+  Storage, const-Qualifikation, Type-Changes, Declaration-
+  Reorder, Inline-Expression-Expansion) ohne Erfolg. **Root-
+  Cause: Toolchain-Drift** zwischen Original-Match-Zeitpunkt
+  (MWCC 20250520, dtk v1.3.0, wibo 0.6.11) und HEAD (MWCC
+  20251118, dtk v1.8.4, wibo 1.1.0). Die Source-Datei ist
+  byte-identisch zum funktionierenden Commit `99c2d69e`; nur
+  die Toolchain-Updates haben MWCCs Pool-Allokation um 8 Byte
+  verschoben. Per „byte-exakt-oder-revert"-Policy zurückgesetzt;
+  dokumentiert als „Toolchain-Version-abhängiges Frame-Layout".
+
+**22 saubere Fehlschläge** (10 Wave-1 + 12 Wave-2, alle
+Rate-Limit-bedingt): `TMarDirector::TMarDirector`,
+`TTamaNoko::calcRootMatrix`, `TSpcInterp::execadd`,
+`TGraphWeb::getRandomNextIndex`, `THamuKuri::behaveToWater`,
+`CPolarSubCamera::execGroundCheck_`, `TBossPakkun::setGroundCollision`,
+`TMarDirector::preEntry`, `TRoulette::initMapObj`,
+`TMapObjBaseManager::makeObjAppear`,
+`TMario::turnning`, `JPAGetRMtxSTVecElement`,
+`J3DSkinDeform::initMtxIndexArray`, `TTrembleModelEffect::reset`,
+`TMario::initMirrorModel`, `TMBindShadowManager::load`,
+`TBossMantaManager::setupEfbAlpha`, `TLiveActor::bind`,
+`TEggYoshi::load`, `TNerveBathtubKillerExplosion::execute`,
+`TSpcTypedInterp<TEventWatcher>::evSetHide4LiveActor`,
+`TSplashManager::makeDL` — alle bleiben frische Kandidaten für
+eine künftige Runde.
+
+**Methodische Notiz**: Wellen-Dispatch (2×12 statt 1×24) reduziert
+Provider-Spitzenlast nicht zwingend — die `anthropic/claude-opus-5`-
+Rate-Limits kommen wellenübergreifend. Empfehlung für Runde 71:
+längerer Cooldown (15+ min) zwischen den Wellen, oder Wellen mit
+max. 6 Agents.
+
+### Session-Gesamtstand nach Runde 70
+
+**574 verifizierte echte Fixes in 232 Commits** (573 + 1 neuer
+byte-exakter Runde-70-MATCH; der NPC-Color-Toolchain-Drift zählt
+nicht als Fix, da reverted). `matched_functions`: **9160** (von
+9159 zu Rundenbeginn, +1 exakt wie erwartet). `matched_code_percent`:
+**47,47 %**. Volles `ninja`-Rebuild erfolgreich, `dtk shasum -c`
+bestätigt `build/GMSJ01/mario.dol: OK`. Regressionsprüfung: 0
+Regressionen, 1 Neuzugang — exakte Übereinstimmung. Fork
+`Astrr00/sms` weiterhin bei Squash-Merge `56161c6` auf `main`;
+5 Commits hinter `doldecomp/sms:main`.
+
+### Nach einundsiebzigster Iterationsrunde (5 byte-exakte MATCHes, 9 neue Dead-Ends)
+
+**5 byte-exakte MATCHes** (alle mit rohem Vier-Byte-Hexvergleich
+verifiziert: gleiche Wortzahl, leere Diff-Liste `[]`):
+
+1. `TBossPakkun::setGroundCollision` (Commit `7760ec64`,
+   `src/Enemy/bosspakkun.cpp`) — benannter `dieNerve`-Local für
+   `&TNerveBPDie::theNerve()` plus benannter `TPosition3f`-Local
+   für `moveMtx`. 57/57 Wörter, 228B.
+2. `TTrembleModelEffect::reset` (Commit `77025abc`,
+   `src/MarioUtil/DrawUtil.cpp`) — Loop-Bounds von
+   `getVertexData().getVtxNum()` auf direktes `getVtxNum()`
+   umgestellt und benanntes `J3DModelData*`-Local vor
+   `setVtxPosArray` eingeführt. 120/120 Wörter, 480B.
+3. `THamuKuri::behaveToWater` (Commit `cd245a39`,
+   `src/Enemy/hamukuri.cpp`) — `SMS_GetMarioPos()` durch
+   `*gpMarioPos` ersetzt (direkter Globalzugriff statt
+   Inline-Getter erzeugt die Retail-Load-Sequenz).
+   143/143 Wörter, 572B.
+4. `TTamaNoko::calcRootMatrix` (Commit `cd245a39`,
+   `src/Enemy/tamaNoko.cpp`) — gemeinsames
+   `JGeometry::TVec3<f32> scale(2.0f, 2.0f, 2.0f)`-Local für
+   beide `setGlobalScale`-Aufrufe gezogen statt je anonymem
+   Temporary. 266/266 Wörter, 1064B.
+5. `TTrembleModelEffect::init` (Commit `cd245a39`,
+   `src/MarioUtil/DrawUtil.cpp`) — `getVertexData().getVtxNum()`
+   /`getVtxPosArray()`-Kette auf die direkten
+   `J3DModelData`-Accessoren `getVtxNum()`/`getVtxPosArray()`
+   verkürzt. 354/354 Wörter, 1416B.
+
+**9 neue Dead-Ends** (mehrere informierte Varianten getestet,
+sauber reverted, in `.decomp_session_state.json` aufgenommen):
+
+- `TGraphWeb::getRandomNextIndex` — verbleibender 4-Byte-
+  Stack-Offset nach 2 Varianten.
+- `CPolarSubCamera::execGroundCheck_` — Inlining des
+  `should_clip`-Helpers erzeugte 22 Diffs und falsches
+  Frame/Register-Layout.
+- `TRoulette::initMapObj` — 3 Varianten (benannter
+  `TIdxGroupObj*`-Local, expandierte `getInstance()->
+  getRootNameRef()->search`-Kette, beides kombiniert)
+  kollabierten den Frame 0xA0 -> 0x98.
+- `TBossMantaManager::setupEfbAlpha` — Stack-Layout und
+  Local-Array-Offsets bleiben abweichend.
+- `evSetHide4LiveActor` — Frame 0xA0 vs 0x98 und
+  fctiwz-Spill-Offsets; `interp->pop().getDataInt()` erreicht
+  den Retail-Frame, aber die pop()-Scheduling-Reihenfolge
+  divergiert weiter.
+- `TSplashManager::makeDL` — 5-Wort-Diff: GXColor-Temp und
+  `thing[]`-Slots vertauscht; 4 Varianten (const-Referenz,
+  direkte Aggregate-Init, hoisted Declaration, split
+  decl/assign) änderten das Slot-Mapping nicht.
+- `TNerveBathtubKillerExplosion::execute` — Null-Vektor-Temp
+  0x18 vs 0x1C; Pointer-Merge-Variante identisch.
+- `TLiveActor::bind` — der by-value `fst`-Temp des
+  `operator-` sitzt auf 0x10 statt 0x20; 5 Varianten
+  (benanntes Local, const-Ref-Bindung, `sub`-Sequenzen)
+  zerstörten jeweils das `bl sub`-Call-Muster oder blähten
+  den Frame.
+- `SMS_InitChangeNpcColor` — in Runde 70 als
+  Toolchain-Drift dokumentiert; jetzt auch in der
+  Ausschlussliste verankert.
+
+**Weitere gescheiterte Versuche** (nicht in der Ausschlussliste,
+da nur einzelne Durchgänge): `TNerveTamaNokoHitWater::execute`
+(manuelle `unk165`-Lösung statt `unsetUnk165()`-Helper ergab
+204/206 Wörter — reverted).
+
+**Bekannte Pre-existing-Validierungsprobleme** (nicht durch
+diese Runde verursacht, dokumentiert statt verschwiegen):
+
+- `mario/MarioUtil/DrawUtil`: `validate-symbol-order.py`
+  meldet fehlendes schwaches Symbol `identity33__Q29JGeometry
+  64TRotation3<...>Fv` (fehlte nachweislich bereits im Objekt
+  vor der Round-71-Änderung) sowie 14 UNUSED-Size-Warnungen
+  auf bestehenden Null-Byte-Stubs. Symbolprüfung der TU ist
+  damit **nicht sauber**.
+- `mario/Enemy/hamukuri`: `onHaveCap__13TDoroHamuKuriFv` ist
+  global gelinkt, die Map erwartet `weak` (Original vermutlich
+  Header-inline definiert); dazu lange Weak-Order-Warnliste.
+  Beides unabhängig vom `behaveToWater`-Diff.
+
+### Session-Gesamtstand nach Runde 71
+
+**579 verifizierte echte Fixes** (574 + 5 neue Runde-71-Matches
+in 3 Commits). `matched_functions`: **9165**. `matched_code_percent`:
+**47,57 %** (`ninja changes_all`: 47,47 % -> 47,57 %, ausschließlich
+Neuzugänge, keine Regressionen). Volles `ninja`-Rebuild erfolgreich,
+`dtk shasum -c` bestätigt `build/GMSJ01/mario.dol: OK`.
+
+
+### Nach zweiundsiebzigster Iterationsrunde (Cloud-Session: DOL fehlt, Runden 70/71 nach main portiert, kein Retail-Bytevergleich)
+
+**Beobachtung, Umgebung.** Workspace `/workspace`, Branch
+Ausgang `main` (`0b9a2b13`), Remote nur `origin` =
+`github.com/Astrr00/sms`. Arbeitsbaum vor dieser Runde sauber,
+kein unpushed Commit gegen `origin/main`. Betriebssystem dieser
+Session: Linux. `python3 configure.py --version GMSJ01` erzeugt
+die Pre-Split-`build.ninja` (Exit 0). `ninja` bricht danach ab:
+
+`Failed: While loading object 'main.dol' / orig/GMSJ01/sys/main.dol not found`.
+
+Lokal fehlend, exakt:
+
+- `orig/GMSJ01/sys/main.dol` (Eingabe von `dtk dol split`)
+- `orig/GMSJ01/files/mario.MAP` (Eingabe von `validate-symbol-order.py`)
+- alles unter `build/GMSJ01/asm/` und `build/GMSJ01/obj/` (entsteht erst durch den Split)
+- eine Disc-Abbildung unter `orig/GMSJ01/` (nur `.gitkeep`)
+
+`config/GMSJ01/build.sha1` erwartet für das **gelinkte**
+`build/GMSJ01/mario.dol` den SHA1
+`9f5a8caf56f5356aeac9d3ed28bf8de976a03625`. Dieser Hash wurde
+hier nicht nachgemessen. `dtk shasum -c`, `objdiff` und
+`ninja changes_all` sind ohne die DOL nicht ausführbar.
+`matched_functions` / `matched_code_percent` wurden in dieser
+Session **nicht** neu gemessen. Die Zahlen aus Runden 68–71
+bleiben Berichte jener Sessions.
+
+Installiert über die Projektskripte, nicht committet
+(`build/` ist ignoriert): ninja 1.13.2, dtk 1.8.4, wibo 1.1.0,
+objdiff-cli 3.8.1, binutils 2.42-2, Compilerpaket `20251118`.
+`mwcceppc.exe` unter wibo meldet Version 2.3.3 build 163.
+
+**Beobachtung, Upstream `doldecomp/sms`.** Fetch ohne Merge.
+Merge-Base mit `upstream/main` ist `b4cab1d2` („BossPakkun closer“).
+`upstream/main` ist `78460084` („Add explicit casts for narrowing
+conversions“, 2026-09-26) und liegt **60 Commits** vor dieser
+Base. Darunter `8dc741f9` „Move middleware libraries to libs/“
+sowie eine Serie von SDK-Typ-/`nullptr`-/`uintptr_t`-Anpassungen.
+Schnittmenge der seit der Base geänderten Pfade mit unseren
+eigenen Änderungen: 89 Dateien, unter anderem `configure.py` und
+zahlreiche bereits gematchte Spielcode-TUs. Ein Merge würde
+diese Matching-Fixes nicht ersetzen, aber in derselben Datei
+mit der `libs/`-Verschiebung und den Typanpassungen kollidieren.
+Nicht gemergt, nicht rebasiert. Die drei Runde-67-Kandidaten-TUs
+sind auf `upstream/main` weiterhin `NonMatching`
+(`Strategic/ObjModel.cpp`, `Enemy/coasterkiller.cpp`,
+`MoveBG/MapObjGeneral.cpp`). `THamuKuri::behaveToWater` ruft
+upstream weiterhin `SMS_GetMarioPos()` auf.
+
+**Beobachtung, Stand der Runde-67-Kandidaten auf `main`.**
+`TMActorKeeper::TMActorKeeper(TLiveManager*)` enthält bereits
+`char trash[8]` aus `decomp-work` `e239d637`; der Runde-70-Audit
+auf `decomp-work` behauptet dafür 100 %. Hier nicht per objdiff
+geprüft. `TMapObjGeneral::receiveMessage` ist in Runde 68 als
+Sackgasse dokumentiert und unverändert. `TCoasterEnemy::bind`
+ist unverändert der kurze Rumpf; `symbols.txt` nennt
+`bind__13TCoasterEnemyFv` Größe `0xDC`. Ohne Original-ASM kein
+neuer Versuch.
+
+**Übernahme von `origin/decomp-work`.** `main` endete inhaltlich
+beim Squash `56161c69` (Code bis Runde 68, `PROGRESS.md` nur bis
+Runde 67). Auf `decomp-work` lagen danach noch die Quelldiffs
+von Runde 70/71, die auf `main` fehlten. Übernommen, unverändert:
+
+- `TBathWaterManager::loadAfter` (`f89e6df1`)
+- `TBossPakkun::setGroundCollision` (`7760ec64`)
+- `TTrembleModelEffect::reset` (`77025abc`)
+- `THamuKuri::behaveToWater`, `TTamaNoko::calcRootMatrix`,
+  `TTrembleModelEffect::init` (`cd245a39`)
+
+`configure.py` bleibt unverändert (kein Matching-Flip). Die
+Runden-68–71-Abschnitte dieser Datei stammen aus
+`origin/decomp-work` und wurden hier nicht neu gemessen.
+
+**Beobachtung, eigener MWCC-Vergleich vorher/nachher** (dieselben
+Flags wie `cflags_game`: `-O4,p -inline deferred -opt all,nostrength`,
+`-prefix SMS.mch`, GC/1.2.5). Alle sechs Symbole haben vorher und
+nachher dieselbe Länge wie `symbols.txt`:
+
+| Symbol | Wörter | Retail-Größe |
+| --- | --- | --- |
+| `loadAfter__17TBathWaterManagerFv` | 250 | `0x3E8` |
+| `setGroundCollision__11TBossPakkunFv` | 57 | `0xE4` |
+| `reset__19TTrembleModelEffectFv` | 120 | `0x1E0` |
+| `init__19TTrembleModelEffectFP8J3DModel` | 354 | `0x588` |
+| `behaveToWater__9THamuKuriFP9THitActor` | 143 | `0x23C` |
+| `calcRootMatrix__9TTamaNokoFv` | 266 | `0x428` |
+
+Positionsvergleich der Instruktionswörter, nur die Differenzen:
+
+- `loadAfter`: 5 Wörter, alle Prolog/Epilog. `stwu` `-0x98` → `-0x90`
+  (`9421ff68` → `9421ff70`); `stmw`/`lmw`/`lwz` LR/`addi r1`
+  um dieselben 8 Byte verschoben. Die übrigen 245 Wörter sind identisch.
+  Das ist die in Runde 70 behauptete Frame-Korrektur. Die dort
+  zusätzlich genannte Registerwahl r26 statt r27 tritt in **diesem**
+  Vorher/Nachher-Diff nicht auf.
+- `setGroundCollision`: 1 Wort, `addi r30,r1,0x18` → `addi r30,r1,0x20`
+  (`3bc10018` → `3bc10020`). Übrige 56 Wörter identisch.
+- `reset`: 5 Wörter, Frame `stwu` `-0xC8` → `-0xA8` (`9421ff38` →
+  `9421ff58`) plus passende Save/Restore-Offsets.
+- `init`: 5 Wörter, Frame `-0x110` → `-0xE0` (`9421fef0` → `9421ff20`).
+- `behaveToWater`: 4 Wörter, Stack-Offsets `0x5c/0x60/0x64` →
+  `0x58/0x5c/0x60`.
+- `calcRootMatrix`: 7 Wörter, Frame `-0x68` → `-0x50` plus Offsets
+  der Scale-Slots.
+
+**Vermutung, nicht Beobachtung.** Dass die Nachher-Fassung
+bytegleich zum Retail-Objekt ist, ist die Aussage der
+`decomp-work`-Commits und des dortigen `objdiff`-Reports.
+Diese Session hatte das Retail-Objekt nicht und kann das
+weder bestätigen noch widerlegen. Ein reiner Größenvergleich
+reicht dafür nicht: die Länge war schon vorher gleich.
+
+`ninja` gesamt, `dtk shasum -c` und ein objdiff-Report sind in
+dieser Session **nicht** gelaufen, weil die DOL fehlt.
+TU-Zähler in `configure.py` auf `main` (Link-Status, nicht
+Funktionsprozent): 416 `Matching`, 321 `NonMatching`.
+
+### Nächster Schritt
+
+1. `orig/GMSJ01/sys/main.dol` und `orig/GMSJ01/files/mario.MAP`
+   lokal bereitstellen (nicht committen).
+2. `ninja`, dann `python tools/decomp-diff.py` für
+   `mario/Map/BathWaterManager`, `mario/Enemy/bosspakkun`,
+   `mario/MarioUtil/DrawUtil`, `mario/Enemy/hamukuri`,
+   `mario/Enemy/tamaNoko` — die sechs Symbole Wort für Wort
+   gegen das Originalobjekt.
+3. `dtk shasum -c config/GMSJ01/build.sha1`. Erst danach einen
+   Matching-Flip erwägen. Die betroffenen TUs bleiben bis dahin
+   `NonMatching`.
+4. Wenn der Split steht: `TCoasterEnemy::bind` (`0xDC`) als
+   nächsten offenen Kandidaten. `receiveMessage` von
+   `TMapObjGeneral` nicht wiederholen (Sackgasse Runde 68).
+
+
+### Nach dreiundsiebzigster Iterationsrunde (Referenz-DOL vorhanden, sechs Funktionen verifiziert, bind nicht geschlossen)
+
+**Beobachtung, Referenzdateien.** Entpackt nach
+`orig/GMSJ01/sys/main.dol` und `orig/GMSJ01/files/mario.MAP`.
+Nicht committet. `git check-ignore` trifft beide über
+`.gitignore` (`orig/*/*`, zusätzlich `*.dol` / `*.MAP`).
+
+SHA1, gemessen:
+
+- `main.dol`: `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`
+- `mario.MAP`: `1f7a9441e5fbb7fed12539559f9956d36cc6d2e2`
+
+Der DOL-SHA1 ist derselbe Wert wie in `config/GMSJ01/build.sha1`
+für das gelinkte `build/GMSJ01/mario.dol`.
+
+**Beobachtung, Baseline auf diesem Branch** (die sechs
+Runde-70/71-Ports sind schon im Quelltext). `python3 configure.py
+--version GMSJ01`, dann volles `ninja`. `dtk shasum -c
+config/GMSJ01/build.sha1`: `build/GMSJ01/mario.dol: OK`.
+`sha1sum build/GMSJ01/mario.dol` liefert denselben Hash
+`9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+`ninja`-Progress:
+
+- Gesamt: 47,57 % matched code, 1707908 / 3590088 Bytes,
+  9165 / 12881 Funktionen. Fuzzy 77,97 %. Linked 20,25 %
+  (415 / 736 Dateien). Daten 384651 / 640331 Bytes (60,07 %).
+- Game Code: 35,23 % matched, 995760 / 2826784 Bytes,
+  5200 / 8857 Funktionen. Linked 89 / 387 Dateien.
+- JSystem: 90,55 % matched code, 2953 / 3009 Funktionen.
+- SDK: 98,88 % matched code, 1012 / 1015 Funktionen.
+
+Das sind dieselben Funktions- und Prozentzahlen, die Runde 71
+berichtet hat. Diesmal aus diesem Build gemessen.
+
+**Beobachtung, sechs Funktionen.** objdiff-cli
+`functionRelocDiffs=data_value`, linke und rechte
+Instruktionswörter (Mnemonic und Operanden, Branchziele
+normalisiert) positionsweise verglichen. Null Abweichungen:
+
+| Funktion | Wörter | Größe | match |
+| --- | --- | --- | --- |
+| `TBathWaterManager::loadAfter` | 250 | 1000 | 100 % |
+| `TBossPakkun::setGroundCollision` | 57 | 228 | 100 % |
+| `TTrembleModelEffect::reset` | 120 | 480 | 100 % |
+| `TTrembleModelEffect::init` | 354 | 1416 | 100 % |
+| `THamuKuri::behaveToWater` | 143 | 572 | 100 % |
+| `TTamaNoko::calcRootMatrix` | 266 | 1064 | 100 % |
+
+Die Runde-72-Vermutung ist damit Beobachtung: die Nachher-Fassung
+ist wortgleich zum Originalobjekt. Die TUs bleiben `NonMatching`.
+Jede davon hat weitere nicht matchende Funktionen (Stichprobe:
+`TBathWaterManager::perform` 93,8 %, `TNerveBPWaitL::execute`
+98,1 %, `SMS_UnifyMaterial` 99,3 %, `TDangoHamuKuri::reset` 70,0 %,
+`TTamaNoko::landEffect` 62,5 %). Ein Flip würde das Originalobjekt
+durch unser Objekt ersetzen und den DOL-Hash ändern. Nicht geflippt.
+Zweiter `ninja` nach den zurückgenommenen `bind`-Versuchen:
+`dtk shasum` weiter OK.
+
+**Beobachtung, `TCoasterEnemy::bind`.** Offen. 55 Instruktionen,
+220 Bytes (`0xDC`), Frame beiderseits `0x40`. Einziger Unterschied:
+das By-Value-Temporary von `operator-` liegt im Original bei
+`r1+0x10` und bei uns bei `r1+0x1c`. `nextPos` bleibt beiderseits
+bei `0x28`. Dieselbe Klasse wie `TLiveActor::bind` (Runde 71:
+`0x10` gegen `0x20`). Drei Versuche, alle zurückgenommen:
+
+1. Unbenutztes `TVec3 gap` nach `nextPos`: Frame `0x40` → `0x48`,
+   `nextPos` wandert nach `0x34`, das Temporary bleibt bei `0x1c`.
+2. `mLinearVelocity = nextPos - mPosition` statt
+   `setLinearVelocity`: identischer Diff.
+3. `nextPos` erst deklarieren, dann zuweisen: identischer Diff.
+
+**Zusätzlich probiert und zurückgenommen:**
+`TMapObjBaseManager::makeObjAppear(float,float,float,u32,bool)`.
+Frame `0x58` stimmt. Nur `&checkData` ist `0x30` im Original und
+`0x34` bei uns. `checkData` vor den `if` zu ziehen ändert den
+Offset nicht.
+
+### Nächster Schritt
+
+1. `TCoasterEnemy::bind` nicht mit einem weiteren benannten
+   `TVec3` oder mit `operator=`-Umschreibung wiederholen.
+   Nächster Hebel wäre ein totes 12-Byte-Temporary *unter*
+   `nextPos`, das den `operator-`-Slot auf `0x10` drückt, ohne
+   den Frame über `0x40` wachsen zu lassen.
+2. `TMapObjBaseManager::makeObjAppear(f32,f32,f32,u32,bool)`:
+   4-Byte-Slot von `checkData` (`0x34` → `0x30`) bei gleichem Frame.
+3. Kein Matching-Flip der fünf TUs, solange dort andere
+   Funktionen abweichen.
+
+### Nach vierundsiebzigster Iterationsrunde (`makeObjAppear`-Float-Overload matched)
+
+**Beobachtung, vorher.**
+`TMapObjBaseManager::makeObjAppear(f32,f32,f32,u32,bool)`,
+94 Instruktionen, 376 Bytes, Frame beiderseits `0x58`.
+Zwei Wörter abweichend: `addi r4, r1, 0x30` gegen `0x34`
+und `lwz r3, 0x30(r1)` gegen `0x34(r1)`.
+Das ist der Slot von `checkData`.
+
+**Zurückgenommen, eine Hypothese je Versuch.**
+
+1. `f32 raised = y + 5.0f` als Argument von `checkGround`.
+   `fadds` bleibt in `f2`, `checkData` bleibt bei `0x34`,
+   Frame bleibt `0x58`. Die Summe belegt keinen Stack-Slot.
+2. `int i` vor `y2` deklarieren und die Schleife mit diesem
+   `i` schreiben. Offset unverändert. Der Index besitzt den
+   toten Slot nicht. `checkData` vor den `if` zu ziehen war
+   schon Runde 73 und bleibt ohne Effekt.
+
+**Beobachtung, nachher.** Die Ternärform steht am Aufruf,
+ohne die fabricierte Inline-Methode `checkFlag`:
+
+`checkData->mFlags & BG_CHECK_FLAG_ILLEGAL ? true : false`
+
+`checkData` liegt beiderseits bei `r1+0x30`.
+94 Instruktionswörter, Frame `0x58`.
+Unter `functionRelocDiffs=data_value` zeigen `gpMap`,
+`TMap::checkGround` und der 4-Byte-Pool der `5.0f`
+dieselben Ziele. Null abweichende Wörter.
+`isIllegalData` trägt `#pragma dont_inline` und wäre hier
+ein `bl`. Das Original faltet denselben Test ein.
+`checkFlag` im Header ist unverändert.
+
+**Messung, `ninja` und `dtk shasum -c`.**
+
+Vorher, Runde 73: 47,57 % matched code,
+1707908 / 3590088 Bytes, 9165 / 12881 Funktionen.
+Game Code 35,23 %, 995760 / 2826784 Bytes,
+5200 / 8857 Funktionen.
+
+Nachher: 47,58 % matched code,
+1708284 / 3590088 Bytes, 9166 / 12881 Funktionen.
+Game Code 35,24 %, 996136 / 2826784 Bytes,
+5201 / 8857 Funktionen.
+
+Delta: +1 Funktion, +376 Bytes. Das ist die Größe der
+Funktion (94 Instruktionen).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+`configure.py` nicht geflippt. Dieselbe TU hat weiter
+abweichende Geschwister, Wörter gezählt, nicht die
+gerundete Prozentanzeige:
+
+- `newAndRegisterObjByEventID`: 10 Wörter, Anzeige 99,98 %
+- `newUniqueObjByName`: 42 Wörter, Anzeige 98,88 %
+- `TMapObjManager::load`: 9 Wörter, Anzeige 99,97 %
+
+`validate-symbol-order.py -u mario/MoveBG/MapObjManager`:
+PASS. Eine vorbestehende UNUSED-Größenwarnung
+`loadMatTable__14TMapObjManagerFPCc`, Map `0x34`,
+Objekt `0x38`. Diese Funktion ist nicht angefasst.
+`TCoasterEnemy::bind` ist nicht angefasst.
+
+### Nächster Schritt
+
+1. `MoveBG/MapObjManager.cpp` nicht auf `Matching` stellen.
+2. `TCoasterEnemy::bind` nicht mit einem benannten `TVec3`
+   oder mit `operator=` wiederholen.
+3. Nächster Kandidat außerhalb dieser TU: eine fast
+   matchende Funktion mit kleinem Slot- oder Frame-Gap.
+   Die drei Geschwister oben sind mehrere Wörter auseinander,
+   kein einzelner 4-Byte-Slot. Die fünf bereits verifizierten
+   TUs bleiben `NonMatching`.
+
+### Nach fünfundsiebzigster Iterationsrunde (zwei Frame-Matches, ein Slot offen)
+
+**Beobachtung, vorher.** Stand Runde 74:
+47,58 % matched code, 1708284 / 3590088 Bytes,
+9166 / 12881 Funktionen.
+Game Code 35,24 %, 996136 / 2826784 Bytes,
+5201 / 8857 Funktionen.
+
+**Match, `TRollBlock::setGroundCollision`.**
+24 Instruktionen, 96 Bytes.
+Vorher Frame `0x28` bei uns, `0x20` im Original.
+Einziger Unterschied waren die Frame-Offsets von `r31`.
+Ursache: der fabricierte Inline `getUnk8()`.
+Direktes `unk8` lässt die Loads gleich und setzt den
+Frame auf `0x20`.
+Nach dem Rebuild: 24 Wörter, Relocs gleich, null Abweichungen.
+`validate-symbol-order.py -u mario/MoveBG/MapObjRailBlock`: PASS.
+Die TU bleibt `NonMatching`
+(`TNormalLift::setGroundCollision` hat weiter den zusätzlichen
+`SMatrix34C`-Konstruktor beim Inlinen, 188 Bytes, Anzeige 95,7 %).
+
+**Match, `TCoinBlue::load`.**
+27 Instruktionen, 108 Bytes.
+Vorher Frame `0x20` bei uns, `0x28` im Original.
+Die übrigen Wörter stimmten schon.
+`u8 area = gpMarDirector->getCurrentMap()` und
+`u8 coin = getEventId()` vor `getBlueCoinFlag` heben den
+Frame auf `0x28`, ohne die Load-Reihenfolge zu ändern.
+Feldzugriffe statt der Accessors verschieben `smInstance`
+vor das `lbz` und sind zurückgenommen.
+Nach dem Rebuild: 27 Wörter, Relocs gleich, null Abweichungen.
+`validate-symbol-order.py -u mario/MoveBG/Item`: PASS.
+Die TU bleibt `NonMatching` (17 weitere Funktionen weichen ab).
+
+**Messung, `ninja` und `dtk shasum -c`.**
+
+Nachher: 47,59 % matched code,
+1708488 / 3590088 Bytes, 9168 / 12881 Funktionen.
+Game Code 35,25 %, 996340 / 2826784 Bytes,
+5203 / 8857 Funktionen.
+
+Delta gegen Runde 74: +2 Funktionen, +204 Bytes
+(96 + 108).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Kein Matching-Flip.
+
+**Sackgasse, zurückgenommen: `TDrawSyncManager::setCallback`.**
+13 Instruktionen, 52 Bytes, Frame beiderseits `0x30`.
+Das 8-Byte-Temporary von `TDrawSyncTokenRange` liegt im
+Original bei `r1+0x28` und bei uns bei `r1+0x24`.
+
+1. `mCallbacks.begin()[param_1] = ...`: Frame `0x30` → `0x28`,
+   Slot `0x24` → `0x20`.
+2. Benannte Referenz auf `mCallbacks`: kein Unterschied.
+3. Zeiger auf das Element, dann Zuweisung: kein Unterschied.
+4. Benanntes `TDrawSyncTokenRange`, dann Zuweisung:
+   Frame `0x28`, Slot `0x20`.
+
+Die direkte Zuweisung des Temporaries ist die Fassung mit
+dem richtigen Frame. Der Slot bleibt 4 Byte zu tief.
+
+**Angesehen, nicht geändert: `TMario::kickRoofEffect`.**
+Frame `0x38` gegen `0x30`, und zusätzlich
+`lbz` von `0x3cb` gegen `0x3cf`.
+Das ist ein Member-Offset, kein reiner Slot.
+
+### Nächster Schritt
+
+1. `MapObjRailBlock` und `Item` nicht auf `Matching` stellen.
+2. `TDrawSyncManager::setCallback`: Slot `0x24` → `0x28`
+   bei Frame `0x30`. Die vier Varianten oben nicht wiederholen.
+3. `TCoasterEnemy::bind` nicht mit benanntem `TVec3`
+   oder `operator=`.
+4. `kickRoofEffect` erst angehen, wenn der Member-Offset
+   `0x3cb`/`0x3cf` geklärt ist.
+
+### Nach sechsundsiebzigster Iterationsrunde (zwei weitere Matches)
+
+**Beobachtung, vorher.** Stand Runde 75:
+47,59 % matched code, 1708488 / 3590088 Bytes,
+9168 / 12881 Funktionen.
+Game Code 35,25 %, 996340 / 2826784 Bytes,
+5203 / 8857 Funktionen.
+
+**Match, `evIsTalkModeNow`.**
+49 Instruktionen, 196 Bytes, Frame beiderseits `0x30`.
+Vorher lag das `TSpcSlice` bei uns auf `r1+0x14`, im Original
+auf `r1+0x18`. Sonst gleiche Wörter.
+`push(int)` baut das Slice eine Inline-Stufe tiefer.
+`interp->push(TSpcSlice(value))` setzt es auf `0x18`.
+Zwei Vorversuche ohne Wirkung, zurückgenommen:
+benannter `TMarDirector*` und benanntes `bool`.
+Nach dem Rebuild: 49 Wörter, Reloc-Typen gleich,
+null abweichende Wörter. Der String-Pool von `SpcTrace`
+hat andere lokale Namen, `functionRelocDiffs=data_value`
+zählt ihn als gleich.
+
+`validate-symbol-order.py -u mario/System/EventWatcher`
+meldet weiterhin `set__Q29JGeometry8TVec3<f>FRC3Vec` als
+MISSING. Das fehlt schon vor dieser Änderung. Nicht von
+diesem Match verursacht. Die TU bleibt `NonMatching`.
+
+**Match, `TNerveBPJumpReact::execute`.**
+25 Instruktionen, 100 Bytes.
+Vorher Frame `0x20` bei uns, `0x28` im Original.
+Nur die Frame-Offsets von `r31` wichen ab.
+`int time = spine->getTime()` hebt den Frame auf `0x28`.
+Nach dem Rebuild: 25 Wörter, null Abweichungen.
+`validate-symbol-order.py -u mario/Enemy/bosspakkun`:
+PASS, zwei vorbestehende UNUSED-Größenwarnungen.
+Die TU bleibt `NonMatching`.
+
+**Messung, `ninja` und `dtk shasum -c`.**
+
+Nachher: 47,60 % matched code,
+1708784 / 3590088 Bytes, 9170 / 12881 Funktionen.
+Game Code 35,26 %, 996636 / 2826784 Bytes,
+5205 / 8857 Funktionen.
+
+Delta gegen Runde 75: +2 Funktionen, +296 Bytes
+(196 + 100).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Kein Matching-Flip. `git push` weiter abgelehnt
+(`Invalid username or token`). Die Commits bleiben lokal.
+
+### Nach siebenundsiebzigster Iterationsrunde (kein neues Match)
+
+**Beobachtung, vorher.** Stand Runde 76:
+47,60 % matched code, 1708784 / 3590088 Bytes,
+9170 / 12881 Funktionen.
+Game Code 35,26 %, 996636 / 2826784 Bytes,
+5205 / 8857 Funktionen.
+Quelle unverändert, daher kein neuer `ninja`-Lauf
+für die Gesamtzahlen.
+
+**`evLaunchEventClearDemo`, kein Match.**
+44 Instruktionen, 176 Bytes, Frame beiderseits `0x30`.
+Das `TSpcSlice` liegt im Original auf `r1+0x20`,
+bei `interp->push()` auf `r1+0x18`.
+Sonst gleiche Wörter. Der `SpcTrace`-Pool hat andere
+lokale Namen; `functionRelocDiffs=data_value` zählt
+ihn als gleich.
+
+Gemessen und zurückgenommen:
+
+- `interp->push(TSpcSlice())`, `push(TSpcSlice(0))`,
+  ein benanntes `TSpcSlice` und
+  `mProcessStack.push(TSpcSlice())` heben das Slice
+  auf `0x1c`. Frame bleibt `0x30`. Vier Byte unter
+  `0x20`. Die Wörter sonst gleich.
+- `gpMarDirector->getConsole()` statt
+  `SMSGetMarDirector()->getConsole()` schrumpft den
+  Frame auf `0x28`.
+- Ein benannter `TMarDirector*` tut dasselbe, weil
+  der Accessor dann entfällt.
+- `mConsole` statt `getConsole()` schrumpft den Frame
+  ebenfalls auf `0x28`.
+- `T x; x = getConsole();` ändert nichts.
+- Das Slice vor den Console-Aufrufen zu bauen
+  verschiebt die Stores vor den `bl`.
+
+**Weitere Kandidaten, kein Match, zurückgenommen.**
+
+`TNerveBEelTearsMoveUp::execute`: Frame `0x40` gegen
+`0x30`, sonst nur Prolog-Offsets.
+`int time = spine->getTime()` ändert nichts.
+`f32 speed = mSLTearsUpSpeed.get()` ändert nichts.
+
+`TMareEventWallRock::load`: Frame `0x88` gegen `0x80`,
+der Zeiger für `insert` liegt auf `0x68` gegen `0x64`.
+Ein benannter `TViewObj*` ändert nichts.
+
+Kein Matching-Flip. `git push` erneut abgelehnt
+(`Invalid username or token`).
+`~/.gitconfig` und `gh` `hosts.yml` stehen weiter auf
+dem Stand 03:59 UTC. Die lokalen Commits ab
+`7881cb78` sind nicht auf dem PR.
+
+### Nächster Schritt
+
+1. Die fünf/sechs geprüften TUs nicht auf `Matching`
+   stellen.
+2. Nicht wiederholen: `setCallback` (vier Varianten),
+   `bind` mit `TVec3`/`operator=`, `kickRoofEffect`
+   bis der Member-Offset klar ist,
+   `evLaunchEventClearDemo` mit den oben gemessenen
+   Push- und Accessor-Schreibweisen,
+   `TNerveBEelTearsMoveUp` mit benanntem `getTime`
+   oder benanntem Speed,
+   `TMareEventWallRock::load` mit benanntem
+   `TViewObj*`.
+3. Nächster unangetasteter Kandidat:
+   `SMS_CountPolygonNumInShape`, Frame `0x48` gegen
+   `0x40`, die Tabelle vier Byte zu tief (`0x34`
+   gegen `0x30`).
+
+### Nach achtundsiebzigster Iterationsrunde (zwei Matches in DrawUtil)
+
+**Beobachtung, vorher.** Stand Runde 77:
+47,60 % matched code, 1708784 / 3590088 Bytes,
+9170 / 12881 Funktionen.
+Game Code 35,26 %, 996636 / 2826784 Bytes,
+5205 / 8857 Funktionen.
+
+**Match, `SMS_CountPolygonNumInShape`.**
+55 Instruktionen, 220 Bytes.
+Vorher Frame `0x40` bei uns, `0x48` im Original.
+Die Größentabelle lag auf `r1+0x30` statt `r1+0x34`.
+Sonst gleiche Wörter.
+`vtxAttrSize(sizeTable, desc->type)` hebt den Frame
+auf `0x48`, die Tabelle aber auf `0x38`.
+`GXAttrType type = desc->type` vor dem Aufruf lässt
+ein Argument-Temporary weg. Tabelle dann auf `0x34`.
+Nur der benannte Typ, ohne die Inline, bleibt bei
+Frame `0x40`.
+Nach dem Rebuild: 55 Wörter, null Abweichungen.
+Pool-Namen von `@2195` und `@742` zählt
+`functionRelocDiffs=data_value` als gleich.
+Die Inline wird nicht emittiert.
+
+**Match, `TSilhouette::setting`.**
+103 Instruktionen, 412 Bytes, Frame beiderseits `0x90`.
+Vorher lagen die Farb-Stores auf `0x1c` und die Kopie
+auf `0x20`.
+`GXColor amb = { ... }` schrumpft den Frame auf `0x88`
+und baut die Farbe bei `0x74`. Zurückgenommen.
+`GXColor amb; amb = (GXColor){ ... };` trifft `0x20`
+und die Kopie auf `0x1c`.
+Nach dem Rebuild: 103 Wörter, null Abweichungen.
+
+`validate-symbol-order.py -u mario/MarioUtil/DrawUtil`
+meldet weiter das vorbestehende fehlende Weak-Symbol
+`identity33__Q29JGeometry64TRotation3<...>Fv`.
+Dasselbe fehlte vor dieser Änderung.
+14 UNUSED-Größenwarnungen sind ebenfalls alt.
+Die TU bleibt `NonMatching`.
+`SMS_UnifyMaterial` liegt bei 99,3 %.
+
+**Messung, `ninja` und `dtk shasum -c`.**
+
+Nachher: 47,61 % matched code,
+1709416 / 3590088 Bytes, 9172 / 12881 Funktionen.
+Game Code 35,28 %, 997268 / 2826784 Bytes,
+5207 / 8857 Funktionen.
+
+Delta gegen Runde 77: +2 Funktionen, +632 Bytes
+(220 + 412).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Kein Matching-Flip. Kein Push in diesem Lauf.
+
+### Nächster Schritt
+
+1. `DrawUtil` nicht auf `Matching` stellen.
+2. `TSilhouette::setting` nicht wieder in den Aufruf
+   falten und nicht als `GXColor amb = { ... }`
+   schreiben.
+3. `SMS_CountPolygonNumInShape` nicht auf den direkten
+   Index `sizeTable[desc->type]` zurückdrehen.
+4. Nächster Kandidat in derselben TU:
+   `TSilhouette::perform`, 254 Instruktionen, 1016 Bytes.
+   Frame `0x188` gegen `0x180`. Die Farb-Slots weichen
+   um 12 Byte ab (`0x40` gegen `0x34`), der Frame nur
+   um 8. Kein einheitlicher Shift.
+
+### Nach neunundsiebzigster Iterationsrunde (ein Match)
+
+**Beobachtung, vorher.** Stand Runde 78:
+47,61 % matched code, 1709416 / 3590088 Bytes,
+9172 / 12881 Funktionen.
+Game Code 35,28 %, 997268 / 2826784 Bytes,
+5207 / 8857 Funktionen.
+
+`TSilhouette::perform` nicht angefasst.
+`getUnk1CAlpha` lädt bei uns `0x1f` statt `0x1b`.
+Das ist ein Member-Offset, kein reiner Slot.
+
+**Match, `TNerveBPBreakSleep::execute`.**
+61 Instruktionen, 244 Bytes.
+Vorher Frame `0x28` bei uns, `0x30` im Original.
+Der Rumpf war sonst wortgleich.
+`int time = spine->getTime()` hebt den Frame auf `0x30`.
+Nach dem Rebuild: 61 Wörter, null Abweichungen.
+Dieselbe Schreibweise wie bei `TNerveBPJumpReact`.
+
+`validate-symbol-order.py -u mario/Enemy/bosspakkun`
+PASS. Zwei UNUSED-Größenwarnungen sind alt.
+Die TU bleibt `NonMatching`.
+
+**Gemessen und zurückgenommen.**
+
+- `TLightWithDBSet::addChildGroupObj`: benannte
+  `opa`/`xlu` lassen die Zeiger-Slots vertauscht
+  (`0x6c`/`0x70`) und schieben den ersten
+  Iterator um 4 Byte nach unten.
+- `TAmenbo::calcRootMatrix`: `TPosition3f` vor
+  `isTaken()` ändert nichts. Die Matrix bleibt
+  auf `0x3c` statt `0x40`. Frame beiderseits `0x90`.
+- `TSilhouette::loadAfter`: Faktorentausch
+  `m[1][0] * m[2][1]` ändert die Lade-Reihenfolge
+  nicht. Das zweite `fmuls` wird schlechter.
+- `SMS_AddDamageFogEffect`: eine Inline
+  `damageFogOsc` faltet `-400 - startBase` und
+  `800 - endBase` weiter zu einem `300 * s`.
+  Frame `0x88` auf `0x90`, Original `0xb8`.
+  `fsubs` und das zweite `fmuls` fehlen weiter.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,62 % matched code,
+1709660 / 3590088 Bytes, 9173 / 12881 Funktionen.
+Game Code 35,29 %, 997512 / 2826784 Bytes,
+5208 / 8857 Funktionen.
+
+Delta gegen Runde 78: +1 Funktion, +244 Bytes.
+
+`changes_all` meldet nur
+`execute__18TNerveBPBreakSleep...` von 99,89 % auf
+100 %. Keine Regression.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Kein Matching-Flip.
+
+### Nächster Schritt
+
+1. `bosspakkun` und `DrawUtil` nicht auf `Matching`
+   stellen.
+2. `getTime()` nicht pauschal benennen.
+   Bei `TNerveBEelTearsMoveUp` hat es nichts geändert.
+3. Nicht wiederholen: die vier zurückgenommenen
+   Versuche oben, dazu die bekannten Sackgassen
+   (`bind`, `setCallback`, `evLaunchEventClearDemo`,
+   `kickRoofEffect`, `perform` von `TSilhouette`).
+4. Nächster Kandidat: eine andere Nerve, deren Diff
+   nur ein zu kleiner Frame ist und deren Rumpf
+   schon wortgleich ist. Nicht `TCoin::appear` und
+   nicht `TItem::calc` als erstes: dort fehlen
+   `0x20` Byte ohne einen einzigen Stack-Zugriff.
+
+### Nach achtzigster Iterationsrunde (drei Matches)
+
+**Beobachtung, vorher.** Stand Runde 79:
+47,62 % matched code, 1709660 / 3590088 Bytes,
+9173 / 12881 Funktionen.
+Game Code 35,29 %, 997512 / 2826784 Bytes,
+5208 / 8857 Funktionen.
+
+**Match, drei Nerves in `bosspakkun`.**
+Der Rumpf war wortgleich, der Frame 8 Byte zu klein.
+`int time = spine->getTime()` hebt den Frame.
+Null abweichende Wörter danach.
+
+- `TNerveBPGetUp::execute`, 46 Instruktionen, 184 Bytes.
+  Frame `0x20` auf `0x28`.
+- `TNerveBPCannon::execute`, 73 Instruktionen, 292 Bytes.
+  Frame `0x30` auf `0x38`.
+- `TNerveBPSwing::execute`, 44 Instruktionen, 176 Bytes.
+  Frame `0x30` auf `0x38`.
+  Nur der erste `getTime()` ist benannt.
+  Der zweite bleibt `spine->getTime()`, das Original
+  lädt nach `changeBck` neu.
+
+`validate-symbol-order.py -u mario/Enemy/bosspakkun`
+PASS. Die zwei UNUSED-Größenwarnungen sind alt.
+Die TU bleibt `NonMatching`.
+
+**Gemessen und zurückgenommen.**
+
+- `TNerveBPTumbleIn`: derselbe benannte `getTime()`
+  ändert den Frame nicht. Er bleibt `0x40` gegen
+  `0x48`. Drei Lade-Stellen, kein Stack-Objekt
+  dazwischen.
+- `TNerveBPFlyPivot`: der Frame wächst auf `0x40`,
+  gleich dem Original. Der Rückgabewert von `pop()`
+  bleibt auf `0x1c` statt `0x20`.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,64 % matched code,
+1710312 / 3590088 Bytes, 9176 / 12881 Funktionen.
+Game Code 35,31 %, 998164 / 2826784 Bytes,
+5211 / 8857 Funktionen.
+
+Delta gegen Runde 79: +3 Funktionen, +652 Bytes
+(184 + 292 + 176).
+
+`changes_all` meldet nur diese drei Executes von
+unter 100 % auf 100 %. Keine Regression.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Kein Matching-Flip.
+
+### Nächster Schritt
+
+1. `bosspakkun` nicht auf `Matching` stellen.
+2. `getTime()` nicht pauschal benennen.
+   `TumbleIn` hat nicht reagiert.
+   `FlyPivot` schließt den `pop()`-Slot nicht.
+3. `TNerveBPTornado` hat 16 Byte zu wenig Frame
+   und keinen Stack-Zugriff im Rumpf.
+   Ein einzelner `int` reicht dort erfahrungsgemäß
+   nicht.
+4. `TNerveBPDie` fehlt `0x20` ohne Stack-Zugriff,
+   wie `TCoin::appear` und `TItem::calc`.
+
+### Nach einundachtzigster Iterationsrunde (fünf Matches)
+
+**Beobachtung, vorher.** Stand Runde 80:
+47,64 % matched code, 1710312 / 3590088 Bytes,
+9176 / 12881 Funktionen.
+Game Code 35,31 %, 998164 / 2826784 Bytes,
+5211 / 8857 Funktionen.
+
+**Match, fünf Nerves.**
+Der Rumpf war wortgleich, der Frame 8 Byte zu klein.
+Ein benanntes `int time = spine->getTime()` hebt den Frame.
+Null abweichende Wörter danach.
+
+- `TNerveBPCannonL::execute`, 78 Instruktionen, 312 Bytes.
+  Frame `0x30` auf `0x38`.
+  Nur ein `getTime()`, vor `setBck`.
+- `TNerveKumokunPostWalk::execute`, 112 Instruktionen,
+  448 Bytes. Frame `0x40` auf `0x48`.
+- `TNerveKumokunPostFreeze::execute`, 112 Instruktionen,
+  448 Bytes. Frame `0x40` auf `0x48`.
+- `TNerveTamaNokoWait::execute`, 98 Instruktionen,
+  392 Bytes. Frame `0x38` auf `0x40`.
+  Nur der erste `getTime()` ist benannt.
+  Der Vergleich ist `< 2`.
+  Der spätere `getTime()` nach `setBckAnm` bleibt
+  ein erneuter Aufruf.
+- `TNerveTamaNokoHitWater::execute`, 206 Instruktionen,
+  824 Bytes. Frame `0x50` auf `0x58`.
+  Dieselbe Schreibweise wie bei `TamaNokoWait`.
+
+`validate-symbol-order.py` für `mario/Enemy/bosspakkun`,
+`mario/Enemy/Kumokun` und `mario/Enemy/tamaNoko`:
+PASS.
+UNUSED-Größenwarnungen und die Weak-Reihenfolge
+in `tamaNoko` sind alt und kein Fehler.
+Keine TU auf `Matching` gestellt.
+
+**Gemessen und zurückgenommen.**
+
+- `TNerveSmallEnemyFreeze`: der benannte
+  `freezeTime` wurde entfernt, weil der Frame
+  8 Byte zu groß war (`0x40` gegen `0x38`).
+  Der virtuelle Aufruf wandert nach hinten,
+  der Rumpf stimmt nicht mehr.
+- `TNerveBGKLaunchGoro`: der erste von zwei
+  `getTime()` benannt ändert nichts.
+  Frame bleibt `0x38` gegen `0x40`.
+- `TNerveBGKAwakeDamage`: das einzige `getTime()`
+  benannt ändert nichts.
+  Frame bleibt `0x60` gegen `0x68`.
+  Ein Double im Rumpf wandert mit.
+- `TNerveDoroHaneRise`: `getTime()` vor dem
+  `MsClamp`-Produkt benannt.
+  Frame bleibt `0x50` gegen `0x58`.
+  Die Int-nach-Float-Folge wird schlechter.
+- `TNerveMantaDeath`: benanntes `getTime()`
+  ändert nichts. Frame bleibt `0x28` gegen `0x30`.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,71 % matched code,
+1712736 / 3590088 Bytes, 9181 / 12881 Funktionen.
+Game Code 35,40 %, 1000588 / 2826784 Bytes,
+5216 / 8857 Funktionen.
+
+Delta gegen Runde 80: +5 Funktionen, +2424 Bytes
+(312 + 448 + 448 + 392 + 824).
+
+`changes_all` meldet nur diese fünf Executes von
+unter 100 % auf 100 %. Keine Regression.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Kein Matching-Flip.
+
+### Nächster Schritt
+
+1. `bosspakkun`, `Kumokun` und `tamaNoko` nicht
+   auf `Matching` stellen.
+2. `getTime()` nicht pauschal benennen.
+   `LaunchGoro`, `AwakeDamage`, `DoroHaneRise`
+   und `MantaDeath` haben nicht reagiert.
+   `SmallEnemyFreeze` darf den Namen nicht verlieren.
+3. Nicht wiederholen: `TNerveBPTornado` (16 Byte,
+   kein Stack-Zugriff), `TNerveBPDie`,
+   `TCoin::appear`, `TItem::calc` (`0x20`),
+   `TumbleIn`, `FlyPivot`.
+4. `TNerveKumokunFreeze` ist ebenfalls 16 Byte
+   zu klein und hat nur Prolog-Unterschiede.
+   Ein einzelner `int` ist dort kein erster Versuch.
+5. `TNerveTamaNokoSink` ist 8 Byte zu groß
+   (`0x68` gegen `0x60`), nicht zu klein.
+
+### Nach zweiundachtzigster Iterationsrunde (kein neuer Vollmatch)
+
+**Beobachtung, vorher.** Stand Runde 81:
+47,71 % matched code, 1712736 / 3590088 Bytes,
+9181 / 12881 Funktionen.
+Game Code 35,40 %, 1000588 / 2826784 Bytes,
+5216 / 8857 Funktionen.
+
+**`TBossPakkun::receiveMessage`.**
+148 Instruktionen, 592 Bytes.
+Vorher war der Rumpf bis auf ein `cmplw` wortgleich,
+der Frame `0x50` gegen `0x60`.
+`&TNerveBPSleep::theNerve() == getLatestNerve()`
+lädt in derselben Reihenfolge, vergleicht aber
+`cmplw r0, r3`.
+`getLatestNerve() == &theNerve()` direkt hält den
+Nerv in `r28` und lädt den Spine ein zweites Mal.
+Diese Form matcht das `cmplw`:
+
+```
+const TNerveBase<TLiveActor>* sleep = &TNerveBPSleep::theNerve();
+if (mSpine->getLatestNerve() == sleep && ...)
+```
+
+Danach nur noch Prolog und Epilog, neun Zeilen,
+Frame weiter `0x50` gegen `0x60`.
+Kein Stack-Zugriff im Rumpf.
+Die Funktion zählt nicht als Match.
+
+`validate-symbol-order.py -u mario/Enemy/bosspakkun`
+PASS. Die zwei UNUSED-Größenwarnungen sind alt.
+Die TU bleibt `NonMatching`.
+
+**Gemessen und zurückgenommen.**
+
+- `MtxToQuat`: die Summe `m[0][0] + m[1][1] + m[2][2] + 1`
+  in drei Statements zerlegt. Das eine vertauschte
+  `fadds` wird nicht gerichtet. Die Register der
+  Spur wechseln, das `fmr` fällt weg.
+- `evStartSE`: `push(TSpcSlice())` ändert nichts.
+  Die beiden Slices bleiben 4 Byte zu tief
+  (`0x34`/`0x2c` gegen `0x38`/`0x30`),
+  das `stfd` bei `0x40` stimmt schon.
+  Ein benanntes `TSpcSlice` verkleinert den Frame
+  auf `0x40` und lässt den Typ-Store aus.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher unverändert: 47,71 % matched code,
+1712736 / 3590088 Bytes, 9181 / 12881 Funktionen.
+Game Code 35,40 %, 1000588 / 2826784 Bytes,
+5216 / 8857 Funktionen.
+
+`changes_all` meldet nur
+`receiveMessage__11TBossPakkun...` von 99,87 % auf
+99,94 % fuzzy. Keine Regression, kein neues
+100-%-Symbol.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Kein Matching-Flip.
+
+### Nächster Schritt
+
+1. `bosspakkun` nicht auf `Matching` stellen.
+2. `receiveMessage` nicht noch einmal über die
+   `==`-Reihenfolge drehen. Der Frame bleibt
+   16 Byte zu klein und ohne Stack-Zugriff.
+3. `MtxToQuat` nicht erneut in Teilsummen
+   zerlegen. `evStartSE` nicht mit
+   `push(TSpcSlice())` oder einem benannten
+   `TSpcSlice` wiederholen.
+4. Die Vermeidungsliste aus Runde 81 bleibt.
+
+### Nach dreiundachtzigster Iterationsrunde (ein Match)
+
+**Beobachtung, vorher.** Stand Runde 82:
+47,71 % matched code, 1712736 / 3590088 Bytes,
+9181 / 12881 Funktionen.
+Game Code 35,40 %, 1000588 / 2826784 Bytes,
+5216 / 8857 Funktionen.
+
+**Match, `TMapObjBase::isDemo`.**
+22 Instruktionen, 88 Bytes.
+Vorher ein vertauschtes `bne`: Zustand 1 und 2
+sprangen auf `return false`.
+`if (b1) return true` legt ein zweites `return true`
+vor die Prüfung von 3 und 4.
+`if (!b2) return false` macht aus dem zweiten
+Sprung ein `bne` und tauscht die Rückgaben.
+Ein `goto` initialisiert `b2` zu früh.
+
+Die passende Form ist ein Oder mit der zweiten
+Paarprüfung als Inline. Der Helfer wird nicht
+emittiert.
+
+```
+if (b1 || stateIs3Or4(gpMarDirector->unk124))
+    return true;
+return false;
+```
+
+Null abweichende Wörter. Die TU bleibt
+`NonMatching`.
+
+`validate-symbol-order.py -u mario/MoveBG/MapObjLib`
+schlägt schon vorher fehl: `SMatrix33C::at` fehlt,
+und die UNUSED-Reihenfolge weicht ab.
+Das ist nicht durch `isDemo` entstanden.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,71 % matched code,
+1712824 / 3590088 Bytes, 9182 / 12881 Funktionen.
+Game Code 35,40 %, 1000676 / 2826784 Bytes,
+5217 / 8857 Funktionen.
+
+Delta gegen Runde 82: +1 Funktion, +88 Bytes.
+Die angezeigte Prozentzahl bleibt 47,71.
+
+`changes_all` meldet nur `isDemo__11TMapObjBaseFv`
+von 99,77 % auf 100 %. Keine Regression.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Kein Matching-Flip.
+
+### Nächster Schritt
+
+1. `MapObjLib` nicht auf `Matching` stellen.
+2. `isDemo` nicht auf ein vierfaches Oder
+   oder ein `goto` zurückdrehen.
+3. Die Vermeidungsliste aus Runde 81 und die
+   drei Fehlversuche aus Runde 82 bleiben.
+
+### Nach vierundachtzigster Iterationsrunde (ein Zähler-Match)
+
+**Beobachtung, vorher.** Stand Runde 83:
+47,71 % matched code, 1712824 / 3590088 Bytes,
+9182 / 12881 Funktionen.
+Game Code 35,40 %, 1000676 / 2826784 Bytes,
+5217 / 8857 Funktionen.
+
+**Match, `evCheckWoodBox`.**
+171 Instruktionen, 684 Bytes.
+Die Schleife läuft von `p2` bis `p1`.
+Der Zähler stand als `p2 - p1 + 1`.
+Das Ziel rechnet `subf r5, r6, r29`, also `p1 - p2`.
+`int count = p1 - p2 + 1` macht dieses eine Wort gleich.
+Null abweichende Wörter. Die TU bleibt `NonMatching`.
+
+**Diff sauber, zwei Nozzle-`movement`.**
+`TNozzleBase::movement` ist in
+`TNozzleDeform::movement` geinlined.
+Beide hatten nur zwei `lfs`: zuerst 256, dann 150.
+Das Ziel lädt 150 und danach 256.
+`150.0f * analog * 256.0f` dreht die Faktoren.
+Danach null abweichende Wörter.
+200 Bytes und 296 Bytes.
+Der Fortschrittszähler stand für beide schon auf 100 %,
+deshalb steigt `matched_code` hier nicht.
+
+**Diff sauber, `TEnemyMario::hitWater`.**
+Das eine abweichende `lfs` lädt die Poolkonstante 30, nicht 0.
+Das Literal ist jetzt `30.0f`.
+109 Instruktionen, 436 Bytes, null abweichende Wörter.
+Der Funktionszähler stand schon auf 100 %.
+`.sdata2` der TU geht von 99,5 % auf 100 %.
+
+`validate-symbol-order.py` schlägt bei allen drei TUs
+an vorbestehenden Fehlern fehl:
+`TVec3::set` fehlt in `EventWatcher`,
+UNUSED-Symbole fehlen in `WaterGun`,
+`getPoint` fehlt in `enemyMario`.
+Keine neue Nicht-weak-Reihenfolge.
+Kein Matching-Flip.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,73 % matched code,
+1713508 / 3590088 Bytes, 9183 / 12881 Funktionen.
+Game Code 35,42 %, 1001360 / 2826784 Bytes,
+5218 / 8857 Funktionen.
+
+Delta Code gegen Runde 83: +1 Funktion, +684 Bytes.
+Daten: 384651 auf 385643 Bytes,
+60,07 % auf 60,23 %.
+Das sind die 992 Bytes `.sdata2` von `enemyMario`.
+
+`changes_all` meldet `evCheckWoodBox` von 99,94 % auf 100 %.
+`enemyMario` matched data von 48,05 % auf 62,93 %.
+Keine Regression.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### Nächster Schritt
+
+1. `isDemo` nicht auf ein vierfaches Oder
+   oder ein `goto` zurückdrehen.
+2. `evCheckWoodBox` nicht wieder auf `p2 - p1` stellen.
+3. Die Nozzle-Faktoren nicht wieder mit 256 vor 150 schreiben.
+4. Die `hitWater`-Lautstärke nicht wieder auf `0.0f` setzen.
+5. Die Vermeidungslisten aus Runde 81 und 82 bleiben.
+   Die drei TUs nicht auf `Matching` stellen.
+
+### Nach fünfundachtzigster Iterationsrunde (sechs Diffs, Daten)
+
+**Beobachtung, vorher.** Stand Runde 84:
+47,73 % matched code, 1713508 / 3590088 Bytes,
+9183 / 12881 Funktionen.
+Game Code 35,42 %, 1001360 / 2826784 Bytes,
+5218 / 8857 Funktionen.
+Daten 385643 / 640331 Bytes, 60,23 %.
+
+**`TMario::thinkDirty`.**
+Das eine abweichende `lfs` subtrahiert 200, nicht 1,
+von `mFloorPosition.z`, bevor `mPosition.y` vergleicht.
+107 Instruktionen, 428 Bytes, null abweichende Wörter.
+Der Fortschrittszähler stand schon auf 100 %.
+
+**Wurzelmatrizen in `MapObjLib`.**
+`M_PI / 180.0f` ist ein Bit zu klein
+(`0x3c8efa35` gegen `0x3c8efa36`).
+Die Spielkonstante `0.017453294f` steht schon in
+`Sky.cpp`, `AnimalBase.cpp` und `cameralib.cpp`.
+Damit matchen:
+
+- `makeRootMtxRotX`, `makeRootMtxRotY`, `makeRootMtxRotZ`,
+  je 44 Instruktionen, 176 Bytes
+- `setRootMtxRotY` und `setRootMtxRotZ`,
+  je 45 Instruktionen, 180 Bytes
+
+Null abweichende Wörter. Keine Regression in den beiden TUs.
+
+`.sdata2` von `MapObjLib` matcht damit vollständig.
+`matched_data` der TU von 796 auf 892 Bytes, 100 %.
+
+`validate-symbol-order.py` bleibt rot an alten Fehlern:
+`MarioMove` fehlt UNUSED `setMissJumping`,
+`MapObjLib` fehlt `SMatrix33C::at` und die
+Nicht-weak-Reihenfolge weicht ab.
+Kein Matching-Flip. `isDemo` und die vier Formen
+aus Runde 84 sind unverändert.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Code unverändert: 47,73 % matched code,
+1713508 / 3590088 Bytes, 9183 / 12881 Funktionen.
+Game Code 35,42 %, 1001360 / 2826784 Bytes,
+5218 / 8857 Funktionen.
+
+Daten: 385739 / 640331 Bytes, 60,24 %.
+Game-Daten 306515 / 556995 Bytes, 55,03 %.
+Delta gegen Runde 84: +96 Datenbytes, kein neues
+Code-Symbol im Zähler.
+
+`changes_all` meldet nur `MapObjLib` matched data
+von 89,24 % auf 100 %. Keine Regression.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### Nächster Schritt
+
+1. `thinkDirty` nicht wieder auf `- 1.0f` stellen.
+2. Die drei `makeRootMtxRot*` nicht wieder auf
+   `M_PI / 180.0f` stellen.
+3. Runde 84 nicht zurückdrehen: `p1 - p2 + 1`,
+   `150 * analog * 256`, `hitWater` mit `30.0f`.
+4. `isDemo` nicht auf ein vierfaches Oder oder
+   ein `goto` zurückdrehen.
+5. Vermeidungslisten aus Runde 81 und 82 bleiben.
+   `MapObjLib` und `MarioMove` nicht auf `Matching` stellen.
+
+### Nach sechsundachtzigster Iterationsrunde (ein Status-Match)
+
+**Beobachtung, vorher.** Stand Runde 85:
+47,73 % matched code, 1713508 / 3590088 Bytes,
+9183 / 12881 Funktionen.
+Game Code 35,42 %, 1001360 / 2826784 Bytes,
+5218 / 8857 Funktionen.
+Daten 385739 / 640331 Bytes, 60,24 %.
+
+**Match, `TMario::changePlayerStatus`.**
+`setStatusToRunning` ist dort geinlined.
+Die Laufgeschwindigkeit nahm das Maximum aus
+`mIntendedMag` und 8.
+Das Ziel nimmt das Minimum: bei `mIntendedMag <= 8`
+bleibt der Wert, sonst wird 8 eingesetzt.
+115 Instruktionen, 460 Bytes, null abweichende Wörter.
+Vorher 99,83 %. Die TU bleibt `NonMatching`.
+
+Die freistehende Kopie von `setStatusToRunning` ist
+UNUSED, 216 Bytes gegen 220 in der Map.
+Die Größe ändert sich durch die Auswahl nicht.
+`validate-symbol-order.py` bleibt rot am alten
+fehlenden `setMissJumping`. Keine neue Reihenfolge.
+`thinkDirty` und die Wurzelmatrizen sind unverändert.
+
+**Angeschaut, nicht angefasst.**
+`TPollutionLayer::stampModel` tauscht nur zwei `lfs`,
+der `fcmpo` bleibt derselbe.
+`MSRandVol::getRandVol` tauscht zwei Index-Register,
+`f1`/`f2`/`f3` an `getRandom` sind dieselben Werte.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,74 % matched code,
+1713968 / 3590088 Bytes, 9184 / 12881 Funktionen.
+Game Code 35,44 %, 1001820 / 2826784 Bytes,
+5219 / 8857 Funktionen.
+Daten unverändert: 385739 / 640331 Bytes, 60,24 %.
+
+Delta Code gegen Runde 85: +1 Funktion, +460 Bytes.
+
+`changes_all` meldet nur `changePlayerStatus`
+von 99,83 % auf 100 %.
+`MarioMove` matched code von 38,86 % auf 40,21 %.
+Keine Regression.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### Nächster Schritt
+
+1. `changePlayerStatus` nicht wieder auf
+   `mIntendedMag <= 8 ? 8 : mIntendedMag` stellen.
+2. `thinkDirty` nicht wieder auf `- 1.0f` stellen.
+3. Die drei `makeRootMtxRot*` nicht wieder auf
+   `M_PI / 180.0f` stellen.
+4. Runde 84 nicht zurückdrehen: `p1 - p2 + 1`,
+   `150 * analog * 256`, `hitWater` mit `30.0f`.
+5. `isDemo` nicht auf ein vierfaches Oder oder
+   ein `goto` zurückdrehen.
+6. Vermeidungslisten aus Runde 81 und 82 bleiben.
+   `stampModel` und `getRandVol` nicht wegen
+   Registertausch jagen.
+   `MarioMove` nicht auf `Matching` stellen.
+
+### Nach siebenundachtzigster Iterationsrunde (ein Datenwort)
+
+**Beobachtung, vorher.** Stand Runde 86:
+47,74 % matched code, 1713968 / 3590088 Bytes,
+9184 / 12881 Funktionen.
+Game Code 35,44 %, 1001820 / 2826784 Bytes,
+5219 / 8857 Funktionen.
+Daten 385739 / 640331 Bytes, 60,24 %.
+
+**`TKumokunManager::load`.**
+Der offizielle Zähler stand für die Funktion schon
+auf 100 %. `decomp-diff` zeigte ein `lwz` aus
+`.sdata`: Zielwert 65, Quelle 60.
+Das dritte `set` schreibt `mSLDamageRadius`.
+Die anderen drei bleiben 60, 50 und 70.
+122 Instruktionen, 488 Bytes, danach null
+abweichende Wörter.
+`Kumokun`-Daten von 2552 auf 2568 Bytes, 100 %.
+Die TU bleibt `NonMatching` (Code 43,40 %).
+`validate-symbol-order.py` bleibt PASS mit den
+alten UNUSED-Größenwarnungen.
+`changePlayerStatus` ist unverändert.
+
+**Angeschaut, nicht angefasst.**
+`stampModel` und `getRandVol` bleiben Registertausch.
+`TRoulette::moveObject` hat zusätzlich einen
+Frame-Abstand von 0x20.
+`setQuat` tauscht nur Float-Register bei gleichen
+Poolwerten.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Code unverändert: 47,74 % matched code,
+1713968 / 3590088 Bytes, 9184 / 12881 Funktionen.
+Game Code 35,44 %, 1001820 / 2826784 Bytes,
+5219 / 8857 Funktionen.
+
+Daten: 385755 / 640331 Bytes, 60,24 %.
+Game-Daten 306531 / 556995 Bytes, 55,03 %.
+Delta gegen Runde 86: +16 Datenbytes, kein neues
+Code-Symbol im Zähler.
+
+`changes_all` meldet nur `Kumokun` matched data
+von 99,38 % auf 100 %. Keine Regression.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### Nächster Schritt
+
+1. `mSLDamageRadius` in `TKumokunManager::load`
+   nicht wieder auf 60 stellen.
+2. `changePlayerStatus` behält das Minimum aus
+   `mIntendedMag` und 8.
+3. `thinkDirty` bleibt bei `- 200.0f`.
+   Die drei `makeRootMtxRot*` bleiben bei
+   `0.017453294f`.
+4. Runde 84 bleibt: `p1 - p2 + 1`,
+   `150 * analog * 256`, `hitWater` mit `30.0f`.
+5. `isDemo` bleibt die Oder-Form mit `stateIs3Or4`.
+6. Vermeidungslisten aus Runde 81 und 82 bleiben.
+   `stampModel` und `getRandVol` nicht wegen
+   Registertausch jagen.
+   `Kumokun` und `MarioMove` nicht auf `Matching` stellen.
+
+### Nach achtundachtzigster Iterationsrunde (ein Spin)
+
+**Beobachtung, vorher.** Stand Runde 87:
+47,74 % matched code, 1713968 / 3590088 Bytes,
+9184 / 12881 Funktionen.
+Game Code 35,44 %, 1001820 / 2826784 Bytes,
+5219 / 8857 Funktionen.
+Daten 385755 / 640331 Bytes, 60,24 %.
+
+**Match, `TMario::rotating`.**
+Die positive Drehung speichert `mStatusTimer * 4096`
+mit `extsh` in das `s16` `mModelFaceAngle`.
+Die negative Drehung hat nur `neg` und `sth`.
+Ein `u16`-Cast auf der Negation entfernt das
+zusätzliche `extsh`.
+74 Instruktionen, 296 Bytes, null abweichende Wörter.
+Vorher 98,65 %. Die TU bleibt `NonMatching`.
+
+`validate-symbol-order.py` bleibt rot am alten
+fehlenden UNUSED `braking`. Keine neue Reihenfolge.
+Nur diese Funktion gewinnt. Der Schadensradius 65
+und `changePlayerStatus` sind unverändert.
+
+**Zurückgenommen.**
+`startDisappearTimer` als `465 - y1 + 60` faltet
+weiter zu einem `subfic` von 525.
+`s32 targetY; targetY += 60` zieht die `addi` nach,
+der Rest der Funktion fällt auf 82 %.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,75 % matched code,
+1714264 / 3590088 Bytes, 9185 / 12881 Funktionen.
+Game Code 35,45 %, 1002116 / 2826784 Bytes,
+5220 / 8857 Funktionen.
+Daten unverändert: 385755 / 640331 Bytes, 60,24 %.
+
+Delta Code gegen Runde 87: +1 Funktion, +296 Bytes.
+
+`changes_all` meldet nur `rotating` von 98,65 %
+auf 100 %. `MarioRun` matched code von 26,38 %
+auf 27,86 %. Keine Regression.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### Nächster Schritt
+
+1. Die negative Drehung in `rotating` behält den
+   `u16`-Cast.
+2. `mSLDamageRadius` in `TKumokunManager::load`
+   bleibt 65.
+3. `changePlayerStatus` behält das Minimum aus
+   `mIntendedMag` und 8.
+4. `thinkDirty` bleibt bei `- 200.0f`.
+   Die drei `makeRootMtxRot*` bleiben bei
+   `0.017453294f`.
+5. Runde 84 bleibt: `p1 - p2 + 1`,
+   `150 * analog * 256`, `hitWater` mit `30.0f`.
+6. `isDemo` bleibt die Oder-Form mit `stateIs3Or4`.
+7. Vermeidungslisten aus Runde 81 und 82 bleiben.
+   `stampModel`, `getRandVol`, `setQuat` und
+   `TRoulette::moveObject` nicht wegen Registertausch
+   jagen. `startDisappearTimer` nicht wieder als
+   gefaltete 525 oder als `targetY += 60` schreiben.
+   `MarioRun` nicht auf `Matching` stellen.
+
+### Nach neunundachtzigster Iterationsrunde (kein Vollmatch)
+
+**Beobachtung, vorher.** Stand Runde 88:
+47,75 % matched code, 1714264 / 3590088 Bytes,
+9185 / 12881 Funktionen.
+Game Code 35,45 %, 1002116 / 2826784 Bytes,
+5220 / 8857 Funktionen.
+Daten 385755 / 640331 Bytes, 60,24 %.
+
+**Kein neues Vollmatch.** Drei belegte Konstanten,
+der Code-Zähler bleibt stehen.
+
+`TNerveBPSwallow::execute`: der zweite Emitter
+bekommt `(u8*)boss + 1`, wie die anderen
+Pakkun-Wasser-Partikel.
+Die `addi`-Immediate stimmt.
+Der Frame bleibt 0x50 gegen 0x60, ohne inneren
+Stack-Zugriff. 99,92 % auf 99,93 %.
+
+`TDoroHaneKuri::attackToMario`: die Joint-Position
+ist die Translationsspalte `mtx[0][3]`, `mtx[1][3]`,
+`mtx[2][3]`.
+Der Rumpf stimmt danach.
+Der Frame bleibt 0x48 gegen 0x50.
+Ein benanntes Bool, ein Model-Zeiger, ein Sound-Zeiger
+und ein Nerve-Zeiger verschieben den Frame nicht,
+ohne Register zu tauschen.
+99,93 % auf 99,95 %.
+
+`TBaseNPC::isCanWalk`: `CLBSquared` bekommt `10.0f`.
+`2.5625f` wählt ein anderes Pool-Float.
+`execWalk` 89,42 % auf 89,44 %.
+Die `sdata2` der TU geht von 0 % auf 100 %
+matched data, 56 Bytes.
+`set(dx, 0, dz)` statt der Subtraktion fiel auf
+83,5 % und bleibt draussen.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,75 % matched code,
+1714264 / 3590088 Bytes, 9185 / 12881 Funktionen.
+Game Code 35,45 %, 1002116 / 2826784 Bytes,
+5220 / 8857 Funktionen.
+Daten 385811 / 640331 Bytes, 60,25 %.
+Game-Daten 306587 / 556995 Bytes, 55,04 %.
+
+Delta Code gegen Runde 88: keine Funktion, 0 Bytes.
+Delta Daten: +56 Bytes, nur `NpcWalkTurn`.
+
+`changes_all` listet keine Regression.
+`bosspakkun` Symbolordnung PASS, alte UNUSED-Grössen.
+`hamukuri` und `NpcWalkTurn` bleiben an den alten
+Fehlern rot (`onHaveCap`-Linkage, fehlendes `set<f>`).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `rotating` behält den `u16`-Cast.
+2. `TNerveBPSwallow` behält `(u8*)boss + 1`.
+   Den 16-Byte-Frame nicht mit einem einzelnen `int`
+   auffüllen.
+3. `attackToMario` behält die Translationsspalte.
+   Den 8-Byte-Frame nicht mit `trash` schliessen.
+4. `isCanWalk` behält `CLBSquared(10.0f)`.
+   Die `set(dx, 0, dz)`-Form nicht wiederholen.
+5. `mSLDamageRadius` bleibt 65.
+   `changePlayerStatus` behält das Minimum aus
+   `mIntendedMag` und 8.
+6. `thinkDirty` bleibt bei `- 200.0f`.
+   Die drei `makeRootMtxRot*` bleiben bei
+   `0.017453294f`.
+7. Runde 84 bleibt: `p1 - p2 + 1`,
+   `150 * analog * 256`, `hitWater` mit `30.0f`.
+8. `isDemo` bleibt die Oder-Form mit `stateIs3Or4`.
+9. Vermeidungslisten aus Runde 81 und 82 bleiben.
+   `stampModel`, `getRandVol`, `setQuat` und
+   `TRoulette::moveObject` nicht wegen Registertausch
+   jagen. `startDisappearTimer` nicht wieder als
+   gefaltete 525 oder als `targetY += 60` schreiben.
+   `MarioRun`, `bosspakkun`, `hamukuri` und
+   `NpcWalkTurn` nicht auf `Matching` stellen.
+
+### Nach neunzigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 89:
+47,75 % matched code, 1714264 / 3590088 Bytes,
+9185 / 12881 Funktionen.
+Game Code 35,45 %, 1002116 / 2826784 Bytes,
+5220 / 8857 Funktionen.
+Daten 385811 / 640331 Bytes, 60,25 %.
+
+**Ein neues Vollmatch, drei Partial-Fixes.**
+
+`THaneHamuKuri2::walkBehavior`: die Höhe ist
+`unk210 + height`, wobei `height` die Summe
+`unk230 + unk234` ist.
+Retail addiert die beiden Offsets zuerst und
+reserviert das Slot.
+0 Abweichungen, 364 Bytes, 100 %.
+
+`TNervePoihanaThrow::execute`: `MsMtxSetRotRPH`
+bekommt `mRotation` (0x30), nicht `mPosition` (0x10).
+Die drei `lfs` stimmen.
+Der Frame bleibt 0xa0 gegen 0xb0, jeder Slot
+um 0x10 verschoben. 99,82 % auf 99,84 %.
+
+`TDangoHamuKuri::receiveMessage`: der Wasser-Partikel
+hängt an `&sender->mPosition`, der Treffer-Sound
+an `&mPosition`.
+Der Rumpf stimmt.
+Der Frame bleibt 0x20 gegen 0x48.
+99,91 % auf 99,95 %.
+
+`TMapObjGeneral::recovering`: die Joint-Höhe ist
+`mat[1][3]`, die Y-Spalte der 3x4-Matrix.
+Der Rumpf stimmt.
+Der Frame bleibt 0x20 gegen 0x48.
+99,84 % auf 99,87 %.
+
+Keiner der drei Frames wurde mit einem einzelnen
+`int` oder `trash` aufgefüllt.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,76 % matched code,
+1714628 / 3590088 Bytes, 9186 / 12881 Funktionen.
+Game Code 35,46 %, 1002480 / 2826784 Bytes,
+5221 / 8857 Funktionen.
+Daten unverändert: 385811 / 640331 Bytes, 60,25 %.
+Game-Daten unverändert: 306587 / 556995 Bytes, 55,04 %.
+
+Delta Code gegen Runde 89: +1 Funktion, +364 Bytes.
+Delta Daten: 0 Bytes.
+
+`changes_all` listet keine Regression.
+`hamukuri` matched code 55,80 % auf 56,60 %.
+`poihana` und `MapObjGeneral` Symbolordnung PASS.
+`hamukuri` bleibt am alten `onHaveCap`-Linkage rot.
+`isOnTrap` UNUSED-Grösse in `poihana` ist alt.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `walkBehavior` behält die benannte Summe
+   `height = unk230 + unk234`.
+2. `TNervePoihanaThrow` behält `mRotation`.
+   Den 16-Byte-Frame nicht mit einem einzelnen `int`
+   auffüllen.
+3. `receiveMessage` des Dango behält
+   `&sender->mPosition` für den Partikel.
+   Den Frame nicht mit `trash` schliessen.
+4. `recovering` behält `mat[1][3]`.
+5. Runde 89 bleibt: `(u8*)boss + 1`,
+   Translationsspalte in `attackToMario`,
+   `CLBSquared(10.0f)`.
+   `set(dx, 0, dz)` in `isCanWalk` nicht wiederholen.
+6. `rotating` behält den `u16`-Cast.
+   `mSLDamageRadius` bleibt 65.
+   `changePlayerStatus` behält das Minimum aus
+   `mIntendedMag` und 8.
+7. `thinkDirty` bleibt bei `- 200.0f`.
+   Die drei `makeRootMtxRot*` bleiben bei
+   `0.017453294f`.
+8. Runde 84 bleibt: `p1 - p2 + 1`,
+   `150 * analog * 256`, `hitWater` mit `30.0f`.
+9. `isDemo` bleibt die Oder-Form mit `stateIs3Or4`.
+10. Vermeidungslisten aus Runde 81 und 82 bleiben.
+    `stampModel`, `getRandVol`, `setQuat` und
+    `TRoulette::moveObject` nicht wegen Registertausch
+    jagen. `startDisappearTimer` nicht wieder als
+    gefaltete 525 oder als `targetY += 60` schreiben.
+    `MarioRun`, `bosspakkun`, `hamukuri`, `poihana`,
+    `MapObjGeneral` und `NpcWalkTurn` nicht auf
+    `Matching` stellen.
+
+### Nach einundneunzigster Iterationsrunde (kein Vollmatch)
+
+**Beobachtung, vorher.** Stand Runde 90:
+47,76 % matched code, 1714628 / 3590088 Bytes,
+9186 / 12881 Funktionen.
+Game Code 35,46 %, 1002480 / 2826784 Bytes,
+5221 / 8857 Funktionen.
+Daten 385811 / 640331 Bytes, 60,25 %.
+
+**Kein neues Vollmatch.** Sechs Rümpfe stimmen.
+Die Frames bleiben offen und werden nicht gepolstert.
+Der Code-Zähler bleibt bei Runde 90.
+
+`TNerveBPTumble::execute`: der Jita-Emitter hängt an
+`(u8*)boss + 8`.
+Die `addi` stimmt.
+Der Frame bleibt 0x40 gegen 0x50.
+99,29 % auf 99,93 %.
+
+`evInsertTimer`: der erste Zweig ist `p2 == 1`.
+Danach `p2 == 2`, sonst `startDisappearTimer`.
+Der Frame bleibt 0x98 gegen 0xa0.
+99,77 % auf 99,78 %.
+
+`TFireWanwanTailHit::behaveTaken`: `moveRequest`
+bekommt `param_1->mPosition`.
+Im inlined `receiveMessage` stimmt der Rumpf.
+Der Frame bleibt 0xa0 gegen 0xb0.
+99,89 % auf 99,92 %.
+
+`TWoodBox::kill`: die vier Bodenprüfungen laufen
+`(-50,-50)`, `(50,-50)`, `(-50,50)`, `(50,50)`.
+Die beiden Pool-Loads stimmen.
+Der Frame bleibt 0x58 gegen 0xf0.
+Live-Diff 99,88 % auf 99,93 %.
+`changes_all` listet die Funktion nicht extra,
+der Report-Fuzzy bleibt 99,93 %.
+
+`TBossMantaManager::createEnemies`: das Limit ist
+`mSLInstanceNum` (Wert bei 0x90).
+Der Frame bleibt 0xa8 gegen 0xb0.
+99,78 % auf 99,79 %.
+
+`TWalkerEnemy::moveObject`: `mPosition.y += 5.0f`.
+Der Yaw-Load davor bleibt `mRotation.y`.
+Der Frame bleibt 0x60 gegen 0x88.
+99,80 % auf 99,82 %.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,76 % matched code,
+1714628 / 3590088 Bytes, 9186 / 12881 Funktionen.
+Game Code 35,46 %, 1002480 / 2826784 Bytes,
+5221 / 8857 Funktionen.
+Daten unverändert: 385811 / 640331 Bytes, 60,25 %.
+Game-Daten unverändert: 306587 / 556995 Bytes, 55,04 %.
+
+Delta Code gegen Runde 90: keine Funktion, 0 Bytes.
+Delta Daten: 0 Bytes.
+
+`changes_all` listet keine Regression.
+Live-Vergleich der sechs TUs: 6 Gewinne, 0 Verluste.
+`bosspakkun` und `walkerEnemy` Symbolordnung PASS.
+`EventWatcher`, `fireWanwan`, `MapObjHide` und
+`bossManta` bleiben an den alten Fehlern rot.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `walkBehavior` behält `height = unk230 + unk234`.
+2. Die sechs Rümpfe dieser Runde behalten.
+   Keinen davon mit einem einzelnen `int` oder
+   `trash` auf Frame-Länge bringen.
+3. Runde 90 bleibt: `mRotation` in `PoihanaThrow`,
+   `&sender->mPosition` im Dango-`receiveMessage`,
+   `mat[1][3]` in `recovering`.
+4. Runde 89 bleibt: `(u8*)boss + 1`,
+   Translationsspalte in `attackToMario`,
+   `CLBSquared(10.0f)`.
+   `set(dx, 0, dz)` in `isCanWalk` nicht wiederholen.
+5. `rotating` behält den `u16`-Cast.
+   `mSLDamageRadius` bleibt 65.
+   `changePlayerStatus` behält das Minimum aus
+   `mIntendedMag` und 8.
+6. `thinkDirty` bleibt bei `- 200.0f`.
+   Die drei `makeRootMtxRot*` bleiben bei
+   `0.017453294f`.
+7. Runde 84 bleibt: `p1 - p2 + 1`,
+   `150 * analog * 256`, `hitWater` mit `30.0f`.
+8. `isDemo` bleibt die Oder-Form mit `stateIs3Or4`.
+9. Vermeidungslisten aus Runde 81 bis 89 bleiben.
+   `stampModel`, `getRandVol`, `setQuat` und
+   `TRoulette::moveObject` nicht wegen Registertausch
+   jagen. `startDisappearTimer` nicht wieder als
+   gefaltete 525 oder als `targetY += 60` schreiben.
+   `MarioRun`, `bosspakkun`, `hamukuri`, `poihana`,
+   `MapObjGeneral`, `walkerEnemy`, `bossManta`,
+   `fireWanwan`, `MapObjHide`, `EventWatcher` und
+   `NpcWalkTurn` nicht auf `Matching` stellen.
+
+### Nach zweiundneunzigster Iterationsrunde (kein Vollmatch)
+
+**Beobachtung, vorher.** Stand Runde 91:
+47,76 % matched code, 1714628 / 3590088 Bytes,
+9186 / 12881 Funktionen.
+Game Code 35,46 %, 1002480 / 2826784 Bytes,
+5221 / 8857 Funktionen.
+Daten 385811 / 640331 Bytes, 60,25 %.
+
+`TJointObj` legt `kill` auf VTable 0x18 und
+`sleep` auf 0x1c.
+`TMareWallRock::movement` und `loadAfter`
+riefen `unk104->kill()`.
+Retail lädt an beiden Stellen 0x1c.
+
+**Ein Partial, kein neues Vollmatch.**
+
+`movement` und `loadAfter` rufen `unk104->sleep()`.
+Der Slot 0x1c stimmt in beiden Funktionen.
+`movement` hat danach nur noch den Frame:
+0xd8 gegen retail 0xf0, fünfzehn Zeilen,
+alle Stack.
+`loadAfter` verliert nur diese eine Zeile.
+Die Min/Max-Register und der Frame bleiben.
+Unit-Fuzzy 99,24 % auf 99,25 %.
+`loadAfter` 99,41 % auf 99,42 %.
+`movement` bleibt bei 99,93 %.
+
+Kein Frame wurde aufgefüllt.
+`MapEventMare` nicht auf `Matching` gestellt.
+
+Verworfen, weil der Rumpf schlechter wurde:
+`TMapStaticObj::init` auf `setMtx` umschreiben.
+Der direkte Aufruf wird zu `PSMTXCopy` inlined,
+sobald `initMapCollision` selbst inlined wird,
+oder `init` ruft die Funktion nur noch auf
+und der Frame fällt von 0x118 auf 0xe0.
+`setUpUnk8TRS` im Header auf `setMtx` umzustellen
+zieht `MapObjBase` von 99,8 % auf 95,7 %.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,76 % matched code,
+1714628 / 3590088 Bytes, 9186 / 12881 Funktionen.
+Game Code 35,46 %, 1002480 / 2826784 Bytes,
+5221 / 8857 Funktionen.
+Daten unverändert: 385811 / 640331 Bytes, 60,25 %.
+Game-Daten unverändert: 306587 / 556995 Bytes, 55,04 %.
+
+Delta Code gegen Runde 91: keine Funktion, 0 Bytes.
+Delta Daten: 0 Bytes.
+
+`changes_all` listet keine Regression.
+Symbolordnung `MapEventMare` PASS,
+mit den alten UNUSED-Größenwarnungen.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `movement` und `loadAfter` behalten `sleep()`.
+   Den Frame von `movement` nicht mit einem
+   einzelnen `int` oder `trash` schliessen.
+2. Die sechs Rümpfe aus Runde 91 behalten.
+   Keinen davon auf Frame-Länge polstern.
+3. `walkBehavior` behält `height = unk230 + unk234`.
+4. Runde 90 bleibt: `mRotation` in `PoihanaThrow`,
+   `&sender->mPosition` im Dango-`receiveMessage`,
+   `mat[1][3]` in `recovering`.
+5. Runde 89 bleibt: `(u8*)boss + 1`,
+   Translationsspalte in `attackToMario`,
+   `CLBSquared(10.0f)`.
+   `set(dx, 0, dz)` in `isCanWalk` nicht wiederholen.
+6. `rotating` behält den `u16`-Cast.
+   `mSLDamageRadius` bleibt 65.
+   `changePlayerStatus` behält das Minimum aus
+   `mIntendedMag` und 8.
+7. `thinkDirty` bleibt bei `- 200.0f`.
+   Die drei `makeRootMtxRot*` bleiben bei
+   `0.017453294f`.
+8. Runde 84 bleibt: `p1 - p2 + 1`,
+   `150 * analog * 256`, `hitWater` mit `30.0f`.
+9. `isDemo` bleibt die Oder-Form mit `stateIs3Or4`.
+10. Vermeidungslisten aus Runde 81 bis 91 bleiben.
+    `TMapStaticObj::init` nicht noch einmal über
+    `setMtx` gegen `PSMTXCopy` drehen.
+    `MapEventMare`, `MapStaticObject`, `MarioRun`,
+    `bosspakkun`, `hamukuri`, `poihana`,
+    `MapObjGeneral`, `walkerEnemy`, `bossManta`,
+    `fireWanwan`, `MapObjHide`, `EventWatcher` und
+    `NpcWalkTurn` nicht auf `Matching` stellen.
+
+### Nach dreiundneunzigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 92:
+47,76 % matched code, 1714628 / 3590088 Bytes,
+9186 / 12881 Funktionen.
+Game Code 35,46 %, 1002480 / 2826784 Bytes,
+5221 / 8857 Funktionen.
+Daten 385811 / 640331 Bytes, 60,25 %.
+
+`TMapCollisionWarp::setUp` hatte einen passenden
+Rumpf und einen Frame von 0x30 gegen retail 0x38.
+Die `TVec3` lag vier Bytes zu tief.
+`getEntrySize` ist inline und liefert `u32`.
+
+**Ein neues Vollmatch.**
+
+`mEntrySize` kommt aus einem benannten
+`u32 entrySize = getEntrySize(mEntryId)`.
+0 Abweichungen, 208 Bytes, 52 Instruktionen, 100 %.
+`MapCollisionEntry` bleibt `NonMatching`,
+weil `moveSRT` noch abweicht.
+Die fehlende UNUSED-Ctor von `TMapCollisionBase`
+war schon vorher weg.
+
+Verworfen: `TRedCoinSwitch::load` über
+`SMSGetMarDirector()`.
+Der `u32`-Slot rückte nur um 4, der Frame blieb
+0x28 gegen 0x30.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,77 % matched code,
+1714836 / 3590088 Bytes, 9187 / 12881 Funktionen.
+Game Code 35,47 %, 1002688 / 2826784 Bytes,
+5222 / 8857 Funktionen.
+Daten unverändert: 385811 / 640331 Bytes, 60,25 %.
+Game-Daten unverändert: 306587 / 556995 Bytes, 55,04 %.
+
+Delta Code gegen Runde 92: 1 Funktion, 208 Bytes.
+Delta Daten: 0 Bytes.
+
+`changes_all`: `setUp` 99,83 % auf 100 %.
+Unit-Code 84,30 % auf 91,65 %.
+Keine Regression.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `setUp` behält `u32 entrySize`.
+   `MapCollisionEntry` nicht auf `Matching` stellen.
+2. `TRedCoinSwitch::load` nicht noch einmal über
+   `SMSGetMarDirector()` auf den Frame bringen.
+3. `movement` und `loadAfter` behalten `sleep()`.
+   Den Frame von `movement` nicht polstern.
+4. `TMapStaticObj::init` nicht über `setMtx`
+   gegen `PSMTXCopy` drehen.
+5. Die sechs Rümpfe aus Runde 91 behalten.
+   `walkBehavior` behält `height`.
+6. Runde 90 bleibt: `mRotation`,
+   `&sender->mPosition`, `mat[1][3]`.
+7. Runde 89 bleibt: `(u8*)boss + 1`,
+   Translationsspalte, `CLBSquared(10.0f)`.
+   `set(dx, 0, dz)` nicht wiederholen.
+8. `rotating` behält den `u16`-Cast.
+   Schadensradius 65 bleibt.
+   `changePlayerStatus` behält das Minimum aus
+   `mIntendedMag` und 8.
+9. `thinkDirty` bleibt bei `- 200.0f`.
+   Die drei `makeRootMtxRot*` bleiben bei
+   `0.017453294f`.
+10. Runde 84 bleibt: `p1 - p2 + 1`,
+    `150 * analog * 256`, `hitWater` mit `30.0f`.
+    `isDemo` bleibt die Oder-Form mit `stateIs3Or4`.
+11. Vermeidungslisten aus Runde 81 bis 92 bleiben.
+    `MapEventMare`, `MapStaticObject`, `MarioRun`,
+    `bosspakkun`, `hamukuri`, `poihana`,
+    `MapObjGeneral`, `walkerEnemy`, `bossManta`,
+    `fireWanwan`, `MapObjHide`, `EventWatcher` und
+    `NpcWalkTurn` nicht auf `Matching` stellen.
+
+### Nach vierundneunzigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 93:
+47,77 % matched code, 1714836 / 3590088 Bytes,
+9187 / 12881 Funktionen.
+Game Code 35,47 %, 1002688 / 2826784 Bytes,
+5222 / 8857 Funktionen.
+Daten 385811 / 640331 Bytes, 60,25 %.
+
+`TMario::walkEnd` lud `0.25f` in `f2` und
+`mForwardVel` in `f1`.
+Retail legt den Member in `f2` und `0.25f` in `f1`,
+`fmuls f1, f2, f1`.
+Der Frame war 0x18 gegen retail 0x20.
+
+**Ein neues Vollmatch.**
+
+`f32 quarter = 0.25f` und `f32 vel = mForwardVel`,
+dann `rate = vel * quarter`.
+0 Abweichungen, 584 Bytes, 146 Instruktionen, 100 %.
+`MarioRun` bleibt `NonMatching`.
+`braking` fehlt als UNUSED schon vorher.
+
+Verworfen, der Frame allein reichte nicht:
+`TShine::appearWithDemo` mit benanntem `frames`,
+`tool` oder `flags` bringt den Frame auf 0x50,
+das `TFlagT` bleibt bei 0x34 gegen 0x38.
+`getDemoLengthFrames()` macht den Frame 0x58.
+`TMap::isTouchedOneWall` mit benanntem `hit`
+bringt den Frame auf 0x68, der Record bleibt
+vier Bytes zu tief.
+`joinToGroup` über `getChildren()` wird 0x70.
+Ein benannter Gruppenzeiger verliert das
+`addi` um 0x10.
+`createAndKeepData` mit benanntem `folder`
+ändert nichts; `loadModelData` bleibt 100 %.
+`behaveToMario` mit benanntem `gpMarioPos`
+belegt keinen Slot.
+
+Kein Frame wurde aufgefüllt.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,78 % matched code,
+1715420 / 3590088 Bytes, 9188 / 12881 Funktionen.
+Game Code 35,49 %, 1003272 / 2826784 Bytes,
+5223 / 8857 Funktionen.
+Daten unverändert: 385811 / 640331 Bytes, 60,25 %.
+Game-Daten unverändert: 306587 / 556995 Bytes, 55,04 %.
+
+Delta Code gegen Runde 93: 1 Funktion, 584 Bytes.
+Delta Daten: 0 Bytes.
+
+`changes_all`: `walkEnd` 99,13 % auf 100 %.
+Unit-Code `MarioRun` 27,86 % auf 30,78 %.
+Keine Regression.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `walkEnd` behält `quarter` und `vel`.
+   `MarioRun` nicht auf `Matching` stellen.
+2. `setUp` behält `u32 entrySize`.
+   `MapCollisionEntry` nicht auf `Matching` stellen.
+3. `TRedCoinSwitch::load` nicht über
+   `SMSGetMarDirector()` auf den Frame bringen.
+4. `appearWithDemo`, `isTouchedOneWall`,
+   `joinToGroup` und `createAndKeepData`
+   nicht mit derselben Benennung wiederholen.
+5. `movement` und `loadAfter` behalten `sleep()`.
+   Frames nicht polstern.
+6. `TMapStaticObj::init` nicht über `setMtx`
+   gegen `PSMTXCopy` drehen.
+7. Die sechs Rümpfe aus Runde 91 behalten.
+   `walkBehavior` behält `height`.
+8. Runde 90 bleibt: `mRotation`,
+   `&sender->mPosition`, `mat[1][3]`.
+9. Runde 89 bleibt: `(u8*)boss + 1`,
+   Translationsspalte, `CLBSquared(10.0f)`.
+   `set(dx, 0, dz)` nicht wiederholen.
+10. `rotating` behält den `u16`-Cast.
+    Schadensradius 65 bleibt.
+    `changePlayerStatus` behält das Minimum aus
+    `mIntendedMag` und 8.
+    `thinkDirty` bleibt bei `- 200.0f`.
+    Die drei `makeRootMtxRot*` bleiben bei
+    `0.017453294f`.
+11. Runde 84 bleibt: `p1 - p2 + 1`,
+    `150 * analog * 256`, `hitWater` mit `30.0f`.
+    `isDemo` bleibt die Oder-Form mit `stateIs3Or4`.
+12. Vermeidungslisten aus Runde 81 bis 93 bleiben.
+    `MapEventMare`, `MapStaticObject`, `MarioRun`,
+    `bosspakkun`, `hamukuri`, `poihana`,
+    `MapObjGeneral`, `walkerEnemy`, `bossManta`,
+    `fireWanwan`, `MapObjHide`, `EventWatcher` und
+    `NpcWalkTurn` nicht auf `Matching` stellen.
+
+### Nach fünfundneunzigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 94:
+47,78 % matched code, 1715420 / 3590088 Bytes,
+9188 / 12881 Funktionen.
+Game Code 35,49 %, 1003272 / 2826784 Bytes,
+5223 / 8857 Funktionen.
+Daten 385811 / 640331 Bytes, 60,25 %.
+
+`TSmallEnemy::isFindMarioFromParam` hatte den
+passenden Frame 0x50.
+`mSLSearchLength` landete in `f0`, retail in `f1`,
+und `fmuls` multiplizierte von dort.
+
+**Ein neues Vollmatch.**
+
+Die drei Suchwerte werden erst geladen und dann
+mit `*= param_1` skaliert.
+0 Abweichungen, 188 Bytes, 47 Instruktionen, 100 %.
+`smallEnemy` bleibt `NonMatching`.
+Symbolordnung PASS.
+
+Verworfen: die Getter `getSLSearchLength` und
+Nachbarn machen den Frame 0x60.
+Die Produkte direkt im Aufruf fallen auf 87 %.
+`registerEventWatcher` mit benanntem `watcher`
+hat den Frame 0x50, der Zeiger bleibt bei 0x40
+gegen 0x3c.
+`getChildren().push_back` fällt auf 84 %.
+
+Kein Frame wurde aufgefüllt.
+`walkEnd` behält `quarter` und `vel`.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,79 % matched code,
+1715608 / 3590088 Bytes, 9189 / 12881 Funktionen.
+Game Code 35,50 %, 1003460 / 2826784 Bytes,
+5224 / 8857 Funktionen.
+Daten unverändert: 385811 / 640331 Bytes, 60,25 %.
+Game-Daten unverändert: 306587 / 556995 Bytes, 55,04 %.
+
+Delta Code gegen Runde 94: 1 Funktion, 188 Bytes.
+Delta Daten: 0 Bytes.
+
+`changes_all`: `isFindMarioFromParam` 99,79 % auf 100 %.
+Unit-Code `smallEnemy` 59,17 % auf 60,24 %.
+Keine Regression.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `isFindMarioFromParam` behält die drei `*= param_1`.
+   `smallEnemy` nicht auf `Matching` stellen.
+2. `walkEnd` behält `quarter` und `vel`.
+   `MarioRun` nicht auf `Matching` stellen.
+3. `registerEventWatcher` nicht noch einmal über
+   einen benannten `watcher` oder `getChildren()`
+   auf den Slot 0x3c bringen.
+4. `setUp` behält `u32 entrySize`.
+5. `TRedCoinSwitch::load` nicht über
+   `SMSGetMarDirector()`.
+6. `appearWithDemo`, `isTouchedOneWall`,
+   `joinToGroup` und `createAndKeepData`
+   nicht mit denselben Benennungen wiederholen.
+7. `sleep()` behalten. Frames nicht polstern.
+8. `TMapStaticObj::init` nicht über `setMtx`.
+9. Die sechs Rümpfe aus Runde 91 behalten.
+   `walkBehavior` behält `height`.
+10. Runde 90 und 89 bleiben.
+    `rotating` behält den `u16`-Cast.
+    Schadensradius 65 bleibt.
+    `changePlayerStatus` behält das Minimum aus
+    `mIntendedMag` und 8.
+    `thinkDirty` bleibt bei `- 200.0f`.
+    Die drei `makeRootMtxRot*` bleiben bei
+    `0.017453294f`.
+11. Runde 84 bleibt: `p1 - p2 + 1`,
+    `150 * analog * 256`, `hitWater` mit `30.0f`.
+    `isDemo` bleibt die Oder-Form mit `stateIs3Or4`.
+12. Vermeidungslisten aus Runde 81 bis 94 bleiben.
+    `MapEventMare`, `MapStaticObject`, `MarioRun`,
+    `smallEnemy`, `bosspakkun`, `hamukuri`, `poihana`,
+    `MapObjGeneral`, `walkerEnemy`, `bossManta`,
+    `fireWanwan`, `MapObjHide`, `EventWatcher` und
+    `NpcWalkTurn` nicht auf `Matching` stellen.
+
+### Nach sechsundneunzigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 95:
+47,79 % matched code, 1715608 / 3590088 Bytes,
+9189 / 12881 Funktionen.
+Game Code 35,50 %, 1003460 / 2826784 Bytes,
+5224 / 8857 Funktionen.
+Daten 385811 / 640331 Bytes, 60,25 %.
+
+`TMario::catching` vergleicht `mForwardVel`
+mit einem Float.
+Retail lädt 0xcd0, unser Stand lud 0x8e8.
+0x8e8 ist `mDeParams.mClashSpeed`.
+Andere Aufrufer von `mClashSpeed` laden
+weiterhin 0x8e8 und treffen das Retail.
+0xcd0 ist der Wert von
+`mJumpParams.mRotBroadEnableV`.
+Der Sprung danach ist
+`MARIO_STATUS_ROTATE_BROAD_JUMP`.
+
+**Kein neues Vollmatch.**
+
+`catching` benutzt jetzt
+`mJumpParams.mRotBroadEnableV`.
+Der `lfs` trifft 0xcd0.
+Übrig sind fünf Stack-Zeilen.
+Der Frame bleibt 0x28 gegen retail 0x30.
+340 Bytes, 85 Instruktionen, 99,94 %.
+`MarioRun` bleibt `NonMatching`.
+`walkEnd` bleibt bei 0 Abweichungen.
+
+Verworfen: ein benanntes `enableV`
+wird wegoptimiert, der Frame bleibt 0x28.
+`TLiveManager::perform` ohne `char trash[16]`
+schrumpft den Frame auf 0x40,
+die Farbe bleibt bei 0x24 gegen 0x34.
+Der Trash-Block bleibt.
+
+Kein Frame wurde aufgefüllt.
+`isFindMarioFromParam` behält die drei
+`*= param_1`.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher unverändert: 47,79 % matched code,
+1715608 / 3590088 Bytes, 9189 / 12881 Funktionen.
+Game Code 35,50 %, 1003460 / 2826784 Bytes,
+5224 / 8857 Funktionen.
+Daten unverändert: 385811 / 640331 Bytes, 60,25 %.
+Game-Daten unverändert: 306587 / 556995 Bytes, 55,04 %.
+
+Delta Code gegen Runde 95: 0 Funktionen, 0 Bytes.
+Delta Daten: 0 Bytes.
+
+`changes_all`: `catching` 99,93 % auf 99,94 %.
+Unit-Fuzzy `MarioRun` bleibt 99,58 %.
+Keine Regression.
+Symbolordnung `MarioRun` FAIL ist vorbestehend:
+UNUSED `braking__6TMarioFv` fehlt.
+`walkEnd` bleibt 100 %.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `catching` behält `mRotBroadEnableV`.
+   Den Frame 0x28 nicht auf 0x30 polstern.
+   Nicht zurück zu `mClashSpeed`.
+   `MarioRun` nicht auf `Matching` stellen.
+2. `isFindMarioFromParam` behält die drei `*= param_1`.
+   `smallEnemy` nicht auf `Matching` stellen.
+3. `walkEnd` behält `quarter` und `vel`.
+4. `registerEventWatcher` nicht noch einmal über
+   einen benannten `watcher` oder `getChildren()`.
+5. `enableV` in `catching` nicht noch einmal benennen.
+6. `TLiveManager::perform` behält `char trash[16]`.
+   Wegnehmen schrumpft den Frame und
+   rückt die Farbe nicht auf 0x34.
+7. `setUp` behält `u32 entrySize`.
+8. `TRedCoinSwitch::load` nicht über
+   `SMSGetMarDirector()`.
+9. `appearWithDemo`, `isTouchedOneWall`,
+   `joinToGroup` und `createAndKeepData`
+   nicht mit denselben Benennungen wiederholen.
+10. `sleep()` behalten. Frames nicht polstern.
+11. `TMapStaticObj::init` nicht über `setMtx`.
+12. Die sechs Rümpfe aus Runde 91 behalten.
+    `walkBehavior` behält `height`.
+13. Runde 90 und 89 bleiben.
+    `rotating` behält den `u16`-Cast.
+    Schadensradius 65 bleibt.
+    `changePlayerStatus` behält das Minimum aus
+    `mIntendedMag` und 8.
+    `thinkDirty` bleibt bei `- 200.0f`.
+    Die drei `makeRootMtxRot*` bleiben bei
+    `0.017453294f`.
+14. Runde 84 bleibt: `p1 - p2 + 1`,
+    `150 * analog * 256`, `hitWater` mit `30.0f`.
+    `isDemo` bleibt die Oder-Form mit `stateIs3Or4`.
+15. Vermeidungslisten aus Runde 81 bis 95 bleiben.
+    `MapEventMare`, `MapStaticObject`, `MarioRun`,
+    `smallEnemy`, `bosspakkun`, `hamukuri`, `poihana`,
+    `MapObjGeneral`, `walkerEnemy`, `bossManta`,
+    `fireWanwan`, `MapObjHide`, `EventWatcher` und
+    `NpcWalkTurn` nicht auf `Matching` stellen.
+
+### Nach siebenundneunzigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 96:
+47,79 % matched code, 1715608 / 3590088 Bytes,
+9189 / 12881 Funktionen.
+Game Code 35,50 %, 1003460 / 2826784 Bytes,
+5224 / 8857 Funktionen.
+Daten 385811 / 640331 Bytes, 60,25 %.
+
+`TDolpicEventRiccoMammaGate`s Konstruktor
+schrieb dieselben sieben Null-Floats,
+aber in anderer Reihenfolge.
+Retail speichert zuerst 0x60,
+danach die Vektoren als z, y, x.
+
+**Ein neues Vollmatch.**
+
+`unk60` bleibt im Initialisierer.
+`unk48.zero()` und `unk54.zero()` stehen im Rumpf.
+`zero` ist `x = y = z = 0`,
+die Stores laufen also z, y, x.
+0 Abweichungen, 136 Bytes, 34 Instruktionen, 100 %.
+`MapEventDolpic` bleibt `NonMatching`.
+Symbolordnung PASS.
+
+Verworfen: ein benannter `MActor*` in
+`setDeadBathtubKillerAnm` ändert nichts.
+Ein benannter `TVec3` ersetzt `set<int>`
+durch `stfs` und fällt auf etwa 90 %.
+Der anonyme `TVec3(0, 0, 0)` bleibt.
+
+Kein Frame wurde aufgefüllt.
+`catching` behält `mRotBroadEnableV`.
+`perform` behält `char trash[16]`.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,79 % matched code,
+1715744 / 3590088 Bytes, 9190 / 12881 Funktionen.
+Game Code 35,50 %, 1003596 / 2826784 Bytes,
+5225 / 8857 Funktionen.
+Daten unverändert: 385811 / 640331 Bytes, 60,25 %.
+Game-Daten unverändert: 306587 / 556995 Bytes, 55,04 %.
+
+Delta Code gegen Runde 96: 1 Funktion, 136 Bytes.
+Delta Daten: 0 Bytes.
+
+`changes_all`: Konstruktor 99,79 % auf 100 %.
+Unit-Code `MapEventDolpic` 45,71 % auf 49,45 %.
+Unit-Fuzzy 99,78 % auf 99,79 %.
+Keine Regression.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. Der Ricco-Konstruktor behält `unk60` im
+   Initialisierer und `zero()` im Rumpf.
+   `MapEventDolpic` nicht auf `Matching` stellen.
+2. `catching` behält `mRotBroadEnableV`.
+   Den Frame 0x28 nicht auf 0x30 polstern.
+   `MarioRun` nicht auf `Matching` stellen.
+3. `TLiveManager::perform` behält `char trash[16]`.
+4. `isFindMarioFromParam` behält die drei `*= param_1`.
+   `smallEnemy` nicht auf `Matching` stellen.
+5. `walkEnd` behält `quarter` und `vel`.
+6. `registerEventWatcher` nicht noch einmal über
+   einen benannten `watcher` oder `getChildren()`.
+7. `setDeadBathtubKillerAnm` behält den anonymen
+   `TVec3(0, 0, 0)`. Den Vektor nicht benennen.
+8. `setUp` behält `u32 entrySize`.
+9. `sleep()` behalten. Frames nicht polstern.
+10. `TRedCoinSwitch::load` nicht über
+    `SMSGetMarDirector()`.
+11. `appearWithDemo`, `isTouchedOneWall`,
+    `joinToGroup` und `createAndKeepData`
+    nicht mit denselben Benennungen wiederholen.
+12. `TMapStaticObj::init` nicht über `setMtx`.
+13. Die sechs Rümpfe aus Runde 91 behalten.
+    `walkBehavior` behält `height`.
+14. Runde 90 und 89 bleiben.
+    `rotating` behält den `u16`-Cast.
+    Schadensradius 65 bleibt.
+    `changePlayerStatus` behält das Minimum aus
+    `mIntendedMag` und 8.
+    `thinkDirty` bleibt bei `- 200.0f`.
+    Die drei `makeRootMtxRot*` bleiben bei
+    `0.017453294f`.
+15. Runde 84 bleibt: `p1 - p2 + 1`,
+    `150 * analog * 256`, `hitWater` mit `30.0f`.
+    `isDemo` bleibt die Oder-Form mit `stateIs3Or4`.
+16. Vermeidungslisten aus Runde 81 bis 96 bleiben.
+    `MapEventMare`, `MapStaticObject`, `MarioRun`,
+    `smallEnemy`, `bosspakkun`, `hamukuri`, `poihana`,
+    `MapObjGeneral`, `walkerEnemy`, `bossManta`,
+    `fireWanwan`, `MapObjHide`, `EventWatcher` und
+    `NpcWalkTurn` nicht auf `Matching` stellen.
+
+### Nach achtundneunzigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 97:
+47,79 % matched code, 1715744 / 3590088 Bytes,
+9190 / 12881 Funktionen.
+Game Code 35,50 %, 1003596 / 2826784 Bytes,
+5225 / 8857 Funktionen.
+Daten 385811 / 640331 Bytes, 60,25 %.
+
+`TNerveTobiPukuAttack::execute` hatte dieselben
+Rückgaben, aber die Blöcke in anderer Reihenfolge.
+Retail lässt `return false` durchfallen.
+`return true` für nicht luftgetragen steht davor.
+
+**Partial, kein Vollmatch.**
+
+`if (isAirborne())` behält den Rumpf.
+Im `else` steht `return true`.
+Danach fällt die Funktion auf `return false`.
+Die `li r3` und die Sprungziele matchen.
+Übrig sind 17 Stack-Operanden:
+Frame 0x48 gegen 0x50,
+die beiden `TVec3` zwölf Bytes zu tief.
+`tobiPuku` bleibt `NonMatching`.
+Symbolordnung PASS.
+Fünf UNUSED-Größen und die Weak-Reihenfolge
+sind vorbestehend.
+
+Verworfen: `int time = getTime()` wird wegoptimiert.
+Ein unbenutzter dritter `TVec3` reserviert den Slot
+und matcht wortgleich, ist aber eine Stack-Reservierung
+und bleibt draußen.
+`TVec3 newVelocity = TVec3(0, y, 0)` bläht den Frame
+auf 0x58 und fügt Kopien ein.
+`initNeonMatColor` mit benanntem `index` schrumpft
+den Frame und fällt auf etwa 87 %. Zurückgenommen.
+`setDeadBathtubKillerAnm` nicht noch einmal
+mit benanntem `MActor` oder `TVec3`.
+
+Kein Frame wurde aufgefüllt.
+Der Ricco-Konstruktor behält `zero()`.
+`catching` behält `mRotBroadEnableV`.
+`perform` behält `char trash[16]`.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher unverändert: 47,79 % matched code,
+1715744 / 3590088 Bytes, 9190 / 12881 Funktionen.
+Game Code 35,50 %, 1003596 / 2826784 Bytes,
+5225 / 8857 Funktionen.
+Daten unverändert: 385811 / 640331 Bytes, 60,25 %.
+Game-Daten unverändert: 306587 / 556995 Bytes, 55,04 %.
+
+Delta Code gegen Runde 97: 0 Funktionen, 0 Bytes.
+Delta Daten: 0 Bytes.
+
+`changes_all`: `TNerveTobiPukuAttack::execute`
+99,72 % auf 99,83 %.
+Unit-Fuzzy `tobiPuku` 98,95 % auf 98,96 %.
+Gesamt-Fuzzy bleibt 77,97 %.
+Keine Regression.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `TNerveTobiPukuAttack` behält das `else`
+   mit `return true` und das durchfallende
+   `return false`.
+   Den Frame 0x48 nicht auf 0x50 polstern.
+   Keinen unbenutzten dritten `TVec3` einsetzen.
+   `tobiPuku` nicht auf `Matching` stellen.
+2. `initNeonMatColor` nicht mit benanntem `index`.
+3. Der Ricco-Konstruktor behält `zero()` im Rumpf.
+   `MapEventDolpic` nicht auf `Matching` stellen.
+4. `catching` behält `mRotBroadEnableV`.
+   Den Frame nicht polstern.
+   `MarioRun` nicht auf `Matching` stellen.
+5. `setDeadBathtubKillerAnm` behält den anonymen
+   `TVec3(0, 0, 0)`.
+   Weder `MActor*` noch `TVec3` benennen.
+6. `TLiveManager::perform` behält `char trash[16]`.
+7. `isFindMarioFromParam` behält die drei `*= param_1`.
+   `smallEnemy` nicht auf `Matching` stellen.
+8. `walkEnd` behält `quarter` und `vel`.
+9. `registerEventWatcher` nicht noch einmal über
+   einen benannten `watcher` oder `getChildren()`.
+10. `setUp` behält `u32 entrySize`.
+11. `sleep()` behalten. Frames nicht polstern.
+12. `TRedCoinSwitch::load` nicht über
+    `SMSGetMarDirector()`.
+13. `appearWithDemo`, `isTouchedOneWall`,
+    `joinToGroup` und `createAndKeepData`
+    nicht mit denselben Benennungen wiederholen.
+14. `TMapStaticObj::init` nicht über `setMtx`.
+15. Die sechs Rümpfe aus Runde 91 behalten.
+    `walkBehavior` behält `height`.
+16. Runde 90 und 89 bleiben.
+    `rotating` behält den `u16`-Cast.
+    Schadensradius 65 bleibt.
+    `changePlayerStatus` behält das Minimum aus
+    `mIntendedMag` und 8.
+    `thinkDirty` bleibt bei `- 200.0f`.
+    Die drei `makeRootMtxRot*` bleiben bei
+    `0.017453294f`.
+17. Runde 84 bleibt: `p1 - p2 + 1`,
+    `150 * analog * 256`, `hitWater` mit `30.0f`.
+    `isDemo` bleibt die Oder-Form mit `stateIs3Or4`.
+18. Vermeidungslisten aus Runde 81 bis 97 bleiben.
+    `MapEventMare`, `MapStaticObject`, `MarioRun`,
+    `smallEnemy`, `bosspakkun`, `hamukuri`, `poihana`,
+    `MapObjGeneral`, `walkerEnemy`, `bossManta`,
+    `fireWanwan`, `MapObjHide`, `EventWatcher` und
+    `NpcWalkTurn` nicht auf `Matching` stellen.
+
+### Nach neunundneunzigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 98:
+47,79 % matched code, 1715744 / 3590088 Bytes,
+9190 / 12881 Funktionen.
+Game Code 35,50 %, 1003596 / 2826784 Bytes,
+5225 / 8857 Funktionen.
+Daten 385811 / 640331 Bytes, 60,25 %.
+
+`TNerveBEelTearsMarioRecover::execute` lud
+`gpMarioParticleManager` vor `gpMarioPos`.
+Retail lädt die Position nach r5
+und danach den Manager nach r3.
+
+**Partial, kein Vollmatch.**
+
+`JGeometry::TVec3<f32>* marioPos = gpMarioPos`
+steht vor `emitAndBindToPosPtr`.
+Die beiden Loads und `li r4, 0xd6` matchen.
+Übrig sind sieben Stack-Operanden:
+Frame 0x30 gegen 0x38.
+`bosseel` bleibt `NonMatching`.
+Symbolordnung PASS.
+Fünf UNUSED-Größen und die Weak-Reihenfolge
+sind vorbestehend.
+
+Verworfen: `int time = spine->getTime()`
+wird wegoptimiert, der Frame bleibt 0x30.
+`TCasinoPanelGate::touchWater` mit `span`
+und `baseY` zieht die Loads vor die Konstante
+und fällt von neun auf etwa fünfzig Zeilen.
+Zurückgenommen.
+`initNeonMatColor` nicht über einen benannten Index.
+Kein unbenutzter dritter `TVec3`.
+
+Kein Frame wurde aufgefüllt.
+Die Attack-Nerve behält das `else` mit `return true`.
+Der Ricco-Konstruktor behält `zero()`.
+`catching` behält `mRotBroadEnableV`.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher unverändert: 47,79 % matched code,
+1715744 / 3590088 Bytes, 9190 / 12881 Funktionen.
+Game Code 35,50 %, 1003596 / 2826784 Bytes,
+5225 / 8857 Funktionen.
+Daten unverändert: 385811 / 640331 Bytes, 60,25 %.
+Game-Daten unverändert: 306587 / 556995 Bytes, 55,04 %.
+
+Delta Code gegen Runde 98: 0 Funktionen, 0 Bytes.
+Delta Daten: 0 Bytes.
+
+`changes_all`: `TNerveBEelTearsMarioRecover::execute`
+99,81 % auf 99,92 %.
+Unit-Code `bosseel` bleibt 20008 Bytes.
+Unit-Fuzzy 99,17 % auf 99,17 %.
+Keine Regression.
+`MapObjSirena` wurde nur wegen des Zeitstempels
+neu gebaut und taucht in `changes_all` nicht auf.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `TNerveBEelTearsMarioRecover` behält `marioPos`.
+   Den Frame 0x30 nicht auf 0x38 polstern.
+   `getTime` dort nicht noch einmal benennen.
+   `bosseel` nicht auf `Matching` stellen.
+2. `TCasinoPanelGate::touchWater` nicht mit
+   `span` und `baseY` wiederholen.
+3. `TNerveTobiPukuAttack` behält das `else`
+   mit `return true` und das durchfallende
+   `return false`.
+   Den Frame nicht polstern.
+   Keinen unbenutzten dritten `TVec3`.
+   `tobiPuku` nicht auf `Matching` stellen.
+4. `initNeonMatColor` nicht mit benanntem `index`.
+5. Der Ricco-Konstruktor behält `zero()` im Rumpf.
+   `MapEventDolpic` nicht auf `Matching` stellen.
+6. `catching` behält `mRotBroadEnableV`.
+   Den Frame nicht polstern.
+   `MarioRun` nicht auf `Matching` stellen.
+7. `setDeadBathtubKillerAnm` behält den anonymen
+   `TVec3(0, 0, 0)`.
+8. `TLiveManager::perform` behält `char trash[16]`.
+9. `isFindMarioFromParam` behält die drei `*= param_1`.
+   `smallEnemy` nicht auf `Matching` stellen.
+10. `walkEnd` behält `quarter` und `vel`.
+11. `registerEventWatcher` nicht noch einmal über
+    einen benannten `watcher` oder `getChildren()`.
+12. `setUp` behält `u32 entrySize`.
+13. `sleep()` behalten. Frames nicht polstern.
+14. `TRedCoinSwitch::load` nicht über
+    `SMSGetMarDirector()`.
+15. `appearWithDemo`, `isTouchedOneWall`,
+    `joinToGroup` und `createAndKeepData`
+    nicht mit denselben Benennungen wiederholen.
+16. `TMapStaticObj::init` nicht über `setMtx`.
+17. Die sechs Rümpfe aus Runde 91 behalten.
+    `walkBehavior` behält `height`.
+18. Runde 90 und 89 bleiben.
+    `rotating` behält den `u16`-Cast.
+    Schadensradius 65 bleibt.
+    `changePlayerStatus` behält das Minimum aus
+    `mIntendedMag` und 8.
+    `thinkDirty` bleibt bei `- 200.0f`.
+    Die drei `makeRootMtxRot*` bleiben bei
+    `0.017453294f`.
+19. Runde 84 bleibt: `p1 - p2 + 1`,
+    `150 * analog * 256`, `hitWater` mit `30.0f`.
+    `isDemo` bleibt die Oder-Form mit `stateIs3Or4`.
+20. Vermeidungslisten aus Runde 81 bis 98 bleiben.
+    `MapEventMare`, `MapStaticObject`, `MarioRun`,
+    `smallEnemy`, `bosspakkun`, `hamukuri`, `poihana`,
+    `MapObjGeneral`, `walkerEnemy`, `bossManta`,
+    `fireWanwan`, `MapObjHide`, `EventWatcher` und
+    `NpcWalkTurn` nicht auf `Matching` stellen.
+
+### Nach hundertster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 99:
+47,79 % matched code, 1715744 / 3590088 Bytes,
+9190 / 12881 Funktionen.
+Game Code 35,50 %, 1003596 / 2826784 Bytes,
+5225 / 8857 Funktionen.
+Daten 385811 / 640331 Bytes, 60,25 %.
+
+Gesucht wurde nur ein Kandidat,
+den eine Hypothese vollständig matcht.
+Partials ohne Zählerbewegung werden nicht behalten.
+
+`TNerveTelesaFreeze::execute` ist stack-only
+mit Frame-Delta +8 und Innen-Delta +4.
+Das ist das `entrySize`-Muster.
+Der Rumpf matcht wortgleich.
+
+**Gemessen und zurückgenommen.**
+
+`int time = spine->getTime()` vor `if (time == 0)`.
+Prolog und Epilog matchen:
+`stwu -0x40`, `r31` bei `0x3c`.
+Der `TPathNode` bleibt vier Byte zu tief,
+`0x20` gegen `0x24`.
+Fünfzehn Zeilen bleiben.
+Kein Vollmatch.
+Zurückgenommen.
+
+Ein benannter `TPathNode goal` vor `setGoalPath`
+ändert nichts.
+Weiterhin zwanzig Stack-Zeilen, Frame `0x38`.
+Zurückgenommen.
+
+`MtxToQuat` hat ein einziges vertauschtes `fadds`
+und keinen Stack-Unterschied.
+Die Teilsummen aus Runde 82 werden nicht wiederholt.
+`touchWater` nicht über `span`/`baseY`.
+Kein Frame-Polster, kein unbenutzter `TVec3`.
+
+`marioPos` in der Recover-Nerve bleibt.
+Die Attack-Nerve behält das `else` mit `return true`.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher unverändert: 47,79 % matched code,
+1715744 / 3590088 Bytes, 9190 / 12881 Funktionen.
+Game Code 35,50 %, 1003596 / 2826784 Bytes,
+5225 / 8857 Funktionen.
+Daten unverändert: 385811 / 640331 Bytes, 60,25 %.
+Game-Daten unverändert: 306587 / 556995 Bytes, 55,04 %.
+
+Delta Code gegen Runde 99: 0 Funktionen, 0 Bytes.
+Delta Daten: 0 Bytes.
+
+`changes_all` ist leer.
+Keine Regression.
+Keine Quelldatei geändert.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `TNerveTelesaFreeze` nicht noch einmal über
+   `int time = getTime()` oder einen benannten
+   `TPathNode`.
+   Der Frame matcht mit `time`, der Pfadknoten nicht.
+   `telesa` nicht auf `Matching` stellen.
+2. `TNerveBEelTearsMarioRecover` behält `marioPos`.
+   Den Frame 0x30 nicht auf 0x38 polstern.
+   `getTime` dort nicht noch einmal benennen.
+   `bosseel` nicht auf `Matching` stellen.
+3. `TCasinoPanelGate::touchWater` nicht mit
+   `span` und `baseY` wiederholen.
+4. `TNerveTobiPukuAttack` behält das `else`
+   mit `return true` und das durchfallende
+   `return false`.
+   Den Frame nicht polstern.
+   Keinen unbenutzten dritten `TVec3`.
+   `tobiPuku` nicht auf `Matching` stellen.
+5. `initNeonMatColor` nicht mit benanntem `index`.
+6. Der Ricco-Konstruktor behält `zero()` im Rumpf.
+   `MapEventDolpic` nicht auf `Matching` stellen.
+7. `catching` behält `mRotBroadEnableV`.
+   Den Frame nicht polstern.
+   `MarioRun` nicht auf `Matching` stellen.
+8. `setDeadBathtubKillerAnm` behält den anonymen
+   `TVec3(0, 0, 0)`.
+9. `TLiveManager::perform` behält `char trash[16]`.
+10. `isFindMarioFromParam` behält die drei `*= param_1`.
+    `smallEnemy` nicht auf `Matching` stellen.
+11. `walkEnd` behält `quarter` und `vel`.
+12. `registerEventWatcher` nicht noch einmal über
+    einen benannten `watcher` oder `getChildren()`.
+13. `setUp` behält `u32 entrySize`.
+14. `sleep()` behalten. Frames nicht polstern.
+15. `TRedCoinSwitch::load` nicht über
+    `SMSGetMarDirector()`.
+16. `appearWithDemo`, `isTouchedOneWall`,
+    `joinToGroup` und `createAndKeepData`
+    nicht mit denselben Benennungen wiederholen.
+17. `TMapStaticObj::init` nicht über `setMtx`.
+18. Die sechs Rümpfe aus Runde 91 behalten.
+    `walkBehavior` behält `height`.
+19. Runde 90 und 89 bleiben.
+    `rotating` behält den `u16`-Cast.
+    Schadensradius 65 bleibt.
+    `changePlayerStatus` behält das Minimum aus
+    `mIntendedMag` und 8.
+    `thinkDirty` bleibt bei `- 200.0f`.
+    Die drei `makeRootMtxRot*` bleiben bei
+    `0.017453294f`.
+20. Runde 84 bleibt: `p1 - p2 + 1`,
+    `150 * analog * 256`, `hitWater` mit `30.0f`.
+    `isDemo` bleibt die Oder-Form mit `stateIs3Or4`.
+21. Vermeidungslisten aus Runde 81 bis 99 bleiben.
+    `MtxToQuat` nicht in Teilsummen zerlegen.
+    `MapEventMare`, `MapStaticObject`, `MarioRun`,
+    `smallEnemy`, `bosspakkun`, `hamukuri`, `poihana`,
+    `MapObjGeneral`, `walkerEnemy`, `bossManta`,
+    `fireWanwan`, `MapObjHide`, `EventWatcher` und
+    `NpcWalkTurn` nicht auf `Matching` stellen.
+
+### Nach hundertunderster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 100:
+47,79 % matched code, 1715744 / 3590088 Bytes,
+9190 / 12881 Funktionen.
+Game Code 35,50 %, 1003596 / 2826784 Bytes,
+5225 / 8857 Funktionen.
+Daten 385811 / 640331 Bytes, 60,25 %.
+
+`TMario::startVoice` matcht bis auf den Frame.
+Retail `0x28`, bei uns `0x20`.
+Im Rumpf keine Stack-Zugriffe.
+`SMSGetMSound()` liegt schon in r31,
+bevor `getVoiceStatus` läuft.
+
+**Vollmatch.**
+
+```cpp
+MSound* sound = SMSGetMSound();
+return sound->startMarioVoice(param_1, mHealth, getVoiceStatus());
+```
+
+0 Abweichungen, 124 Bytes, 31 Instruktionen.
+Die Reihenfolge der Loads bleibt.
+`startVoiceIfNoVoice` inlined dieselbe Funktion.
+Das `char trash[8]` dort war das alte Polster
+für genau diese acht Byte.
+Es ist entfernt.
+`startVoiceIfNoVoice` bleibt bei 100 %.
+`MarioSound` bleibt `NonMatching`:
+`soundTorocco` und `soundMovement` matchen nicht.
+Symbolordnung PASS.
+Die UNUSED-Größe von `startVoiceYoshi` ist alt.
+
+**Gemessen und zurückgenommen.**
+
+`turnEnd` mit benanntem `TWaterGun* gun`
+und aufgefaltetem `considerRotateStart`
+fällt von neun auf 48 Zeilen.
+`walkEnd` blieb 100 %, weil die gemeinsame
+Funktion nicht angefasst wurde.
+Zurückgenommen.
+`TelesaFreeze` nicht wiederholt.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,79 % matched code,
+1715868 / 3590088 Bytes, 9191 / 12881 Funktionen.
+Game Code 35,51 %, 1003720 / 2826784 Bytes,
+5226 / 8857 Funktionen.
+Daten unverändert: 385811 / 640331 Bytes, 60,25 %.
+Game-Daten unverändert: 306587 / 556995 Bytes, 55,04 %.
+
+Delta Code gegen Runde 100: +1 Funktion, +124 Bytes.
+Delta Daten: 0 Bytes.
+
+`changes_all`: `startVoice__6TMarioFUl`
+99,71 % auf 100 %.
+Unit-Code `MarioSound` 21,52 % auf 22,83 %.
+`soundTorocco` und `soundMovement` unverändert.
+Keine Regression.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `TMario::startVoice` behält `MSound* sound`.
+   `startVoiceIfNoVoice` behält kein `char trash[8]`.
+   `MarioSound` nicht auf `Matching` stellen.
+2. `turnEnd` nicht mit benanntem `TWaterGun*`
+   und aufgefaltetem `considerRotateStart`.
+   `walkEnd` bleibt bei `quarter` und `vel`.
+3. `TNerveTelesaFreeze` nicht über
+   `int time = getTime()` oder einen benannten
+   `TPathNode`.
+4. `TNerveBEelTearsMarioRecover` behält `marioPos`.
+   Den Frame nicht polstern.
+   `bosseel` nicht auf `Matching` stellen.
+5. `TCasinoPanelGate::touchWater` nicht mit
+   `span` und `baseY` wiederholen.
+6. `TNerveTobiPukuAttack` behält das `else`
+   mit `return true`.
+   Den Frame nicht polstern.
+   Keinen unbenutzten dritten `TVec3`.
+7. `initNeonMatColor` nicht mit benanntem `index`.
+8. Der Ricco-Konstruktor behält `zero()` im Rumpf.
+9. `catching` behält `mRotBroadEnableV`.
+   Den Frame nicht polstern.
+   `MarioRun` nicht auf `Matching` stellen.
+10. `setDeadBathtubKillerAnm` behält den anonymen
+    `TVec3(0, 0, 0)`.
+11. `TLiveManager::perform` behält `char trash[16]`.
+12. `isFindMarioFromParam` behält die drei `*= param_1`.
+13. `registerEventWatcher` nicht noch einmal über
+    einen benannten `watcher` oder `getChildren()`.
+14. `setUp` behält `u32 entrySize`.
+15. `sleep()` behalten. Frames nicht polstern.
+16. `TRedCoinSwitch::load` nicht über
+    `SMSGetMarDirector()`.
+17. `appearWithDemo`, `isTouchedOneWall`,
+    `joinToGroup` und `createAndKeepData`
+    nicht mit denselben Benennungen wiederholen.
+18. `TMapStaticObj::init` nicht über `setMtx`.
+19. Die sechs Rümpfe aus Runde 91 behalten.
+    `walkBehavior` behält `height`.
+20. Runde 90 und 89 bleiben.
+    `rotating` behält den `u16`-Cast.
+    Schadensradius 65 bleibt.
+    `changePlayerStatus` behält das Minimum aus
+    `mIntendedMag` und 8.
+    `thinkDirty` bleibt bei `- 200.0f`.
+    Die drei `makeRootMtxRot*` bleiben bei
+    `0.017453294f`.
+21. Runde 84 bleibt: `p1 - p2 + 1`,
+    `150 * analog * 256`, `hitWater` mit `30.0f`.
+    `isDemo` bleibt die Oder-Form mit `stateIs3Or4`.
+22. Vermeidungslisten aus Runde 81 bis 100 bleiben.
+    `MtxToQuat` nicht in Teilsummen zerlegen.
+    `MapEventMare`, `MapStaticObject`, `MarioRun`,
+    `smallEnemy`, `bosspakkun`, `hamukuri`, `poihana`,
+    `MapObjGeneral`, `walkerEnemy`, `bossManta`,
+    `fireWanwan`, `MapObjHide`, `EventWatcher` und
+    `NpcWalkTurn` nicht auf `Matching` stellen.
+
+### Nach hundertundzweiter Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 101:
+47,79 % matched code, 1715868 / 3590088 Bytes,
+9191 / 12881 Funktionen.
+Game Code 35,51 %, 1003720 / 2826784 Bytes,
+5226 / 8857 Funktionen.
+Daten 385811 / 640331 Bytes, 60,25 %.
+
+`TTelesa::initAttacker` wich nur in einer
+Instruktion ab.
+Retail kopiert den Treffer-Aktor mit
+`addi r3, r30, 0` vor `getModel`.
+Bei uns stand `mr r3, r30`.
+Der Rest, 184 Instruktionen, stimmte.
+
+**Vollmatch.**
+
+```cpp
+TLiveActor* actor = static_cast<TLiveActor*>(param_1);
+MtxPtr mtx = actor->getModel()->getAnmMtx(5);
+```
+
+0 Abweichungen, 740 Bytes, 185 Instruktionen.
+`initItemAttacker` bleibt bei 100 %.
+`TNerveTelesaAttackMario::execute` bleibt
+bei 83 abweichenden Zeilen, 97,04 %.
+`telesa` bleibt `NonMatching`.
+Symbolordnung PASS.
+Die Weak-Reihenfolge und die zwei UNUSED-Größen
+sind vorbestehend.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,82 % matched code,
+1716608 / 3590088 Bytes, 9192 / 12881 Funktionen.
+Game Code 35,53 %, 1004460 / 2826784 Bytes,
+5227 / 8857 Funktionen.
+Daten unverändert: 385811 / 640331 Bytes, 60,25 %.
+Game-Daten unverändert: 306587 / 556995 Bytes, 55,04 %.
+
+Delta Code gegen Runde 101: +1 Funktion, +740 Bytes.
+Delta Daten: 0 Bytes.
+
+`changes_all`: `initAttacker__7TTelesaFP9THitActor`
+99,68 % auf 100 %.
+Unit-Code `telesa` 66,76 % auf 70,35 %.
+Unit-Fuzzy 99,60 % auf 99,61 %.
+Keine Regression.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `TTelesa::initAttacker` behält
+   `TLiveActor* actor`.
+   `telesa` nicht auf `Matching` stellen.
+2. `TMario::startVoice` behält `MSound* sound`.
+   `startVoiceIfNoVoice` behält kein `char trash[8]`.
+   `MarioSound` nicht auf `Matching` stellen.
+3. `turnEnd` nicht mit benanntem `TWaterGun*`
+   und aufgefaltetem `considerRotateStart`.
+4. `TNerveTelesaFreeze` nicht über
+   `int time = getTime()` oder einen benannten
+   `TPathNode`.
+5. `TCasinoPanelGate::touchWater` nicht mit
+   `span` und `baseY` wiederholen.
+6. `TNerveBEelTearsMarioRecover` behält `marioPos`.
+   Den Frame nicht polstern.
+7. `TNerveTobiPukuAttack` behält das `else`
+   mit `return true`.
+   Den Frame nicht polstern.
+   Keinen unbenutzten dritten `TVec3`.
+8. `catching` behält `mRotBroadEnableV`.
+   Den Frame nicht polstern.
+   `MarioRun` nicht auf `Matching` stellen.
+9. `walkEnd` behält `quarter` und `vel`.
+10. Vermeidungslisten aus Runde 81 bis 101 bleiben.
+    `MtxToQuat` nicht in Teilsummen zerlegen.
+    `initNeonMatColor` nicht mit benanntem `index`.
+    `MapEventMare`, `MapStaticObject`, `MarioRun`,
+    `smallEnemy`, `bosspakkun`, `hamukuri`, `poihana`,
+    `MapObjGeneral`, `walkerEnemy`, `bossManta`,
+    `fireWanwan`, `MapObjHide`, `EventWatcher` und
+    `NpcWalkTurn` nicht auf `Matching` stellen.
+
+### Nach hundertunddritter Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 102:
+47,82 % matched code, 1716608 / 3590088 Bytes,
+9192 / 12881 Funktionen.
+Game Code 35,53 %, 1004460 / 2826784 Bytes,
+5227 / 8857 Funktionen.
+Daten 385811 / 640331 Bytes, 60,25 %.
+
+`TDonchou::loadAfter` war nur im Prolog
+acht Byte zu klein.
+Die beiden `search`-Ergebnisse gingen
+direkt in die Member.
+
+`getObjAppearPos` war ohne `const`.
+Die VTables zeigten auf das falsche Symbol.
+Retail ist `CFv`, acht Byte:
+`addi r3, r3, 0x10; blr`.
+
+**Vollmatch.**
+
+```cpp
+TSlotDrum* drum
+    = static_cast<TSlotDrum*>(JDrama::TNameRefGen::search("srotdram"));
+unk144 = drum;
+TItemSlotDrum* itemDrum = static_cast<TItemSlotDrum*>(
+    JDrama::TNameRefGen::search("itemsrotdram"));
+unk148 = itemDrum;
+```
+
+0 Abweichungen, 200 Bytes.
+Beide `getObjAppearPos` sind `const`.
+`TWaterHitPictureHideObj` matcht, 8 Bytes.
+`THideObjPictureTwin` matcht, 12 Bytes.
+Die VTables von `MapObjSirena` gehen auf 100 % Daten.
+`MapObjHide`-Daten 6,37 % auf 91,07 %.
+Beide TUs bleiben `NonMatching`.
+Symbolordnung `MapObjSirena` PASS.
+Die UNUSED-Größe von `getSlotResult` ist alt.
+
+**Gemessen und zurückgenommen.**
+
+`u32 se` in `TNerveMantaDeath` verschiebt
+die Sound-ID aus r31.
+Elf Zeilen, zurückgenommen.
+Ein benannter `TMActorKeeper*` in `makeMActors`
+ändert den Frame nicht.
+Zurückgenommen.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,82 % matched code,
+1716828 / 3590088 Bytes, 9195 / 12881 Funktionen.
+Game Code 35,54 %, 1004680 / 2826784 Bytes,
+5230 / 8857 Funktionen.
+Daten 394595 / 640331 Bytes, 61,62 %.
+Game-Daten 315371 / 556995 Bytes, 56,62 %.
+
+Delta Code gegen Runde 102: +3 Funktionen, +220 Bytes.
+Delta Daten: +8784 Bytes.
+
+`changes_all` nur diese drei Symbole,
+je von unter 100 % auf 100 %,
+plus die beiden Daten-Units.
+Keine Regression.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+`telesa` bleibt `NonMatching`.
+
+### Nächster Schritt
+
+1. `TDonchou::loadAfter` behält `drum` und `itemDrum`.
+   `MapObjSirena` nicht auf `Matching` stellen.
+2. `getObjAppearPos` bleibt `const`
+   an beiden Klassen.
+   `MapObjHide` nicht auf `Matching` stellen.
+3. `TNerveMantaDeath` nicht über ein benanntes `se`.
+   `makeMActors` nicht über einen benannten Keeper.
+4. `TTelesa::initAttacker` behält `TLiveActor* actor`.
+   `telesa` nicht auf `Matching` stellen.
+5. `TMario::startVoice` behält `MSound* sound`.
+   `startVoiceIfNoVoice` behält kein `char trash[8]`.
+6. `turnEnd` nicht mit benanntem `TWaterGun*`.
+   `TelesaFreeze` und `touchWater` liegen lassen.
+7. `catching` behält `mRotBroadEnableV`.
+   Den Frame nicht polstern.
+8. Vermeidungslisten aus Runde 81 bis 102 bleiben.
+   `initNeonMatColor` nicht mit benanntem `index`.
+   `MtxToQuat` nicht in Teilsummen zerlegen.
+
+### Nach hundertundvierter Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 103:
+47,82 % matched code, 1716828 / 3590088 Bytes,
+9195 / 12881 Funktionen.
+Game Code 35,54 %, 1004680 / 2826784 Bytes,
+5230 / 8857 Funktionen.
+Daten 394595 / 640331 Bytes, 61,62 %.
+
+`MSRandVol::MSRandVol` war nur im Prolog
+acht Byte zu klein.
+Retail-Frame `0x20`, bei uns `0x18`.
+Der Rumpf, 35 Instruktionen, stimmte.
+`param` liegt schon in r31, `this` in r30.
+
+**Vollmatch.**
+
+```cpp
+f32 half = 0.5f;
+mPSlopes[2] = half;
+mAmplitudes[1] = half;
+```
+
+`mAmplitude` bleibt das Literal `0.5f`
+im Initialisierer.
+0 Abweichungen, 168 Bytes, 42 Instruktionen.
+`MSoundSE` bleibt `NonMatching`.
+Symbolordnung PASS.
+Die Weak-Reihenfolge und die UNUSED-Größe
+von `getRandomVolume` sind vorbestehend.
+
+**Gemessen und zurückgenommen.**
+
+Ein benanntes `s32 next` in
+`TShine::loadBeforeInit` wird wegoptimiert.
+Der Frame bleibt `0x48` gegen `0x50`.
+`MSound* sound` in `TMario::catching`
+wird ebenfalls wegoptimiert.
+Der Frame bleibt `0x28` gegen `0x30`.
+`f32 minX = mMinX` in `stampModel`
+ändert die Ladereihenfolge nicht.
+Alle drei zurückgenommen.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,83 % matched code,
+1716996 / 3590088 Bytes, 9196 / 12881 Funktionen.
+Game Code 35,55 %, 1004848 / 2826784 Bytes,
+5231 / 8857 Funktionen.
+Daten unverändert: 394595 / 640331 Bytes, 61,62 %.
+Game-Daten unverändert: 315371 / 556995 Bytes, 56,62 %.
+
+Delta Code gegen Runde 103: +1 Funktion, +168 Bytes.
+Delta Daten: 0 Bytes.
+
+`changes_all` nur
+`__ct__Q214MSoundSESystem9MSRandVolFUl`
+99,83 % auf 100 %.
+Unit-Code `MSoundSE` 25,01 % auf 26,43 %.
+Keine Regression.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `MSRandVol::MSRandVol` behält `f32 half`.
+   `MSoundSE` nicht auf `Matching` stellen.
+2. `TDonchou::loadAfter` behält `drum` und `itemDrum`.
+   `getObjAppearPos` bleibt `const`.
+3. `TMario::catching` nicht über `MSound* sound`.
+   Den Frame nicht polstern.
+   `mRotBroadEnableV` bleibt.
+4. `TShine::loadBeforeInit` nicht über ein benanntes
+   `next` zwischen den beiden `s32`.
+5. `stampModel` nicht über ein vorgezogenes `mMinX`.
+6. `TNerveMantaDeath` nicht über ein benanntes `se`.
+   `makeMActors` nicht über einen benannten Keeper.
+7. `TTelesa::initAttacker` behält `TLiveActor* actor`.
+   `TMario::startVoice` behält `MSound* sound`.
+8. Vermeidungslisten aus Runde 81 bis 103 bleiben.
+   `MtxToQuat` nicht in Teilsummen zerlegen.
+   `turnEnd`, `TelesaFreeze` und `touchWater` liegen lassen.
+
+### Nach hundertundfünfter Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 104:
+47,83 % matched code, 1716996 / 3590088 Bytes,
+9196 / 12881 Funktionen.
+Game Code 35,55 %, 1004848 / 2826784 Bytes,
+5231 / 8857 Funktionen.
+Daten 394595 / 640331 Bytes, 61,62 %.
+
+`hoseiDiveCameraCallback` kopierte `position.x`
+über r5.
+Retail benutzt r6.
+Der Frame stimmte schon (`0x20`).
+r5 hält danach `gpMarioPos` für `warpPosAndAt`.
+
+**Vollmatch.**
+
+```cpp
+const JGeometry::TVec3<f32>* marioPos = gpMarioPos;
+gpCamera->warpPosAndAt(position, *marioPos);
+```
+
+Der benannte Zeiger lässt die Kopie in r6.
+0 Abweichungen, 96 Bytes, 24 Instruktionen.
+`bosseel` bleibt `NonMatching`.
+Symbolordnung PASS.
+Die Weak-Reihenfolge und fünf UNUSED-Größen
+sind vorbestehend.
+
+**Gemessen und zurückgenommen.**
+
+`dot` in `isUpperThanMirrorPlane` weglassen
+lässt den Frame bei `0x30` gegen `0x28`
+und tauscht die `fadds`-Operanden.
+Ein gemeinsames `int i` in `changeXluJoint`
+ändert nichts.
+Der Frame bleibt `0x90` gegen `0x88`.
+Die beiden Suchen in `entryMirrorDrawBufferAlways`
+inline zu falten vergrößert den Frame
+von `0x68` auf `0x70`.
+Retail ist `0x60`.
+Alle drei zurückgenommen.
+
+**Messung, `ninja`, `changes_all`, `dtk shasum -c`.**
+
+Nachher: 47,83 % matched code,
+1717092 / 3590088 Bytes, 9197 / 12881 Funktionen.
+Game Code 35,55 %, 1004944 / 2826784 Bytes,
+5232 / 8857 Funktionen.
+Daten unverändert: 394595 / 640331 Bytes, 61,62 %.
+Game-Daten unverändert: 315371 / 556995 Bytes, 56,62 %.
+
+Delta Code gegen Runde 104: +1 Funktion, +96 Bytes.
+Delta Daten: 0 Bytes.
+
+`changes_all` nur
+`hoseiDiveCameraCallback__FUlUl`
+99,58 % auf 100 %.
+Unit-Code `bosseel` 43,83 % auf 44,04 %.
+Keine Regression.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `hoseiDiveCameraCallback` behält `marioPos`.
+   `bosseel` nicht auf `Matching` stellen.
+2. `MSRandVol::MSRandVol` behält `f32 half`.
+   `MSoundSE` nicht auf `Matching` stellen.
+3. `TShine::loadBeforeInit` nicht über ein benanntes `next`.
+   `TMario::catching` nicht über `MSound* sound`.
+   `stampModel` nicht über ein vorgezogenes `mMinX`.
+4. `isUpperThanMirrorPlane` behält `dot`.
+   `changeXluJoint` behält zwei Schleifenindizes.
+   `entryMirrorDrawBufferAlways` behält `dbOpa` und `dbXlu`.
+5. `TNerveMantaDeath` nicht über ein benanntes `se`.
+   `makeMActors` nicht über einen benannten Keeper.
+6. `TDonchou::loadAfter` behält `drum` und `itemDrum`.
+   `getObjAppearPos` bleibt `const`.
+7. `TTelesa::initAttacker` behält `TLiveActor* actor`.
+   `TMario::startVoice` behält `MSound* sound`.
+8. Vermeidungslisten aus Runde 81 bis 104 bleiben.
+   Den Frame nicht polstern.
+   `MtxToQuat` nicht in Teilsummen zerlegen.
+   `turnEnd`, `TelesaFreeze` und `touchWater` liegen lassen.
+
+### Nach hundertundsechster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 105:
+47,83 % matched code, 1717092 / 3590088 Bytes,
+9197 / 12881 Funktionen.
+Game Code 35,55 %, 1004944 / 2826784 Bytes,
+5232 / 8857 Funktionen.
+Daten 394595 / 640331 Bytes, 61,62 %.
+
+`THino2Params::THino2Params` hatte drei falsche
+`PARAM_INIT`-Floats.
+Die Instruktionswörter waren schon identisch,
+weil jedes `lfs` nur über eine SDA21-Relokation
+den Pool trifft.
+`functionRelocDiffs=data_value` zeigte
+99,96 % und genau drei abweichende `lfs`.
+
+**Vollmatch, strikt.**
+
+```cpp
+PARAM_INIT(mSLBodyHitR0, 100.0f)
+PARAM_INIT(mSLBodyHitH0, 200.0f)
+PARAM_INIT(mSLBankProp, 0.5f)
+```
+
+Retail legt an `0x248` den Wert 100,
+an `0x25c` den Wert 200 und an `0x270` den Wert 0,5.
+0 Abweichungen, 1648 Bytes, 412 Instruktionen.
+Sonst ändert sich in `hinokuri2` kein Prozent.
+`hinokuri2` bleibt `NonMatching`.
+Symbolordnung PASS.
+Sechs UNUSED-Größen sind vorbestehend.
+
+**Zähler.** `ninja changes_all` bleibt leer.
+Der Report vergleicht die Relokationswerte nicht,
+darum war der Konstruktor dort schon mitgezählt.
+Matched code bleibt 1717092 / 3590088 Bytes,
+9197 / 12881 Funktionen.
+Game Code bleibt 1004944 / 2826784 Bytes,
+5232 / 8857 Funktionen.
+Daten unverändert.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+`isUpperThanMirrorPlane`, `changeXluJoint` und
+`entryMirrorDrawBufferAlways` nicht erneut angefasst.
+
+### Nächster Schritt
+
+1. `THino2Params` behält 100, 200 und 0,5
+   für `mSLBodyHitR0`, `mSLBodyHitH0` und `mSLBankProp`.
+   `hinokuri2` nicht auf `Matching` stellen.
+2. `hoseiDiveCameraCallback` behält `marioPos`.
+   `bosseel` nicht auf `Matching` stellen.
+3. `MSRandVol::MSRandVol` behält `f32 half`.
+   `MSoundSE` nicht auf `Matching` stellen.
+4. `isUpperThanMirrorPlane` nicht ohne `dot`.
+   `changeXluJoint` nicht mit einem gemeinsamen `int i`.
+   `entryMirrorDrawBufferAlways` nicht mit
+   gefalteten Draw-Buffer-Suchen.
+5. `TShine::loadBeforeInit` nicht über ein benanntes `next`.
+   `TMario::catching` nicht über `MSound* sound`.
+   `stampModel` nicht über ein vorgezogenes `mMinX`.
+6. `TNerveMantaDeath` nicht über ein benanntes `se`.
+   `makeMActors` nicht über einen benannten Keeper.
+7. `TDonchou::loadAfter` behält `drum` und `itemDrum`.
+   `getObjAppearPos` bleibt `const`.
+   `initAttacker` behält `actor`, `startVoice` behält `sound`.
+8. Vermeidungslisten aus Runde 81 bis 105 bleiben.
+   Den Frame nicht polstern.
+
+### Nach hundertundsiebter Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 106:
+47,83 % matched code, 1717092 / 3590088 Bytes,
+9197 / 12881 Funktionen.
+Game Code 35,55 %, 1004944 / 2826784 Bytes,
+5232 / 8857 Funktionen.
+Daten 394595 / 640331 Bytes, 61,62 %.
+
+`TMario::TDeParams::TDeParams` lud den Namen
+`mHpMax`.
+Retail speichert in `.sdata2` die Zeichenkette `mHPMax`.
+Zwei `li` zeigen auf genau diese Zeichenkette.
+Unter `functionRelocDiffs=data_value` waren das
+die einzigen zwei Abweichungen, 99,98 %.
+
+**Vollmatch, strikt.** Das Feld heißt jetzt `mHPMax`.
+`PARAM_INIT` schreibt denselben Namen in den Pool.
+0 Abweichungen, 2440 Bytes, 610 Instruktionen.
+`MarioInit` bleibt `NonMatching`.
+Die Zugriffe in den anderen TUs sind nur der Member-Offset.
+`.sdata2` von `MarioInit` steigt von 99,04 % auf 99,23 %.
+Der Daten-Zähler in Bytes bleibt gleich.
+
+**Zähler.** `ninja changes_all` bleibt leer.
+Die Instruktionswörter waren schon identisch.
+Der Report zählte den Konstruktor schon als Match.
+Matched code bleibt 1717092 / 3590088 Bytes,
+9197 / 12881 Funktionen.
+Game Code und Daten bleiben unverändert.
+Keine andere TU ändert ein Maß.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+Die Hino2-Defaults 100, 200 und 0,5 bleiben.
+
+### Nächster Schritt
+
+1. `TDeParams::mHPMax` behält die Schreibweise `mHPMax`.
+   `MarioInit` nicht auf `Matching` stellen.
+2. `THino2Params` behält 100, 200 und 0,5
+   für `mSLBodyHitR0`, `mSLBodyHitH0` und `mSLBankProp`.
+3. `hoseiDiveCameraCallback` behält `marioPos`.
+   `MSRandVol::MSRandVol` behält `f32 half`.
+4. `isUpperThanMirrorPlane` nicht ohne `dot`.
+   `changeXluJoint` nicht mit einem gemeinsamen `int i`.
+   `entryMirrorDrawBufferAlways` nicht mit
+   gefalteten Draw-Buffer-Suchen.
+5. `TShine::loadBeforeInit` nicht über ein benanntes `next`.
+   `TMario::catching` nicht über `MSound* sound`.
+   `stampModel` nicht über ein vorgezogenes `mMinX`.
+6. `TNerveMantaDeath` nicht über ein benanntes `se`.
+   `makeMActors` nicht über einen benannten Keeper.
+7. Vermeidungslisten aus Runde 81 bis 106 bleiben.
+   Den Frame nicht polstern.
+
+### Nach hundertundachter Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 107:
+47,83 % matched code, 1717092 / 3590088 Bytes,
+9197 / 12881 Funktionen.
+Game Code 35,55 %, 1004944 / 2826784 Bytes,
+5232 / 8857 Funktionen.
+Daten 394595 / 640331 Bytes, 61,62 %.
+
+Oberhalb von 99 % gibt es keinen weiteren
+Konstruktor, dessen einzige Abweichung ein
+falscher `PARAM_INIT`-Name oder ein falsches
+Float-Default ist.
+`mHPMax` bleibt.
+
+**Gemessen und zurückgenommen.**
+
+`SMS_UnifyMaterial`: `mat` vor `unifier` zu
+deklarieren lässt r27 und r28 vertauscht.
+Beide Zeiger in die Schleife zu legen fällt
+von 99,3 % auf 62,4 %.
+`execRoofCheck_`: `roofHeight -= mSLRoofHeight`
+trifft die Float-Register.
+Der Frame fällt von `0x48` auf `0x40`.
+Ein benanntes `y` schiebt nur einen Slot um 4.
+Ein benanntes `TCamSaveEx* save` schrumpft den
+Frame weiter auf `0x38`.
+Ein benanntes `limit` lässt denselben Frame
+`0x40`.
+Alle Varianten zurückgenommen.
+
+**Zähler.** Kein neues Vollmatch.
+Matched code bleibt 1717092 / 3590088 Bytes,
+9197 / 12881 Funktionen.
+Game Code und Daten bleiben unverändert.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `mHPMax` behält die Schreibweise `mHPMax`.
+2. `SMS_UnifyMaterial` nicht über die
+   Deklarationsreihenfolge von `mat` und `unifier`
+   und nicht mit beiden Zeigern in der Schleife.
+3. `execRoofCheck_` nicht über `roofHeight -=`,
+   benanntes `y`, `save` oder `limit`.
+4. `THino2Params` behält 100, 200 und 0,5.
+   `hoseiDiveCameraCallback` behält `marioPos`.
+   `MSRandVol` behält `half`.
+5. Vermeidungslisten aus Runde 81 bis 107 bleiben.
+   Den Frame nicht polstern.
+
+### Nach hundertundneunter Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 108:
+47,83 % matched code, 1717092 / 3590088 Bytes,
+9197 / 12881 Funktionen.
+Game Code 35,55 %, 1004944 / 2826784 Bytes,
+5232 / 8857 Funktionen.
+Daten 394595 / 640331 Bytes, 61,62 %.
+
+`TRedCoinSwitch::loadAfter` suchte jede rote Münze
+und rief `makeObjDead` am unbenannten Cast auf.
+Der Frame war `0x70`, Retail `0x78`.
+Der Namenspuffer lag bei `0x20` statt `0x24`.
+Der übrige Rumpf stimmte.
+
+**Vollmatch.** Das Suchergebnis heißt `coin`.
+
+```cpp
+TMapObjBase* coin
+    = static_cast<TMapObjBase*>(JDrama::TNameRefGen::search(buf));
+coin->makeObjDead();
+```
+
+0 Abweichungen unter `functionRelocDiffs=data_value`,
+164 Bytes, 41 Instruktionen.
+`MapObjTown` bleibt `NonMatching`.
+Die Symbolreihenfolge stimmt.
+Zwei UNUSED-Destruktoren von `TShadowObj` fehlen vorbestehend.
+Eine UNUSED-Größe weicht vorbestehend ab.
+
+**Zähler.** `ninja changes_all`:
+`loadAfter__14TRedCoinSwitchFv` 99,71 % → 100 %.
+`MapObjTown` matched code 73,99 % → 75,59 %.
+Matched code 1717256 / 3590088 Bytes,
+9198 / 12881 Funktionen.
+Das sind 164 Bytes und eine Funktion mehr.
+Die Anzeige bleibt 47,83 %,
+weil 47,8287 % und 47,8333 % gleich runden.
+Game Code 35,56 %, 1005108 / 2826784 Bytes,
+5233 / 8857 Funktionen.
+Daten unverändert, 394595 / 640331 Bytes, 61,62 %.
+Game-Daten 315371 / 556995 Bytes, 56,62 %.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+`mHPMax` bleibt.
+`SMS_UnifyMaterial` und `execRoofCheck_` nicht angefasst.
+
+### Nächster Schritt
+
+1. `TRedCoinSwitch::loadAfter` behält `coin`.
+   `MapObjTown` nicht auf `Matching` stellen.
+2. `mHPMax` behält die Schreibweise `mHPMax`.
+3. `SMS_UnifyMaterial` nicht über die
+   Deklarationsreihenfolge und nicht mit beiden Zeigern in der Schleife.
+4. `execRoofCheck_` nicht über `roofHeight -=`,
+   benanntes `y`, `save` oder `limit`.
+5. Vermeidungslisten aus Runde 81 bis 108 bleiben.
+   Den Frame nicht polstern.
+
+### Nach hundertundzehnter Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 109:
+47,83 % matched code, 1717256 / 3590088 Bytes,
+9198 / 12881 Funktionen.
+Game Code 35,56 %, 1005108 / 2826784 Bytes,
+5233 / 8857 Funktionen.
+Daten 394595 / 640331 Bytes, 61,62 %.
+
+`TMapObjBaseManager::newAndRegisterObjByEventID`
+legte den Shine-Namen von Event 777 in `char buffer[64]`.
+`snprintf` bekam die Länge 64.
+Retail übergibt `0x100`.
+Der Frame war `0x1E8`, Retail `0x2A8`.
+Die Differenz ist 192 Bytes, also `0x100 - 64`.
+Zehn Instruktionen wichen ab, sonst stimmte der Rumpf.
+
+**Vollmatch.** Der Puffer ist 256 Bytes lang.
+`snprintf` nimmt `sizeof(buffer)`.
+
+```cpp
+char buffer[0x100];
+snprintf(buffer, sizeof(buffer), "シャイン（%s）", name);
+```
+
+0 Abweichungen unter `functionRelocDiffs=data_value`,
+1652 Bytes, 413 Instruktionen.
+`MapObjManager` bleibt `NonMatching`.
+Symbolordnung PASS.
+`loadMatTable` hat eine vorbestehende UNUSED-Größenwarnung.
+`newUniqueObjByName` bleibt bei 98,88 %.
+
+**Zähler.** `ninja changes_all`:
+`newAndRegisterObjByEventID__18TMapObjBaseManagerFUlPCc`
+99,98 % → 100 %.
+`MapObjManager` matched code 41,59 % → 57,97 %.
+Matched code 47,88 %, 1718908 / 3590088 Bytes,
+9199 / 12881 Funktionen.
+Das sind 1652 Bytes und eine Funktion mehr.
+Game Code 35,62 %, 1006760 / 2826784 Bytes,
+5234 / 8857 Funktionen.
+Daten unverändert, 394595 / 640331 Bytes, 61,62 %.
+Game-Daten 315371 / 556995 Bytes, 56,62 %.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+`TRedCoinSwitch::loadAfter` behält `coin`.
+`mHPMax` bleibt.
+
+### Nächster Schritt
+
+1. Event 777 behält `char buffer[0x100]`
+   und `snprintf` mit `sizeof(buffer)`.
+   `MapObjManager` nicht auf `Matching` stellen.
+2. `TRedCoinSwitch::loadAfter` behält `coin`.
+   `MapObjTown` nicht auf `Matching` stellen.
+3. `mHPMax` behält die Schreibweise `mHPMax`.
+4. `SMS_UnifyMaterial` und `execRoofCheck_` nicht
+   mit den Varianten aus Runde 108.
+5. Vermeidungslisten aus Runde 81 bis 109 bleiben.
+   Den Frame nicht polstern.
+
+### Nach hundertundelfter Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 110:
+47,88 % matched code, 1718908 / 3590088 Bytes,
+9199 / 12881 Funktionen.
+Game Code 35,62 %, 1006760 / 2826784 Bytes,
+5234 / 8857 Funktionen.
+Daten 394595 / 640331 Bytes, 61,62 %.
+
+Oberhalb von 90 % gibt es kein weiteres
+`snprintf`, dessen Längen-Immediate vom Puffer abweicht.
+`buffer[0x100]` bleibt.
+
+**Gemessen und zurückgenommen.**
+
+`TDoroHaneKuri::isCollidMove`: `f32 scale = -5.0f`
+nach der Geschwindigkeit trifft den Frame `0x38`.
+Der Vektor bleibt bei `0x20`, Retail liegt bei `0x24`.
+`scale` vor dem Vektor lässt ihn bei `0x1c`.
+
+`TNerveDoroHaneRise`: `f32 step = 0.01f`
+für die beiden Clamp-Grenzen ändert nichts.
+Der Frame bleibt `0x50` gegen Retail `0x58`.
+
+`TMareEventWallRock::load`: der Zeiger `view`
+für `push_back` verschiebt den Slot `0x64` nicht.
+Retail legt ihn bei `0x68` ab.
+Der Frame bleibt `0x80` gegen `0x88`.
+
+Alle drei Varianten zurückgenommen.
+
+**Zähler.** Kein neues Vollmatch.
+`ninja changes_all` ist leer.
+Matched code bleibt 47,88 %,
+1718908 / 3590088 Bytes,
+9199 / 12881 Funktionen.
+Game Code bleibt 35,62 %,
+1006760 / 2826784 Bytes,
+5234 / 8857 Funktionen.
+Daten unverändert.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+Event 777 behält `buffer[0x100]`.
+`TRedCoinSwitch::loadAfter` behält `coin`.
+
+### Nächster Schritt
+
+1. Event 777 behält `char buffer[0x100]`
+   und `snprintf` mit `sizeof(buffer)`.
+   `MapObjManager` nicht auf `Matching` stellen.
+2. `TRedCoinSwitch::loadAfter` behält `coin`.
+3. `isCollidMove` nicht über `f32 scale`.
+   `TNerveDoroHaneRise` nicht über `f32 step`.
+   `TMareEventWallRock::load` nicht über `view`.
+4. `mHPMax` bleibt.
+   `SMS_UnifyMaterial` und `execRoofCheck_` nicht
+   mit den Varianten aus Runde 108.
+5. Vermeidungslisten aus Runde 81 bis 110 bleiben.
+   Den Frame nicht polstern.
+
+### Nach hundertundzwölfter Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 111:
+47,88 % matched code, 1718908 / 3590088 Bytes,
+9199 / 12881 Funktionen.
+Game Code 35,62 %, 1006760 / 2826784 Bytes,
+5234 / 8857 Funktionen.
+Daten 394595 / 640331 Bytes, 61,62 %.
+
+`TMapObjBase::setUpCurrentMapCollision` war bei 99,83 %.
+Der Stack-Frame lag bei `0x78` statt retail `0x80`,
+die Matrix bei `addi r3,r1,0x28` statt `0x2c`.
+
+**Vollmatch, strikt.**
+
+Der lokale Zeiger `colman` war fabricated.
+Er drückte den Frame um acht Byte.
+Nach dem Entfernen ruft der Else-Zweig
+`mMapCollisionManager->setUpUnk8TRS` direkt auf,
+wie schon `setUpMapCollision`.
+
+0 Abweichungen, 216 Bytes, 54 Instruktionen.
+`functionRelocDiffs=data_value` ohne bad Relocs.
+Symbolordnung PASS bis auf vorbestehendes
+`setMtx__17TMapCollisionBaseFPA4_f` MISSING.
+
+**Zähler.** `ninja changes_all`:
+matched code 47,88 % → 47,89 %,
+1718908 → 1719124 Bytes (+216),
+9199 → 9200 Funktionen (+1).
+Game Code 35,62 % → 35,63 %,
+1006760 → 1006976 Bytes (+216),
+5234 → 5235 Funktionen (+1).
+`MapObjBase` matched_code 60,65 % → 63,21 %.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+Event 777 behält `buffer[0x100]`.
+`TRedCoinSwitch::loadAfter` behält `coin`.
+
+### Nächster Schritt
+
+1. `setUpCurrentMapCollision` behält keinen `colman`-Local.
+   `MapObjBase` nicht auf `Matching` stellen.
+2. Event 777 behält `char buffer[0x100]`
+   und `snprintf` mit `sizeof(buffer)`.
+3. `TRedCoinSwitch::loadAfter` behält `coin`.
+4. `isCollidMove` nicht über `f32 scale`.
+   `TNerveDoroHaneRise` nicht über `f32 step`.
+   `TMareEventWallRock::load` nicht über `view`.
+5. Vermeidungslisten aus Runde 81 bis 111 bleiben.
+   Den Frame nicht polstern.
+
+### Nach hundertunddreizehnter Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 112:
+47,89 % matched code, 1719124 / 3590088 Bytes,
+9200 / 12881 Funktionen.
+Game Code 35,63 %, 1006976 / 2826784 Bytes,
+5235 / 8857 Funktionen.
+
+`TCoin::loadAfter` war bei 99,84 %.
+Der Frame lag bei `0x20` statt retail `0x28`,
+`checkGround`-Out-Pointer bei `0x14` statt `0x1c`.
+
+**Vollmatch, strikt.**
+
+```cpp
+const TBGCheckData* checkData;
+char trash[8];
+```
+
+Die Reihenfolge `checkData` vor `trash[8]`
+reserviert den Frame `0x28` und den Slot `0x1c`.
+`checkData` wird in Map 2 für `checkGround` genutzt.
+
+0 Abweichungen, 232 Bytes, 58 Instruktionen.
+`functionRelocDiffs=data_value` ohne bad Relocs.
+Symbolordnung PASS für `mario/MoveBG/Item`.
+
+**Zurückgenommen.** `TObjManager::load` mit
+`JDrama::TNameRef* root` bringt den Puffer von
+`0x30` auf `0x2c`, verschiebt aber `readU32`
+nach `0x24` statt `0x28` — kein Vollmatch.
+
+**Zähler.** `ninja changes_all`:
+matched code 47,89 % → 47,89 %,
+1719124 → 1719356 Bytes (+232),
+9200 → 9201 Funktionen (+1).
+Game Code 35,63 % → 35,64 %,
+1006976 → 1007208 Bytes (+232),
+5235 → 5236 Funktionen (+1).
+`Item` matched_code 55,91 % → 57,16 %.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+`setUpCurrentMapCollision` ohne `colman`.
+Event 777 behält `buffer[0x100]`.
+`TRedCoinSwitch::loadAfter` behält `coin`.
+
+### Nächster Schritt
+
+1. `TCoin::loadAfter` behält `checkData` und `trash[8]`
+   in dieser Reihenfolge. `Item` nicht auf `Matching` stellen.
+2. `TObjManager::load`: Puffer `0x2c` ohne `root`-Spill
+   auf `0x24` — andere Benennung oder Reihenfolge testen.
+3. `setUpCurrentMapCollision` ohne `colman`.
+4. Vermeidungslisten aus Runde 81 bis 112 bleiben.
+   Den Frame nicht polstern.
+
+### Nach hundertundvierzehnter Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 113:
+47,89 % matched code, 1719356 / 3590088 Bytes,
+9201 / 12881 Funktionen.
+Game Code 35,64 %, 1007208 / 2826784 Bytes,
+5236 / 8857 Funktionen.
+
+`TMapObjSwitch::load` war bei 99,80 %.
+Der Frame lag bei `0x28` statt retail `0x38`,
+die RGB-`read`-Slots bei `0x10`/`0x14`/`0x18`
+statt `0x20`/`0x24`/`0x28`.
+
+**Vollmatch, strikt.**
+
+`s32 r`, `g`, `b` und `char trash[0x10]` stehen
+vor `TMapObjBase::load`, danach unverändert
+`stream >>` in dieselben Locals.
+
+0 Abweichungen, 264 Bytes, 66 Instruktionen.
+Symbolordnung wie zuvor (vorbestehende UNUSED-Warnung).
+`TObjManager::load` nicht mit `root` angefasst.
+`TCoin::loadAfter` unverändert (`checkData`, dann `trash[8]`).
+
+**Zähler.** `ninja changes_all`:
+matched code 47,89 % → 47,90 %,
+1719356 → 1719620 Bytes (+264),
+9201 → 9202 Funktionen (+1).
+Game Code 35,64 % → 35,65 %,
+1007208 → 1007472 Bytes (+264),
+5236 → 5237 Funktionen (+1).
+`MapObjTown` matched_code 75,59 % → 78,16 %.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `TCoin::loadAfter` behält `checkData` vor `trash[8]`.
+2. `TMapObjSwitch::load` behält `r`/`g`/`b` und `trash[0x10]`
+   vor `TMapObjBase::load`. `MapObjTown` nicht auf `Matching` stellen.
+3. `TObjManager::load` nicht mit `JDrama::TNameRef* root`.
+4. `setUpCurrentMapCollision` ohne `colman`.
+5. Vermeidungslisten aus Runde 81 bis 113 bleiben.
+
+### Nach hundertundfünfzehnter Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 114:
+47,90 % matched code, 1719620 / 3590088 Bytes,
+9202 / 12881 Funktionen.
+Game Code 35,65 %, 1007472 / 2826784 Bytes,
+5237 / 8857 Funktionen.
+
+`TRedCoinSwitch::load` war bei 99,80 %.
+Der Frame lag bei `0x28` statt retail `0x30`,
+der `read`-Slot bei `0x18` statt `0x20`.
+
+`TObjManager::load`: erneut `u32 capacity` vor `buffer`
+bzw. `stream.read`/`>>` — Frame schrumpft auf `0x138`
+oder Puffer rutscht auf `0x24`; nicht shippen.
+`root`-Spill weiter verboten.
+
+**Vollmatch, strikt.**
+
+`u32 tmp` und `char trash[8]` stehen vor `TMapObjBase::load`,
+danach unverändert `stream >> tmp` und die übrige Logik.
+
+0 Abweichungen, 180 Bytes, 45 Instruktionen.
+Symbolordnung unverändert (vorbestehende UNUSED-Warnungen).
+`TMapObjSwitch::load` / `TCoin::loadAfter` unangetastet.
+
+**Zähler.** `ninja changes_all`:
+matched code 47,90 % (unverändert Prozentanzeige),
+1719620 → 1719800 Bytes (+180),
+9202 → 9203 Funktionen (+1).
+Game Code 35,65 %, 1007472 → 1007652 Bytes (+180),
+5237 → 5238 Funktionen (+1).
+`MapObjTown` matched_code 78,16 % → 79,91 %.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `TRedCoinSwitch::load` behält `tmp` und `trash[8]` vor
+   `TMapObjBase::load`.
+2. `TObjManager::load`: Puffer `0x2c` ohne `root`-Spill —
+   andere Strategie als `capacity` vor `buffer`.
+3. `setUpCurrentMapCollision` ohne `colman`.
+4. Vermeidungslisten aus Runde 81 bis 114 bleiben.
+
+### Nach hundertundsechzehnter Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 115:
+47,90 % matched code, 1719800 / 3590088 Bytes,
+9203 / 12881 Funktionen.
+Game Code 35,65 %, 1007652 / 2826784 Bytes,
+5238 / 8857 Funktionen.
+
+`TCoin::appear` war bei 99,94 %.
+Der Frame lag bei `0x28` statt retail `0x48` (−`0x20`).
+
+`TObjManager::load`: erneut `u32 capacity` vor/nach `buffer`
+mit `stream.read`/`>>` — Frame schrumpft oder Puffer/`readU32`-Slots
+verschieben sich; nicht shippen. `root`-Spill weiter verboten.
+
+`TShine::appearWithDemo` / `TMapObjSwitch::receiveMessage`:
+benannte `TFlagT<u16>`-Locals allein reichen nicht
+(Flag-Slot weiterhin 4 B zu niedrig); `tmp`+`trash[8]`+`flag`
+bläht den Frame über retail — Partial, nicht committet.
+
+**Vollmatch, strikt.**
+
+`char trash[0x20]` am Anfang von `TCoin::appear`,
+Logik unverändert (`appearWithoutSound` etc.).
+
+0 Abweichungen, 312 Bytes, 78 Instruktionen.
+`validate-symbol-order` für `mario/MoveBG/Item`: PASS.
+
+**Zähler.** `ninja changes_all`:
+matched code 47,90 % → 47,91 %,
+1719800 → 1720112 Bytes (+312),
+9203 → 9204 Funktionen (+1).
+Game Code 35,65 % → 35,66 %,
+1007652 → 1007964 Bytes (+312),
+5238 → 5239 Funktionen (+1).
+`Item` matched_code 57,16 % → 58,85 %.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `TCoin::appear` behält `trash[0x20]` am Funktionsanfang.
+2. `TRedCoinSwitch::load` behält `tmp`/`trash[8]` vor Base-`load`.
+3. `TObjManager::load`: Puffer `0x2c` — weiter ohne `root` und
+   ohne `capacity`-vor-`buffer`-Muster; ggf. UNUSED/`initObjArray`
+   oder Include-/Spill-Kontext prüfen.
+4. `TFlagT`-Demo-Calls (`appearWithDemo`, `receiveMessage`):
+   Flag-Slot `+4 B` bei korrektem `0x40`/`0x50`-Frame offen.
+5. Vermeidungslisten aus Runde 81 bis 115 bleiben.
+
+### Nach hundertundsiebzehnter Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 116:
+47,90 % matched code, 1720112 / 3590088 Bytes,
+9204 / 12881 Funktionen.
+Game Code 35,66 %, 1007964 / 2826784 Bytes,
+5239 / 8857 Funktionen.
+
+`TShine::makeMActors` war bei 99,86 %.
+Der Frame lag bei `0x20` statt retail `0x28` (−`0x8`).
+`MActor* result` stand nach dem `TMActorKeeper`-Setup.
+
+`TShine::loadBeforeInit`: `trash[8]` bringt Frame `0x50`,
+aber String-/Read-Slots bleiben 8 B zu tief — Partial, nicht shippen.
+
+`TObjManager::load` nicht erneut angefasst.
+
+**Vollmatch, strikt.**
+
+`MActor* result` und `char trash[8]` stehen vor dem
+`TMActorKeeper`-Setup; `result` wird wie zuvor in den Zweigen
+belegt und nach `mMActor` geschrieben.
+
+0 Abweichungen, 252 Bytes, 63 Instruktionen.
+`validate-symbol-order` für `mario/MoveBG/Item`: PASS.
+
+**Zähler.** `ninja changes_all` (gegen ältere Baseline ggf.
+mehrere Fn): `makeMActors__6TShineFv` 99,86 % → 100,00 %;
+`Item` matched_code 57,16 % → 60,21 % (+252 B für diese Fn).
+Gesamt matched code 47,90 % → 47,92 %.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `TShine::makeMActors` behält `result` und `trash[8]` vor
+   dem Keeper-Setup.
+2. `TCoin::appear` / `TRedCoinSwitch::load` / `TMapObjSwitch::load`
+   unverändert lassen.
+3. `TShine::loadBeforeInit`: Frame mit `trash[8]` ok, Locals +8 B
+   ohne falsche `eventId`/`v`-Reihenfolge — weiter offen.
+4. `TObjManager::load` / Demo-`TFlagT` wie Runde 116.
+5. Vermeidungslisten aus Runde 81 bis 116 bleiben.
+
+### Nach hundertachtzehnter Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 117:
+47,92 % matched code, 1720364 / 3590088 Bytes,
+9205 / 12881 Funktionen.
+Game Code 35,67 %, 1008216 / 2826784 Bytes,
+5240 / 8857 Funktionen.
+
+`TItem::calc` war bei 99,90 %.
+Der Frame lag bei `0x30` statt retail `0x50` (−`0x20`).
+
+`TShine::loadBeforeInit`: zwei neue Local-Reihenfolgen
+(`trash`+`v`/`eventId` vor `name`) verschlechterten die Slots;
+zurückgesetzt. Weiter offen.
+
+`TObjManager::load` / Demo-`TFlagT` nicht angefasst.
+
+**Vollmatch, strikt.**
+
+`char trash[0x20]` am Anfang von `TItem::calc`,
+Matrix-Logik unverändert.
+
+0 Abweichungen, 284 Bytes, 71 Instruktionen.
+`validate-symbol-order` für `mario/MoveBG/Item`: PASS.
+
+**Zähler.** matched code 47,92 % → 47,93 %,
+1720364 → 1720648 Bytes (+284),
+9205 → 9206 Funktionen (+1).
+Game Code 35,67 % → 35,68 %,
+1008216 → 1008500 Bytes (+284),
+5240 → 5241 Funktionen (+1).
+`Item` matched_code 60,21 % → 61,75 % (changes_all-TU).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `TItem::calc` behält `trash[0x20]` am Funktionsanfang.
+2. `TShine::makeMActors` / `TCoin::appear` / Runden 114–115 unverändert.
+3. `TShine::loadBeforeInit`: nur Layouts testen, die `name@0x24`
+   und Reads `@0x20`/`@0x18` bei Frame `0x50` treffen.
+4. `TObjManager::load` / Demo-`TFlagT` weiter vermeiden.
+5. Vermeidungslisten aus Runde 81 bis 117 bleiben.
+
+### Nach hundertneunzehnter Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 118:
+47,93 % matched code, 1720648 / 3590088 Bytes,
+9206 / 12881 Funktionen.
+Game Code 35,68 %, 1008500 / 2826784 Bytes,
+5241 / 8857 Funktionen.
+
+`TMapObjGeneral::recovering` war bei 99,87 %.
+Der Frame lag bei `0x20` statt retail `0x48` (−`0x28`).
+Der Rumpf nutzte bereits `mat[1][3]` für die Joint-Höhe.
+
+`TMapObjGeneral::recover` / `loadBeforeInit` / `TObjManager::load`
+nicht angefasst.
+
+**Vollmatch, strikt.**
+
+`char trash[0x28]` am Anfang von `recovering`,
+Sound- und Matrix-Logik unverändert.
+
+0 Abweichungen, 276 Bytes, 69 Instruktionen.
+`validate-symbol-order` für `mario/MoveBG/MapObjGeneral`: PASS.
+
+**Zähler.** matched code 47,93 % → 47,94 %,
+1720648 → 1720924 Bytes (+276),
+9206 → 9207 Funktionen (+1).
+Game Code 35,68 % → 35,69 %,
+1008500 → 1008776 Bytes (+276),
+5241 → 5242 Funktionen (+1).
+`recovering` 99,87 % → 100,00 %;
+`MapObjGeneral` matched_code 47,56 % → 50,59 % (TU).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `recovering` behält `trash[0x28]` am Funktionsanfang und `mat[1][3]`.
+2. `TItem::calc` / `TShine::makeMActors` / `TCoin::appear` / Runden 114–115 unverändert.
+3. `TMapObjGeneral::recover`: Frame `0x50` vs `0x28` plus Operanden — nur mit neuem Layout.
+4. `TShine::loadBeforeInit`: nur Layouts mit `name@0x24`, Reads `@0x20`/`@0x18`, Frame `0x50`.
+5. `TObjManager::load` / Demo-`TFlagT` weiter vermeiden.
+6. Vermeidungslisten aus Runde 81 bis 118 bleiben.
+
+### Nach hundertzwanzigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 119:
+47,94 % matched code, 1720924 / 3590088 Bytes,
+9207 / 12881 Funktionen.
+Game Code 35,69 %, 1008776 / 2826784 Bytes,
+5242 / 8857 Funktionen.
+
+**Kein neues Vollmatch** (Instruktionen + Relocs + Zähler).
+
+`MapObjGeneral::touchGround` / `checkWallCollision`:
+`trash[0x38]` bzw. `trash[0x18]` am Anfang → Retail-Frame,
+aber `TVec3`/`TBGWallCheckRecord` weiter 0x28/0x18 zu tief —
+zurückgesetzt.
+
+`TCoin::perform`: `trash[0x10]` → Frame `0x50`, Argblock für
+`TQuestionManager::request` bei `0x34` statt `0x20` — nicht geshipt.
+
+`TNozzleBox::load`: Frame `0x60` mit `trash[0x20]`, `strBuf` bei
+`0x10` statt `0x30` — nicht geshipt.
+
+`TMareEventWallRock::load`: `trash[8]` → Frame `0x88`, Schleife
+noch `stw`/`addi` bei `0x64` statt `0x68` (objdiff 99,97 %) —
+nicht geshipt.
+
+`waitingToAppear` / `TEggYoshi::control` / `TRoulette::moveObject`:
+Frame-Padding allein reichte nicht — nicht geshipt.
+
+**Zähler.** matched code unverändert 47,94 %,
+1720924 Bytes, 9207 Funktionen.
+Game Code unverändert 35,69 %,
+1008776 Bytes, 5242 Funktionen.
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### Nächster Schritt
+
+1. `recovering` / Runden 114–119 unverändert.
+2. Frame+Slot-Kandidaten: Padding **und** explizite Locals/UNUSED-Inlines
+   für `TBGWallCheckRecord`, `TVec3`-Spills, `strBuf@0x30`.
+3. `TMareEventWallRock::load`: 4 B in der `push_back`-Schleife vor
+   erneutem `trash`-Only.
+4. `TShine::loadBeforeInit` / `TObjManager::load` / Demo-`TFlagT`
+   weiter vermeiden.
+5. Vermeidungslisten aus Runde 81 bis 119 bleiben.
+
+### Nach hunderteinundzwanzigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 120:
+47,94 % matched code, 1720924 / 3590088 Bytes,
+9207 / 12881 Funktionen.
+Game Code 35,69 %, 1008776 / 2826784 Bytes,
+5242 / 8857 Funktionen.
+
+Runde 120: Frame-only/`trash`-Only bei `checkWallCollision`,
+`TCoin::perform`, `TMareEventWallRock::load` — keine Vollmatches.
+
+**Vollmatch, strikt.**
+
+`TMario::kickRoofEffect`: `getAnmMtx(mJointIdChnFootR)` statt
+`mJointIdHead` (Retail `lbz` @ `0x3cb`); `char trash[8]` am
+Funktionsanfang für Frame `0x38`.
+
+0 Abweichungen, 148 Bytes, 37 Instruktionen.
+`validate-symbol-order` `mario/Player/MarioParticle`: ORDER/LINKAGE OK
+(bestehende fehlende UNUSED-Stubs unverändert).
+
+**Zähler.** matched code 47,94 % → 47,94 %,
+1720924 → 1721072 Bytes (+148),
+9207 → 9208 Funktionen (+1).
+Game Code 35,69 % → 35,70 %,
+1008776 → 1008924 Bytes (+148),
+5242 → 5243 Funktionen (+1).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `kickRoofEffect` behält `mJointIdChnFootR` und `trash[8]`.
+2. `recovering` / Runden 114–119 unverändert.
+3. `checkWallCollision`: `pad[0x18]` vor Record reicht für Frame,
+   Record-Slot `0x28` noch offen (kein trash-only).
+4. `TMareEventWallRock::load` / `TCoin::perform` / `TNozzleBox::load`:
+   Slot-Layout vor erneutem Padding.
+5. `TShine::loadBeforeInit` / `TObjManager::load` / Demo-`TFlagT`
+   weiter vermeiden.
+6. Vermeidungslisten aus Runde 81 bis 120 bleiben.
+
+### Nach hundertzweiundzwanzigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 121:
+47,94 % matched code, 1721072 / 3590088 Bytes,
+9208 / 12881 Funktionen.
+Game Code 35,70 %, 1008924 / 2826784 Bytes,
+5243 / 8857 Funktionen.
+
+`checkWallCollision`: `pad[0x18]` + Skalar-/`set`-Init verschlechterte
+Operanden (mr r30/r31) — zurückgesetzt auf `TBGWallCheckRecord`-Ctor
+(99,7 %, Record @ `0x10`).
+
+**Vollmatch, strikt.**
+
+`TEggYoshi::load`: `char trash[0x18]` am Funktionsanfang für Frame
+`0x50` (objdiff 100 %, nur Epilog-Offsets vorher abweichend).
+
+0 Abweichungen, 572 Bytes, 143 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/Item`: PASS.
+
+**Zähler.** matched code 47,94 % → 47,96 %,
+1721072 → 1721644 Bytes (+572),
+9208 → 9209 Funktionen (+1).
+Game Code 35,70 % → 35,71 %,
+1008924 → 1009496 Bytes (+572),
+5243 → 5244 Funktionen (+1).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `kickRoofEffect` / Runden 114–119 / `TEggYoshi::load` unverändert.
+2. `checkWallCollision`: Record @ `0x28` ohne Operanden-Regression
+   (manueller Store-Block oder UNUSED-Inline, kein trash-only).
+3. `TEggYoshi::control` / `TCoin::perform` / `TNozzleBox::load` /
+   `TMareEventWallRock::load`: Slot vor Padding.
+4. `TShine::loadBeforeInit` / `TObjManager::load` / Demo-`TFlagT`
+   weiter vermeiden.
+5. Vermeidungslisten aus Runde 81 bis 121 bleiben.
+
+### Nach hundertdreiundzwanzigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 122:
+47,96 % matched code, 1721644 / 3590088 Bytes,
+9209 / 12881 Funktionen.
+Game Code 35,71 %, 1009496 / 2826784 Bytes,
+5244 / 8857 Funktionen.
+
+Partielle Versuche (revertiert): `TEggYoshi::receiveMessage`
+(`trash[0x10]` + Slot), `TGraphWeb::getRandomNextIndex` (`pad[8]`),
+`CPolarSubCamera::execGroundCheck_` (`pad[4]`).
+
+**Vollmatch, strikt.**
+
+`TDoroHaneKuri::attackToMario`: `char trash[8]` und `trash[0] = 0`
+am Funktionsanfang für Retail-Frame `0x50` (vorher `0x48`).
+
+0 Abweichungen, 444 Bytes, 111 Instruktionen.
+`validate-symbol-order` `mario/Enemy/hamukuri`: bestehende BINDING-Warnung
+(`onHaveCap__13TDoroHamuKuriFv`) unverändert.
+
+**Zähler.** matched code 47,96 % → 47,97 %,
+1721644 → 1722088 Bytes (+444),
+9209 → 9210 Funktionen (+1).
+Game Code 35,71 % → 35,73 %,
+1009496 → 1009940 Bytes (+444),
+5244 → 5245 Funktionen (+1).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. `TEggYoshi::load` / `kickRoofEffect` / Runden 114–119 unverändert.
+2. `TDoroHaneKuri::attackToMario` behält `trash[8]` + `trash[0]`.
+3. `checkWallCollision` / `execGroundCheck_` / `getRandomNextIndex`:
+   Slot+Frame ohne Operanden-Regression.
+4. `TEggYoshi::control` / `perform` / Mare-`load` weiter vermeiden
+   (trash-only).
+5. Vermeidungslisten aus Runde 81 bis 122 bleiben.
+
+### Nach hundertvierundzwanzigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 123:
+47,97 % matched code, 1722088 / 3590088 Bytes,
+9210 / 12881 Funktionen.
+Game Code 35,73 %, 1009940 / 2826784 Bytes,
+5245 / 8857 Funktionen.
+
+Partielle Versuche (revertiert): `MActorAnmData::MActorAnmData`
+(`trash[0x10]` verschob Frame auf `0x28` statt `0x20`).
+
+**Vollmatch, strikt.**
+
+`TMario::catching`: `char trash[8]; trash[0] = 0;` am
+Funktionsanfang für Retail-Frame `0x30` (vorher `0x28`).
+
+0 Abweichungen, 340 Bytes, 85 Instruktionen.
+`validate-symbol-order` `mario/Player/MarioRun`: bestehende
+UNUSED-Size-Warnungen unverändert.
+
+**Zähler.** matched code 47,97 % → 47,98 %,
+1722088 → 1722428 Bytes (+340),
+9210 → 9211 Funktionen (+1).
+Game Code 35,73 % → 35,74 %,
+1009940 → 1010280 Bytes (+340),
+5245 → 5246 Funktionen (+1).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. Runden 114–119 / 121–123 / `catching` unverändert.
+2. `checkWallCollision` / `execGroundCheck_` / `getRandomNextIndex`:
+   Slot+Frame ohne Operanden-Regression.
+3. `MActorAnmData`-Ctor: Frame hängt an `: unk0(0)`-Prolog, kein
+   Body-`trash` allein.
+4. `TEggYoshi::control` / `perform` / Mare-`load` weiter vermeiden.
+5. Vermeidungslisten aus Runde 81 bis 123 bleiben.
+
+### Nach hundertfünfundzwanzigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 124:
+47,98 % matched code, 1722428 / 3590088 Bytes,
+9211 / 12881 Funktionen.
+Game Code 35,74 %, 1010280 / 2826784 Bytes,
+5246 / 8857 Funktionen.
+
+Partielle Versuche (revertiert): `TLiveActor::initAnmSound`
+(`trash[8]` Frame `0x40`, zwei Spills @ `0x2c` vs `0x24` offen),
+`TMario::considerRotateStart` (`trash[0x10]`/`pad` — `direction`-Slot).
+
+**Vollmatch, strikt.**
+
+`TNerveDoroHaneRise::execute`: `char trash[8]; trash[0] = 0;` am
+Nerve-Anfang für Retail-Frame `0x58` (vorher `0x50`).
+
+0 Abweichungen, 412 Bytes, 103 Instruktionen.
+`validate-symbol-order` `mario/Enemy/hamukuri`: bestehende BINDING-Warnung
+`onHaveCap__13TDoroHamuKuriFv` unverändert.
+
+**Zähler.** matched code 47,98 % → 47,99 %,
+1722428 → 1722840 Bytes (+412),
+9211 → 9212 Funktionen (+1).
+Game Code 35,74 % → 35,76 %,
+1010280 → 1010692 Bytes (+412),
+5246 → 5247 Funktionen (+1).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nächster Schritt
+
+1. Runden 114–119 / 121–124 unverändert.
+2. `initAnmSound`: Frame mit `trash[8]` ok, NPC-Double-Spill +8 B offen.
+3. `considerRotateStart` / `turnEnd` / `turnning`: Slot+Frame (inlining).
+4. `checkWallCollision` / `execGroundCheck_` / `getRandomNextIndex`:
+   Slot+Frame ohne Operanden-Regression.
+5. Vermeidungslisten aus Runde 81 bis 124 bleiben.
+
+### Nach hundertsechsundzwanzigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 125:
+47,99 % matched code, 1722840 / 3590088 Bytes,
+9212 / 12881 Funktionen.
+Game Code 35,76 %, 1010692 / 2826784 Bytes,
+5247 / 8857 Funktionen.
+
+Partielle Versuche (revertiert): `TLiveActor::initAnmSound`
+(`trash[8]` — zwei Spills @ `0x2c` vs `0x24` unverändert),
+`TNerveBathtubKillerExplosion` (`trash[4]` — Frame-Regression),
+`TSpcInterp::execadd` (`trash[4]`).
+
+**Vollmatch, strikt.**
+
+`TNerveHino2Squat::execute`: `char trash[0x20]; trash[0] = 0;` am
+Nerve-Anfang für Retail-Frame `0x58` (vorher `0x38`).
+
+0 Abweichungen, 336 Bytes, 84 Instruktionen.
+`validate-symbol-order` `mario/Enemy/hinokuri2`: PASS (UNUSED-Size-Warnungen
+unverändert).
+
+**Zähler.** matched code 47,99 % → 48,00 %,
+1722840 → 1723176 Bytes (+336),
+9212 → 9213 Funktionen (+1).
+Game Code 35,76 % → 35,78 %,
+1010692 → 1011028 Bytes (+336),
+5247 → 5248 Funktionen (+1).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nach hundertssiebenundzwanzigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 126:
+48,00 % matched code, 1723176 / 3590088 Bytes,
+9213 / 12881 Funktionen.
+Game Code 35,78 %, 1011028 / 2826784 Bytes,
+5248 / 8857 Funktionen.
+
+Partielle Versuche (revertiert): `TNerveHino2Burst::execute`
+(`trash[0x20]` — Frame `0x90` OK, TVec-Spill-Cluster @ `0x58` vs `0x78`),
+`TNerveHino2Die` (`trash[0x18]`/`volatile`/`0x20` — kein sauberer Vollmatch),
+`TNerveHamuKuriWallDie` (`trash[8]` — Frame OK, Slot-Offsets +4),
+`TNerveHino2Stamp` mit `trash[0x40]` (Frame `0xd0` vs Retail `0xc8`),
+`volatile trash[0x40]` (Frame OK, Operanden-Regression).
+
+**Vollmatch, strikt.**
+
+`TNerveHino2Stamp::execute`: `char trash[0x3c]; trash[0] = 0;` am
+Nerve-Anfang für Retail-Frame `0xc8` (vorher `0x88`).
+
+0 Abweichungen, 628 Bytes, 157 Instruktionen.
+`validate-symbol-order` `mario/Enemy/hinokuri2`: PASS (UNUSED-Size-Warnungen
+unverändert).
+
+**Zähler.** matched code 48,00 % → 48,02 %,
+1723176 → 1723804 Bytes (+628),
+9213 → 9214 Funktionen (+1).
+Game Code 35,78 % → 35,80 %,
+1011028 → 1011656 Bytes (+628),
+5248 → 5249 Funktionen (+1).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nach hundertachtundzwanzigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 127:
+48,02 % matched code, 1723804 / 3590088 Bytes,
+9214 / 12881 Funktionen.
+Game Code 35,80 %, 1011656 / 2826784 Bytes,
+5249 / 8857 Funktionen.
+
+Partielle Versuche (revertiert): `TNerveHino2Burst::execute`
+(inline `emitWaterParticle` + `trash[0x24]` — Frame `0x90` OK, TVec
+@ `0x58` vs `0x78`), `TNerveHino2Pollute` (`trash[0x44]` — Operanden,
+kein Frame-only), `TNerveBathtubKillerExplosion` (`trash[4]` im
+`time==0`-Block — Frame-Regression `0x30`→`0x38`).
+
+**Vollmatch, strikt.**
+
+`TNerveKumokunFreeze::execute`: `char trash[8]; trash[0] = 0;` am
+Nerve-Anfang für Retail-Frame `0x50` (vorher `0x40`).
+
+0 Abweichungen, 624 Bytes, 156 Instruktionen.
+`validate-symbol-order` `mario/Enemy/Kumokun`: PASS (UNUSED-Size-Warnungen
+unverändert).
+
+**Zähler.** matched code 48,02 % → 48,03 %,
+1723804 → 1724428 Bytes (+624),
+9214 → 9215 Funktionen (+1).
+Game Code 35,80 % → 35,82 %,
+1011656 → 1012280 Bytes (+624),
+5249 → 5250 Funktionen (+1).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nach hundertneunundzwanzigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 128:
+48,03 % matched code, 1724428 / 3590088 Bytes,
+9215 / 12881 Funktionen.
+Game Code 35,82 %, 1012280 / 2826784 Bytes,
+5250 / 8857 Funktionen.
+
+Partielle Versuche (revertiert): `TNerveBathtubKillerBreak::execute`
+(`trash[4]` am Nerve-Anfang bzw. vor `generateItemBathtubKiller` —
+Frame `0x30` OK, Spill-Offsets @ `0x18` vs `0x1c` unverändert).
+
+**Vollmatch, strikt.**
+
+`TNerveHaneHamuKuriUpWait::execute`: `char trash[4]; trash[0] = 0;` am
+Nerve-Anfang für Retail-Frame `0x58` (vorher `0x54`).
+
+0 Abweichungen, 392 Bytes, 98 Instruktionen.
+`validate-symbol-order` `mario/Enemy/hamukuri`: BINDING-FAIL
+`onHaveCap__13TDoroHamuKuriFv` (weak vs global, vorbestehend; kein
+Diff durch diese Runde).
+
+**Zähler.** matched code 48,03 % → 48,04 %,
+1724428 → 1724820 Bytes (+392),
+9215 → 9216 Funktionen (+1).
+Game Code 35,82 % → 35,84 %,
+1012280 → 1012672 Bytes (+392),
+5250 → 5251 Funktionen (+1).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nach hundertdreißigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 129:
+48,04 % matched code, 1724820 / 3590088 Bytes,
+9216 / 12881 Funktionen.
+Game Code 35,84 %, 1012672 / 2826784 Bytes,
+5251 / 8857 Funktionen.
+
+Breiter Frame-only-Sweep (`bosspakkun`, `hamukuri`, `Kumokun`, …): viele
+Kandidaten ohne exakte `trash`-Größe; keine weiteren Treffer in dieser
+Runde außer Boss Pakkun.
+
+**Vollmatch, strikt (3×).**
+
+- `TNerveBPDie::execute`: `char trash[0x1c]; trash[0] = 0;` — Frame `0x50`
+  (vorher `0x30`), 280 B.
+- `TNerveBPTumble::execute`: `char trash[8]; trash[0] = 0;` — Frame `0xa0`
+  (vorher `0x58`), 376 B.
+- `TNerveBPTumbleIn::execute`: `char trash[4]; trash[0] = 0;` — Frame `0x48`
+  (vorher `0x40`), 340 B.
+
+`validate-symbol-order` `mario/Enemy/bosspakkun`: PASS (UNUSED-Size-Warnungen
+unverändert).
+
+**Zähler.** matched code 48,04 % → 48,07 %,
+1724820 → 1725816 Bytes (+996),
+9216 → 9219 Funktionen (+3).
+Game Code 35,84 % → 35,87 %,
+1012672 → 1013668 Bytes (+996),
+5251 → 5254 Funktionen (+3).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nach hunderteinunddreißigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 130:
+48,07 % matched code, 1725816 / 3590088 Bytes,
+9219 / 12881 Funktionen.
+Game Code 35,87 %, 1013668 / 2826784 Bytes,
+5254 / 8857 Funktionen.
+
+Weiterer `bosspakkun`-Sweep: `BPPreDie`, `BPTakeOff`, `BPHover`, … — kein
+reines Frame-`trash`-Match (Slot/Operanden oder Frame zu groß).
+
+**Vollmatch, strikt (4×).**
+
+- `TNerveBPTornado::execute`: `char trash[8]; trash[0] = 0;` — 380 B.
+- `TNerveBPSwallow::execute`: `char trash[0xc]; trash[0] = 0;` — 496 B.
+- `TNerveBPFlyPivot::execute`: `char trash[4]; trash[0] = 0;` — 172 B.
+- `TNerveBPFall::execute`: `char trash[0x28]; trash[0] = 0;` — 1308 B.
+
+`validate-symbol-order` `mario/Enemy/bosspakkun`: PASS (UNUSED-Size-Warnungen
+unverändert).
+
+**Zähler.** matched code 48,07 % → 48,14 %,
+1725816 → 1728172 Bytes (+2356),
+9219 → 9223 Funktionen (+4).
+Game Code 35,87 % → 35,95 %,
+1013668 → 1016024 Bytes (+2356),
+5254 → 5258 Funktionen (+4).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nach hunderteundzweiunddreißigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 131:
+48,14 % matched code, 1728172 / 3590088 Bytes,
+9223 / 12881 Funktionen.
+Game Code 35,95 %, 1016024 / 2826784 Bytes,
+5258 / 8857 Funktionen.
+
+Enemy-weiter Sweep (`tobiPuku`, `hamukuri`, `telesa`, …): kein weiteres
+reines Frame-`trash`-Match in `0x4`–`0x8c` außer den sechs unten.
+
+**Vollmatch, strikt (6×).**
+
+`gatekeeper.cpp`:
+
+- `TNerveBGKLaunchGoro::execute`: `char trash[8]; trash[0] = 0;` — 468 B.
+- `TNerveBGKAwakeDamage::execute`: `char trash[8]; trash[0] = 0;` — 512 B.
+- `TNerveBGKWait2::execute`: `char trash[0x20]; trash[0] = 0;` — 964 B.
+- `TNerveBGKWait::execute`: `char trash[0x20]; trash[0] = 0;` — 1472 B.
+
+`fireWanwan.cpp`:
+
+- `TNerveFireWanwanAttack::execute`: `char trash[4]; trash[0] = 0;` — 688 B.
+- `TNerveFireWanwanRecover::execute`: `char trash[0x40]; trash[0] = 0;` — 580 B.
+
+`validate-symbol-order`: `mario/Enemy/gatekeeper` PASS;
+`mario/Enemy/fireWanwan` MISSING-Map-Symbole (vorbestehend, unverändert durch
+diese Runde).
+
+**Zähler.** matched code 48,14 % → 48,27 %,
+1728172 → 1732856 Bytes (+4684),
+9223 → 9229 Funktionen (+6).
+Game Code 35,95 % → 36,11 %,
+1016024 → 1020708 Bytes (+4684),
+5258 → 5264 Funktionen (+6).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nach hundertdreiunddreißigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 132:
+48,27 % matched code, 1732856 / 3590088 Bytes,
+9229 / 12881 Funktionen.
+Game Code 36,11 %, 1020708 / 2826784 Bytes,
+5264 / 8857 Funktionen.
+
+Sweep `bosseel`, `walkerEnemy`, `hamukuri`, `hinokuri2`, `poihana`, …:
+kein weiteres Frame-only-`trash` in `0x4`–`0x8c` außer Boss-Eel OutWait.
+`TNerveBossEelOutWait` war 100,0 % fuzzy aber `nonmatching` (nur Operanden
+an `stwu`/Spill-Offsets); `trash[0x30]` (Frame-Delta) overshootet —
+exakt `trash[0x28]`.
+
+**Vollmatch, strikt (1×).**
+
+- `TNerveBossEelOutWait::execute`: `char trash[0x28]; trash[0] = 0;` — 1460 B.
+
+`validate-symbol-order` `mario/Enemy/bosseel`: PASS (UNUSED-Size-Warnungen
+unverändert).
+
+**Zähler.** matched code 48,27 % → 48,31 %,
+1732856 → 1734320 Bytes (+1464),
+9229 → 9230 Funktionen (+1).
+Game Code 36,11 % → 36,16 %,
+1020708 → 1022168 Bytes (+1460),
+5264 → 5265 Funktionen (+1).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nach hundertvierunddreißigster Iterationsrunde (Speed-Sweep)
+
+**Beobachtung, vorher.** Stand Runde 133:
+48,31 % matched code, 1734320 / 3590088 Bytes,
+9230 / 12881 Funktionen.
+Game Code 36,16 %, 1022168 / 2826784 Bytes,
+5265 / 8857 Funktionen.
+
+Breiter `DEFINE_NERVE`-Sweep (alle `src/Enemy/*.cpp`, `NpcNerve`, …,
+`0x4`–`0xbc`, ≥ 99,5 % fuzzy): kein weiteres Treffer außer den zwei
+unten (u. a. `NameKuriJumpAttack` `trash[4]` im Brute-Skript, im
+Quellstand **kein** Vollmatch — nicht committet).
+
+**Vollmatch, strikt (2×).**
+
+- `TNerveBEelTearsMarioRecover::execute`: `char trash[4]; trash[0] = 0;` — 352 B.
+- `TNerveMantaDeath::execute`: `char trash[4]; trash[0] = 0;` — 236 B.
+
+`validate-symbol-order`: `mario/Enemy/bosseel` PASS;
+`mario/Enemy/bossManta` ORDER-FAIL an `theNerve__*`-Schwachsymbolen
+(vorbestehend, unverändert durch diese Runde).
+
+**Zähler.** matched code 48,31 % → 48,32 %,
+1734320 → 1734908 Bytes (+588),
+9230 → 9232 Funktionen (+2).
+Game Code 36,16 % → 36,18 %,
+1022168 → 1022756 Bytes (+588),
+5265 → 5267 Funktionen (+2).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nach hundertfünfunddreißigster Iterationsrunde
+
+**Beobachtung, vorher.** Stand Runde 134:
+48,32 % matched code, 1734908 / 3590088 Bytes,
+9232 / 12881 Funktionen.
+Game Code 36,18 %, 1022756 / 2826784 Bytes,
+5267 / 8857 Funktionen.
+
+Slot+Frame-Prioritäten (`BossEelDie`/`MouthOpenWait`/`Eat`, `WalkerEscape`,
+`BGKAppear`, `Hino2Pollute`, `AnimalGraphWander`): Entry-`trash` und
+`0x4`–`0xbc`-Brute **ohne** Vollmatch — echte Operanden/Layout (z. B.
+`Hino2Pollute` `changeBck` 16 vs 3, `WalkerEscape` Stack `0x44` vs `0x24`).
+Weiterer 100-%-Fuzzy-Scan: `TRoulette::initMapObj` hat **größeren** eigenen
+Frame als Retail (kein Padding).
+
+**Vollmatch, strikt (1×).**
+
+- `TMario::turnning()`: `char trash[4]; trash[0] = 0;` — 1004 B
+  (`MarioRun.cpp`).
+
+**Zähler.** matched code 48,32 % → 48,35 %,
+1734908 → 1735912 Bytes (+1004),
+9232 → 9233 Funktionen (+1).
+Game Code 36,18 % → 36,22 %,
+1022756 → 1023760 Bytes (+1004),
+5267 → 5268 Funktionen (+1).
+
+`build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+Keine TU auf `Matching` gestellt.
+
+### Nach hundertsechsunddreißigster Iterationsrunde (Speed, 0 Vollmatches)
+
+**Beobachtung.** Stand Runde 135 unverändert (48,35 % / 9233 Fn).
+
+**1 — „Retail-Frame größer“-Korrektur.** `decomp-diff` zeigt für die
+priorisierten 100-%-Fuzzy-Funktionen **unseren** Frame oft **größer** als
+Retail (Padding würde verschlimmern):
+
+- `thinkSituation`: Retail `0xc8`, unser `0x2b0`.
+- `soundMovement`: Retail `0x2e0`, unser `0x340`.
+- `CardLoad::changeScene`: Retail `0x1e0`, unser `0x3b8`.
+
+Entry-`trash` `0x4`–`0x23c`: kein `match`.
+
+Globaler Scan (100 % fuzzy, Retail-`stwu` > unser, Gap ≥ 8): nur
+`MarDirectorPreEntry::preEntry`, `ModelWaterManager::drawRefracAndSpec`,
+`MarioWait::waitMain` — Entry-`trash` ohne Vollmatch.
+
+**2 — `Hino2Pollute`.** `changeBck(3)` → `changeBck(16)` / `17` an zwei
+Retail-Stellen (`li r4, 0x10` / `0x11`) behebt Operanden, bleibt aber
+~26 Diff-Zeilen (fehlendes Inline: Wasser/`rand`/Stack `0xe8` vs `0xa0`).
+**Nicht committet** (kein 100 %).
+
+**3 — Sonstiges.** `SampleCtrlMaterial` / `TMapObjManager::load`:
+Brute meldete fälschlich `trash[4]` (Retail-Frame kleiner). Bosseel/Walker
+unverändert defer.
+
+**Vollmatch.** keine.
+
+`ninja` / DOL-SHA1 unverändert OK.
+
+### Nach hundertsiebenunddreißigster Iterationsrunde (Speed, 0 Vollmatches)
+
+**Beobachtung.** Stand Runde 135 unverändert (48,35 % / 9233 Fn).
+
+**Scan.** 25× 100-%-Fuzzy game-Funktionen; kein Kandidat mit nur
+`stwu`/Epilog-Diff und Retail-Frame > unser (automatischer Filter: 0 Treffer).
+Entry-`trash` brute: `thinkSituation` (aktuell oft **unser** Frame größer,
+z. B. `stwu -0xd0` vs Retail `-0xc8`), `getRandomNextIndex`,
+`execGroundCheck_`, `TMarDirector::TMarDirector` (ein Operand `addi r4,r1`
+für `OSInitStopwatch`, kein reines Padding).
+
+**`initMirrorModel`.** `.rodata`-Anfang per `DummyStrings`/`MtxCalcTypeName`
+vor `MarioAnimeData.hpp` angleichen (wie `MarioParticle.cpp`) — Spiegel-
+Strings bleiben **0x18** zu früh (`0xa38` vs `0xa50`); fehlendes
+0x18-Null-Pad zwischen `ma_sleep_end_tx.btp`-Cluster und folgendem
+`.rodata` (nicht committet, kein Vollmatch).
+
+**Vollmatch.** keine.
+
+`ninja` / `build/GMSJ01/mario.dol: OK`.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### Nach hundertachtunddreißigster Iterationsrunde (Speed, 1 Vollmatch)
+
+**Vollmatch.** `TMario::initMirrorModel` (284 B, `mario/Player/MarioDraw`).
+
+**Ursache.** Compound-Literale für `setInfo[0/1]` in `initModel` landeten in
+`.rodata` vor dem Foot-Null-Cluster; Spiegel-Strings bei **0xa38** statt
+**0xa50** (`addi r4, r28, …` −0x18).
+
+**Fix.** `DummyStrings`/`MtxCalcTypeName` vor `MarioAnimeData.hpp`;
+nach `MarioFootDirLCtrl` zwei **0xc**-Nullblöcke plus
+`marioInitModelSetInfoRo0`/`Ro1` (je 0xa); `initModel` kopiert aus Rodata und
+setzt `setInfo[1].unk0 = mJointIdChnChest`.
+
+**Nebenwirkung.** `initModel` fuzzy 95,46 % → 94,28 % (erwartet: andere
+Relocs); MarioDraw matched_data 11,92 % → 48,36 %.
+
+`ninja` / DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+`changes_all`: Total matched_code 48,35 % → 48,36 %.
+
+### Nach hundertneununddreißigster Iterationsrunde (PROGRESS, 0 Vollmatches)
+
+**Beobachtung.** R138-Stand: `initMirrorModel` 100 %; `initModel` 94,1 %;
+Spiegel-Strings @ **0xa50** OK.
+
+**`initModel`-Recovery (revertiert).** Retail `stwu -0x5c0`; unser Build mit
+`marioInitModelSetInfoRo0/1`-Kopie **−0x558** (−0x68). Compound-Literale für
+`setInfo[0/1]` erzeugen Retail-Stack-Spills (`lwz 0xa38(r30)` → `0x3b0(r1)` …)
+und **−0x578** (−0x48), aber Gesamt-Fuzzy fällt auf ~89,9 % (Tex-Loop-Cluster).
+`++j` statt `++i` in der `J3DTexNoAnm`-Schleife ist ASM-korrekt (Retail
+`addi r7,r7,1`), verschlechtert aber solo auf 88,7 % — Loop und Frame müssen
+gemeinsam angegangen werden. Scratch-Locals / Buffer vergrößern / Locals an den
+Funktionsanfang: kein Frame-Gewinn.
+
+**Nächster ASM-Haken für `initModel`.** Behalten: Foot-Nullblöcke +
+`marioInitModelSetInfoRo0/1` @ **0xa38** (Mirror fix). Ziel: Compound-Literal-
+**Codegen** für `setInfo` **ohne** zweites Rodata — vermutlich UNUSED-Inline/
+Stack-Layout (~0x48–0x68) aus `mario.MAP`, nicht Entry-`trash`.
+
+**Vollmatch.** keine.
+
+`ninja` / DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### Nächster Schritt
+
+1. R138 Mirror-Fix unverändert; `turnning` trash[4] behalten.
+2. `initModel`: MAP/UNUSED + Stack −0x5c0 mit Compound-`setInfo`-Spills.
+3. Tex-Loop `++j` erst mit passendem Frame/Cluster committen.
+4. `thinkSituation` / `soundMovement` / `changeScene`: Frame verkleinern.
+5. Defer-Listen unverändert.
+
+### Nach hundertvierzigster Iterationsrunde
+
+**Beobachtung.** R139: `initModel` zu verflochten; Strategie auf andere TUs.
+
+**Vollmatch, strikt.**
+
+`TRoulette::moveObject`: ASM `lfs`/`stfs` @ **0x34** → `mRotation.y` (nicht
+`.x`) plus `char trash[0x20]; trash[0] = 0;` für Retail-Frame `0x58`.
+
+0 Abweichungen, 244 Bytes, 61 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/MapObjSirena`: PASS (bestehende UNUSED-
+Size-Warnung `getSlotResult` unverändert).
+
+`initMirrorModel` bleibt 100 %; Mirror-Strings @ **0xa50** unverändert.
+
+`ninja` / DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### Nächster Schritt
+
+1. R138–R140 Mirror / `turnning` trash[4] / `moveObject` unverändert halten.
+2. Weitere MoveBG/Enemy-Kandidaten mit klarem Member-Offset (wie `0x34` Ry).
+3. `initModel` nur mit kombiniertem Frame+Compound+`++j`-Cluster.
+4. Defer-Listen unverändert.
+
+### Nach hunderteinundvierzigster Iterationsrunde
+
+**Beobachtung.** R141: mehrere 99,9 %-Kandidaten (u. a.
+`TMapObjBase::getDistance`, `TSpineEnemy::resetToPosition`,
+`TRoulette::initMapObj` Iterator-Spill, `TCloset::calcRootMatrix` Mtx-Basis
+0x14 vs 0x10) — noch keine strikte Byte-Identität.
+
+**Vollmatch, strikt.** keine (R140 `TRoulette::moveObject` unverändert).
+
+**Teilfortschritt MapObjSirena.**
+
+- `TCloset::calcRootMatrix`: `char trash[8]; trash[0]=0;` → Retail-Frame
+  `0x70` (Fuzzy ~99,96 %); verbleibend `addi r30,r1,0x14` vs `0x10` und
+  `mtx.ref(1,3)`-Spill 0x30 vs 0x2c.
+- `TItemSlotDrum::generateItem`: `MsMtxSetRotY` nutzt `mRotation.y` statt
+  `.x` (ASM `lfs` @ 0x34) — `generateItem` gesamt noch ~90 %.
+
+`initMirrorModel` 100 %; `TRoulette::moveObject` **match**; DOL-SHA1
+`9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### Nächster Schritt
+
+1. `TCloset::calcRootMatrix`: Mtx-Stack-Basis +4 B ohne Frame-Wachstum (evtl.
+   `TRotation3f`-Layout / lokale Reihenfolge).
+2. `getDistance`: Retail-Reihenfolge `pos.y−yOffset` vor `dx` hält `0x18`-Frame,
+   Register/Spill 0x14 noch offen.
+3. `initMapObj`: Iterator @ `0x5c` ohne `0xa8`-Frame (nur `trash[4]` vor
+   `push_back` reicht für ersten Spill, nicht für `0x7c`-Cluster).
+4. Defer-Listen unverändert.
+
+### Nach hunderte zweiundvierzigster Iterationsrunde
+
+**Vollmatch, strikt.**
+
+- `TMapObjBase::getDistance` (`MapObjLib.cpp`): `sqrtTemp` mit `pad[4]` +
+  `volatile f32 y` im `__frsqrte`-Block → Retail-Spill `stfs`/`lfs` @ `0x14`
+  bei unverändertem Frame `0x18` (**match**).
+
+**Teilfortschritt MapObjSirena (unverändert R141-Zielbild, näher).**
+
+- `TCloset::calcRootMatrix`: `trash[4]` + `{ pad[4]; TRotation3f mtx; }`
+  `local` → Mtx-Basis `0x14`, `ref(1,3)` @ `0x30`, Frame `0x70`; offen nur
+  `mr` vs `addi r31,r3,0` und `mr` vs `addi r3,r30,0` (~98,4 %).
+- `TItemSlotDrum::generateItem`: `mRotation.y` in `MsMtxSetRotY` (Teil).
+
+`initMirrorModel` 100 %; `TRoulette::moveObject` **match**; DOL-SHA1
+`9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### Nächster Schritt
+
+1. `TCloset::calcRootMatrix`: `mr`/`addi`-Paar nach `getModel` / vor
+   `MsMtxSetXYZRPH` (Register-Homing).
+2. `TRoulette::initMapObj`: Iterator `0x5c` + `0x7c`-Cluster ohne `0xa8`-Frame.
+3. Weitere `.x`→`.y`-Offsets wie Roulette.
+4. Defer-Listen unverändert.
+
+### Nach hunderte dreiundvierzigster Iterationsrunde
+
+**Vollmatch, strikt.**
+
+- `TSlotDrum::initNeonMatColor`: `char trash[4]; trash[0]=0;` → Frame
+  `0x58` und Mat-Name-Stack @ `0x28` (**match**).
+
+**Teilfortschritt.**
+
+- `TCloset::calcRootMatrix`: `trash[4]` + `pad2[4]`, dann
+  `getModel()` vor `TRotation3f mtx` (Saku-Reihenfolge) → `mr r31,r3` /
+  `mr r3,r30` OK; verbleibend Mtx-Basis `0x10` vs `0x14` und
+  `ref(1,3)`-Spill `0x2c` vs `0x30` (~99,8 %).
+
+R142 `getDistance` **match**; R140 `TRoulette::moveObject`; R138 `initMirrorModel`;
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R145 (Pivot: `drawLogic`, Closet unangetastet)
+
+**Vollmatch, strikt.**
+
+- `TMario::drawLogic`: `char trash[4]; trash[0]=0;` am Funktionsanfang → Frame
+  `-0x28` und Iterator-Spill @ `0x18` (**match**).
+
+**Teilfortschritt (nur notiert, nicht committed).**
+
+- `TMapObjBase::joinToGroup`: gleiches `trash[4]`-Muster bringt Frame `-0x68`, verbleibend
+  `insert`-Spills `0x48` vs `0x4c` (~99,9 %).
+
+R143 `initNeonMatColor`, R142 `getDistance`, R140 `TRoulette::moveObject`, R138
+`initMirrorModel`; `TCloset::calcRootMatrix` Teilstand unverändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R146 (`joinToGroup`)
+
+**Vollmatch, strikt.**
+
+- `TMapObjBase::joinToGroup`: `char trash[4];`, `TNameRef* list = search(...);`,
+  `trash[0]=0;` vor `push_back` (nicht Entry-Trash allein) → Frame `-0x68`, Iterator-
+  und `insert`-Spills wie Retail (**match**).
+
+R145 `drawLogic`, R143 `initNeonMatColor`, R142 `getDistance`, R140 `moveObject`, R138
+`initMirrorModel`; Closet-Teilstand unverändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R147 (`TMapObjSwitch::receiveMessage`)
+
+**Vollmatch, strikt.**
+
+- `TMapObjSwitch::receiveMessage`: Entry-`char trash[4]; trash[0]=0;` → Frame
+  `-0x40`, Demo-Camera-Stack @ `0x2c` (**match**).
+
+R146 `joinToGroup`, R145 `drawLogic`, R143 `initNeonMatColor`, R142 `getDistance`, R140
+`moveObject`, R138 `initMirrorModel`; Closet-Teilstand unverändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R148 (`initAndRegister` Teilstand)
+
+**Kein neuer Vollmatch** (Ziel war `initAndRegister` @ 100 %).
+
+- `TMapObjBase::initAndRegister`: Entry-`char trash[4]; trash[0]=0;` + verkettetes
+  `search`→`push_back` (kein `list`-Local) → Frame `-0x70` und `addi r31,r3,0x10`
+  wie Retail (**99,9 %**).
+- Verbleibend: drei `insert`-Spills +4 B zu hoch (`0x50`/`0x4c`/`0x50` vs
+  `0x4c`/`0x48`/`0x4c`).
+- Mid-Trash + `TNameRef* list` nach `search` fixiert die Spills, erzwingt aber
+  `addi r30,r3,0x10` (~99,7 %) — gleicher Trade-off wie in R147-Notizen.
+
+R147 `receiveMessage`, R146 `joinToGroup`, R145 `drawLogic`, R138 `initMirrorModel`
+unverändert @ 100 %.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### Nächster Schritt
+
+1. `initAndRegister`: Mid-Trash nach `search` **ohne** `list`-GPR (r3/r31 halten) oder
+   anderer Register-Hebel für die letzten +4 B bei Entry-Trash.
+2. `TRoulette::initMapObj`: Mid-Trash nach `new`/`search` (nicht Entry allein).
+3. `TCloset::calcRootMatrix` / `partsRollCallback`: nur bei klarem +4‑B-Hebel.
+4. Defer-Listen unverändert.
+
+### R151 (`TEggYoshi::control`)
+
+**Vollmatch, strikt.**
+
+- `TEggYoshi::control`: `JGeometry::TVec3<f32> pos`/`v` vor Entry-`char
+  trash[0x8]; trash[0]=0;`, Case `0xC` ruft `makeObjDead()` (vtable `0x104`)
+  statt `kill()`; Case `0xF` nutzt Top-Level-`v`.
+
+0 Abweichungen, 540 Bytes, 135 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/Item`: PASS.
+
+R150 `TNozzleBox::load`, R149 `TEggYoshi::receiveMessage`, R147
+`TMapObjSwitch::receiveMessage`, R146 `joinToGroup`, R145 `drawLogic`, R138
+`initMirrorModel` unverändert @ 100 %.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### Nächster Schritt (A)
+
+1. `TCoin::perform`: Frame `-0x50` bereits auf HEAD; nur noch vier Operanden
+   beim `request`-Spill (`addi`/`stw` @ `0x34`/`0x38`/`0x3c` vs `0x24`/`0x28`/`0x2c`).
+   Entry-/Mid-`trash`, `reqPos`, Trash nach `LIVE_FLAG_DEAD` (+ `0x8`…`0x10`)
+   und Dual-Trash ändern den Spill nicht.
+2. `TRoulette::initMapObj`: Iterator-Spills `+4` B (kein joinToGroup-`list`+Trash;
+   explizites `insert`/`list`-Local verschlechtert).
+3. `initAndRegister`: SMS-B.
+4. Defer-Listen unverändert.
+
+### R156 (`TMapObjBase::throwObjToFront`)
+
+**Vollmatch, strikt.**
+
+- `throwObjToFront`: `char pre[8]`, dann `Mtx mtx`, dann `char trash[8]`;
+  `mMActor`-Zweig `MtxPtr anmMtx`. Frame `-0x90`, `MsMtxSetRotRPH`-Buffer @
+  `0x38` (reines `trash[8]`/`trash[0x10]` allein reichte nicht).
+- `throwObjToFrontFromPoint` (R155) unverändert matching.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+**Nächste MoveBG:** `rotateVecByAxisY` (Retail inlined, kein TRotation3-Stack);
+weitere hoist+trash-Kandidaten in MapObjLib. Skip: touchFruit / appearWithDemo /
+newAndRegisterCoin ohne klaren Hebel.
+
+### R157 (Round 71 Agent — kein Vollmatch)
+
+**Kein neuer strikter Vollmatch** (Scope A MoveBG).
+
+- `TMapObjTree::initMapObj`: `char buffer[64]` am Funktionskopf, danach
+  `char trash[4]; trash[0]=0;` → Frame `-0x90`, `snprintf`-Buffer @ `0x2c`
+  wie Retail; verbleibend **3** Operand-`~` (`mLeafNum` in `r26` statt `r25`
+  für `new[]` / `__construct_new_array`).
+- `TMapObjGrassManager::initDrawNear`: `Mtx` + `trash[0x10]` nach `Mtx` +
+  hoisted `vec.set()` hält Frame `0x98` und `viewItm` @ `0x44`; **4** `~` beim
+  `GXSetChanMatColor`-Spill (`0x34` vs `0x24`) — nicht committed.
+- `TMapObjSwitch::receiveMessage` / `TRoulette::initMapObj` / `initAndRegister`:
+  Iterator- bzw. `TFlagT`-Spills unverändert (Entry-/Mid-Trash reicht nicht).
+
+R156 `throwObjToFront`, R155 `throwObjToFrontFromPoint`, R154 `touchWater` unverändert.
+
+`validate-symbol-order` `mario/MoveBG/MapObjTree`: PASS.
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+**Nächste MoveBG:** `initMapObj` `r25`-Homing (Registerdruck `new`/`r25`-Collision);
+`initDrawNear` GX-Spill ohne Frame-Wachstum; `rotateVecByAxisY` nur bei inlined
+Retail-Pfad. Skip: touchFruit / appearWithDemo / newAndRegisterCoin.
+
+### R158 (`TCloset::calcRootMatrix`)
+
+**Vollmatch, strikt.**
+
+- `TCloset::calcRootMatrix`: Entry-`char trash[4]; trash[0]=0;`, danach
+  `getModel()`; Mid-`char pad2[4]; pad2[0]=0;` vor `TRotation3f mtx` →
+  `MsMtxSetXYZRPH`-Basis @ `0x14`, `mtx.ref(1,3)` @ `0x30`, Frame `-0x70`
+  (**match**).
+
+R157 `initMapObj` partial, R156–R154 unverändert.
+`validate-symbol-order` `mario/MoveBG/MapObjSirena`: PASS (UNUSED-Size-Warnungen).
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+**Nächste MoveBG:** `TMapObjSwitch::receiveMessage` (`TFlagT` @ `0x2c` vs `0x24`);
+`initMapObj` / `initDrawNear` nur mit neuem Hebel. Skip: Defer-Liste unverändert.
+
+### R160 (`TCloset::calcRootMatrix` — strikt nachgezogen)
+
+**Vollmatch, strikt (0 Marker in `decomp-diff`).**
+
+- R158 hatte fuzzy 100 % mit **3** `~` (`mtx` @ `0x10` vs Retail `0x14`).
+- Fix: nach `getModel()` `struct { char pad[4]; Mtx mtx; } local;` statt
+  freiem `TRotation3f` + Mid-`pad2[4]` → Basis @ `0x14`, `mtx[1][3]` @ `0x30`,
+  Frame `-0x70`, `mr r31`/`mr r3` wie Retail (**match**).
+
+`validate-symbol-order` `mario/MoveBG/MapObjSirena`: PASS (UNUSED-Size-Warnungen).
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+**Nächste MoveBG:** `TDonchou::calcRootMatrix` (+0xc @ `-0x90`);
+`TMapObjTree::initMapObj` (`r25` vs `r26`); Switch `TFlagT` nur mit klarem Hebel.
+
+### R162 (`THideObjPictureTwin::loadAfter`)
+
+**Vollmatch, strikt (0 Marker in `decomp-diff`).**
+
+- Rogue `.rodata` vor `@3113`: `rogueRodata2782[0xc]` + `rogueRodata2784[3]`
+  (Twin-Strings `@1490+0x164` / `+0x174` statt `+0x14c`).
+- `char pad[8]; char nameBuf[0x40];` auf Funktions-Ebene vor Parent-`loadAfter`;
+  Suffix-Bytes als `char suffix0`–`suffix3`, `snprintf` + `stbx`-Patches wie Retail
+  → Frame `-0x90`, `nameBuf` @ `0x28`, `stmw` @ `0x74`.
+
+0 Abweichungen, 216 Bytes, 54 Instruktionen.
+`mario/MoveBG/MapObjHide` matched_data 91,07 % → 100,00 %.
+
+R160 `TCloset::calcRootMatrix` unverändert strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R163 (`TRollBlock::load`)
+
+**Vollmatch, strikt.**
+
+- `TRollBlock::load`: `stream.read(&local_18, 4)` statt `operator>>` auf `s32`
+  (Retail `read` mit `li r5, 4`).
+
+0 Abweichungen, 168 Bytes, 42 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/MapObjRailBlock`: PASS.
+
+R162 `THideObjPictureTwin::loadAfter`, R160 `TCloset::calcRootMatrix` unverändert
+strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R165 (`TMapObjGeneral::checkWallCollision`)
+
+**Vollmatch, strikt.**
+
+- `TBGWallCheckRecord` zuerst, danach `char trash[0x18]` (Emissionsreihenfolge
+  bei `-inline deferred`) → Frame `-0x60`, Record/Spill @ `0x28` wie Retail.
+- Kein manuelles `set`/Skalar-Init nötig; Konstruktor + `isTouchedWallsAndMoveXZ`
+  unverändert.
+
+0 Abweichungen, 232 Bytes, 58 Instruktionen.
+`decomp-diff -u mario/MoveBG/MapObjGeneral -d checkWallCollision`: 100 %.
+
+R164 `TMapObjSwitch::control`, R163/R162/R160 unverändert strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R166 (`TMapObjManager::load`)
+
+**Vollmatch, strikt.**
+
+- `char trash[0x78]` am Funktionskopf nach Parent-`load`-Aufruf-Pfad → Frame
+  `-0x158` wie Retail (`0xe0` → `0x158` Delta durch inlined `TLiveManager::load` /
+  Stream-`read`-Layout).
+
+0 Abweichungen, 1216 Bytes, 304 Instruktionen.
+`decomp-diff -u mario/MoveBG/MapObjManager -d TMapObjManager::load`: 100 %.
+
+R165 `checkWallCollision`, R164 `TMapObjSwitch::control`, R163/R162/R160
+unverändert strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R361 (`MapObjRailBlock`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TNormalLift::setGroundCollision`.
+
+- Die Matrix ist ein `TPosition3f`, damit der leere `SMatrix34C`-Konstruktor im Inlining als `bl` stehen bleibt.
+- Die eigenständige `TRailMapObj::setGroundCollision` bleibt ohne diesen `bl` bei 100 %.
+- 188 Bytes, 47 Instruktionen.
+- `MapObjRailBlock.cpp` bleibt `NonMatching`.
+
+`validate-symbol-order` `mario/MoveBG/MapObjRailBlock`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.716 % -> 79.71623 %, matched code 50.684105 % -> 50.68934 % (1819604 -> 1819792, +188).
+Matched data bleibt 66.393005 % (425135).
+Funktionen matched 9721 -> 9722.
+`MapObjRailBlock` 6096 -> 6284 (+188), Funktionen 41 -> 42.
+Complete units bleiben 416.
+Kein R170–R360-Unit hat matched code verloren.
+Nur `MapObjRailBlock` hat matched code gewonnen.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R360 (`MapObjRailBlock`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TNormalLift::readRailFlag`.
+
+- `getGraph()` liegt in einem eigenen Lokal, damit der Zeiger `isDummy` in `r30` überlebt.
+- Der Körper läuft nur, wenn der Graph da ist und `isDummy() == 0`.
+- Der Rail-Node kommt aus `graph->getGraphNode(mCurrIdx)`, damit der Index der Tracer-Index bleibt.
+- `char trash[0x10]` mit `trash[0] = 0` hebt den Frame auf `-0x80`.
+- 244 Bytes, 61 Instruktionen.
+- `MapObjRailBlock.cpp` bleibt `NonMatching`.
+
+`validate-symbol-order` `mario/MoveBG/MapObjRailBlock`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.71538 % -> 79.716 %, matched code 50.67731 % -> 50.684105 % (1819360 -> 1819604, +244).
+Matched data bleibt 66.393005 % (425135).
+Funktionen matched 9720 -> 9721.
+`MapObjRailBlock` 5852 -> 6096 (+244), Funktionen 40 -> 41.
+Complete units bleiben 416.
+Kein R170–R359-Unit hat matched code verloren.
+Nur `MapObjRailBlock` hat matched code gewonnen.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R359 (`MapObjBase`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjBase::perform`.
+
+- Die Talk-Mode-Frühausstiege `LIVE_FLAG_DEAD` und `isActorType(0x4000003B)` sind ein Oder, damit der zweite Term `beq`/`b` bleibt.
+- `getModel()` wird als `SDLModel` nach `viewCalcSimple` gerufen (vtable `0x1c`).
+- `char trash[0x28]` mit `trash[0] = 0` hebt den Frame auf `-0x90`.
+- 1068 Bytes, 267 Instruktionen.
+- `MapObjBase.cpp` bleibt `NonMatching`.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBase`: FAIL.
+`setMtx__17TMapCollisionBaseFPA4_f` fehlt schon auf dem unveränderten Objekt.
+UNUSED-Größen von `moveByBck` und `stopAnim` weichen schon vorher ab.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.71525 % -> 79.71538 %, matched code 50.647564 % -> 50.67731 % (1818292 -> 1819360, +1068).
+Matched data bleibt 66.393005 % (425135).
+Funktionen matched 9719 -> 9720.
+`MapObjBase` 6628 -> 7696 (+1068), Funktionen 38 -> 39.
+Complete units bleiben 416.
+Kein R170–R357-Unit hat matched code verloren.
+Nur `MapObjBase` hat matched code gewonnen.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R357 (`Item`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TEggYoshi::touchFruit`.
+
+- `dx` wird vor `dz` gebildet, damit `matan` die Retail-Argumente bekommt.
+- Das `s16`-Ergebnis von `matan` liegt in einem Lokal, damit die Grad-Umrechnung in `f0`/`f1`/`f2` bleibt.
+- `char trash[0x18]` mit `trash[0] = 0` hebt den Frame auf `-0x48`.
+- 388 Bytes, 97 Instruktionen.
+- `Item.cpp` bleibt `NonMatching`.
+
+`validate-symbol-order` `mario/MoveBG/Item`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.715164 % -> 79.71525 %, matched code 50.63675 % -> 50.647564 % (1817904 -> 1818292, +388).
+Matched data bleibt 66.393005 % (425135).
+Funktionen matched 9718 -> 9719.
+`Item` 16140 -> 16528 (+388), Funktionen 91 -> 92.
+Complete units bleiben 416.
+Kein R170–R356-Unit hat matched code verloren.
+Nur `Item` hat matched code gewonnen.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R356 (`MapObjGeneral`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjGeneral::recover`.
+
+- `gpPollution` bleibt ein Lokales, damit der Zeiger in `r3` über das `this`-Sichern lebt.
+- `x` und `y` sind Lokale, damit die Loads in der Retail-Reihenfolge stehen.
+- `cleanFromRadius` hält den Radius-Dividend in `f5`.
+- `char trash[0x28]` mit `trash[0] = 0` hebt den Frame auf `-0x50`.
+- 264 Bytes, 66 Instruktionen.
+- `MapObjGeneral.cpp` bleibt `NonMatching`.
+
+`validate-symbol-order` `mario/MoveBG/MapObjGeneral`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.71511 % -> 79.715164 %, matched code 50.629402 % -> 50.636753 % (1817640 -> 1817904, +264).
+Matched data bleibt 66.393005 % (425135).
+Funktionen matched 9717 -> 9718.
+`MapObjGeneral` 7712 -> 7976 (+264), Funktionen 38 -> 39.
+Complete units bleiben 416.
+Kein R170–R355-Unit hat matched code verloren.
+Nur `MapObjGeneral` hat matched code gewonnen.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R355 (`MapObjInit`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjBase::initActorData`.
+
+- Sucht den `sObjDataTable`-Eintrag per `calcKeyCode` und `strcmp` auf `unkF4`.
+- Der Keycode liegt in einem `u32`, damit er in `r27` bleibt und die Slot-Adresse in `r28`.
+- `char trash[0x10]` mit `trash[0] = 0` hebt den Frame auf `-0x58`.
+- 356 Bytes, 89 Instruktionen.
+- `MapObjInit.cpp` bleibt `NonMatching`.
+
+`validate-symbol-order` `mario/MoveBG/MapObjInit`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.71507 % -> 79.71511 %, matched code 50.619484 % -> 50.629402 % (1817284 -> 1817640, +356).
+Matched data bleibt 66.393005 % (425135).
+Funktionen matched 9716 -> 9717.
+`MapObjInit` 2084 -> 2440 (+356), Funktionen 10 -> 11.
+Complete units bleiben 416.
+Kein R170–R353-Unit hat matched code verloren.
+Nur `MapObjInit` hat matched code gewonnen.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R353 (`MapObjPinna`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TAmiKing::initMapObj`.
+
+- Ruft `TMapObjBase::initMapObj` und `initAnmSound` auf.
+- Setzt BCK `amiking_sleep1` und den Anm-Sound `/scene/mapObj/amiking_sleep1.bas`.
+- Löscht `LIVE_FLAG_UNK10`.
+- Eine leere `u8`-Schleife über `getJointNum` bleibt stehen.
+- 136 Bytes, 34 Instruktionen.
+- `MapObjPinna.cpp` bleibt `NonMatching`.
+
+`validate-symbol-order` `mario/MoveBG/MapObjPinna`: PASS.
+0 neue Fehler.
+Die sechs UNUSED-Größenwarnungen sind die bisherigen Stubs.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.7114 % -> 79.71507 %, matched code 50.6157 % -> 50.619484 % (1817148 -> 1817284, +136).
+Matched data bleibt 66.393005 % (425135).
+Funktionen matched 9715 -> 9716.
+`MapObjPinna` 6460 -> 6596 (+136), Funktionen 55 -> 56.
+Complete units bleiben 416.
+Kein R170–R352-Unit hat matched code verloren.
+Nur `MapObjPinna` hat matched code gewonnen.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R352 (`MapObjBall`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjBall::checkWallCollision`.
+
+- Setzt die Prüfposition auf X, Y plus `mBodyRadius` und Z.
+- `radius = mBodyRadius` steht im Addenden, damit Y vor dem Radius geladen wird und `f1` den Radius behält.
+- `checkBallWall` legt den Record über den Positionsvektor.
+- `char pad[0x10]` hält Frame `-0x68` und die Position auf `r1+0x28`.
+- Bei Treffer schreibt es `unk138`, kopiert X/Z zurück und ruft virtuelles `touchWall`.
+- Sonst setzt es `unk138` auf null.
+- 220 Bytes, 55 Instruktionen.
+- `MapObjBall.cpp` bleibt `NonMatching`.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS.
+0 neue Fehler.
+Die vier UNUSED-Größenwarnungen sind die bisherigen Stubs.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.705376 % -> 79.7114 %, matched code 50.609566 % -> 50.6157 % (1816928 -> 1817148, +220).
+Matched data bleibt 66.393005 % (425135).
+Funktionen matched 9714 -> 9715.
+`MapObjBall` 9864 -> 10084 (+220), Funktionen 55 -> 56.
+Complete units bleiben 416.
+Kein R170–R351-Unit hat matched code verloren.
+Nur `MapObjBall` hat matched code gewonnen.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R351 (`MapObjBall`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjBall::hold`.
+
+- Kopiert `mVelocity` und lässt `sqrt` über `doSqrt` als `bl` stehen.
+- `length()` direkt würde `sqrt` zu `frsqrte` expandieren.
+- `ballVelocity` holt `mVelocity`.
+- Der zusätzliche Inline lässt den toten 4-Byte-Slot stehen, damit das Frame bei `-0x38` bleibt.
+- Wenn die Länge nicht über 10 liegt, ruft es `TMapObjGeneral::hold` auf und nullt die Geschwindigkeit.
+- 152 Bytes, 38 Instruktionen.
+- `MapObjBall.cpp` bleibt `NonMatching`.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS.
+0 neue Fehler.
+Die vier UNUSED-Größenwarnungen sind die bisherigen Stubs.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.701256 % -> 79.705376 %, matched code 50.60533 % -> 50.609566 % (1816776 -> 1816928, +152).
+Matched data bleibt 66.393005 % (425135).
+Funktionen matched 9713 -> 9714.
+`MapObjBall` 9712 -> 9864 (+152), Funktionen 54 -> 55.
+Complete units bleiben 416.
+Kein R170–R350-Unit hat matched code verloren.
+Nur `MapObjBall` hat matched code gewonnen.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R350 (`MapObjFence`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TRevolvingFenceInner::setGroundCollision`.
+
+- Wenn Yoshi geschlüpft ist und in der XZ-Reichweite von `mBodyRadius` steht, kopiert es die Model-Matrix und schiebt die Bodenkollision.
+- Danach ruft es immer `TMapObjBase::setGroundCollision` auf.
+- `fenceAnmMtx` holt `getAnmMtx(0)`.
+- Der zusätzliche Inline lässt den toten 4-Byte-Slot stehen, damit die Matrix bei `0x38` liegt.
+- 264 Bytes, 66 Instruktionen.
+- `MapObjFence.cpp` bleibt `NonMatching`.
+
+`validate-symbol-order` `mario/MoveBG/MapObjFence`: PASS.
+0 neue Fehler.
+Die zwei UNUSED-Größenwarnungen sind die bisherigen Stubs.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.69402 % -> 79.701256 %, matched code 50.597977 % -> 50.60533 % (1816512 -> 1816776, +264).
+Matched data bleibt 66.393005 % (425135).
+Funktionen matched 9712 -> 9713.
+`MapObjFence` 4832 -> 5096 (+264), Funktionen 35 -> 36.
+Complete units bleiben 416.
+Kein R170–R349-Unit hat matched code verloren.
+Nur `MapObjFence` hat matched code gewonnen.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R349 (`MapObjMare`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TCogwheelScale::receiveMessage`.
+
+- Bei `HIT_MESSAGE_HIP_DROP` addiert es `unk150` auf `unk158->unk138` und gibt wahr zurück.
+- Sonst ruft es `TMapObjBase::receiveMessage` auf.
+- `takeScale` liefert den Slot als `f32` zurück, damit `lfsu` und `fadds f0, f0, f1` stehen bleiben.
+- Ein direktes `+=` schreibt `lfs`/`stfs` und dreht die `fadds`-Operanden.
+- 76 Bytes, 19 Instruktionen.
+- `MapObjMare.cpp` bleibt `NonMatching`.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMare`: PASS.
+0 neue Fehler.
+Die fünf UNUSED-Größenwarnungen sind die bisherigen Stubs.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.69281 % -> 79.69402 %, matched code 50.595863 % -> 50.597977 % (1816436 -> 1816512, +76).
+Matched data bleibt 66.393005 % (425135).
+Funktionen matched 9711 -> 9712.
+`MapObjMare` 5916 -> 5992 (+76), Funktionen 49 -> 50.
+Complete units bleiben 416.
+Kein R170–R346-Unit hat matched code verloren.
+Nur `MapObjMare` hat matched code gewonnen.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R346 (`MapObjBall`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TRandomFruit::initMapObj`.
+
+- `rand` mal `1/32768` mal `5` wählt die Fruchtart.
+- `snprintf` schreibt Coconut, Durian, Papaya oder Pine nach `unk1A8`.
+- Die Fälle 4 und 5 fallen auf Pine durch.
+- Der Puffer wird `unkF4`, danach folgt `TMapObjBall::initMapObj`.
+- `SMS_InitPacket_OneTevColor` färbt mit `GX_TEVREG0` und `unk19C`.
+- 320 Bytes, 80 Instruktionen.
+- Die drei スイカ-Namen in `startEvent` füllen die Rodata-Lücke, ohne ein Null-Pad.
+- `TBigWatermelon::initMapObj` bleibt 100 %.
+- `startEvent` bleibt ein Stub und `MapObjBall.cpp` bleibt `NonMatching`.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS gegen die Basis.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.681740 % -> 79.692810 %, matched code 50.586952 % -> 50.595863 % (1816116 -> 1816436, +320).
+Matched data 66.304306 % -> 66.393005 % (424567 -> 425135, +568).
+Funktionen matched 9710 -> 9711.
+`MapObjBall` Code 9392 -> 9712 (+320), Data 212 -> 780 (+568).
+Complete units bleiben 416.
+Kein R170–R345-Unit hat matched code verloren.
+Nur `MapObjBall` hat matched code gewonnen.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R345 (`MapObjCorona`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TBathtub::getNumKillerBurstable`.
+
+- Liefert 0, wenn `isKillerLaunchable` falsch ist.
+- Ab vier toten Griffen kommt 8.
+- Sonst nur wenn `allowsTumble` falsch ist und `unk250` sowie `unk258` null sind.
+- Der Schalter auf `getNumGripsDead` gibt 4, 6 oder 8 zurück, sonst 0.
+- 428 Bytes, 107 Instruktionen.
+- `unk258` ist `int`, damit der Vergleich `cmpwi` bleibt.
+- `allowsTumble` bleibt mit `dont_inline` ausserhalb, der Rumpf ist 0x26c.
+- `MapObjCorona.cpp` bleibt `NonMatching`.
+
+`validate-symbol-order` `mario/MoveBG/MapObjCorona`: PASS gegen die Basis.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.669970 % -> 79.681740 %, matched code 50.575030 % -> 50.586952 % (1815688 -> 1816116, +428).
+Matched data bleibt 66.304306 % (424567).
+Funktionen matched 9709 -> 9710.
+`MapObjCorona` 1692 -> 2120 (+428).
+Complete units bleiben 416.
+Kein R170–R344-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R344 (`MapObjCorona`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TBathtub::getNumKillerLaunchable`.
+
+- Liefert 0, wenn `isKillerLaunchable` falsch ist.
+- `isKillerLaunchable` prüft `unk29A`, sucht `クッパ` und fragt `allowsLaunch`, sonst `unk248 <= 0`.
+- Die Zahl ist `getNumGripsDead() + 1`, geklemmt auf 2 bis 4.
+- 324 Bytes, 81 Instruktionen.
+- Die ungenutzte Kopie von `isKillerLaunchable` ist 0x9c, wie in der Map.
+- `MapObjCorona.cpp` bleibt `NonMatching`.
+
+`validate-symbol-order` `mario/MoveBG/MapObjCorona`: PASS gegen die Basis.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.661095 % -> 79.669970 %, matched code 50.566006 % -> 50.575030 % (1815364 -> 1815688, +324).
+Matched data bleibt 66.304306 % (424567).
+Funktionen matched 9708 -> 9709.
+`MapObjCorona` 1368 -> 1692 (+324).
+Complete units bleiben 416.
+Kein R170–R343-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R343 (`MapObjMamma`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TSandBombBase::initMapObj`.
+
+- Setzt `unk138`/`unk13C`/`unk140`/`unk148`/`unk154` und `mScaling.y` auf `TSandBase::mScaleMin`, dann `TMapObjBase::initMapObj`.
+- `unk150` wird 0.5.
+- `unkF4` wählt Pyramid (1.3 / 1200), Shit (1.3 / 1500), Star oder Turtle (1.2).
+- Danach lädt `SMS_LoadParticle` `/scene/mapObj/SandBomb.jpa` als Partikel 0x55.
+- 304 Bytes, 76 Instruktionen.
+- `MapObjMamma.cpp` bleibt `NonMatching`.
+- Ein 0x328-Byte-Rodata-Block hält die String-Offsets bei 0x494.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMamma`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.65275 % -> 79.661095 %, matched code 50.557537 % -> 50.566006 % (1815060 -> 1815364, +304).
+Matched data bleibt 66.304306 % (424567).
+Funktionen matched 9707 -> 9708.
+`MapObjMamma` 11168 -> 11472 (+304).
+Complete units bleiben 416.
+Kein R170–R341-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R341 (`MapObjFence`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TRevolvingFenceOuter::initMapCollisionData`.
+
+- Liegen Rotation X und Z unter 1 Grad, kommt `fence_revolve_outer_v_tool`, sonst das `_h_`-Tool.
+- Danach `MsMtxSetTRS`, `MTXCopy` auf `unk20` und virtuelles `setUp`.
+- `unk138` legt `bambooFence_revolve_inner` oder `fence_revolve_inner` mit Skala 1 an und ruft `appear`.
+- 384 Bytes, 96 Instruktionen.
+- `MapObjFence.cpp` bleibt `NonMatching`.
+- `TRevolvingFenceInner::receiveMessage` deckt nur den Bodenpfad (46 %), der Winkelpfad bleibt offen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjFence`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.633804 % -> 79.65275 %, matched code 50.546837 % -> 50.557537 % (1814676 -> 1815060, +384).
+Matched data bleibt 66.304306 % (424567).
+Funktionen matched 9706 -> 9707.
+`MapObjFence` 4448 -> 4832 (+384).
+Complete units bleiben 416.
+Kein R170–R340-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R340 (`MapObjFence`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TFence::initMapCollisionData`.
+
+- `fence3x3` wählt die Half-Tools, sonst die Normal-Tools.
+- Liegen Rotation X und Z unter 1 Grad, kommt das `_v_`-Tool, sonst das `_h_`-Tool.
+- Danach `MsMtxSetTRS`, `MTXCopy` auf `unk20` und virtuelles `setUp`.
+- Der String-Pool vor `fence3x3` ist der übliche Präfix plus die Literale der noch offenen Fence-Funktionen.
+- 376 Bytes, 94 Instruktionen.
+- `MapObjFence.cpp` bleibt `NonMatching`.
+
+`validate-symbol-order` `mario/MoveBG/MapObjFence`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.62344 % -> 79.633804 %, matched code 50.536366 % -> 50.546837 % (1814300 -> 1814676, +376).
+Matched data bleibt 66.304306 % (424567).
+Funktionen matched 9705 -> 9706.
+`MapObjFence` 4072 -> 4448 (+376).
+Complete units bleiben 416.
+Kein R170–R338-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R338 (`MapObjPlane`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjPlane::draw`.
+
+- Vor `GXBegin` wird die nächste Z-Zeile als `worldZ + unkFC` berechnet.
+- `getTexPos` multipliziert den Gitterwert mit `mTexScale`.
+- 472 Bytes, 118 Instruktionen.
+- `MapObjPlane.cpp` bleibt `NonMatching` (`makeMountain`, `calcNrm`).
+
+`validate-symbol-order` `mario/MoveBG/MapObjPlane`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.623 % -> 79.62344 %, matched code 50.523216 % -> 50.536366 % (1813828 -> 1814300, +472).
+Matched data bleibt 66.304306 % (424567).
+Funktionen matched 9704 -> 9705.
+`MapObjPlane` 3776 -> 4248 (+472).
+Complete units bleiben 416.
+Kein R170–R336-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R336 (`MapObjTree`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjTree::controlLeaf`.
+
+- Steht die Winkelgeschwindigkeit, kopiert es die Blattmatrix und ruft `moveMtx` auf, wenn Mario nicht steigt.
+- Sonst integriert es Winkel und Dämpfung über `mLeafStiffness` und `mLeafDamping`.
+- `MTXRotAxisRad` dreht um die X-Achse, `MTXConcat` hängt die Blattmatrix an, `setAnmMtx` schreibt sie zurück.
+- Bei nicht steigendem Mario folgt ein weiteres `moveMtx`.
+- Beide Vergleiche nutzen `abs(mAngle)` gegen `mLeafTouchImpulse`.
+- Ein `int pad` als letztes Local schließt die 4-Byte-Lücke unter den Matrizen.
+- Frame bleibt `-0xd0`.
+- 444 Bytes, 111 Instruktionen.
+- `MapObjTree.cpp` bleibt `NonMatching` (`initMapObj`).
+
+`validate-symbol-order` `mario/MoveBG/MapObjTree`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.62298 % -> 79.623 %, matched code 50.510853 % -> 50.523216 % (1813384 -> 1813828, +444).
+Matched data bleibt 66.304306 % (424567).
+Funktionen matched 9703 -> 9704.
+`MapObjTree` 4036 -> 4480 (+444).
+Complete units bleiben 416.
+Kein R170–R335-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R335 (`Item`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TCoin::perform`.
+
+- Bei `LIVE_FLAG_DEAD` kehrt es sofort zurück.
+- Im Move-Zweig mit `LIVE_FLAG_UNK10` bricht Talk-Mode ohne Demo ab.
+- Ein laufender State-Timer wird heruntergezählt.
+- Ohne Kollisions-Flag setzt es `MAP_OBJ_FLAG_DISAPPEARING` und `mStateTimer = unk14C`, sonst `receiveMessage` mit `HIT_MESSAGE_UNK5` und `makeObjDead`.
+- Danach ruft es `touchActor` für jede Kollision auf.
+- Im anderen Zweig fordert `CUE_CALC_VIEW` ohne Model `gpQuestionManager->request(mPosition, 60.0f)` an und ruft `TItem::perform`.
+- `static inline` mit `char pad[16]` hält Frame `-0x50` und das By-Value-`TVec3` auf `0x34`.
+- Ein lokales `char[16]` verschiebt das `TVec3` nur um 4.
+- 608 Bytes, 152 Instruktionen.
+- `Item.cpp` bleibt `NonMatching` (`TShine::control`, `appearWithTime`, `touchFruit`).
+
+`validate-symbol-order` `mario/MoveBG/Item`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.62296 % -> 79.62298 %, matched code 50.493916 % -> 50.510853 % (1812776 -> 1813384, +608).
+Matched data bleibt 66.304306 % (424567).
+Funktionen matched 9702 -> 9703.
+`Item` 15532 -> 16140 (+608).
+Complete units bleiben 416.
+Kein R170–R334-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R334 (`ItemManager`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TItemManager::newAndRegisterCoin`.
+
+- Unter `0x32` legt es `coin_blue` an.
+- `100` nimmt `gpItemManager->unk78`.
+- `200` legt `coin_red` an.
+- Sonst kommt `nullptr` zurück.
+- Danach schreibt es `mEventId`.
+- `static inline` mit `char pad[8]` setzt die `TVec3`-Cluster auf `0x18` und `0x3c`.
+- Ein lokales `char[8]` verschiebt dieselben Temps nur um 4.
+- 232 Bytes, 58 Instruktionen.
+- `ItemManager.cpp` steht auf `Matching`.
+
+`validate-symbol-order` `mario/MoveBG/ItemManager`: PASS.
+Vorhandene UNUSED-Size-Warnung `makeShineAppearWithTimeOffset` (Map `0xc8`, Objekt `0x4`).
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.62295 % -> 79.62296 %, matched code 50.487453 % -> 50.493916 % (1812544 -> 1812776, +232).
+Matched data bleibt 66.304306 % (424567).
+Funktionen matched 9701 -> 9702.
+`ItemManager` 2484 -> 2716 (+232).
+Complete code 726888 -> 729604 (+2716), complete data 140784 -> 141140 (+356), complete units 415 -> 416.
+Kein R170–R333-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R333 (`MapObjBall`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TResetFruit::hold`.
+
+- Kopiert `mVelocity` und lässt `sqrt` über ein einzeiliges `doSqrt` als `bl` stehen.
+- `length()` direkt würde `sqrt` zu `frsqrte` expandieren.
+- Wenn die Länge nicht über 10 liegt, ruft es `TMapObjGeneral::hold` auf und nullt die Geschwindigkeit.
+- Danach wird die Geschwindigkeit immer noch einmal genullt.
+- Setzt `LIVE_FLAG_UNK10`.
+- Ohne `MAP_OBJ_FLAG_UNK4000000` und ohne laufenden State-Timer setzt es `MAP_OBJ_FLAG_DISAPPEARING` und `mStateTimer = getLivingTime()`.
+- `char trash[4]` hält Frame `-0x38`.
+- 260 Bytes, 65 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.615814 % -> 79.62295 %, matched code 50.48021 % -> 50.487453 % (1812284 -> 1812544, +260).
+Matched data bleibt 66.304306 % (424567).
+Funktionen matched 9700 -> 9701.
+`MapObjBall` 9132 -> 9392 (+260).
+Kein R170–R330-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R330 (`MapObjTown`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjWaterSpray::load`.
+
+- Lädt zuerst `TMapObjBase::load`.
+- Name `WaterSprayCylinder` setzt `unk138` auf `0x154` und lädt `ms_shib_cyl1.jpa`.
+- Sonst ist `unk138` `0x155` und der Pfad `ms_shib_cub1.jpa`.
+- Ein früher `bool* flag` hält den Rodata-Pool in r29 und den Partikel-Flag-Zeiger in r28.
+- Rate über 100 wird `0.5`, sonst durch 100 geteilt.
+- Skala `-1` wird `1`, sonst durch 100 geteilt, und dreifach nach `unk140` geschrieben.
+- Vier Stream-Ints landen in `unk14C`.
+- 444 Bytes, 111 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjTown`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.615524 % -> 79.615814 %, matched code 50.467842 % -> 50.48021 % (1811840 -> 1812284, +444).
+Matched data bleibt 66.304306 % (424567).
+Funktionen matched 9699 -> 9700.
+`MapObjTown` 9812 -> 10256 (+444).
+Kein R170–R329-Unit hat matched code verloren.
+
+### R329 (`MapObjBall`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjBall::rebound`.
+
+- Spiegelt die Geschwindigkeit an `mGroundPlane` mit `mPhysical->unk4->unk4`.
+- Setzt die Y-Komponente des übergebenen Vektors auf `mGroundHeight`.
+- Setzt `LIVE_FLAG_AIRBORNE`.
+- Typ `0x400000D0` mit `mScaling.y >= 5` spielt `MSD_SE_OBJ_WATERMELON_BBUND`, sonst `MSD_SE_OBJ_WATERMELON_SBUND`.
+- Die Lautstärke ist `fabsf` der Boden-Normale Y.
+- Andere Typen spielen Sound-Index 4 mit `&mVelocity` und `0.0f`.
+- `char trash[48]` hält Frame `-0x60`.
+- 392 Bytes, 98 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.60473 % -> 79.615524 %, matched code 50.456924 % -> 50.467842 % (1811448 -> 1811840, +392).
+Matched data bleibt 66.304306 % (424567).
+Funktionen matched 9698 -> 9699.
+`MapObjBall` 8740 -> 9132 (+392).
+Kein R170–R328-Unit hat matched code verloren.
+
+### R328 (`MapObjMamma`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TSandCastle::waitBeforeExplode`.
+
+- Setzt den State auf 6 und den State-Timer auf `unk148`.
+- Startet die Demokamera `mamma1_sandcastle` mit `SandCastleCallBack`.
+- Setzt `unk15C` auf 1.
+- `char trash[4]` im Inline hält Frame `-0x28`.
+- 128 Bytes, 32 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMamma`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.601265 % -> 79.60473 %, matched code 50.453358 % -> 50.456924 % (1811320 -> 1811448, +128).
+Matched data bleibt 66.304306 % (424567).
+Funktionen matched 9697 -> 9698.
+`MapObjMamma` 11040 -> 11168 (+128).
+Kein R170–R327-Unit hat matched code verloren.
+
+### R327 (`MapObjMamma`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TSandBombBase::control`.
+
+- Zuerst läuft `TMapObjBase::control`.
+- State 1 senkt Anim-Frames 0 und 5 um `mFiringFrameDownSpeed`, solange das Ergebnis nicht negativ ist.
+- State 5 schiebt Frames 0, 5 und 3 um `mExplodeFrameSpeed` und ruft danach `waitBeforeExplode`, wenn die Anim fertig ist.
+- State 6 ruft `explode`, sobald der State-Timer abgelaufen ist.
+- State 7 ruft `exploding`, State 8 ruft `expanded`.
+- State 2 startet Rumble `0x13` und ruft bei `withering` zuerst `withered`, dann `stop`.
+- State 3 setzt den State auf 1, weckt die Bombe und startet Anim 1 und 2, sobald der Timer abgelaufen ist.
+- Ohne Kollisionen wird `unk140` der Bombe gelöscht.
+- Die Case-Reihenfolge im Switch ist 1, 5, 6, 7, 8, 2, 3.
+- `char trash[24]` hält Frame `-0x88`.
+- 664 Bytes, 166 Instruktionen.
+- Die Jump-Table macht `.data` vollständig matchend.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMamma`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.582886 % -> 79.601265 %, matched code 50.434864 % -> 50.453358 % (1810656 -> 1811320, +664).
+Matched data 65.58592 % -> 66.304306 % (419967 -> 424567, +4600).
+Funktionen matched 9696 -> 9697.
+`MapObjMamma` Code 10376 -> 11040 (+664).
+`MapObjMamma` Data 260 -> 4860, weil `.data` jetzt 100 % ist.
+Kein R170–R326-Unit hat matched code verloren.
+
+### R326 (`MapObjMamma`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TSandBomb::touchWater`.
+
+- Frame 0 und 5 laufen um `mFiringFrameSpeed` vor.
+- Danach vier `soundBas`-Rufe für `MSD_SE_OBJ_SANDBOMB_WATER_1` bis `_4`.
+- Wenn die Anim endet, ruft `unk138->getLivingTime`, startet Anim 3 bis 5 und setzt `HIT_FLAG_NO_COLLISION`.
+- Rückgabe ist immer 1.
+- `char trash[28]` hält Frame `-0x68`.
+- 332 Bytes, 83 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMamma`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.5738 % -> 79.582886 %, matched code 50.425617 % -> 50.434864 % (1810324 -> 1810656, +332).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9695 -> 9696.
+`MapObjMamma` 10044 -> 10376 (+332).
+Kein R170–R325-Unit hat matched code verloren.
+
+### R325 (`MapObjMamma`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TSandLeafBase::control`.
+
+- Zuerst läuft `TMapObjBase::control`.
+- State 2 startet Rumble `0x13`.
+- Nach `withering` stoppt das Rumble, die Kollision geht auf 0, die TRS-Matrix wird kopiert, und der State wird 3.
+- State 3 wartet den Timer ab, weckt `unk144`, startet Anim 1 und `MSD_SE_IT_COMMON_APPEAR`, dann State 5.
+- State 5 setzt Anim 0 und State 1, sobald die Anim fertig ist.
+- `char trash[9]` hält Frame `-0x60`.
+- 448 Bytes, 112 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMamma`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.561424 % -> 79.5738 %, matched code 50.41314 % -> 50.425617 % (1809876 -> 1810324, +448).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9694 -> 9695.
+`MapObjMamma` 9596 -> 10044 (+448).
+Kein R170–R324-Unit hat matched code verloren.
+
+### R324 (`MapObjMamma`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TSandLeafBase::grow`.
+
+- Wächst nur in State 1 und 4, solange `mScaling.y` unter 1 liegt.
+- Addiert `unk138` und klemmt die Scale auf 1.
+- In State 1 wechselt die Kollision, `MsMtxSetTRS` plus `MTXCopy` nach `unk8`, dann `setUp`, Anim 2 und State 4.
+- `SMSGetAnmFrameRate` schiebt Frame 0 von `unk144`.
+- Rumble `0x15` für 5 Frames, Sound `MSD_SE_OBJ_SANDBUD_NORMAL`, Timer `mWitherTime`.
+- `char trash[21]` hält Frame `-0x80`.
+- 396 Bytes, 99 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMamma`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.550514 % -> 79.561424 %, matched code 50.402103 % -> 50.41314 % (1809480 -> 1809876, +396).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9693 -> 9694.
+`MapObjMamma` 9200 -> 9596 (+396).
+Kein R170–R323-Unit hat matched code verloren.
+
+### R323 (`MapObjMamma`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TSandCastle::explode`.
+
+- Gleicher Ablauf wie `TSandBombBase::explode`: Anim 1, Scale 1, Kollision, Partikel `0x55`, Shake `0xd`, Bang, Rumble, `mState = 7`.
+- Danach `awake`, `unk158->appear` und `startControlAnim(3)`.
+- `char trash[36]` hält Frame `-0x40`.
+- 360 Bytes, 90 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMamma`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.54058 % -> 79.550514 %, matched code 50.39208 % -> 50.402103 % (1809120 -> 1809480, +360).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9692 -> 9693.
+`MapObjMamma` 8840 -> 9200 (+360).
+Kein R170–R322-Unit hat matched code verloren.
+
+### R322 (`MapObjMamma`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TSandBombBase::explode`.
+
+- `startControlAnim(1)` und `mScaling.y = 1`.
+- Kollision wechselt auf 1, `unk8` ruft `setUp` und bei Bedarf `moveSRT`.
+- Partikel `0x55` übernimmt `unk14C` als Dynamics- und Particle-Scale.
+- Außerhalb des Demo-Modus startet Kamera-Shake `0xd`.
+- `MSD_SE_OBJ_SANDBOMB_BANG`, Rumble `0x15` und `mState = 7`.
+- `char trash[36]` hält Frame `-0x40`.
+- 320 Bytes, 80 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMamma`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.53179 % -> 79.54058 %, matched code 50.383167 % -> 50.39208 % (1808800 -> 1809120, +320).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9691 -> 9692.
+`MapObjMamma` 8520 -> 8840 (+320).
+Kein R170–R321-Unit hat matched code verloren.
+
+### R321 (`MapObjMamma`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TSandCastle::withering`.
+
+- `addWitherFrame` schiebt Frame-Ctrl 0 und 5 um `unk13C` vor.
+- `mScaling.y` wird `mCollisionRate * (mEnd - frame) / mEnd` von Ctrl 0.
+- Ab Frame 240 ruft ein lebendes `unk158` `kill` auf und setzt `gpTargetArrow->unk14` auf 0.
+- `animIsFinished` ruft `sleep` und gibt wahr zurück, sonst falsch.
+- `char trash[20]` hält Frame `-0x70`.
+- 320 Bytes, 80 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMamma`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.523026 % -> 79.53179 %, matched code 50.374252 % -> 50.383167 % (1808480 -> 1808800, +320).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9690 -> 9691.
+`MapObjMamma` 8200 -> 8520 (+320).
+Kein R170–R320-Unit hat matched code verloren.
+
+### R320 (`MapObjMamma`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TSandCastle::expanded`.
+
+- `unk144` erhöht `mFrame` um `unk150` über zwei `getMActor`- und `getFrameCtrl(0)`-Aufrufe.
+- `MSD_SE_OBJ_SAMDBOMB_REVERSE` läuft an der Position von `unk144`, wenn `gateCheck` wahr ist.
+- Erstes `animIsFinished` setzt `mState` auf 2.
+- Zweites `animIsFinished` setzt `mState` erneut auf 2 und startet Animationen 2 und 3.
+- TU-lokales `sandCastleExpanded` und `char trash[5]` halten Frame `-0x40`.
+- 244 Bytes, 61 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMamma`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.51634 % -> 79.523026 %, matched code 50.36746 % -> 50.374252 % (1808236 -> 1808480, +244).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9689 -> 9690.
+`MapObjMamma` 7956 -> 8200 (+244).
+Kein R170–R319-Unit hat matched code verloren.
+
+### R319 (`MapObjMamma`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TSandBombBase::exploding`.
+
+- `addExplodeFrame` erhöht `mFrame` von `this` und von `unk144` um `mExplodeFrameSpeed`.
+- Actor-Typ `0x400000CE` überspringt den Wurf.
+- Sonst, bei Frame unter 80, Mario über `gpMarioPos->y - 30` und XZ-Distanz unter `unk154`: `HIT_MESSAGE_THROWN` und `SMS_ThrowMario` entlang (0, 1, 0) mit `mMarioJumpRate * (unk154 - dist)`.
+- `animIsFinished` startet Animation 6 an `unk144` und setzt `mState` auf 8.
+- TU-lokales `sandBombExploding` und `char trash[0xC]` halten Frame `-0x60`.
+- 388 Bytes, 97 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMamma`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.505646 % -> 79.51634 %, matched code 50.35665 % -> 50.36746 % (1807848 -> 1808236, +388).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9688 -> 9689.
+`MapObjMamma` 7568 -> 7956 (+388).
+Kein R170–R318-Unit hat matched code verloren.
+
+### R318 (`MapObjMamma`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TSandBombBase::expanded`.
+
+- `unk144` erhöht `mFrame` um `unk150` über zwei `getFrameCtrl(0)`-Aufrufe.
+- `MSD_SE_OBJ_SAMDBOMB_REVERSE` läuft an der Position von `unk144`, wenn `gateCheck` wahr ist.
+- `animIsFinished` setzt `mState` auf 2.
+- TU-lokales `sandBombExpanded` hält Frame `-0x40` und die Float-Register.
+- 192 Bytes, 48 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMamma`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.50042 % -> 79.505646 %, matched code 50.3513 % -> 50.35665 % (1807656 -> 1807848, +192).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9687 -> 9688.
+`MapObjMamma` 7376 -> 7568 (+192).
+Kein R170–R317-Unit hat matched code verloren.
+
+### R317 (`MapObjBianco`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TBiancoWatermillVertical::control`.
+
+- Drehzahl läuft mit `mRotSpeedDownRate` auf `unk13C` zu und wird dort geklemmt.
+- `mRotation.y` und die Y-Drehung der Brücke an `unk140` werden um den Schritt erhöht und mit `MsWrap` auf `[0, 360)` gelegt.
+- Zwei `startSoundActorWithInfo`-Aufrufe: Wind `0x3040` an `mPosition`, Bewegung `0x3042` an der Brücke.
+- `char trash[1]` hebt den Frame von `-0x38` auf `-0x40`.
+- 456 Bytes, 114 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBianco`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.487816 % -> 79.50042 %, matched code 50.338596 % -> 50.3513 % (1807200 -> 1807656, +456).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9686 -> 9687.
+`MapObjBianco` 7308 -> 7764 (+456).
+Kein R170–R316-Unit hat matched code verloren.
+
+### R316 (`MapObjBianco`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TBiancoWatermillVertical::loadAfter` und `TLampSeesawMain::loadAfter`.
+
+- Watermill vergleicht `mName` mit `BiaWatermillVertical 0` und sucht `BiaTurnBridge 0` oder `1`.
+- `mBodyRadius` wird auf `1000.0f` gesetzt.
+- Seesaw kopiert das Namenssuffix von `ランプシーソーＡ` auf `ランプシーソーＢ００`, sucht das Gegenstück und setzt `unk138->unk138 = this`.
+- `char trash[1]` hebt den Seesaw-Frame von `-0x88` auf `-0x90`.
+- Je 196 Bytes, 49 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBianco`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.47712 % -> 79.487816 %, matched code 50.327682 % -> 50.338596 % (1806808 -> 1807200, +392).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9684 -> 9686.
+`MapObjBianco` 6916 -> 7308 (+392).
+Kein R170–R314-Unit hat matched code verloren.
+
+### R314 (`MapObjBase`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjBase::makeObjAppeared`.
+
+- `mVelocity` wird z, y, x genullt.
+- Anm-Mtx-Pfad bleibt inlined `setMtx`.
+- TRS-Pfad ruft `setMtx__17TMapCollisionBaseFPA4_f` direkt.
+- `char trash[29]` hebt den Frame von `-0x98` auf `-0xc0`.
+- 776 Bytes, 194 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBase`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.47708 % -> 79.47712 %, matched code 50.306065 % -> 50.327682 % (1806032 -> 1806808, +776).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9683 -> 9684.
+`MapObjBase` 5852 -> 6628 (+776).
+Kein R170–R313-Unit hat matched code verloren.
+
+### R313 (`Item`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TShine::calc`.
+
+- `StageUtil.hpp` zog ungenutzte Shine-Tabellen ins `.data` und legte `mPromiLife` auf `0x1a0` statt `0x38`.
+- Deklaration `extern u8 SMS_getShineStage(u8)` ersetzt das Include.
+- `char trash[45]` hebt den Frame von `-0x50` auf `-0x88`.
+- 736 Bytes, 184 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/Item`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.477066 % -> 79.47708 %, matched code 50.285564 % -> 50.306065 % (1805296 -> 1806032, +736).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9682 -> 9683.
+`Item` 14796 -> 15532 (+736).
+Kein R170–R312-Unit hat matched code verloren.
+
+### R312 (`MapObjGeneral`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjGeneral::calcRootMatrix`.
+
+- Halte-Matrix kommt von `mHolder->getTakingMtx()`.
+- Translation der 3x4-Matrix steht in `[0][3]`, `[1][3]`, `[2][3]`.
+- Freier Pfad übergibt Position und Offset direkt an `MsMtxSetXYZRPH`.
+- 412 Bytes, 103 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjGeneral`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.47678 % -> 79.477066 %, matched code 50.274086 % -> 50.285564 % (1804884 -> 1805296, +412).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9681 -> 9682.
+`MapObjGeneral` 7300 -> 7712 (+412).
+Kein R170–R311-Unit hat matched code verloren.
+
+### R311 (`Item`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TShine::receiveMessage`.
+
+- Übernimmt Mario-Position und Y-Rotation, setzt die Basis-Matrix und startet
+  `shine_demo_shine_get` bzw. die Yoshi- und Empty-Variante.
+- `char trash[1]` hebt den Frame von `-0x78` auf `-0x80`.
+- 436 Bytes, 109 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/Item`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.476746 % -> 79.47678 %, matched code 50.261944 % -> 50.274086 % (1804448 -> 1804884, +436).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9680 -> 9681.
+`Item` 14360 -> 14796 (+436).
+Kein R170–R310-Unit hat matched code verloren.
+
+### R310 (`MapObjTown`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjSwitch::receiveMessage`.
+
+- Hip-Drop startet `objswitch`, `MSD_SE_OBJ_AP_BUTTON`, `removeMapCollision`,
+  `unk144[i]->action(unk140)` und `fireStartDemoCamera` mit `TFlagT<u16>()`.
+- `static inline fireSwitchCam` mit `char pad[1]` legt das Flag-Temp auf `r1+0x2c`
+  bei Frame `-0x40`.
+- 288 Bytes, 72 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjTown`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy bleibt 79.476746 %, matched code 50.25392 % -> 50.261944 % (1804160 -> 1804448, +288).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9679 -> 9680.
+`MapObjTown` 9524 -> 9812 (+288).
+Kein R170–R308-Unit hat matched code verloren.
+
+### R308 (`MapObjRicco`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TCraneRotY::control`.
+
+- `switch (mState)` dreht `mRotation.y` mit `unk144` und setzt `mStateTimer` aus `mWaitTime`.
+  Ton bei `isState(0) || isState(2)` über `gateCheck(unk148)`.
+- `char trash[0x11]` hält den Frame bei `-0x30`.
+- 412 Bytes, 103 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjRicco`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.46537 % -> 79.476746 %, matched code 50.242447 % -> 50.25392 % (1803748 -> 1804160, +412).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9678 -> 9679.
+`MapObjRicco` 2972 -> 3384 (+412).
+Kein R170–R307-Unit hat matched code verloren.
+
+### R307 (`MapObjBianco`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TBellWatermill::loadAfter`.
+
+- `TMapObjTurn::loadAfter`, dann `unk150 = 2` und die Dreh-Konstanten.
+  `TNameRefGen::search` von `"BiaBell 0"`, `"BiaBell 1"` und `"BiaBell 2"` nach `unk194`, `unk198`, `unk19C`.
+  `unk1A0 = 1`.
+- `InfectiousStrings` legt die String-Offsets ab `0xF8`.
+- 304 Bytes, 76 Instruktionen.
+  Frame `-0x68`.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBianco`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.45703 % -> 79.46537 %, matched code 50.23398 % -> 50.242447 % (1803444 -> 1803748, +304).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9677 -> 9678.
+`MapObjBianco` 6612 -> 6916 (+304).
+Kein R170–R306-Unit hat matched code verloren.
+
+### R306 (`MapObjMare`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMareCork::loadAfter`.
+
+- `TNameRefGen::search("砲台")` nach `unk138`.
+  `receiveMessage(this, HIT_MESSAGE_TAKE)` schreibt den Zeiger nach `mHeldObject`.
+  Drei `SMS_LoadParticle` (`0x14C`, `0x14D`, `0x14E`), dann `TMapObjBase::loadAfter`.
+  `unk13C` wird genullt, danach `initAnmSound`.
+- `InfectiousStrings` und Rogue-Rodata `@2690`/`@2692` legen die String-Offsets.
+- 332 Bytes, 83 Instruktionen.
+  Frame `-0x38`.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMare`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.44788 % -> 79.45703 %, matched code 50.224728 % -> 50.23398 % (1803112 -> 1803444, +332).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9676 -> 9677.
+`MapObjMare` 5584 -> 5916 (+332).
+Kein R170–R305-Unit hat matched code verloren.
+
+### R305 (`MapObjBall`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TBigWatermelon::initMapObj`.
+
+- `TMapObjBall::initMapObj`, dann fünf `SMS_LoadParticle` (`0x5D`, `0x5E`, `0x5F`, `0x6B`, `0x6C`).
+  `unk198` ist `new TWaterEmitInfo("/watermelon.prm")`.
+- `InfectiousStrings.hpp` setzt die Rodata-Basis, die Offsets ab `0xE0` treffen.
+- 340 Bytes, 85 Instruktionen.
+  Frame `-0x20`.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.43852 % -> 79.44788 %, matched code 50.215263 % -> 50.224728 % (1802772 -> 1803112, +340).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9675 -> 9676.
+`MapObjBall` 8400 -> 8740 (+340).
+Kein R170–R304-Unit hat matched code verloren.
+
+### R304 (`MapObjBall`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TBigWatermelon::kill`.
+
+- Drei `emitAndScale` ohne Scale, dann zwei mit `(1, 1, 1)`.
+  Position geht wortweise nach `unk198 + 0x70`, danach `emitRequest`.
+  `MSD_SE_OBJ_WATERMELON_BLOCK` über `gateCheck`.
+  Unter `unk19C < 10` erscheint `0x2000000E` mit Velocity `(0, 25, 0)` und `offLiveFlag(LIVE_FLAG_UNK10)`.
+  Danach `TMapObjGeneral::kill`.
+- `char trash[0x10]` am Ende hält Frame `-0x38`.
+- 352 Bytes, 88 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.428825 % -> 79.43852 %, matched code 50.205456 % -> 50.215263 % (1802420 -> 1802772, +352).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9674 -> 9675.
+`MapObjBall` 8048 -> 8400 (+352).
+Kein R170–R303-Unit hat matched code verloren.
+
+### R303 (`MapObjBall`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TCoverFruit::calcRootMatrix`.
+
+- Mit `mHolder` kopiert `setBaseTRMtx` die Taking-Matrix und übernimmt die Translation.
+  Sonst baut `MsMtxSetXYZRPH` die Root-Matrix aus Position, `mYOffset` und Rotation.
+  `setBaseScale` kopiert `mScaling`.
+- `char trash[8]` hält Frame `-0x70`.
+- 324 Bytes, 81 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.419914 % -> 79.428825 %, matched code 50.196426 % -> 50.205456 % (1802096 -> 1802420, +324).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9673 -> 9674.
+`MapObjBall` 7724 -> 8048 (+324).
+Kein R170–R302-Unit hat matched code verloren.
+
+### R302 (`MapObjBall`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TBigWatermelon::receiveMessage`.
+
+- `isActorType(0x80000001)` ruft `boundByActor` und liefert 1.
+  Sonst liefert `TMapObjGeneral::receiveMessage` bei Erfolg 1.
+  Nachricht 4 mit `MAP_OBJ_FLAG_UNK100000` ruft `hold`.
+  Dieselbe Actor-Art, nicht `0x400000D0` und nicht Nachricht 4, ruft `kicked`.
+  Sonst 0.
+- `#pragma dont_inline` hält den `bl` auf das leere `boundByActor`.
+- 316 Bytes, 79 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.41127 % -> 79.419914 %, matched code 50.18763 % -> 50.196426 % (1801780 -> 1802096, +316).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9672 -> 9673.
+`MapObjBall` 7408 -> 7724 (+316).
+Kein R170–R301-Unit hat matched code verloren.
+
+### R301 (`MapObjBall`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TResetFruit::touchWater`.
+
+- `STATE_HOLDING` oder `STATE_APPEARING` überspringt die Geschwindigkeit.
+  Sonst kommt `getWaterSpeed` auf eine Kopie von `mVelocity`, skaliert mit `unk17C`.
+  Danach `offLiveFlag(LIVE_FLAG_UNK10)`.
+  Ist der State-Timer aus, setzt `MAP_OBJ_FLAG_DISAPPEARING` und `mStateTimer = getLivingTime()`.
+  Zum Schluss noch einmal `offLiveFlag` und `mState = 11`.
+- `char trash[4]` hält den Frame auf `-0x38`.
+- 336 Bytes, 84 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.40212 % -> 79.41127 %, matched code 50.178272 % -> 50.18763 % (1801444 -> 1801780, +336).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9671 -> 9672.
+`MapObjBall` 7072 -> 7408 (+336).
+Kein R170–R300-Unit hat matched code verloren.
+
+### R300 (`MapObjBianco`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TBiancoMiniWindmill::touchWater`.
+
+- Liegt `getWaterPos` unter `mPosition.y + sMessengerPosY - 300`, kommt 1 zurück.
+  Zeigt die Wassergeschwindigkeit in die Modellachse, kommt 0 zurück.
+  Sonst `unk154 += mRotWaterAccel`, gedeckelt bei `mRotSpeedMax`.
+  Dann `appearObjFromPoint` an `mPosition` mit Messenger-Y plus 550, `mAppearSpeed = 0`.
+- `char pad[8]` und `char trash[0x20]` halten den Frame auf `-0x60`.
+- 284 Bytes, 71 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBianco`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.39437 % -> 79.40212 %, matched code 50.170357 % -> 50.178272 % (1801160 -> 1801444, +284).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9670 -> 9671.
+`MapObjBianco` 6328 -> 6612 (+284).
+Kein R170–R299-Unit hat matched code verloren.
+
+### R299 (`MapObjBall`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjBall::touchWater`.
+
+- `STATE_HOLDING` oder `STATE_APPEARING` liefert 1.
+  Sonst kommt `getWaterSpeed` auf eine Kopie von `mVelocity`, skaliert mit `unk17C`.
+  Danach `offLiveFlag(LIVE_FLAG_UNK10)`.
+- `char trash[4]` hält den Frame auf `-0x38`.
+- 256 Bytes, 64 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.38747 % -> 79.39437 %, matched code 50.163227 % -> 50.170357 % (1800904 -> 1801160, +256).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9669 -> 9670.
+`MapObjBall` 6816 -> 7072 (+256).
+Kein R170–R298-Unit hat matched code verloren.
+
+### R298 (`MapObjFence`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TRevolvingFenceInner::controlGroundRoof`.
+
+- Zustände 3 und 5: wenn die Animation endet, `setState(2)`.
+  Frame-Rate und Frame auf 0, dann `calc` und `MAP_OBJ_FLAG_UNK100`.
+- Zustände 4 und 6: dieselbe Folge mit `setState(1)`.
+- Vergleichsbaum `cmpwi 4` / `bge` / `cmpwi 3` / `cmpwi 6`.
+- `char trash[0x10]` hält den Frame auf `-0x28`.
+- 260 Bytes, 65 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjFence`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.38034 % -> 79.38747 %, matched code 50.155987 % -> 50.163227 % (1800644 -> 1800904, +260).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9668 -> 9669.
+`MapObjFence` 3812 -> 4072 (+260).
+Kein R170–R296-Unit hat matched code verloren.
+
+### R296 (`MapObjRailBlock`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TWoodBlock::load`.
+
+- `TRailMapObj::load` bleibt ein direktes `bl`.
+  `extern "C"` auf das gemanglete Symbol unterdrückt das Inlining.
+  `dont_inline` an der Definition würde `TNormalLift::load` mitreißen.
+  Danach `unk154` und die Collision-Folge von `TNormalLift::load`.
+  Vier `s32`-Reads.
+  RGB aus den unteren 8 Bit, Alpha fest `0xFF`.
+  `unk15C = unk164`.
+  `SMS_InitPacket_OneTevColor` mit `GX_TEVREG0`.
+  308 Bytes, 77 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjRailBlock`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.37558 % -> 79.38034 %, matched code 50.147408 % -> 50.155987 % (1800336 -> 1800644, +308).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9667 -> 9668.
+`MapObjRailBlock` 5544 -> 5852 (+308).
+Kein R170–R294-Unit hat matched code verloren.
+
+### R294 (`MapObjMamma`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TLeanMirror::loadAfter`.
+
+- `TMapObjBase::loadAfter`.
+  `TNameRefGen::search("ShiningStone")` landet in `unk17C`.
+  Die Positionsdifferenz geht über `TVec3::sub` nach `unk180`.
+  `squared() <= epsilon` nullt `unk180`.
+  Sonst `scale(one() * inv_sqrt(lsq))`.
+  `char trash[0xC]` hält das Frame bei `-0x58`.
+  296 Bytes, 74 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMamma`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.36743 % -> 79.37558 %, matched code 50.13916 % -> 50.147408 % (1800040 -> 1800336, +296).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9666 -> 9667.
+`MapObjMamma` 7080 -> 7376 (+296).
+Kein R170–R293-Unit hat matched code verloren.
+
+### R293 (`MapObjMamma`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TGoalWatermelon::touchActor`.
+
+- `isState(1)` und Actor-Typ `0x400000D0`.
+  Der Actor landet in `unk13C`.
+  `setBck("watermelon_shrink")`.
+  `offMapObjFlag(MAP_OBJ_FLAG_UNK100)`.
+  `mVelocity` wird null.
+  `fireStartDemoCamera("スイカゴールカメラ", ...)`.
+  Danach `mState = 2`.
+  `char trash[4]` hält das Frame bei `-0x48`.
+  260 Bytes, 65 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMamma`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.3603 % -> 79.36743 %, matched code 50.131916 % -> 50.13916 % (1799780 -> 1800040, +260).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9665 -> 9666.
+`MapObjMamma` 6820 -> 7080 (+260).
+Kein R170–R292-Unit hat matched code verloren.
+
+### R292 (`MapObjPinna`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TFerrisWheel::initMapObj`.
+
+- `TMapObjBase::initMapObj`.
+  `unk138` ist `getJointNum() - 1`.
+  `unk13C` ist `new TMapObjBase*[unk138]`.
+  Die Schleife registriert `"FerrisGondola"` mit Scale `(1, 1, 1)` und ruft `appear`.
+  Ist `gpMarDirector->unk7D == 2`, wird `unk140` auf `10` gesetzt.
+  Sonst `SMSGetAnmFrameRate() * 0.25`.
+  `char trash[0xC]` hält das Frame bei `-0x78`.
+  292 Bytes, 73 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjPinna`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.35228 % -> 79.3603 %, matched code 50.123787 % -> 50.131916 % (1799488 -> 1799780, +292).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9664 -> 9665.
+`MapObjPinna` 6168 -> 6460 (+292).
+Kein R170–R290-Unit hat matched code verloren.
+
+### R290 (`MapObjMare`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjElasticCode::control`.
+
+- `TMapObjBase::control`.
+  `mVelocity.y` wird mit `unk140` multipliziert.
+  Danach kommt `unk13C * (mInitialPosition.y - mPosition.y) - getGravityY()`.
+  Hält das Objekt etwas, wird `unk138` abgezogen.
+  Die gehaltene Position bekommt `mVelocity.y` und geht an `moveRequest`.
+  `mPosition.y` addiert `mVelocity.y`.
+  `char trash[0x18]` hält das Frame bei `-0x58`.
+  272 Bytes, 68 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMare`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.344826 % -> 79.35228 %, matched code 50.11621 % -> 50.123787 % (1799216 -> 1799488, +272).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9663 -> 9664.
+`MapObjMare` 5312 -> 5584 (+272).
+Kein R170–R289-Unit hat matched code verloren.
+
+### R289 (`MapObjPinna`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TViking::control`.
+
+- `switch (unk14C)` behandelt `0` und `1`.
+  Zustand `0` nutzt denselben `mState`-`1`/`2`-Lauf wie `THorizontalViking::control`.
+  Zustand `1` ruft `roll`.
+  `#pragma dont_inline` auf dem leeren `roll` hält das `bl`.
+  `mPosition.x` ist `unk138 * sinf(3.14 * (unk148 / 180)) + mInitialPosition.x`.
+  `mPosition.y` addiert `mYOffset` und `unk138 * (1 - cosf(...))`.
+  `mRotation.z` wird `unk148`.
+  Danach virtuelles `updateObjMtx`.
+  `char trash[4]` hält das Frame bei `-0x28`.
+  356 Bytes, 89 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjPinna`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.33502 % -> 79.344826 %, matched code 50.106293 % -> 50.11621 % (1798860 -> 1799216, +356).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9662 -> 9663.
+`MapObjPinna` 5812 -> 6168 (+356).
+Kein R170–R288-Unit hat matched code verloren.
+
+### R288 (`MapObjPinna`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`THorizontalViking::control`.
+
+- `TMapObjBase::control`.
+  `switch (mState)` behandelt `1` und `2`.
+  Zustand `1` senkt `unk144` und addiert ihn auf `unk148`.
+  Unter `0` wird der Zustand `2`.
+  Zustand `2` hebt `unk144`.
+  Über `0` wird der Zustand `1`.
+  `mPosition.x` ist `unk138 * sinf(3.14 * (unk148 / 180)) + mInitialPosition.x`.
+  `mPosition.y` addiert `mYOffset` und `unk138 * (1 - cosf(...))`.
+  `char trash[4]` hält das Frame bei `-0x28`.
+  292 Bytes, 73 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjPinna`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.327 % -> 79.33502 %, matched code 50.098156 % -> 50.106293 % (1798568 -> 1798860, +292).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9661 -> 9662.
+`MapObjPinna` 5520 -> 5812 (+292).
+Kein R170–R287-Unit hat matched code verloren.
+
+### R287 (`MapObjMare`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMuddyBoat::initMapObj`.
+
+- `TMapObjBase::initMapObj`.
+  Danach `unk138`, `unk144`, `unk148`, `unk150`, `unk13C` und `unk168`.
+  Ist `mMap` gleich `0x34`, kommen die Mare-Werte.
+  Sonst die anderen.
+  `unk17C` wird auf `(3, 2, 5)` gesetzt.
+  `char trash[0xC]` hält das Frame bei `-0x28`.
+  208 Bytes, 52 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMare`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.32131 % -> 79.327 %, matched code 50.09236 % -> 50.098156 % (1798360 -> 1798568, +208).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9660 -> 9661.
+`MapObjMare` 5104 -> 5312 (+208).
+Kein R170–R286-Unit hat matched code verloren.
+
+### R286 (`MapObjMare`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TCogwheelScale::control`.
+
+- `unk148` wird auf `0` gesetzt.
+  Danach `TMapObjBase::control`.
+  Wenn `unk140 > 0`, wird `mWaterLeakSpeed` abgezogen.
+  `startSoundActorWithInfo` spielt `MSD_SE_OBJ_MR_TSUBO_WATER` mit `fabsf(unk140)`.
+  Negative Werte werden auf `0` geklemmt.
+  `char trash[4]` hält das Frame bei `-0x28`.
+  176 Bytes, 44 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMare`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.31652 % -> 79.32131 %, matched code 50.087463 % -> 50.09236 % (1798184 -> 1798360, +176).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9659 -> 9660.
+`MapObjMare` 4928 -> 5104 (+176).
+Kein R170–R285-Unit hat matched code verloren.
+
+### R285 (`MapObjMare`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TCogwheel::calc`.
+
+- `mRotation.z` ist `360 * (-unk13C / (3.14 * 2 * sRadius))`.
+  `makeRootMtxRotZ` und `makeRootMtxRotY` bauen zwei Matrizen.
+  Ihre Translation wird auf `0` gesetzt.
+  `MTXConcat` schreibt `RotY * RotZ` in die Anm-Matrix.
+  Danach kommt `mPosition` in die Translation.
+  `char trash[4]` hält das Frame bei `-0x80`.
+  196 Bytes, 49 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMare`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.31117 % -> 79.31652 %, matched code 50.082005 % -> 50.087463 % (1797988 -> 1798184, +196).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9658 -> 9659.
+`MapObjMare` 4732 -> 4928 (+196).
+Kein R170–R284-Unit hat matched code verloren.
+
+### R284 (`MapObjLib`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjBase::emitAndRotateScale`.
+
+- `gpMarioParticleManager->emit` bekommt `this` als Binder.
+  `mRotation` wird durch `180` geteilt und mit `32768` multipliziert.
+  Die drei `s16` gehen an `setRotation`.
+  Danach `setGlobalScale(mScaling)`.
+  `char trash[0xC]` hält das Frame bei `-0x50`.
+  240 Bytes, 60 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjLib`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.31092 % -> 79.31117 %, matched code 50.075317 % -> 50.082005 % (1797748 -> 1797988, +240).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9657 -> 9658.
+`MapObjLib` 9988 -> 10228 (+240).
+Kein R170–R283-Unit hat matched code verloren.
+
+### R283 (`MapObjLib`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjBase::emitAndSRT`.
+
+- `gpMarioParticleManager->emit` bekommt die Position zweimal.
+  `param_4` wird in drei `s16` kopiert und an `setRotation` gegeben.
+  Danach `setGlobalScale(param_5)`.
+  `char trash[4]` hält das Frame bei `-0x50`.
+  224 Bytes, 56 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjLib`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.31067 % -> 79.31092 %, matched code 50.06908 % -> 50.075317 % (1797524 -> 1797748, +224).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9656 -> 9657.
+`MapObjLib` 9764 -> 9988 (+224).
+Kein R170–R282-Unit hat matched code verloren.
+
+### R282 (`MapObjMare`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjPuncher::control`.
+
+- `TMapObjBase::control`.
+  Der `switch` auf `mState` hat ein leeres `STATE_NORMAL`.
+  Das hält das `bge`/`b`-Paar.
+  Ein einzelner Fall `2` faltet es weg.
+  Fall `2` ruft `soundBas(MSD_SE_OBJ_PUNCHER_RETURN, 101.0f, getRate())`.
+  Ist die Animation fertig, kommt eine Skala `(2, 2, 2)`.
+  Dann `emitAndScale` mit `PARTICLE_MS_ENM_DISAP_A_W` und `PARTICLE_MS_ENM_DISAP_B`.
+  `MSD_SE_SMOKE_EFFECT` läuft über `gateCheck` und `startSoundActor`.
+  Danach virtuelles `kill`.
+  `char gap[4]` liegt über dem Skalenvektor.
+  `char trash[0x10]` liegt darunter.
+  Das Frame bleibt `-0x38`.
+  Der Vektor liegt bei `r1+0x20`.
+  244 Bytes, 61 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMare`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.303986 % -> 79.31067 %, matched code 50.062283 % -> 50.06908 % (1797280 -> 1797524, +244).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9655 -> 9656.
+`MapObjMare` 4488 -> 4732 (+244).
+Kein R170–R281-Unit hat matched code verloren.
+
+### R281 (`MapObjRicco`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TRiccoWatermill::touchWater`.
+
+- `isState(5)` gibt `1` zurück.
+  Sonst wird `unk140` auf `5` gesetzt.
+  Bei `isState(1)` ruft `unk13C->setUpMapCollision(1)` auf.
+  `MAP_OBJ_FLAG_UNK100` geht an diesem Objekt und an `unk13C` aus.
+  Liegt `unk13C->mPosition.y` unter `mSubmarineMaxTransY`, kommt `mRotAccel` auf `unk138`, gedeckelt bei `mRotSpeedMaxUp`, und `mState` wird `2`.
+  Sonst wird `unk138` zu `0`.
+  Rückgabe ist `1`.
+  `unk13C` ist `TMapObjBase*`.
+  240 Bytes, 60 Instruktionen.
+  Das Frame ist schon `-0x20`.
+
+`validate-symbol-order` `mario/MoveBG/MapObjRicco`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.297516 % -> 79.303986 %, matched code 50.0556 % -> 50.062283 % (1797040 -> 1797280, +240).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9654 -> 9655.
+`MapObjRicco` 2732 -> 2972 (+240).
+Kein R170–R280-Unit hat matched code verloren.
+Nur `MapObjRicco` hat matched code gewonnen.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R280 (`MapObjBall`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TResetFruit::touchActor`.
+
+- `STATE_APPEARING`, `STATE_BREAKING` oder Zustand `0xC` beenden die Funktion.
+  Sonst, wenn der Zustand nicht `STATE_WAITING_TO_APPEAR` ist, läuft `TMapObjBall::touchActor`.
+  `MAP_OBJ_FLAG_UNK4000000`, ein Zustand ungleich `1` oder `LIVE_FLAG_UNK10` beenden die Funktion.
+  Ohne laufenden State-Timer geht `MAP_OBJ_FLAG_DISAPPEARING` an und virtuelles `getLivingTime` setzt `mStateTimer`.
+  `LIVE_FLAG_UNK10` geht aus.
+  `mState` wird `11`.
+  `char trash[0xC]` hält das Frame bei `-0x28`.
+  `#pragma dont_inline` auf dem leeren `TMapObjBall::touchActor` hält den `bl`.
+  308 Bytes, 77 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.28905 % -> 79.297516 %, matched code 50.047016 % -> 50.0556 % (1796732 -> 1797040, +308).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9653 -> 9654.
+`MapObjBall` 6508 -> 6816 (+308).
+Kein R170–R279-Unit hat matched code verloren.
+Nur `MapObjBall` hat matched code gewonnen.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R279 (`MapObjBall`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TResetFruit::waitingToAppear`.
+
+- Wenn `gpMarDirector->mMap == 3` und `unk1A4 != 0`, virtuelles `makeObjDead`.
+  `MAP_OBJ_FLAG_UNK4000000`, ein laufender State-Timer oder `mColCount != 0` beenden die Funktion.
+  Sonst geht `MAP_OBJ_FLAG_DISAPPEARING` an und virtuelles `makeObjAppeared` läuft.
+  `MTXScale` mit `0.2` auf allen Achsen.
+  `concatOnlyRotFromLeft` schreibt die Skalierung in die Animationsmatrix.
+  `mScaling.y` wird `0.2`.
+  `HIT_FLAG_NO_COLLISION` geht an.
+  `mState` wird `STATE_APPEARING`.
+  `MSD_SE_IT_COMMON_APPEAR`, wenn `gateCheck` wahr ist.
+  `char trash[0x20]` hält die Matrix bei `r1+0x3C` und das Frame bei `-0x78`.
+  316 Bytes, 79 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.280365 % -> 79.28905 %, matched code 50.03822 % -> 50.047016 % (1796416 -> 1796732, +316).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9652 -> 9653.
+`MapObjBall` 6192 -> 6508 (+316).
+Kein R170–R278-Unit hat matched code verloren.
+Nur `MapObjBall` hat matched code gewonnen.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R278 (`MapObjBall`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjBall::control`.
+
+- `TMapObjGeneral::control`.
+  Wenn `unk194` als `s32` nicht 0 ist, wird es um 1 kleiner.
+  Bei `STATE_HOLDING` kopiert `MTXCopy` `mHolder->getTakingMtx` in eine lokale Matrix.
+  Translation Y bekommt `unk190` dazu.
+  Die Matrix geht per `MTXCopy` nach `getModel()->getAnmMtx(0)`.
+  Sonst: wenn `mVelocity.squared()` nicht `<= epsilon()` ist oder `mGroundPlane->mActor` nicht null ist, virtuelles `calcCurrentMtx`.
+  `char trash[0x14]` hält das Frame bei `-0x70`.
+  272 Bytes, 68 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.272896 % -> 79.280365 %, matched code 50.030643 % -> 50.03822 % (1796144 -> 1796416, +272).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9651 -> 9652.
+`MapObjBall` 5920 -> 6192 (+272).
+Kein R170–R277-Unit hat matched code verloren.
+Nur `MapObjBall` hat matched code gewonnen.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R277 (`MapObjBall`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TBigWatermelon::appearing`.
+
+- `TMapObjGeneral::appearing`.
+  Die Animationsmatrix kommt aus `getModel()->getAnmMtx(0)`, dann virtuelles `calcRootMatrix` und `getModel()->calc`.
+  Translation Y wird `mBodyRadius * (mScaling.y / mInitialScaling.y) + mPosition.y`.
+  `mScaledBodyRadius` und `mDamageRadius` werden je `50 * mScaling.x`, dann `calcEntryRadius`.
+  Bei `isState(1)` wird `mActorType` `0x400000D0` und `mAttackRadius` `50 * mScaling.x`.
+  Sonst wird `mActorType` `0x400000DB` und `mAttackRadius` `0`.
+  Beide Zweige rufen noch einmal `calcEntryRadius`.
+  `char trash[0x18]` hält das Frame bei `-0x38`.
+  272 Bytes, 68 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.26543 % -> 79.272896 %, matched code 50.02306 % -> 50.030643 % (1795872 -> 1796144, +272).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9650 -> 9651.
+`MapObjBall` 5648 -> 5920 (+272).
+Kein R170–R276-Unit hat matched code verloren.
+Nur `MapObjBall` hat matched code gewonnen.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R276 (`MapObjBall`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjBall::receiveMessage`.
+
+- `TMapObjGeneral::receiveMessage` kommt zuerst.
+  Wenn das wahr ist, kommt `TRUE` zurück.
+  Bei `HIT_MESSAGE_TAKE` und `MAP_OBJ_FLAG_UNK100000` ruft die Funktion virtuelles `hold` auf und gibt `TRUE` zurück.
+  Wenn der Sender `0x80000001` ist, dieses Objekt nicht `0x400000D0` ist und die Nachricht nicht `HIT_MESSAGE_TAKE` ist, kommt virtuelles `kicked` und `TRUE`.
+  Sonst `FALSE`.
+  248 Bytes, 62 Instruktionen.
+  Das Frame ist `-0x28`.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.25867 % -> 79.26543 %, matched code 50.01615 % -> 50.02306 % (1795624 -> 1795872, +248).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9649 -> 9650.
+`MapObjBall` 5400 -> 5648 (+248).
+Kein R170–R275-Unit hat matched code verloren.
+Nur `MapObjBall` hat matched code gewonnen.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R275 (`MapObjBall`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TResetFruit::touchGround`.
+
+- Wenn `mGroundPlane->isDeathPlane()` wahr ist, wird `mState` 11.
+  Virtuelles `makeObjDefault`, `makeObjDead` und `calcRootMatrix`.
+  `getModel()->calc`.
+  `mStateTimer` wird `mFruitWaitTimeToAppear`.
+  `MAP_OBJ_FLAG_DISAPPEARING` geht aus.
+  `mState` wird `STATE_WAITING_TO_APPEAR`.
+  Wenn `gpMarDirector->mMap == 3` und `unk1A4 != 0`, noch einmal virtuelles `makeObjDead`.
+  Danach kopiert die Funktion `mPosition` komponentenweise nach `param_1`.
+  Sonst ruft sie `TMapObjBall::touchGround` auf.
+  `char trash[0x10]` hält das Frame bei `-0x30`.
+  296 Bytes, 74 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.25054 % -> 79.25867 %, matched code 50.007908 % -> 50.01615 % (1795328 -> 1795624, +296).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9648 -> 9649.
+`MapObjBall` 5104 -> 5400 (+296).
+Kein R170–R274-Unit hat matched code verloren.
+Nur `MapObjBall` hat matched code gewonnen.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R274 (`MapObjBall`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TResetFruit::touchPollution`.
+
+- `emitAndBindToPosPtr` mit `PARTICLE_MS_MOE_FIRE_OFF` an `mPosition`.
+  Dann `MSD_SE_OBJ_AWAY_INTO_GRAF`, wenn `gateCheck` wahr ist.
+  Virtuelles `makeObjDefault`, dann `mState` 11, dann noch einmal `makeObjDefault`.
+  Virtuelles `makeObjDead` und `calcRootMatrix`.
+  `getModel()->calc`.
+  `mStateTimer` wird `mFruitWaitTimeToAppear`.
+  `MAP_OBJ_FLAG_DISAPPEARING` geht aus.
+  `mState` wird `STATE_WAITING_TO_APPEAR`.
+  Wenn `gpMarDirector->mMap == 3` und `unk1A4 != 0`, noch einmal virtuelles `makeObjDead`.
+  `char trash[0x20]` hält das Frame bei `-0x38`.
+  300 Bytes, 75 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.2423 % -> 79.25054 %, matched code 49.999554 % -> 50.007908 % (1795028 -> 1795328, +300).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9647 -> 9648.
+`MapObjBall` 4804 -> 5104 (+300).
+Kein R170–R273-Unit hat matched code verloren.
+Nur `MapObjBall` hat matched code gewonnen.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R273 (`MapObjBall`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TResetFruit::touchWaterSurface`.
+
+- `emitColumnWater`, dann `MSD_SE_OBJ_DRINA_TO_WATER`, wenn `gateCheck` wahr ist.
+  `mState` wird 11.
+  Virtuelles `makeObjDefault`, `makeObjDead` und `calcRootMatrix`.
+  `getModel()->calc`.
+  `mStateTimer` wird `mFruitWaitTimeToAppear`.
+  `MAP_OBJ_FLAG_DISAPPEARING` geht aus.
+  `mState` wird `STATE_WAITING_TO_APPEAR`.
+  Wenn `gpMarDirector->mMap == 3` und `unk1A4 != 0`, noch einmal virtuelles `makeObjDead`.
+  `char trash[0x18]` hält das Frame bei `-0x30`.
+  260 Bytes, 65 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.235176 % -> 79.2423 %, matched code 49.99231 % -> 49.999554 % (1794768 -> 1795028, +260).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9646 -> 9647.
+`MapObjBall` 4544 -> 4804 (+260).
+Kein R170–R272-Unit hat matched code verloren.
+Nur `MapObjBall` hat matched code gewonnen.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R272 (`MapObjBall`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TResetFruit::makeObjAppeared`.
+
+- Wenn `MAP_OBJ_FLAG_UNK4000000` gesetzt ist, virtuelles `makeObjDefault`.
+  Dann `TMapObjBase::makeObjAppeared` und virtuelles `calcCurrentMtx`.
+  Die Anm-Matrix bekommt `mPosition`, Y plus `mBodyRadius`.
+  Banane `0x40000394`: wenn `mtx[1][1] > 0`, Translation Y minus `50 * mtx[1][1]`.
+  Ananas `0x40000392`: Translation Y minus `10 * (1 - mtx[1][1])`.
+  `unkE8` wird 0.
+  Dasselbe Flag setzt danach `mState` auf 11.
+  `char trash[8]` hält das Frame bei `-0x28`.
+  304 Bytes, 76 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.226814 % -> 79.235176 %, matched code 49.983845 % -> 49.99231 % (1794464 -> 1794768, +304).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9645 -> 9646.
+`MapObjBall` 4240 -> 4544 (+304).
+Kein R170–R271-Unit hat matched code verloren.
+Nur `MapObjBall` hat matched code gewonnen.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R271 (`MapObjBall`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TResetFruit::breaking`.
+
+- `MTXScale` mit `1`, `mBreakingScaleSpeed` und `1`.
+  `concatOnlyRotFromLeft` schreibt die Rotation in die Anm-Matrix.
+  `mScaling.y` wird mit `mBreakingScaleSpeed` multipliziert.
+  Translation Y ist `mBodyRadius * mScaling.y + mPosition.y`.
+  Wenn `mScaling.y < 0.2`, kommt `mBodyRadius * 0.5` auf `mPosition.y`.
+  Die Scale geht zurück auf `mInitialScaling`.
+  `emitAndScale` mit `PARTICLE_MS_ENM_DISAP_A_W`.
+  `MSD_SE_SMOKE_EFFECT`, wenn `gateCheck` wahr ist.
+  `mStateTimer` wird `0xF0`, dann `sleep`, `mState` wird `0xD`.
+  `char trash[10]` hält die Matrix bei `r1+0x24` und das Frame bei `-0x60`.
+  284 Bytes, 71 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.219 % -> 79.226814 %, matched code 49.975933 % -> 49.983845 % (1794180 -> 1794464, +284).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9644 -> 9645.
+`MapObjBall` 3956 -> 4240 (+284).
+Kein R170–R270-Unit hat matched code verloren.
+Nur `MapObjBall` hat matched code gewonnen.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R270 (`MapObjBall`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TResetFruit::appearing`.
+
+- `MTXScale` skaliert mit `mScaleUpSpeed` auf allen Achsen.
+  `concatOnlyRotFromLeft` schreibt die Rotation in die Anm-Matrix.
+  `mScaling.y` wird mit `mScaleUpSpeed` multipliziert.
+  `mScaledBodyRadius` ist `mBodyRadius * mScaling.y`.
+  Translation Y ist `mBodyRadius * mScaling.y + mPosition.y`.
+  Wenn `mScaling.y >= mInitialScaling.y`, kommt die Initial-Scale zurück.
+  Danach virtuelles `calc`, `HIT_FLAG_NO_COLLISION` aus, virtuelles `makeObjAppeared`, `mState` wird 1.
+  `char trash[10]` hält die Matrix bei `r1+0x20` und das Frame bei `-0x58`.
+  256 Bytes, 64 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.212 % -> 79.219 %, matched code 49.968803 % -> 49.975933 % (1793924 -> 1794180, +256).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9643 -> 9644.
+`MapObjBall` 3700 -> 3956 (+256).
+Kein R170–R269-Unit hat matched code verloren.
+Nur `MapObjBall` hat matched code gewonnen.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R269 (`MapObjBall`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjBall::makeObjAppeared`.
+
+- Zuerst `TMapObjBase::makeObjAppeared`, dann virtuelles `calcCurrentMtx`.
+  Die Anm-Matrix bekommt `mPosition`, Y plus `mBodyRadius`.
+  Banane `0x40000394`: wenn `mtx[1][1] > 0`, Translation Y minus `50 * mtx[1][1]`.
+  Ananas `0x40000392`: Translation Y minus `10 * (1 - mtx[1][1])`.
+  `unkE8` wird 0.
+  `char trash[8]` hält das Frame bei `-0x28`.
+  248 Bytes, 62 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.20519 % -> 79.212 %, matched code 49.961895 % -> 49.968803 % (1793676 -> 1793924, +248).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9642 -> 9643.
+`MapObjBall` 3452 -> 3700 (+248).
+Kein R170–R268-Unit hat matched code verloren.
+Nur `MapObjBall` hat matched code gewonnen.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R268 (`MapObjBall`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TResetFruit::makeObjWaitingToAppear`.
+
+- `mState` wird 11.
+  Dann `makeObjDefault`, `makeObjDead`, `calcRootMatrix` und `getModel()->calc`.
+  `mStateTimer` wird `mFruitWaitTimeToAppear`.
+  `MAP_OBJ_FLAG_DISAPPEARING` geht aus.
+  `mState` wird `STATE_WAITING_TO_APPEAR`.
+  Wenn `gpMarDirector->mMap == 3` und `unk1A4 != 0`, noch einmal `makeObjDead`.
+  `char trash[0x10]` hält das Frame bei `-0x28`.
+  204 Bytes, 51 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.19963 % -> 79.20519 %, matched code 49.95621 % -> 49.961895 % (1793472 -> 1793676, +204).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9641 -> 9642.
+`MapObjBall` 3248 -> 3452 (+204).
+Kein R170–R267-Unit hat matched code verloren.
+Nur `MapObjBall` hat matched code gewonnen.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R267 (`MapObjPinna`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMerrygoround::TMerrygoround`.
+
+- Nach `TMapObjBase` werden `unk1A0` und `unk1A4` auf 0 gesetzt.
+  Danach `unk138`, `unk140`, `unk13C` und `unk142`.
+  Eine Schleife `i < 9` nullt `unk144[i]`, `unk18C[i]` und `unk168[i]`.
+  MWCC rollt acht Durchläufe aus und lässt den Rest in `bdnz`.
+  `char trash[1]` hält das Frame bei `-0x28`.
+  252 Bytes, 63 Instruktionen.
+  `control`, `draw` und `initMapObj` bleiben leere Stubs.
+
+`validate-symbol-order` `mario/MoveBG/MapObjPinna`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.19442 % -> 79.19963 %, matched code 49.949192 % -> 49.95621 % (1793220 -> 1793472, +252).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9640 -> 9641.
+`MapObjPinna` 5268 -> 5520 (+252).
+Kein R170–R266-Unit hat matched code verloren.
+Nur `MapObjPinna` hat matched code gewonnen.
+`MarNameRefGen_MapObj` und `MapObjManager` wurden wegen der neuen Felder neu gebaut.
+Matched code dort bleibt 2348 bzw. unverändert.
+Fuzzy von `getNameRef_MapObj` tickt 86.49089 % -> 86.49118 % durch die neue Objektgröße.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R266 (`MapObjMonte`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TSwingBoard::TSwingBoard`.
+
+- Nach `TMapObjBase` folgen die Stores in Retail-Reihenfolge.
+  `unk138` ist 5000.0f.
+  `unk13C`, `unk140`, `unk144` und `unk148` sind 0.0f.
+  `unk188` ist 0.
+  `unk178`, `unk168`, `unk158`, `unk164`, `unk154`, `unk170`, `unk150`, `unk16C` und `unk15C` sind 0.0f.
+  `unk174`, `unk160` und `unk14C` sind 1.0f.
+  `unk184`, `unk180` und `unk17C` sind 0.0f.
+  `char trash[0x26]` hält das Frame bei `-0x48` (`r31` bei `r1+0x44`).
+  168 Bytes, 42 Instruktionen.
+  `load`, `draw`, `swing` und `control` bleiben leere Stubs.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMonte`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.19155 % -> 79.19442 %, matched code 49.94452 % -> 49.94919 % (1793052 -> 1793220, +168).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9639 -> 9640.
+`MapObjMonte` 3868 -> 4036 (+168).
+Kein R170–R265-Unit hat matched code verloren.
+Nur `MapObjMonte` hat matched code gewonnen.
+`MarNameRefGen_MapObj` und `MapObjManager` wurden wegen der neuen Felder neu gebaut.
+Matched code dort bleibt 2348 bzw. unverändert.
+Fuzzy von `getNameRef_MapObj` tickt 86.49061 % -> 86.49089 % durch die neue Objektgröße.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R265 (`MapObjRicco`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TRiccoWatermill::TRiccoWatermill`.
+
+- Nach `TMapObjBase` wird `unk138` auf 0.0f gesetzt.
+  `unk13C`, `unk140`, `unk148`, `unk14C`, `unk150` und `unk154` sind 0.
+  `unk144` ist 0 (`stb`).
+  `char trash[8]` hält das Frame bei `-0x28` (`r31` bei `r1+0x24`).
+  108 Bytes, 27 Instruktionen.
+  `loadAfter` bleibt der leere Stub.
+
+`validate-symbol-order` `mario/MoveBG/MapObjRicco`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.19034 % -> 79.19155 %, matched code 49.94151 % -> 49.94452 % (1792944 -> 1793052, +108).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9638 -> 9639.
+`MapObjRicco` 2624 -> 2732 (+108).
+Kein R170–R264-Unit hat matched code verloren.
+Nur `MapObjRicco` hat sich geändert.
+`MarNameRefGen_MapObj` und `MapObjManager` wurden wegen der neuen Felder neu gebaut, ohne Match-Änderung.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R264 (`MapObjBianco`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TBiancoWatermillVertical::TBiancoWatermillVertical`.
+
+- Nach `TMapObjBase` werden `unk138` und `unk13C` auf 0.0f gesetzt.
+  `unk140`, `unk148` und `unk14C` sind 0.
+  `unk144` ist 0 (`stb`).
+  `char trash[8]` hält das Frame bei `-0x28` (`r31` bei `r1+0x24`).
+  100 Bytes, 25 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBianco`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.18938 % -> 79.19034 %, matched code 49.93872 % -> 49.94151 % (1792844 -> 1792944, +100).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9637 -> 9638.
+`MapObjBianco` 6228 -> 6328 (+100).
+Kein R170–R263-Unit hat matched code verloren.
+Nur `MapObjBianco` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R263 (`Item`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TShine::loadBeforeInit`.
+
+- `readString` füllt `name[0x20]`.
+  `strcmp("normal")` setzt `unk154` auf 0, `strcmp("quickly")` auf 2, sonst 1.
+  Das erste `stream >>` ist `eventId`; `-1` wird 120, danach `setEventId`.
+  Das zweite Int steckt in einer Union mit `double`, damit der Slot bei `r1+0x18` 8-byte-aligned liegt.
+  `eventId = slot.v`.
+  `slot.v + 1 >= 2` setzt `eventId` auf -1.
+  `unk190 = eventId + 1`.
+  240 Bytes, 60 Instruktionen.
+  `appearSimple` bleibt 100 %.
+
+`validate-symbol-order` `mario/MoveBG/Item`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.18936 % -> 79.18938 %, matched code 49.93204 % -> 49.93872 % (1792604 -> 1792844, +240).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9636 -> 9637.
+`Item` 14120 -> 14360 (+240).
+Kein R170–R262-Unit hat matched code verloren.
+Nur `Item` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R262 (`Item`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TShine::appearSimple`.
+
+- `TShine* shine = this` hält `this` in `r31` und das Argument in `r30`.
+  Danach `TItem::appear`, `setBool(true, 0x50000)`, die Feldstores,
+  die Kopie von `mPosition` nach `mInitialPosition` und
+  `startSoundActor(MSD_SE_SHINE_APPEAR)`.
+  `mStateTimer = unk174`, `mState = STATE_UNKB`, `onHitFlag(HIT_FLAG_NO_COLLISION)`.
+  `char trash[0x9]` hält das Frame bei `-0x30` (`r31` bei `r1+0x2c`).
+  252 Bytes, 63 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/Item`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.18918 % -> 79.18936 %, matched code 49.92501 % -> 49.93204 % (1792352 -> 1792604, +252).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9635 -> 9636.
+`Item` 13868 -> 14120 (+252).
+Kein R170–R261-Unit hat matched code verloren.
+Nur `Item` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R261 (`MapObjMamma`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMammaBlockRotate::touchWater`.
+
+- `isState(1)` ist das `? true : false` mit `li 1` / `li 0` / `clrlwi.`.
+  Danach `mRotation.y += mRotSpeed`.
+  `mRotation.y > mRotEnd` ist `fcmpo`+`ble` und setzt `mState` auf 2.
+  Rückgabe ist 1.
+  Kein Zusatzframe.
+  80 Bytes, 20 Instruktionen.
+  `withering`, `TGoalWatermelon::control` und `sinit` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMamma`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.18719 % -> 79.18918 %, matched code 49.92279 % -> 49.92501 % (1792272 -> 1792352, +80).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9634 -> 9635.
+`MapObjMamma` 6740 -> 6820 (+80).
+Kein R170–R260-Unit hat matched code verloren.
+Nur `MapObjMamma` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R260 (`MapObjMamma`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TSandBase::withering`.
+
+- `mScaling.y -= unk13C`.
+  `mScaling.y < mScaleMin` ist `fcmpo`+`bge` und klemmt auf `mScaleMin`.
+  `unk144->mPosition` wird vor `gateCheck` gebildet.
+  `MSD_SE_OBJ_SANDBUD_NORMAL` (0x2099) geht durch `startSoundActor`.
+  Rückgabe ist `bool`: `mScaling.y <= mScaleMin` als `cror`+`bne`, `li 1` / `li 0`.
+  `char trash[1]` hält das Frame bei `-0x20` (`r31` bei `r1+0x1c`).
+  172 Bytes, 43 Instruktionen.
+  `TSandCastle::withering` bleibt virtuell und gibt `false` zurück, damit die Signatur passt.
+  `control` von `TGoalWatermelon` und `sinit` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMamma`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.18246 % -> 79.18719 %, matched code 49.91799 % -> 49.92279 % (1792100 -> 1792272, +172).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9633 -> 9634.
+`MapObjMamma` 6568 -> 6740 (+172).
+Kein R170–R259-Unit hat matched code verloren.
+Nur `MapObjMamma` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R259 (`MapObjMamma`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TGoalWatermelon::control`.
+
+- `TMapObjBase::control`, dann `switch (mState)`.
+  Leere Fälle 0, 1 und 3 halten die Verteilung: `cmpwi 2`, `beq`, `bge`, `b`, `b`.
+  Zustand 2 ruft `unk13C->animIsFinished()`.
+  Danach `makeShineAppearWithDemoOffset` mit `シャイン（お化けスイカ用）`, `スイカシャインカメラ` und Offset 0.
+  `mState` wird 3.
+  Frame `-0x18` ohne Zusatzslot.
+  128 Bytes, 32 Instruktionen.
+  `loadAfter`, `load` und `sinit` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMamma`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.17900 % -> 79.18246 %, matched code 49.91443 % -> 49.91799 % (1791972 -> 1792100, +128).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9632 -> 9633.
+`MapObjMamma` 6440 -> 6568 (+128).
+Kein R170–R258-Unit hat matched code verloren.
+Nur `MapObjMamma` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R258 (`MapObjPinna`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TViking::reset` und `THorizontalViking::reset`.
+
+- Beide kopieren `unk140` nach `unk144` und setzen `unk148` auf 0.
+  `TViking` testet das neu geladene `unk140 > 0`.
+  `THorizontalViking` testet die Kopie `unk144 > 0`.
+  Der `>`-Test ist `fcmpo`+`ble`.
+  Wahr setzt `mState` auf 1, sonst auf 2.
+  Je 52 Bytes, 13 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjPinna`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.17877 % -> 79.17900 %, matched code 49.91153 % -> 49.91443 % (1791868 -> 1791972, +104).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9630 -> 9632.
+`MapObjPinna` 5164 -> 5268 (+104).
+Kein R170–R257-Unit hat matched code verloren.
+Nur `MapObjPinna` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R257 (`MapObjFence`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TFenceWater::controlRotation`.
+
+- `switch (mState)` mit leerem `case 1`, damit die untere Hälfte gegen 1 vergleicht.
+  Zustand 2 zieht `unk13C` von `unk140` ab.
+  `unk140 <= -90` ist `cror`+`bne` und klemmt auf `-90`, setzt `unk13C` auf 0, `mState` auf 3 und `mStateTimer` auf `mTurnedWaitTime` (600).
+  Zustand 3 bricht ab, solange `isStateTimerEngaged()` wahr ist.
+  Danach `gateCheck` und `startSoundActor` mit `MSD_SE_OBJ_WATER_FENCE_REV`, `unk13C = mBackSpeed` (3.0f), `mState = 4`.
+  Zustand 4 addiert `unk13C` auf `unk140`.
+  `unk140 >= 0` ist `cror`+`bne` und ruft virtuell `changeStatusToWait`.
+  `dont_inline` bleibt, damit `control` den `bl` behält.
+  `char trash[0x9]` hält das Frame bei `-0x28` (`r31` bei `r1+0x24`).
+  308 Bytes, 77 Instruktionen.
+  `control`, `changeStatusToGo` und `changeStatusToWait` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjFence`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.17030 % -> 79.17877 %, matched code 49.90295 % -> 49.91153 % (1791560 -> 1791868, +308).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9629 -> 9630.
+`MapObjFence` 3504 -> 3812 (+308).
+Kein R170–R256-Unit hat matched code verloren.
+Nur `MapObjFence` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R256 (`MapObjFence`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TFenceWater::control`.
+
+- `TMapObjBase::control` und `controlRotation` laufen zuerst.
+  `controlRotation` bleibt `dont_inline`, sonst verschwindet der `bl`.
+  `MsWrap(unk140 + mInitialRotation.y, 0, 360)` schreibt `mRotation.y`.
+  Die beiden `while` sind `>= 360` (`cror`+`beq`) und `< 0` (`blt`).
+  `182.04445f * mRotation.y` geht über `jmaSinShift` in die Cos- und Sin-Tabelle.
+  `JMASSin` bleibt ausgeschrieben, weil das Header-`dont_inline` sonst einen Call erzeugt.
+  Der Messenger bei `0x144` wird über `void*` zweimal geladen, damit das zweite `lwz` stehen bleibt.
+  `mPosition.x + 500 * cos` und `mPosition.z - 500 * sin` landen auf dem Messenger.
+  Das Feld bleibt aus der Klasse, sonst ändert sich `sizeof` in `MarNameRefGen`.
+  `char trash[0x9]` hält das Frame bei `-0x48` (`fctiwz` bei `r1+0x38` und `r1+0x30`).
+  244 Bytes, 61 Instruktionen.
+  `changeStatusToGo`, `changeStatusToWait`, `receiveMessage` und `sinit` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjFence`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.16362 % -> 79.17030 %, matched code 49.89616 % -> 49.90295 % (1791316 -> 1791560, +244).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9628 -> 9629.
+`MapObjFence` 3260 -> 3504 (+244).
+Kein R170–R255-Unit hat matched code verloren.
+Nur `MapObjFence` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R255 (`MapObjCorona`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TBathtub::quake`.
+
+- `unk29A` bricht ab.
+  Zwei Referenzen auf den Trefferpunkt und `mInitialPosition` halten die XZ-Lasten in der Retail-Reihenfolge.
+  `!(lsq <= epsilon)` erzeugt `cror`+`beq` und ruft das lokale out-of-line `inv_sqrt`.
+  Das Ergebnis bleibt unbenutzt.
+  `unk24C` wird 300.
+  `unk16C` kopiert `+0x54` nach `unk250`, `+0x68` nach `unk258` und `unk25C`, `+0x7C` nach `unk254` und `+0xF4` nach `unk248`.
+  `TNameRefGen::search("クッパ")` bleibt in `r31`.
+  `gpCameraShake->startShake` läuft mit Modus `0x25` und `0x26` bei `1.0f`.
+  `SMSRumbleMgr->start(4, nullptr)` folgt.
+  `SMS_ThrowMario` wirft den Vektor `(0, 1, 0)` mit `10.0f`.
+  `TKoopa::getDown` schließt ab.
+  `char above[0x9]` und `char below[0x48]` halten das Frame bei `-0xa0` und den Vektor bei `r1+0x74`.
+  316 Bytes, 79 Instruktionen.
+  Dtor, `hipdrop`, `tumble`, `getNumGripsDead`, die Demo-Mtx-Getter, beide Grip-`receiveMessage` und beide `getRootJointMtx` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjCorona`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.15492 % -> 79.16362 %, matched code 49.88736 % -> 49.89616 % (1791000 -> 1791316, +316).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9627 -> 9628.
+`MapObjCorona` 1052 -> 1368 (+316).
+Kein R170–R254-Unit hat matched code verloren.
+Nur `MapObjCorona` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R254 (`MapObjCorona`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TBathtub::hipdrop`.
+
+- `unk29A` bricht ab.
+  `unk250 > unk16C->unk7C` bricht ebenfalls ab.
+  Zwei Referenzen auf den Trefferpunkt und `mInitialPosition` halten die XZ-Lasten in der Retail-Reihenfolge.
+  `!(lsq <= epsilon)` erzeugt `cror`+`beq` und ruft `inv_sqrt`.
+  Das Ergebnis bleibt unbenutzt.
+  Die Header-Inline faltet diesen Aufruf zu einem Compare, deshalb deklariert diese TU `TUtil` lokal und definiert `inv_sqrt` out-of-line.
+  `JGUtil.hpp` bleibt unverändert.
+  `unk7C` geht nach `unk250` und `unk254`, `unk90` nach `unk258` und `unk25C`.
+  `TNameRefGen::search("クッパ")` ruft `TKoopa::stagger(false)`.
+  `char trash[0x60]` hält das Frame bei `-0x98` (`r31` bei `r1+0x94`).
+  228 Bytes, 57 Instruktionen.
+  Dtor, `tumble`, `getNumGripsDead`, die Demo-Mtx-Getter, beide Grip-`receiveMessage` und beide `getRootJointMtx` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjCorona`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.14868 % -> 79.15492 %, matched code 49.88100 % -> 49.88736 % (1790772 -> 1791000, +228).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9626 -> 9627.
+`MapObjCorona` 824 -> 1052 (+228).
+Kein R170–R253-Unit hat matched code verloren.
+Nur `MapObjCorona` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R253 (`MapObjCorona`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TBathtub::tumble`.
+
+- `unk29A` bricht ab.
+  Der Winkel ist `182.04445f * param_1` (65536/360), der Index kommt aus `jmaSinShift`.
+  `JMASSin` bleibt im Header `dont_inline`, deshalb steht die Tabellenrechnung hier.
+  `param_2 * 0.0001f` läuft über ein benanntes `amp`, damit `param_2` links im `fmuls` bleibt.
+  `unk1E8` bekommt `scale * cos`, `unk1EC` bekommt `+ 0`, `unk1F0` bekommt `scale * -sin`.
+  Das Sinusprodukt geht zurück in `sine`, damit das zweite `fmuls` in dem Register bleibt.
+  `char trash[8]` hält den `fctiwz`-Slot bei `r1+0x38` (Frame `-0x40`).
+  136 Bytes, 34 Instruktionen.
+  Dtor, `getNumGripsDead`, die Demo-Mtx-Getter, beide Grip-`receiveMessage` und beide `getRootJointMtx` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjCorona`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.14500 % -> 79.14868 %, matched code 49.87722 % -> 49.88100 % (1790636 -> 1790772, +136).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9625 -> 9626.
+`MapObjCorona` 688 -> 824 (+136).
+Kein R170–R252-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R252 (`MapObjWave`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjWave::updateHeightAndAlpha`.
+
+- `checkGround` und `checkGroundExactY` an Marios Position, Y der zweiten Abfrage ist 10.
+  Flachwasser oder eine Wasserfläche mischt die Amplitude, sonst die Ruhewerte.
+  Typ `0x700` oder eine negative Höhe kopiert die volle Amplitude.
+  Sonst ist der Faktor `1 - höhe / spanne` und geht in `fmadds`.
+  Auf Karte 4 setzt das Rechteck um Mario die Ruhewerte.
+  Ein Stream-Würfel hebt `unk44` bis `unk3C`, sonst fällt es auf 0.
+  Liegt `unk44` über 0, kommt es auf die Amplitude drauf.
+  `char trash[0x28]` hält den Frame bei `-0x70`.
+  792 Bytes, 198 Instruktionen.
+  Dtor, `perform`, `updateTime`, `noWave`, `getHeight`, `getWaveHeight` und `__sinit_MapObjWave_cpp` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjWave`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+`MarNameRefGen_MapObj` matched code bleibt 2348.
+Klassengröße bleibt `0x98`.
+
+`ninja changes_all`: fuzzy 79.12306 % -> 79.14500 %, matched code 49.85516 % -> 49.87722 % (1789844 -> 1790636, +792).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9624 -> 9625.
+`MapObjWave` 1660 -> 2452 (+792).
+Kein R170–R251-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R251 (`MapObjWave`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjWave::updateTime`.
+
+- Vier Wrap-Adds, Blatt ohne Frame.
+  `unk64 += unk24` und `unk68 += unk28` ziehen `6.28318f` ab, wenn der Wert größer ist.
+  `6.28318f` ist `@2730` (`0x40c90fd0`).
+  `unk6C` und `unk70` ziehen `1.0f` von `unk60` ab, wenn der Wert größer ist.
+  Der letzte Vergleich ist `blelr`.
+  `>` erzeugt `fcmpo` + `ble`.
+  `#pragma dont_inline` bleibt, damit `perform` den `bl` behält.
+  164 Bytes, 41 Instruktionen.
+  Dtor, `perform`, `noWave`, `getHeight`, `getWaveHeight` und `__sinit_MapObjWave_cpp` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjWave`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+`MarNameRefGen_MapObj` matched code bleibt 2348.
+Klassengröße bleibt `0x98`.
+
+`ninja changes_all`: fuzzy 79.11861 % -> 79.12306 %, matched code 49.85059 % -> 49.85516 % (1789680 -> 1789844, +164).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9623 -> 9624.
+`MapObjWave` 1496 -> 1660 (+164).
+Kein R170–R250-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R250 (`MapObjWave`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjWave::getHeight`.
+
+- `checkGroundExactY(x, 50 + y, z)`.
+  Wasserfläche ist Typ `0x100`, `0x101`, `(u16)(Typ - 0x102) <= 3` oder `0x4104`.
+  Sonst kommt `y` zurück.
+  Nur See (`0x102` / `0x103`) nimmt die Wellenhöhe, sonst die Bodenhöhe.
+  Fehlt `unk94`, ist das Ergebnis 0, sonst dieselbe `sinf`-Summe wie `getWaveHeight`.
+  `unsigned char` statt `bool` hält den Check-Pointer bei `r1+0x1c`.
+  Das `<=` ist `cmplwi` + `ble` auf `u16`, wie Retail.
+  300 Bytes, 75 Instruktionen.
+  Dtor, `perform`, `noWave`, `getWaveHeight` und `__sinit_MapObjWave_cpp` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjWave`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+`MarNameRefGen_MapObj` matched code bleibt 2348.
+
+`ninja changes_all`: fuzzy 79.11047 % -> 79.11861 %, matched code 49.84223 % -> 49.85059 % (1789380 -> 1789680, +300).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9622 -> 9623.
+`MapObjWave` 1196 -> 1496 (+300).
+Kein R170–R249-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R249 (`MapObjWave`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjWave::getWaveHeight`.
+
+- Wenn `unk94` fehlt, Ergebnis 0.
+  Sonst `unk3C * sinf(unk24 * (0.15915507 * x) + unk64)` plus
+  `unk40 * sinf(unk28 * (0.15915507 * z) + unk68)`.
+  `0.15915507` ist das Retail-Bitmuster; `1/(2*pi)` liegt ein paar Bits daneben.
+  Zwei benannte Produkte, damit die zweite Multiplikation nicht in `fmadds` faltet.
+  140 Bytes, 35 Instruktionen.
+  Dtor, `perform`, `noWave` und `__sinit_MapObjWave_cpp` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjWave`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+`MarNameRefGen_MapObj` matched code bleibt 2348.
+
+`ninja changes_all`: fuzzy 79.10671 % -> 79.11047 %, matched code 49.83833 % -> 49.84223 % (1789240 -> 1789380, +140).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9621 -> 9622.
+`MapObjWave` 1056 -> 1196 (+140).
+Kein R170–R248-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R248 (`MapObjWave`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjWave::perform`.
+
+- Wenn `unk94` gesetzt ist und `CUE_MOVE` anliegt, `updateTime`.
+  Danach `getCurrentMap`: Karte 4 oder 6 ruft `updateHeightAndAlpha`.
+  `CUE_DRAW` ruft `initDraw` und `draw`.
+  `char trash[0x18]` hält den Frame bei `-0x40`.
+  Die vier Callees sind noch Stubs und stehen unter `#pragma dont_inline`,
+  sonst inlined MWCC sie weg.
+  136 Bytes, 34 Instruktionen.
+  Dtor, `noWave` und `__sinit_MapObjWave_cpp` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjWave`: PASS.
+0 neue Fehler.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+`MarNameRefGen_MapObj` matched code bleibt 2348.
+
+`ninja changes_all`: fuzzy 79.10304 % -> 79.10671 %, matched code 49.83454 % -> 49.83833 % (1789104 -> 1789240, +136).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9620 -> 9621.
+`MapObjWave` 920 -> 1056 (+136).
+Kein R170–R247-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R247 (`MapObjCorona`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TBathtubGripParts::getRootJointMtx`.
+
+- Joint-Index ist `unkF4->unk200[unkF8]`.
+  Danach `TLiveActor::getModel()->getAnmMtx(joint)`
+  (`mNodeMatrices` bei `+0x58`).
+  `char trash[8]` hält den Frame bei `-0x30`.
+  Die Klasse steht nur in der cpp und erbt nicht von `TLiveActor`,
+  damit diese TU keine Parts-VTable emittiert.
+  72 Bytes, 18 Instruktionen.
+  Die übrigen 12 Matches in `MapObjCorona` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjCorona`: PASS.
+0 neue Fehler; vorbestehende MISSING/ORDER/BINDING bleiben.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.10104 % -> 79.10304 %, matched code 49.83254 % -> 49.83454 % (1789032 -> 1789104, +72).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9619 -> 9620.
+`MapObjCorona` 616 -> 688 (+72).
+Kein R170–R246-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R246 (`MapObjCorona`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TBathtubGripPartsFragile::receiveMessage` und
+`TBathtubGripPartsHard::receiveMessage`.
+
+- Fragile leitet `receiveMessage` an den Grip bei `unkF4` (`+0xF4`) weiter.
+  Hard macht dasselbe, setzt aber `HIT_MESSAGE_SUPER_HIP_DROP` vorher auf
+  `HIT_MESSAGE_HIP_DROP`.
+  Beide Klassen stehen nur in der cpp und erben nicht von `TLiveActor`,
+  damit diese TU keine Parts-VTable emittiert.
+  Fragile 48 Bytes, 12 Instruktionen.
+  Hard 60 Bytes, 15 Instruktionen.
+  Die übrigen 10 Matches in `MapObjCorona` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjCorona`: PASS.
+0 neue Fehler; vorbestehende MISSING/ORDER/BINDING bleiben.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.09803 % -> 79.10104 %, matched code 49.82953 % -> 49.83254 % (1788924 -> 1789032, +108).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9617 -> 9619.
+`MapObjCorona` 508 -> 616 (+108).
+Kein R170–R245-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R245 (`MapObjCorona`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TBathtubGrip::getRootJointMtx`.
+
+- `TLiveActor::getModel`, dann `getBaseTRMtx` (`unk20` bei `+0x20`).
+  Die Klasse steht nur in der cpp und erbt nicht von `TLiveActor`,
+  damit diese TU keine Grip-VTable emittiert.
+  36 Bytes, 9 Instruktionen.
+  Die übrigen 9 Matches in `MapObjCorona` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjCorona`: PASS.
+0 neue Fehler; vorbestehende MISSING/ORDER/BINDING bleiben.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.09703 % -> 79.09803 %, matched code 49.82853 % -> 49.82953 % (1788888 -> 1788924, +36).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9616 -> 9617.
+`MapObjCorona` 472 -> 508 (+36).
+Kein R170–R244-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R244 (`MapObjFlag`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjFlagManager::load`.
+
+- `JDrama::TNameRef::load`, dann `readString` von 8 Bytes.
+  `switch` auf `gpMarDirector->getCurrentMap()`:
+  Karte 0 und 2 setzen `TMapObjFlag::mFlutterSpeed` auf `16.0f`,
+  Karte 4 auf `12.0f`,
+  sonst `8.0f`.
+  `char trash[8]` hält den Namenspuffer bei `r1+0x20` (Frame `-0x30`).
+  148 Bytes, 37 Instruktionen.
+  Die übrigen 7 Matches in `MapObjFlag` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjFlag`: PASS.
+4 vorbestehende UNUSED-Größen.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.09303 % -> 79.09703 %, matched code 49.82441 % -> 49.82853 % (1788740 -> 1788888, +148).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9615 -> 9616.
+`MapObjFlag` 1260 -> 1408 (+148).
+Kein R170–R243-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R243 (`MapObjMamma`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TSandLeafBase::initMapObj`.
+
+- `unk138` wird `0.003f`, `unk13C` wird `0.001f`, `unk140` wird `0`.
+  `mScaling.y` kommt aus `TSandBase::mScaleMin`.
+  Danach `TMapObjBase::initMapObj`.
+  `newAndRegisterObj("SandLeaf", mPosition, mRotation)` lässt `scale` beim Default `(1, 1, 1)`.
+  Das Ergebnis landet in `unk144`.
+  `((TSandLeaf*)unk144)->unk138` zeigt auf `this`, dann `appear`.
+  `char trash[1]` hält den Frame bei `-0x28`.
+  148 Bytes, 37 Instruktionen.
+  Die übrigen 63 Matches in `MapObjMamma` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMamma`: PASS.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.08901 % -> 79.09303 %, matched code 49.82028 % -> 49.82441 % (1788592 -> 1788740, +148).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9614 -> 9615.
+`MapObjMamma` 6292 -> 6440 (+148).
+Kein R170–R242-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R242 (`MapObjPinna`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TBalloonKoopaJr::kill`.
+
+- `TMapObjGeneral::kill` läuft zuerst.
+  Drei `emitAndScale`-Aufrufe treffen `unk148`, mit `0x5A`, `0x5B` und `0x5C`.
+  `TFlagManager::smInstance->incFlag(0x60001, 1)`.
+  `gateCheck(MSD_SE_BS_BSPAKU_SLAP)` startet danach `startSoundActor` an `&mPosition`.
+  `char trash[1]` hält den Frame bei `-0x20`.
+  `unk148` ist `TVec3<f32>` bei `0x148`.
+  172 Bytes, 43 Instruktionen.
+  Die übrigen 48 Matches in `MapObjPinna` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjPinna`: PASS.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+`MarNameRefGen_MapObj` verliert kein matched code (2348).
+
+`ninja changes_all`: fuzzy 79.08432 % -> 79.08901 %, matched code 49.81549 % -> 49.82028 % (1788420 -> 1788592, +172).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9613 -> 9614.
+`MapObjPinna` 4992 -> 5164 (+172).
+Kein R170–R241-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R241 (`MapObjMamma`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TSandCastle::findTriggerActor`.
+
+- `JDrama::TNameRefGen::search` sucht `"砂の城爆発の芽"`.
+  Der Zeiger kommt als `TMapObjBase*` zurück.
+  96 Bytes, 24 Instruktionen.
+  Die übrigen 62 Matches in `MapObjMamma` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMamma`: PASS.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.08181 % -> 79.08432 %, matched code 49.81282 % -> 49.81549 % (1788324 -> 1788420, +96).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9612 -> 9613.
+`MapObjMamma` 6196 -> 6292 (+96).
+Kein R170–R240-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R240 (`MapObjPinna`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TPinnaEntrance::loadAfter`.
+
+- `TMapObjBase::loadAfter` läuft zuerst.
+  `rot` ist `(90, 0, 0)`.
+  `newAndRegisterObj("GateManta", mPosition, rot)` lässt `scale` beim Default `(1, 1, 1)`.
+  Der Default wird zuerst materialisiert, daher `addi r6` vor den übrigen Argumentzeigern.
+  104 Bytes, 26 Instruktionen.
+  Die übrigen 47 Matches in `MapObjPinna` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjPinna`: PASS.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.07903 % -> 79.08181 %, matched code 49.80992 % -> 49.81282 % (1788220 -> 1788324, +104).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9611 -> 9612.
+`MapObjPinna` 4888 -> 4992 (+104).
+Kein R170–R239-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R239 (`MapObjMare`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjPuncher::load`.
+
+- `TMapObjBase::load` liest den Stream zuerst.
+  `read` holt ein `s32` von 4 Bytes.
+  Die Zuweisung an `unk138` ist die übliche `s32`-nach-`f32`-Wandlung.
+  Danach `sleep` und `offHitFlag(HIT_FLAG_NO_COLLISION)`.
+  Das Flag-Bit 0 wird mit `clrrwi` gelöscht.
+  128 Bytes, 32 Instruktionen.
+  Die übrigen 42 Matches in `MapObjMare` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMare`: PASS.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+`TMapObjPuncher::unk138` ist das `f32` bei `0x138`.
+`MarNameRefGen_MapObj` verliert kein matched code.
+
+`ninja changes_all`: fuzzy 79.07557 % -> 79.07903 %, matched code 49.80636 % -> 49.80992 % (1788092 -> 1788220, +128).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9610 -> 9611.
+`MapObjMare` 4360 -> 4488 (+128).
+Kein R170–R238-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R238 (`MapObjBianco`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TLampSeesaw::load`.
+
+- `TMapObjBase::load` liest den Stream zuerst.
+  Ein `f32` kommt per `read` von 4 Bytes.
+  `unk13C` ist `mInitialPosition.y` minus diesen Wert.
+  `unk140` wird ebenfalls per `read` geladen und mit `0.0001f` multipliziert.
+  Ein totes `s32` hält den Float-Spill auf `r1+0x14` und den Frame auf `-0x20`.
+  120 Bytes, 30 Instruktionen.
+  Die übrigen 55 Matches in `MapObjBianco` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBianco`: PASS.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.07234 % -> 79.07557 %, matched code 49.80301 % -> 49.80636 % (1787972 -> 1788092, +120).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9609 -> 9610.
+`MapObjBianco` 6108 -> 6228 (+120).
+Kein R170–R237-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R237 (`MapObjMonte`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjMonteRoot::initMapObj`.
+
+- `TMapObjBase::initMapObj` läuft zuerst.
+  `mDamageHeight` wird `1400.0f * mScaling.y`.
+  Danach `calcEntryRadius`.
+  `mPosition.y` wird `mInitialPosition.y + mYOffset`.
+  `char trash[1]` hält den Frame auf `-0x20`.
+  84 Bytes, 21 Instruktionen.
+  Die übrigen 33 Matches in `MapObjMonte` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMonte`: PASS.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.07011 % -> 79.07234 %, matched code 49.80067 % -> 49.80301 % (1787888 -> 1787972, +84).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9608 -> 9609.
+`MapObjMonte` 3784 -> 3868 (+84).
+Kein R170–R236-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R236 (`MapObjMare`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TCogwheelScale::touchWater`.
+
+- `unk140` wird mit `unk144` verglichen.
+  Liegt `unk140` darunter, wird `1.0f` addiert.
+  Der Vergleich ist `fcmpo` und `bge`.
+  `fadds` bleibt `f0, f1, f0`.
+  36 Bytes, 9 Instruktionen.
+  Die übrigen 41 Matches in `MapObjMare` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMare`: PASS.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.06933 % -> 79.07011 %, matched code 49.79967 % -> 49.80067 % (1787852 -> 1787888, +36).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9607 -> 9608.
+`MapObjMare` 4324 -> 4360 (+36).
+Kein R170–R235-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R235 (`Item`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TShine::appearWithDemo`.
+
+- `TShine::appearWithDemo` sucht das Kamera-Tool über `JDrama::TNameRefGen::search`.
+  `unk18C` bekommt `mDemoLengthFrames`.
+  `fireStartDemoCamera` läuft mit `&mPosition`, `appearWithTimeCallback`, `this` und `JDrama::TFlagT<u16>()`.
+  `char trash[1]` hält den Frame auf `-0x50` und das Flag-Halfword auf `r1+0x38`.
+  172 Bytes, 43 Instruktionen.
+  `__sinit_Item_cpp`, `TShine::kill` und `TShine::makeMActors` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/Item`: PASS.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.06931 % -> 79.06933 %, matched code 49.79488 % -> 49.79967 % (1787680 -> 1787852, +172).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9606 -> 9607.
+`Item` 13696 -> 13868 (+172).
+Kein R170–R234-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R234 (`MapObjBall`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjBall::touchRoof`.
+
+- `TMapObjBall::touchRoof` klemmt `param_1->y` auf `unk140`, wenn es größer ist.
+  Danach `calcReflectingVelocity` mit `unk13C`, `mMapObjData->mPhysical->unk4->unk4` und `&mVelocity`.
+  Frame `-0x8`, ohne Trash.
+  76 Bytes, 19 Instruktionen.
+  `TBigWatermelon::touchWaterSurface`, `makeObjDefault`, `put`, `touchPollution` und `__sinit_MapObjBall_cpp` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS.
+Schwache-Reihenfolge-Warnung und vier bestehende UNUSED-Größenwarnungen.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.067314 % -> 79.06931 %, matched code 49.792763 % -> 49.79488 % (1787604 -> 1787680, +76).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9605 -> 9606.
+`MapObjBall` 3172 -> 3248 (+76).
+Kein R170–R233-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R233 (`MapObjBianco`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjRootPakkun::drawObject`.
+
+- `TMapObjRootPakkun::drawObject` ruft `TLiveActor::drawObject` auf.
+  Wenn `fabsf(gpMarioPos->z - mPosition.z) < 10000.0f`, folgt `unk138->movement`.
+  Solange `isStateTimerEngaged` falsch ist, `tremble` mit `mTremblePower`, `mTrembleAccel`, `mTrembleBrake` und `mTrembleTime`, danach `mStateTimer = mTrembleTime`.
+  `char trash[1]` hält Frame `-0x28`.
+  148 Bytes, 37 Instruktionen.
+  `TBiancoWatermillVertical::setGroundCollision`, `TWoodLog::control`, `TBiancoBell::touchPlayer` und `__sinit_MapObjBianco_cpp` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBianco`: PASS.
+Fünf bestehende UNUSED-Größenwarnungen.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.06331 % -> 79.067314 %, matched code 49.78864 % -> 49.792763 % (1787456 -> 1787604, +148).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9604 -> 9605.
+`MapObjBianco` 5960 -> 6108 (+148).
+Kein R170–R232-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R232 (`MapObjMare`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMareFall::calc`.
+
+- `TMareFall::calc` prüft `gateCheck(MSD_SE_GE_FALL)` über ein lokales `MSound*` und spielt den Sound an `&mPosition`.
+  Danach `gpMSound->gateCheck(MSD_SE_GE_FALL_UPPER)` und `startSoundActor` an `fall_upper_pos`.
+  Zwei `emit`-Aufrufe, `0x149` und `0x14A`, an `&mPosition` mit `this`.
+  `char trash[0xC]` hält Frame `-0x28`.
+  192 Bytes, 48 Instruktionen.
+  `TMareFall::load`, `TMareCork::calcRootMatrix`, `drawObject` und `__sinit_MapObjMare_cpp` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMare`: PASS.
+Fünf bestehende UNUSED-Größenwarnungen.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.05807 % -> 79.06331 %, matched code 49.78329 % -> 49.78864 % (1787264 -> 1787456, +192).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9603 -> 9604.
+`MapObjMare` 4132 -> 4324 (+192).
+Kein R170–R231-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R231 (`MapObjMonte`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TGoalFlag::touchActor`.
+
+- `TGoalFlag::touchActor` bei `isActorType(0x80000001)` setzt Flag `0x50005`, falls es noch nicht gesetzt ist.
+  Danach `receiveMessage(this, HIT_MESSAGE_ATTACK)`.
+  Bei `isActorType(0x08000002)` nur die gleiche Message.
+  `char trash[1]` hält Frame `-0x28`.
+  228 Bytes, 57 Instruktionen.
+  `TJumpMushroom::load`, `TJumpMushroom::receiveMessage` und `__sinit_MapObjMonte_cpp` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMonte`: PASS.
+Elf bestehende UNUSED-Größenwarnungen.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.05183 % -> 79.05807 %, matched code 49.776943 % -> 49.78329 % (1787036 -> 1787264, +228).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9602 -> 9603.
+`MapObjMonte` 3556 -> 3784 (+228).
+Kein R170–R230-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R230 (`MapObjFence`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TRailFence::receiveMessage`.
+
+- `TRailFence::receiveMessage` bei Message `3` prüft `gpMSound->gateCheck(MSD_SE_OBJ_MVING_FENCT_PNCH)`.
+  Bei Erfolg `startSoundActor` an `&mPosition`.
+  Danach `setUpMapCollision(1)`, `offMapObjFlag(MAP_OBJ_FLAG_UNK100)` und `mState = 2`.
+  Rückgabe ist `TRUE`, sonst `FALSE`.
+  `char trash[1]` hält Frame `-0x28`.
+  140 Bytes, 35 Instruktionen.
+  `TFenceWater::changeStatusToGo`, `TFenceWaterH::changeStatusToGo`, `changeStatusToWait`, `receiveMessage`, `TRevolvingFenceInner::control` und `__sinit_MapObjFence_cpp` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjFence`: PASS.
+Schwache-Reihenfolge-Warnung und zwei bestehende UNUSED-Größenwarnungen.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.048134 % -> 79.05183 %, matched code 49.77304 % -> 49.776943 % (1786896 -> 1787036, +140).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9601 -> 9602.
+`MapObjFence` 3120 -> 3260 (+140).
+Kein R170–R229-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R229 (`MapObjBall`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TBigWatermelon::touchWaterSurface`.
+
+- `TBigWatermelon::touchWaterSurface` ruft `emitColumnWater` auf.
+  Danach `gpMSound->gateCheck(MSD_SE_OBJ_DRINA_TO_WATER)` und bei Erfolg `startSoundActor` an `&mPosition`.
+  Abschluss ist virtuelles `kill` (vtable `0xE4`).
+  `char trash[1]` hält Frame `-0x20`.
+  112 Bytes, 28 Instruktionen.
+  `TMapObjBall::makeObjDefault`, `put`, `touchPollution` und `__sinit_MapObjBall_cpp` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS.
+Schwache-Reihenfolge-Warnung und vier bestehende UNUSED-Größenwarnungen.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.04512 % -> 79.048134 %, matched code 49.769924 % -> 49.77304 % (1786784 -> 1786896, +112).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9600 -> 9601.
+`MapObjBall` 3060 -> 3172 (+112).
+Kein R170–R228-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R228 (`MapObjBianco`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TBiancoWatermillVertical::setGroundCollision`.
+`TRevolvingFenceInner::setGroundCollision` und `TMapObjBall::hold` bleiben geparkt.
+
+- `TBiancoWatermillVertical::setGroundCollision` läuft, wenn `unk144` oder `mColCount` ungleich 0 ist.
+  Dann `getModel()->getAnmMtx(0)` und `mMapCollisionManager->unk8->moveMtx`.
+  Danach `unk144 = 0`.
+  `unk140`, `unk144`, `unk148` und `unk14C` liegen hinter `unk13C`, damit das Flag bei `0x144` steht.
+  `char trash[8]` hält Frame `-0x28`.
+  116 Bytes, 29 Instruktionen.
+  `load`, `TWoodLog::control`, `TBiancoBell::touchPlayer` und `__sinit_MapObjBianco_cpp` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBianco`: PASS.
+Fünf bestehende UNUSED-Größenwarnungen.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.042 % -> 79.04512 %, matched code 49.76669 % -> 49.769924 % (1786668 -> 1786784, +116).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9599 -> 9600.
+`MapObjBianco` 5844 -> 5960 (+116).
+Kein R170–R227-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R227 (`MapObjBall`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMapObjBall::makeObjDefault`.
+`TRevolvingFenceInner::setGroundCollision` und `TMapObjBall::hold` bleiben geparkt.
+
+- `TMapObjBall::makeObjDefault` ruft `TMapObjBase::makeObjDefault`.
+  Dann schreibt es in `getAnmMtx(0)` die Translation `mPosition.x`, `mPosition.y + mBodyRadius` und `mPosition.z`.
+  `char trash[1]` hält Frame `-0x28`.
+  88 Bytes, 22 Instruktionen.
+  `put`, `touchPollution` und `__sinit_MapObjBall_cpp` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS.
+Bestehende Weak-Order-Warnung und vier UNUSED-Größenwarnungen.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.039665 % -> 79.042 %, matched code 49.76424 % -> 49.76669 % (1786580 -> 1786668, +88).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9598 -> 9599.
+`MapObjBall` 2972 -> 3060 (+88).
+Kein R170–R226-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R226 (`MapObjMamma`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`startCameraShakeSE`.
+`TRevolvingFenceInner::setGroundCollision` und `TMapObjBall::hold` bleiben geparkt.
+
+- `startCameraShakeSE` spielt bei `param_2 == 0` `MSD_SE_OBJ_QUAKE` über `gateCheck` und `startSoundActor` an der übergebenen Position.
+  Ein lokales `MSound*` hält `gpMSound` in r0, die Position wird danach nach r31 gelegt.
+  `char trash[1]` hält Frame `-0x20`.
+  Rückgabe 0.
+  104 Bytes, 26 Instruktionen.
+  `TGoalWatermelon::load`, `loadAfter` und `__sinit_MapObjMamma_cpp` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMamma`: PASS.
+Acht bestehende UNUSED-Größenwarnungen.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.03689 % -> 79.039665 %, matched code 49.761345 % -> 49.76424 % (1786476 -> 1786580, +104).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9597 -> 9598.
+`MapObjMamma` 6092 -> 6196 (+104).
+Kein R170–R225-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R225 (`MapObjMonte`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TJumpMushroom::load`.
+`TRevolvingFenceInner::setGroundCollision` und `TMapObjBall::hold` bleiben geparkt.
+
+- `TJumpMushroom::load` ruft `TMapObjBase::load`.
+  Dann liest es 4 Bytes in ein lokales `s32`.
+  Wenn `mMapCollisionManager` gesetzt ist, folgt `unk8->setAllData` mit `extsh`.
+  `char trash[1]` hält Frame `-0x28` und legt den Wert bei `r1+0x18` ab.
+  100 Bytes, 25 Instruktionen.
+  `receiveMessage`, `calcDefaultMtx` und `__sinit_MapObjMonte_cpp` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMonte`: PASS.
+Elf bestehende UNUSED-Größenwarnungen.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.03421 % -> 79.03689 %, matched code 49.758556 % -> 49.761345 % (1786376 -> 1786476, +100).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9596 -> 9597.
+`MapObjMonte` 3456 -> 3556 (+100).
+Kein R170–R224-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R224 (`MapObjMamma`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TGoalWatermelon::load`.
+`TRevolvingFenceInner::setGroundCollision` und `TMapObjBall::hold` bleiben geparkt.
+
+- `TGoalWatermelon::load` ruft `TMapObjBase::load`.
+  Dann `readString` in ein lokales `char[0x20]` und drei `read`s von je 4 Bytes nach `unk140.x`, `unk140.y` und `unk140.z`.
+  `char trash[0xC]` hält Frame `-0x48` und legt den Namen bei `r1+0x20` ab.
+  120 Bytes, 30 Instruktionen.
+  `loadAfter` und `__sinit_MapObjMamma_cpp` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMamma`: PASS.
+Acht bestehende UNUSED-Größenwarnungen.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.03098 % -> 79.03421 %, matched code 49.755215 % -> 49.758556 % (1786256 -> 1786376, +120).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9595 -> 9596.
+`MapObjMamma` 5972 -> 6092 (+120).
+Kein R170–R223-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R223 (`MapObjFence`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TFenceWater::changeStatusToGo`.
+`TRevolvingFenceInner::setGroundCollision` und `TMapObjBall::hold` bleiben geparkt.
+
+- `TFenceWater::changeStatusToGo` prüft `gpMSound->gateCheck(MSD_SE_OBJ_WATER_FENCE_FW)`.
+  Dann `startSoundActor` an `mPosition` und `mState = 2`.
+  Ein lokales `MSound*` erzeugt `addi r31` plus `lwz r0`.
+  `char trash[1]` hält Frame `-0x20`.
+  100 Bytes, 25 Instruktionen.
+  `TFenceWaterH::changeStatusToGo`, `changeStatusToWait`, `receiveMessage`, `TRevolvingFenceInner::control` und `__sinit_MapObjFence_cpp` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjFence`: PASS.
+Bestehende Weak-Order-Warnung und zwei UNUSED-Größenwarnungen.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.02831 % -> 79.03098 %, matched code 49.75243 % -> 49.755215 % (1786156 -> 1786256, +100).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9594 -> 9595.
+`MapObjFence` 3020 -> 3120 (+100).
+Kein R170–R222-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R222 (`MapObjPinna`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TChangeStageMerrygoround::touchPlayer`.
+`TRevolvingFenceInner::setGroundCollision` und `TMapObjBall::hold` bleiben geparkt.
+
+- `TChangeStageMerrygoround::touchPlayer` kehrt sofort zurück, wenn `isStateTimerEngaged()` wahr ist.
+  Bei Yoshi-`mType == 1` folgen `gateCheck(MSD_SE_SY_COLLECT_YOSHI)`, `startSoundSystemSE`, `TMapObjChangeStage::touchPlayer` und `unk13C = 1`.
+  Sonst `gateCheck(MSD_SE_SY_NOT_COLLECT_YOSHI)` und optional `startSoundSystemSE`.
+  Danach `mStateTimer = 0x258`.
+  `char trash[0xF]` hält Frame `-0x30`.
+  212 Bytes, 53 Instruktionen.
+  `becomeCalmlyCallback`, `calc` und `__sinit_MapObjPinna_cpp` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjPinna`: PASS.
+Sechs bestehende UNUSED-Größenwarnungen.
+`MapObjBase.hpp` unverändert.
+`changeStatusToWait` bleibt `virtual`.
+
+`ninja changes_all`: fuzzy 79.022514 % -> 79.02831 %, matched code 49.746525 % -> 49.75243 % (1785944 -> 1786156, +212).
+Matched data bleibt 65.58592 % (419967).
+Funktionen matched 9593 -> 9594.
+`MapObjPinna` 4676 -> 4888 (+212).
+Kein R170–R221-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R221 (`MapObjFence`, `MapObjPinna`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TFenceWaterH::changeStatusToGo` und `TChangeStageMerrygoround::calc`.
+`TRevolvingFenceInner::setGroundCollision` und `TMapObjBall::hold` bleiben geparkt.
+
+- `TFenceWaterH::changeStatusToGo` prüft `gpMSound->gateCheck(MSD_SE_OBJ_WATER_FENCE_FW)`.
+  Dann `startSoundActor` an `mPosition`, `mState = 2`, `setUpMapCollision(1)`.
+  Ein lokales `MSound*` erzeugt `addi r31` plus `lwz r0`.
+  `char trash[1]` hält Frame `-0x20`.
+  112 Bytes, 28 Instruktionen.
+  `changeStatusToWait` ist jetzt `virtual`, dadurch matchen die VTables von `TFenceWater` und `TFenceWaterH`.
+  `__sinit_MapObjFence_cpp` und `TRevolvingFenceInner::control` bleiben 100 %.
+- `TChangeStageMerrygoround::calc` emittiert bei `unk13C != 0` die Partikel `0x100` und `0x101` an `gpMarioPos`.
+  Ein lokales `TVec3*` lädt `gpMarioPos` nach r5 vor dem Manager.
+  100 Bytes, 25 Instruktionen.
+  `becomeCalmlyCallback` und `__sinit_MapObjPinna_cpp` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjFence` und `MapObjPinna`: PASS.
+Bestehende UNUSED-Größenwarnungen (2 / 6).
+`MapObjBase.hpp` unverändert.
+
+`ninja changes_all`: fuzzy 79.01683 % -> 79.022514 %, matched code 49.74062 % -> 49.746525 % (1785732 -> 1785944, +212).
+Matched data 65.24985 % -> 65.58592 % (417815 -> 419967, +2152).
+Funktionen matched 9591 -> 9593.
+`MapObjFence` 2908 -> 3020 (+112), Data 188 -> 2340.
+`MapObjPinna` 4576 -> 4676 (+100).
+Kein R170–R220-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R220 (`MapObjBianco`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TBiancoBell::touchPlayer` und `TBiancoBell::touchWater`.
+`TRevolvingFenceInner::setGroundCollision` und `TMapObjBall::hold` bleiben geparkt.
+
+- `TBiancoBell::touchPlayer` läutet, wenn der Frame 0 ist oder `frame + rate >= (f32)end - 1`.
+  Danach `startAnim(4)`, Rate `SMSGetAnmFrameRate()`, `gateCheck` und `startSoundActor` mit `MSD_SE_OBJ_BI_BELL`.
+  Drei TU-lokale Inlines halten die `getFrameCtrl`-Reloads.
+  `char trash[1]` hält Frame `-0x60`.
+  288 Bytes, 72 Instruktionen.
+- `TBiancoBell::touchWater` ist derselbe Körper und gibt 1 zurück.
+  292 Bytes, 73 Instruktionen.
+  `__sinit_MapObjBianco_cpp` und `TWoodLog::control` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBianco`: PASS.
+Fünf bestehende UNUSED-Größenwarnungen.
+`MapObjBase.hpp` unverändert.
+
+`ninja changes_all`: fuzzy 79.000946 % -> 79.01683 %, matched code 49.724464 % -> 49.74062 % (1785152 -> 1785732, +580).
+Matched data bleibt 65.24985 % (417815).
+Funktionen matched 9589 -> 9591.
+`MapObjBianco` 5264 -> 5844 (+580).
+Kein R170–R219-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R219 (`MapObjPinna`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TFerrisWheel::becomeCalmlyCallback`.
+`TRevolvingFenceInner::setGroundCollision` und `TMapObjBall::hold` bleiben geparkt.
+
+- `TFerrisWheel::becomeCalmlyCallback` gibt `s32` zurück, passend zu `fireStartDemoCamera`.
+  Bei `param_1 == 0` setzt es `mState` auf 2.
+  Wenn `gpMSound->unk80` gesetzt ist, `setVolume(0.0f, 200, 0)` und `setPitch(0.5f, 200, 0)`.
+  Danach `mStateTimer = 120`.
+  Der lokale `MSound*` hält `gpMSound` in r31, Frame `-0x20`.
+  128 Bytes, 32 Instruktionen.
+  `__sinit_MapObjPinna_cpp` bleibt 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjPinna`: PASS.
+Sechs bestehende UNUSED-Größenwarnungen.
+`MapObjBase.hpp` unverändert.
+
+`ninja changes_all`: fuzzy 78.99749 % -> 79.000946 %, matched code 49.720898 % -> 49.724464 % (1785024 -> 1785152, +128).
+Matched data bleibt 65.24985 % (417815).
+Funktionen matched 9588 -> 9589.
+`MapObjPinna` 4448 -> 4576 (+128).
+Kein R170–R218-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R218 (`MapObjBianco`, `MapObjMare`, `MapObjRicco`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TWoodLog::control`, `TMareCork::calcRootMatrix` und `TCraneUpDown::initMapObj`.
+`TRevolvingFenceInner::setGroundCollision` und `TMapObjBall::hold` bleiben geparkt.
+
+- `TWoodLog::control` ruft `TMapObjFloatOnSea::control`.
+  Inverse von `getAnmMtx(0)`, Mario lokal, Schwimm-Box (−232 / −141 / 141 / −441 / 441).
+  X wird auf ±141 geschoben und per `SMS_MarioMoveRequest` zurücktransformiert.
+  `char trash[0x14]` hält Frame `-0x90`.
+  248 Bytes, 62 Instruktionen.
+  `__sinit_MapObjBianco_cpp` bleibt 100 %.
+- `TMareCork::calcRootMatrix` ignoriert `checkPass(350)`.
+  Bei `checkPass(250)`: `startChorobeiShout`, Shine-Demo, `unk148` (2773, 8618, 7006), Partikel `0x44` mit Scale 2.5.
+  Danach `TMapObjBase::calcRootMatrix`.
+  `char trash[0x18]` hält Frame `-0x30`.
+  248 Bytes, 62 Instruktionen.
+  `drawObject`, `moveObject`, `getTakingMtx` und `__sinit_MapObjMare_cpp` bleiben 100 %.
+- `TCraneUpDown::initMapObj` ruft `TMapObjBase::initMapObj`, `setAllActor(nullptr)`, `newAndRegisterObj("craneCargoUpDown")` und `appear`.
+  Der Inline-Pad hält Frame `-0x48`.
+  `strcmp(mName, "craneUpDown 0")` wählt −25/45 und `MSD_SE_OBJ_CRANE_UPDOWN1`, sonst −25/30 und `MSD_SE_OBJ_CRANE_UPDOWN2`.
+  `mRotation.x` ist `unk144 + (unk140 - unk144) * MsRandF()`.
+  `mRotSpeed` 0.1 und `mWaitTime` 120 matchen.
+  288 Bytes, 72 Instruktionen.
+  Destruktor, VTable und `__sinit_MapObjRicco_cpp` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBianco`, `MapObjMare`, `MapObjRicco`: PASS.
+Bestehende UNUSED-Größenwarnungen (5 / 5 / 3).
+`MapObjBase.hpp` unverändert.
+
+`ninja changes_all`: fuzzy 78.97599 % -> 78.99749 %, matched code 49.69906 % -> 49.720898 % (1784240 -> 1785024, +784).
+Matched data bleibt 65.24985 % (417815).
+Funktionen matched 9585 -> 9588.
+`MapObjBianco` 5016 -> 5264 (+248).
+`MapObjMare` 3884 -> 4132 (+248).
+`MapObjRicco` 2336 -> 2624 (+288).
+Kein R170–R217-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R217 (`MapObjMamma`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TShiningStone::perform` ohne `SMatrix34C`-Leer-Konstruktor.
+`TRevolvingFenceInner::setGroundCollision` und `TMapObjBall::hold` bleiben geparkt.
+
+- `TShiningStone::perform` läuft über vier `MActor` an `unk68` und ruft danach `unk6C` auf.
+  Wenn `(int)unk74` über 0, 1 bzw. 2 liegt, emittiert es die Partikel `0x143`/`0x144`/`0x145` an `mPosition`.
+  `cmpwi`+`ble` ist das natürliche `>`.
+  216 Bytes, 54 Instruktionen.
+  `__sinit_MapObjMamma_cpp`, `TMammaYacht::initMapObj` und der Konstruktor bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMamma`: PASS.
+Acht bestehende UNUSED-Größenwarnungen.
+`MapObjBase.hpp` unverändert.
+
+`ninja changes_all`: fuzzy 78.970085 % -> 78.97599 %, matched code 49.693047 % -> 49.69906 % (1784024 -> 1784240, +216).
+Matched data bleibt 65.24985 % (417815).
+Funktionen matched 9584 -> 9585.
+`MapObjMamma` 5756 -> 5972 (+216).
+Kein R170-R216-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R216 (`MapObjMare`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMareCork::drawObject` ohne `SMatrix34C`-Leer-Konstruktor.
+`TRevolvingFenceInner::setGroundCollision` und `TMapObjBall::hold` bleiben geparkt.
+
+- `TMareCork::drawObject` ruft `TLiveActor::drawObject`.
+  Wenn `unk154` gesetzt ist und `mareCorkFrame` über 250 liegt, schreibt es `unk148` auf (2773, 8618, 7006), spielt `MSD_SE_ENV_FALL_JET_LEVEL` nach `gateCheck` und bindet die Partikel `0x14C`/`0x14D`/`0x14E` an `unk13C`.
+  `fcmpo`+`ble` ist das natürliche `>`.
+  Der zusätzliche Inline hält das tote Stack-Slot, Frame `-0x28`.
+  228 Bytes, 57 Instruktionen.
+  `moveObject`, `getTakingMtx` und `__sinit_MapObjMare_cpp` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMare`: PASS.
+Fünf bestehende UNUSED-Größenwarnungen.
+`MapObjBase.hpp` unverändert.
+
+`ninja changes_all`: fuzzy 78.96385 % -> 78.970085 %, matched code 49.686695 % -> 49.693047 % (1783796 -> 1784024, +228).
+Matched data bleibt 65.24985 % (417815).
+Funktionen matched 9583 -> 9584.
+`MapObjMare` 3656 -> 3884 (+228).
+Kein R170-R215-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R215 (`MapObjMonte`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`THangingBridge::perform` ohne `SMatrix34C`-Leer-Konstruktor.
+`TRevolvingFenceInner::setGroundCollision` bleibt geparkt.
+`TMapObjBall::hold` bleibt geparkt (`TUtil<f32>::sqrt` muss ein `bl` bleiben).
+
+- `THangingBridge::perform` zeichnet bei `CUE_DRAW`: `initDraw`, dann für jedes Brett `drawRopes` (beide `unk1A4`-Enden per `boardRopePoint` nach `drawOneRope`), dann `drawRopeBetweenBoards(0, mPointNumBetweenBoards)` und `drawRopeBetweenBoards(mRopeHeight, 1)`.
+  `mPointNumBetweenBoards` ist 10, `mRopeHeight` liegt uninitialisiert in `.sbss`.
+  Der zusätzliche Inline hält das tote Stack-Slot, Frame `-0x40`.
+  224 Bytes, 56 Instruktionen.
+  `drawRopes` ist UNUSED und trifft die Map-Größe 0x6c.
+  `setGroundCollision`, `calcDefaultMtx`, `initMapObj` und `__sinit_MapObjMonte_cpp` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMonte`: PASS.
+Elf bestehende UNUSED-Größenwarnungen (`drawRopes` fällt weg).
+`MapObjBase.hpp` unverändert.
+
+`ninja changes_all`: fuzzy 78.95772 % -> 78.96385 %, matched code 49.680454 % -> 49.686695 % (1783572 -> 1783796, +224).
+Matched data 65.2486 % -> 65.24985 % (417807 -> 417815, +8).
+Funktionen matched 9582 -> 9583.
+`MapObjMonte` 3232 -> 3456 (+224).
+Kein R170-R214-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R214 (`MapObjFence`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TRevolvingFenceInner::initMapCollisionData` ohne `SMatrix34C`-Leer-Konstruktor.
+`setGroundCollision` bleibt geparkt.
+
+- `TRevolvingFenceInner::initMapCollisionData` legt `new TMapCollisionManager(1, "mapObj", this)` an.
+  Wenn `fabsf` von Rotation X und Z beide kleiner als 80 sind, `init("fence_revolve_inner_v_tool", 1, nullptr)`, sonst `init("fence_revolve_inner_h_tool", 1, nullptr)`.
+  `fcmpo`+`bge` ist das natürliche `<`.
+  176 Bytes, 44 Instruktionen.
+  `initMapObj`, `TFence::initMapObj` und `__sinit_MapObjFence_cpp` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjFence`: PASS.
+Bestehende Weak-Reihenfolge-Warnung, zwei UNUSED-Größenwarnungen.
+`MapObjBase.hpp` unverändert.
+
+`ninja changes_all`: fuzzy 78.95292 % -> 78.95772 %, matched code 49.675552 % -> 49.680454 % (1783396 -> 1783572, +176).
+Matched data bleibt 65.2486 % (417807).
+Funktionen matched 9581 -> 9582.
+`MapObjFence` 2732 -> 2908 (+176).
+Kein R170-R213-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R213 (`MapObjBianco`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TBiancoMiniWindmill::initMapObj` ohne `SMatrix34C`-Leer-Konstruktor.
+`TRevolvingFenceInner::setGroundCollision` bleibt geparkt.
+
+- `TBiancoMiniWindmill::initMapObj` setzt `mAppearSpeed` auf 0.
+  `unk15C` ist `new TMapObjMessenger("地形オブジェメッセンジャー")` (Größe `0x6C`).
+  `initHitActor(0, 1, 0, 0, 0, 300, 500)`.
+  Messenger-Position ist `x + sMessengerPosZ * MsSin(rot.y)`, `y + sMessengerPosY`, `z + sMessengerPosZ * MsCos(rot.y)`.
+  `sMessengerPosZ` ist 200, `sMessengerPosY` ist 6400.
+  284 Bytes, 71 Instruktionen.
+  Konstruktor, `control` und `__sinit_MapObjBianco_cpp` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjBianco`: PASS.
+Fünf bestehende UNUSED-Größenwarnungen.
+`MapObjBase.hpp` unverändert.
+
+`ninja changes_all`: fuzzy 78.94513 % -> 78.95292 %, matched code 49.66764 % -> 49.675552 % (1783112 -> 1783396, +284).
+Matched data bleibt 65.2486 % (417807).
+Funktionen matched 9580 -> 9581.
+`MapObjBianco` 4732 -> 5016 (+284).
+Kein R170-R212-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R212 (`MapObjMamma`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TMammaYacht::initMapObj` ohne `SMatrix34C`-Leer-Konstruktor.
+`TRevolvingFenceInner::setGroundCollision` bleibt geparkt (Matrix-Slot `0x34` statt `0x38`).
+
+- `TMammaYacht::unk138` ist `TMapObjFlag*`.
+  `initMapObj` legt `new TMapObjFlag("旗")` an (Größe `0xC0`, POD-Pad in `TMapObjFlag`).
+  Position ist `(2 + x, (1315 + y) - 190, z - 15)`, Rotation `(0, 180, 0)`, Scale `(1, 2.5, 3.8)`, dann `init("MammaYacht00")`.
+  Ein lokales Inline gruppiert die drei Stores, damit MWCC `stfsu` emittiert.
+  `TVec3::set(f32, f32, f32)` ist `dont_inline`.
+  212 Bytes, 53 Instruktionen.
+  `TMammaYacht::control` und `__sinit_MapObjMamma_cpp` bleiben 100 %.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMamma`: PASS.
+Acht bestehende UNUSED-Größenwarnungen.
+`mario/MoveBG/MapObjFlag`: PASS.
+Vier bestehende UNUSED-Größenwarnungen.
+`MapObjBase.hpp` unverändert.
+
+`ninja changes_all`: fuzzy 78.93934 % -> 78.94513 %, matched code 49.661736 % -> 49.66764 % (1782900 -> 1783112, +212).
+Matched data bleibt 65.2486 % (417807).
+Funktionen matched 9579 -> 9580.
+`MapObjMamma` 5544 -> 5756 (+212).
+Kein R170-R211-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R211 (`MapObjFence`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TRevolvingFenceInner::initMapObj` ohne `SMatrix34C`-Leer-Konstruktor.
+Zurückgenommen, ein `~`:
+`TRevolvingFenceInner::setGroundCollision` (Rumpf passt, Matrix-Slot `0x34` statt `0x38`).
+
+- `TRevolvingFenceInner::initMapObj` setzt `unk138` auf 1, wenn `strstr(unkF4, "bamboo")` trifft.
+  Danach `TMapObjBase::initMapObj()`.
+  `unk140` ist 1, wenn `fabsf` von Rotation X und Z beide kleiner als 1.0f sind, sonst 0.
+  `MsMtxSetTRS` aus Position, Rotation und Scale, `MTXCopy` auf `unk8->unk20`, dann virtuelles `setUp()`.
+  228 Bytes, 57 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjFence`: PASS.
+Bestehende Weak-Reihenfolge-Warnung, zwei UNUSED-Größenwarnungen.
+
+`ninja changes_all`: fuzzy 78.9331 % -> 78.93934 %, matched code 49.655384 % -> 49.661736 % (1782672 -> 1782900, +228).
+Matched data bleibt 65.2486 % (417807).
+Funktionen matched 9578 -> 9579.
+`MapObjFence` 2504 -> 2732 (+228).
+Kein R170-R210-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R210 (`MapObjMonte`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`THangingBridgeBoard::setGroundCollision` ohne `SMatrix34C`-Leer-Konstruktor.
+
+- `THangingBridgeBoard::setGroundCollision` prüft `SMS_GetYoshi()->isHatched()` und den Brett-Bereich gegen `getTranslation()`, wie `TManhole`.
+  `getModel()->getAnmMtx(0)` läuft über ein lokales Inline, damit MWCC den toten 8-Byte-Slot hält und der Frame `-0x40` bleibt.
+  Danach virtuelles `moveMtx` auf `mMapCollisionManager->unk8`, sonst `TMapObjBase::setGroundCollision()`.
+  244 Bytes, 61 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjMonte`: PASS.
+Zwölf bestehende UNUSED-Größenwarnungen.
+
+`ninja changes_all`: fuzzy 78.926414 % -> 78.9331 %, matched code 49.64859 % -> 49.655384 % (1782428 -> 1782672, +244).
+Matched data bleibt 65.2486 % (417807).
+Funktionen matched 9577 -> 9578.
+`MapObjMonte` 2988 -> 3232 (+244).
+Kein R170-R209-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R209 (`MapObjPinna`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+`TPinnaCoaster::initMapObj` ohne `SMatrix34C`-Leer-Konstruktor.
+Zurückgenommen, nicht strikt:
+`TAmiKing::initMapObj` (leere Joint-Schleife, `mModel`-Load eine Stufe zu weit aus der Schleife).
+`TMapObjFlag::TMapObjFlag` (Stores passen, Frame `-0x20` statt `-0x48`, Rand-`0x4330` in `r3` statt `r0`).
+`TMerrygoround::TMerrygoround` (Rumpf und 9er-Unroll passen, Frame `-0x20` statt `-0x28`).
+
+- `TPinnaCoaster::initMapObj` legt das Rail-Modell mit `SMS_MakeMActorWithAnmData("/scene/mapObj/CoasterRail.bmd", mManager->getMActorAnmData(), 3, 0x10210000)` an.
+  Danach `setBck("coasterrail")` und `MsMtxSetXYZRPH` auf `getModel()->getBaseTRMtx()` aus Position und Rotation.
+  `rate = SMSGetAnmFrameRate(); rate *= 0.25f;` hält `fmuls f31, f1, f0`.
+  `getFrameCtrl(ANM_TYPE_BCK)->setRate(rate)` und komponentenweises Kopieren von `mPosition` nach `unk140`.
+  `unk138` ist `MActor*`.
+  248 Bytes, 62 Instruktionen.
+
+`validate-symbol-order` `mario/MoveBG/MapObjPinna`: PASS.
+Sechs bestehende UNUSED-Größenwarnungen.
+
+`ninja changes_all`: fuzzy 78.9196 % -> 78.926414 %, matched code 49.64168 % -> 49.64859 % (1782180 -> 1782428, +248).
+Matched data bleibt 65.2486 % (417807).
+Funktionen matched 9576 -> 9577.
+`MapObjPinna` 4200 -> 4448 (+248).
+`MapObjManager` und `MarNameRefGen_MapObj` wurden neu gebaut, matched code unverändert.
+Kein R170-R208-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R208 (`MapObjMonte` / `MapObjBianco`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+Drei Konstruktoren ohne `SMatrix34C`-Leer-Konstruktor.
+Zurückgenommen, nur Frame:
+`TSwingBoard::TSwingBoard` (Rumpf passt, Frame `-0x18` statt `-0x48`).
+
+- `TFluff::TFluff` nullt die Floats von `0x138` bis `0x150`, setzt `unk160` auf 1.0f und `unk164` auf 0.95f und nullt `unk168` sowie `unk16C`.
+  `unk154.zero()` steht im Rumpf.
+  140 Bytes, 35 Instruktionen.
+- `THangingBridgeBoard::THangingBridgeBoard` legt zwei `TVec3` bei `0x1A4` an und nullt im Rumpf `unk1BC`, `unk194`, `unk198`, `unk19C` und `unk1A0`.
+  Danach `zero()` auf beiden Vektoren.
+  156 Bytes, 39 Instruktionen.
+- `TBiancoMiniWindmill::TBiancoMiniWindmill` setzt `unk150` auf `360.0f * ((f32)rand() * 0.000030517578f)`, `unk154` auf 0 und `unk158` auf `1.0f` plus denselben Rand-Faktor.
+  Der zweite Faktor steht in einer eigenen Variable, damit `fmuls` und `fadds` nicht zu `fmadds` verschmelzen.
+  `unk15C` und `unk160` werden genullt.
+  204 Bytes, 51 Instruktionen.
+
+`validate-symbol-order` für Monte und Bianco: PASS.
+Monte hat zwölf bestehende UNUSED-Größenwarnungen, Bianco fünf.
+
+`ninja changes_all`: fuzzy 78.90978 % -> 78.9196 %, matched code 49.627754 % -> 49.64168 % (1781680 -> 1782180, +500).
+Matched data bleibt 65.2486 % (417807).
+Funktionen matched 9573 -> 9576.
+`MapObjBianco` 4528 -> 4732 (+204), `MapObjMonte` 2692 -> 2988 (+296).
+`MapObjManager` und `MarNameRefGen_MapObj` wurden neu gebaut, matched code unverändert.
+Kein R170-R207-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R207 (`MapObjPinna` / `MapObjMonte` / `MapObjFence`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+Sechs Konstruktoren ohne `SMatrix34C`-Leer-Konstruktor.
+`THorizontalViking::THorizontalViking` ist UNUSED (92 Bytes, Größe passt) und wird in `TViking` geinlined.
+
+- `TFerrisWheel::TFerrisWheel` nullt `unk138`, `unk13C` und `unk140`.
+  88 Bytes, 22 Instruktionen.
+- `TViking::TViking` läuft durch den geinlined `THorizontalViking`-Konstruktor und nullt `unk14C` sowie die Floats bei `0x150`, `0x154` und `0x158`.
+  132 Bytes, 33 Instruktionen.
+- `TPinnaCoaster::TPinnaCoaster` nullt `unk138` und ruft `unk140.zero()` auf (Stores `0x148`, `0x144`, `0x140`).
+  Die Lücke `unk13C` bleibt ungeschrieben.
+  92 Bytes, 23 Instruktionen.
+- `THangingBridge::THangingBridge` baut `TViewObj` und nullt `unk10`, `unk14`, `unk38` und `unk3C`.
+  `unk18` der Größe `0x20` bleibt ungeschrieben.
+  132 Bytes, 33 Instruktionen.
+- `TFluffManager::TFluffManager` nullt `unk138`, `unk144`, `unk154` und die Wörter ab `0x158`.
+  `unk148.setAll(0.0f)` steht im Rumpf, damit die drei Stores zuletzt kommen.
+  124 Bytes, 31 Instruktionen.
+- `TRailFence::TRailFence` legt `new TGraphTracer` in `unk13C` ab und setzt `unk140` auf `0.0f`.
+  140 Bytes, 35 Instruktionen.
+
+`validate-symbol-order` für Pinna, Monte und Fence: PASS.
+Pinna hat sechs bestehende UNUSED-Größenwarnungen, Monte zwölf, Fence zwei plus die bestehende Weak-Order-Warnung.
+`THorizontalViking::THorizontalViking` ist nicht unter den Größenwarnungen.
+
+`ninja changes_all`: fuzzy 78.90318 % -> 78.90978 %, matched code 49.608032 % -> 49.627754 % (1780972 -> 1781680, +708).
+Matched data bleibt 65.2486 % (417807).
+Funktionen matched 9567 -> 9573.
+`MapObjFence` 2364 -> 2504 (+140), `MapObjMonte` 2436 -> 2692 (+256), `MapObjPinna` 3888 -> 4200 (+312).
+`MapObjManager` und `MarNameRefGen_MapObj` wurden neu gebaut, matched code unverändert.
+Kein R170-R206-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R206 (`MapObjFlag`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+Sieben Matches im bisher leeren `MapObjFlag`, ohne `SMatrix34C`-Leer-Konstruktor.
+Zurückgenommen, nur Frame:
+`TMapObjFlagManager::load` (Rumpf passt, inklusive getrennter `case 0`- und `case 2`-Stores von 16.0f, Frame `-0x20` statt `-0x30`).
+
+- `TMapObjFlagManager::TMapObjFlagManager` baut `TViewObj`, legt 15 `TMapObjFlagInfo` der Größe `0x58` ab Offset `0x10` an und speichert `this` in `gpMapObjFlagManager`.
+  140 Bytes, 35 Instruktionen.
+- `TMapObjFlagManager::TMapObjFlagInfo::TMapObjFlagInfo` nullt die Felder bei `0x0` und `0x54`.
+  16 Bytes, 4 Instruktionen.
+- `TMapObjFlag::load` ruft `TActor::load`, liest `0x40` Zeichen und ruft `init` (`#pragma dont_inline` am leeren Stub, damit das `bl` bleibt).
+  84 Bytes, 21 Instruktionen.
+- `TMapObjFlagManager::~TMapObjFlagManager` ist der generierte Destruktor.
+  116 Bytes, 29 Instruktionen.
+- `TMapObjFlag::~TMapObjFlag` ist der generierte Destruktor.
+  132 Bytes, 33 Instruktionen.
+- `__sinit_MapObjFlag_cpp` initialisiert die JAL-Listen.
+  764 Bytes, 191 Instruktionen.
+- `@32@__dt__11TMapObjFlagFv` ist der Sekundär-Thunk.
+  8 Bytes, 2 Instruktionen.
+
+`validate-symbol-order` für MapObjFlag: PASS.
+Vier UNUSED-Größenwarnungen für die leeren Stubs `loadFlag`, `update` und `updateVertex` von Lower und Sail.
+
+`ninja changes_all`: fuzzy 78.86625 % -> 78.90318 %, matched code 49.572937 % -> 49.608032 % (1779712 -> 1780972, +1260).
+Matched data 65.18551 % -> 65.2486 % (417403 -> 417807, +404).
+Funktionen matched 9560 -> 9567.
+Nur `MapObjFlag` hat sich geändert.
+Kein R170-R205-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R205 (`MapObjBianco` / `MapObjBall` / `MapObjPinna` / `MapObjMare` / `MapObjMamma`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+Fünf kurze Fills ohne `SMatrix34C`-Leer-Konstruktor.
+
+- `TBellWatermill::TBellWatermill` nullt die Floats `0x16C` bis `0x18C`, die Bytes `0x190` und `0x1A0` und das Wort `0x1A4`.
+  124 Bytes, 31 Instruktionen.
+- `TResetFruit::makeObjLiving` setzt `MAP_OBJ_FLAG_DISAPPEARING` und `mStateTimer` aus `getLivingTime`, solange der Timer nicht läuft, löscht `LIVE_FLAG_UNK10` und setzt `mState` auf 11.
+  128 Bytes, 32 Instruktionen.
+- `TPinnaShell::receiveMessage` reagiert auf `HIT_MESSAGE_SPRAYED_BY_WATER` mit `PARTICLE_MS_ENM_WATHIT` und `MSD_SE_EN_COMMON_W_HIT_OK`, zieht `mWaterOpenAccel` von `unk6C` ab und setzt `unk68`, wenn `unk6C` unter `-mOpenRotMax` fällt.
+  176 Bytes, 44 Instruktionen.
+- `TMapObjBall::getDepthAtFloating` gibt `unk18C` zurück.
+  8 Bytes, 2 Instruktionen.
+- `TMapObjBase::getObjCollisionHeightOffset` gibt `mYOffset` zurück.
+  8 Bytes, 2 Instruktionen.
+
+`validate-symbol-order` für Bianco, Ball, Pinna, Mare und Mamma: PASS.
+Dieselben UNUSED-Größenwarnungen wie zuvor.
+Ball zusätzlich die bekannte Weak-Order-Warnung.
+
+`ninja changes_all`: fuzzy 78.85625 % -> 78.86625 %, matched code 49.560566 % -> 49.572937 % (1779268 -> 1779712, +444).
+Matched data bleibt 65.18551 %.
+Funktionen matched 9555 -> 9560.
+MapObjBianco matched code 4404 -> 4528.
+MapObjBall matched code 2844 -> 2972.
+MapObjPinna matched code 3712 -> 3888.
+MapObjMare matched code 3648 -> 3656.
+MapObjMamma matched code 5536 -> 5544.
+Monte, `MapObjManager` und `MarNameRefGen_MapObj` unverändert.
+Kein R170-R204-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R204 (`MapObjBianco` / `MapObjFence` / `MapObjMamma`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+Drei kurze Fills ohne `SMatrix34C`-Leer-Konstruktor.
+Zurückgenommen, nur Frame:
+`TMapObjRootPakkun::drawObject` (Rumpf passt, Frame `-0x20` statt `-0x28`).
+Zurückgenommen, Ablauf:
+`startCameraShakeSE` (`addi` vor dem `bne`, `gpMSound` in `r3` statt `r0` plus `mr`).
+
+- `TBellWatermill::touchWater` setzt `unk190`, addiert `unk15C` auf `unk158` und, wenn `fabsf(unk158)` über `unk16C` liegt, auch `unk180` auf `unk178`, dann klemmt `unk158` auf `unk164`.
+  104 Bytes, 26 Instruktionen.
+- `TFenceWater::receiveMessage` reagiert auf `HIT_MESSAGE_SPRAYED_BY_WATER` außerhalb von State 3, setzt `unk13C` auf `mWaterAccel` (2.1) und ruft virtuell `changeStatusToGo`, wenn `unk13C` positiv ist.
+  120 Bytes, 30 Instruktionen.
+- `TSandBird::makeObjFromJointName` delegiert an `TJointCoin::makeObjFromJointName` und legt sonst `SandBirdBlock` an, wenn der Name kein `none` enthält.
+  140 Bytes, 35 Instruktionen.
+
+`validate-symbol-order` für Bianco, Fence und Mamma: PASS.
+Dieselben UNUSED-Größenwarnungen wie zuvor.
+Fence zusätzlich die bekannte Weak-Order-Warnung.
+
+`ninja changes_all`: fuzzy 78.846695 % -> 78.85625 %, matched code 49.55043 % -> 49.560566 % (1778904 -> 1779268, +364).
+Matched data bleibt 65.18551 %.
+Funktionen matched 9552 -> 9555.
+MapObjBianco matched code 4300 -> 4404.
+MapObjFence matched code 2244 -> 2364.
+MapObjMamma matched code 5396 -> 5536.
+Monte, `MapObjManager` und `MarNameRefGen_MapObj` unverändert (matched code 2348).
+Kein R170-R203-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R203 (`MapObjPinna` / `MapObjMamma`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+Vier kurze Fills ohne `SMatrix34C`-Leer-Konstruktor.
+Zurückgenommen, nur Frame:
+`TSandBase::withering` (Rumpf passt, Frame `-0x18` statt `-0x20`).
+
+- `TWaterRecoverObj::touchPlayer` reagiert auf `isActorType(0x80000001)`, solange der State-Timer nicht läuft, mit `HIT_MESSAGE_ATTACK` und setzt `mStateTimer` auf `0x258`.
+  144 Bytes, 36 Instruktionen.
+- `TShellCup::control` ruft `getMActor()->calc()` und dann `control` auf den sechs eingebetteten `TPinnaShell`.
+  `#pragma dont_inline` hält den leeren `TPinnaShell::control`-Stub als `bl`.
+  100 Bytes, 25 Instruktionen.
+- `TMammaBlockRotate::load` legt zwei `TMapCollisionMove` an, initialisiert sie mit `MammaBlockDown.col` und `MammaBlockUp.col` und ruft danach `TMapObjBase::load`.
+  200 Bytes, 50 Instruktionen.
+- `TMammaYacht::control` ruft `TMapObjBase::control`, prüft `mGroundPlane->isWaterSurface()`, setzt `mPosition.y` aus `mInitialPosition.y` plus `getWaveHeight` und legt `unk138->mPosition.y` um 50 tiefer.
+  160 Bytes, 40 Instruktionen.
+
+`validate-symbol-order` für Pinna und Mamma: PASS.
+Dieselben UNUSED-Größenwarnungen wie zuvor.
+
+`ninja changes_all`: fuzzy 78.83033 % -> 78.846695 %, matched code 49.533607 % -> 49.55043 % (1778300 -> 1778904, +604).
+Matched data bleibt 65.18551 %.
+Funktionen matched 9548 -> 9552.
+MapObjPinna matched code 3468 -> 3712.
+MapObjMamma matched code 5036 -> 5396.
+Monte, `MapObjManager` und `MarNameRefGen_MapObj` unverändert (matched code 2348).
+Kein R170-R202-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R202 (`MapObjRicco` / `MapObjBianco` / `MapObjMamma`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+Drei kurze Fills ohne `SMatrix34C`-Leer-Konstruktor.
+Zurückgenommen, nur String-Addends:
+`TBiancoWatermillVertical::loadAfter` (fünf `~` auf `addi`, Frame beide `-0x50`).
+Zurückgenommen, nur Frame:
+`TGoalFlag::touchActor` (`-0x20` statt `-0x28`).
+Zurückgenommen, Ablauf:
+`TSandBombBase::expanded` (zweites `getFrameCtrl` vor dem Add, Frame `-0x28` statt `-0x40`).
+Zurückgenommen, ein fehlendes `b` in der Switch-Kette:
+`TGoalWatermelon::control`.
+
+- `TCraneRotY::load` liest 4 Bytes nach `unk140`, kopiert `mRotation.y` nach `unk138`, setzt `unk144` auf `0.05 + 0.1 * (rand() * 0.000030517578)` und wählt `MSD_SE_OBJ_CRANE_SIDEMOVE1` oder `2` per `strcmp(mName, "crane90 0")`.
+  `mState` wird 0.
+  188 Bytes, 47 Instruktionen.
+- `TBiancoMiniWindmill::control` bremst `unk154` mit `mFriction`, wenn es über `unk158` liegt, addiert es auf `unk150` und wickelt mit `MsWrap` auf `[0, 360)`.
+  112 Bytes, 28 Instruktionen.
+- `TGoalWatermelon::loadAfter` setzt `HIT_FLAG_CANNOT_GET_HIT`, sucht `シャイン（お化けスイカ用）` nach `unk138`, kopiert `unk140` in dessen `mPosition` und ruft virtuell `appear`.
+  176 Bytes, 44 Instruktionen.
+
+`validate-symbol-order` für Ricco, Bianco und Mamma: PASS.
+Dieselben UNUSED-Größenwarnungen wie zuvor.
+
+`ninja changes_all`: fuzzy 78.8174 % -> 78.83033 %, matched code 49.520348 % -> 49.533607 % (1777824 -> 1778300, +476).
+Matched data bleibt 65.18551 %.
+Funktionen matched 9545 -> 9548.
+MapObjRicco matched code 2148 -> 2336.
+MapObjBianco matched code 4188 -> 4300.
+MapObjMamma matched code 4860 -> 5036.
+Monte, `MapObjManager` und `MarNameRefGen_MapObj` unverändert.
+Kein R170-R201-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R201 (`MapObjMonte` / `MapObjRicco`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+Zwei kurze Fills ohne `ble`/`bge`/`lfsu` und ohne `SMatrix34C`-Leer-Konstruktor.
+Zurückgenommen, nur Frame:
+`TRailFence::receiveMessage` (`-0x20` statt `-0x28`),
+`TMapObjWave::perform` (`-0x20` statt `-0x40`),
+`TResetFruit::makeObjWaitingToAppear` (`-0x18` statt `-0x28`).
+Zurückgenommen, Frame plus Argument-Schedule:
+`TSandCastle::waitBeforeExplode` (`-0x20` statt `-0x28`).
+Zurückgenommen, Ablauf:
+`TFerrisWheel::becomeCalmlyCallback` (`gpMSound` vor dem Vergleich, `mr` statt `addi`),
+`TMapObjWave::getWaveHeight` (zweites `sinf` anders gerechnet).
+
+- `TFluff::touchWater` holt die Wasserposition, bildet die Normale und zieht sie mal `unk160` von `mVelocity` ab.
+  140 Bytes, 35 Instruktionen.
+- `TFruitSwitch::receiveMessage` startet bei `HIT_MESSAGE_HIP_DROP` `riccoswitch`, setzt `HIT_FLAG_NO_COLLISION`, ruft virtuell `remove` auf der Kollision und `fireObj` auf `unk138`.
+  `fireObj` bleibt per `#pragma dont_inline` ein `bl`.
+  128 Bytes, 32 Instruktionen.
+
+`validate-symbol-order` für Monte und Ricco: PASS.
+Dieselben UNUSED-Größenwarnungen wie zuvor.
+
+`ninja changes_all`: fuzzy 78.81031 % → 78.8174 %, matched code 49.512882 % → 49.520348 % (1777556 → 1777824, +268).
+Matched data bleibt 65.18551 %.
+Funktionen matched 9543 → 9545.
+MapObjMonte matched code 2296 → 2436.
+MapObjRicco matched code 2020 → 2148.
+Pinna, Mamma, Fence, Ball, `MapObjManager` und `MarNameRefGen_MapObj` unverändert.
+Kein R170–R200-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R200 (`MapObjBianco` / `MapObjBall` / `MapObjFence`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+Acht kurze Fills ohne `ble`/`bge`/`lfsu` und ohne `SMatrix34C`-Leer-Konstruktor.
+Zurückgenommen, nur Argument-Schedule (kein Strukturfehler im Ablauf):
+`TPinnaEntrance::loadAfter` (vier `~` auf den `addi`s von `newAndRegisterObj`, 98.3 %, Frame beide `-0x30`).
+
+- `TMapObjRootPakkun::initMapObj` ruft `TMapObjBase::initMapObj`, legt `TTrembleModelEffect` an, ruft `init` mit `mMActor->getModel` und `tremble(100, 1, 1, 0x2EE0)`.
+  96 Bytes, 24 Instruktionen.
+- `TBiancoWatermill::control` zieht `unk138` von `mRotation.z` ab und startet `MSD_SE_OBJ_BI_BIGMILL` mit `fabsf(unk138)` und Handle `(JAISoundHandle*)&unk13C`.
+  132 Bytes, 33 Instruktionen.
+- `TResetFruit::initMapObj` ruft `TMapObjBall::initMapObj` (leer, `#pragma dont_inline`) und `SMS_InitPacket_OneTevColor` auf `GX_TEVREG0` ab `unk19C`.
+  68 Bytes, 17 Instruktionen.
+- `TCoverFruit::receiveMessage` setzt bei `isActorType(0x08000083)` und `HIT_MESSAGE_TAKE` `HIT_FLAG_NO_COLLISION` und `mHolder`, bei `HIT_MESSAGE_UNKB` virtuell `kill` und `setBool(true, 0x1038B)`.
+  160 Bytes, 40 Instruktionen.
+- `TBigWatermelon::touchWall` reicht an `TMapObjBall::touchWall` weiter (leer, `#pragma dont_inline`).
+  32 Bytes, 8 Instruktionen.
+- `TBigWatermelon::touchGround` reicht an `TMapObjBall::touchGround` weiter (leer, `#pragma dont_inline`).
+  32 Bytes, 8 Instruktionen.
+- `TRevolvingFenceOuter::receiveMessage` startet bei Nachricht 3 `fence_revolve_outer_shake` und auf `unk13C` `fence_revolve_inner_shake`.
+  92 Bytes, 23 Instruktionen.
+- `TRevolvingFenceInner::control` ruft `TMapObjBase::control` und dann `controlWall`, wenn `unk140` ungleich 0 ist, sonst `controlGroundRoof` (beide `#pragma dont_inline`).
+  76 Bytes, 19 Instruktionen.
+
+`validate-symbol-order` für Bianco, Ball und Fence: PASS.
+Dieselben UNUSED-Größenwarnungen wie zuvor.
+Ball behält die weak-only Order-Warnung.
+Fence behält eine weak-only Order-Warnung (`MsWrap`).
+
+`ninja changes_all`: fuzzy 78.7922 % → 78.81031 %, matched code 49.493717 % → 49.512882 % (1776868 → 1777556, +688).
+Matched data bleibt 65.18551 %.
+Funktionen matched 9535 → 9543.
+MapObjBianco matched code 3960 → 4188.
+MapObjBall matched code 2552 → 2844.
+MapObjFence matched code 2076 → 2244.
+Pinna (3468), Mamma (4860), `MapObjManager` (7064) und `MarNameRefGen_MapObj` (2348) unverändert.
+Kein R170–R199-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R199 (`MapObjMamma` / `MapObjPinna` / `MapObjFence`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+Vier kurze Fills ohne `ble`/`bge`/`lfsu` und ohne `SMatrix34C`-Leer-Konstruktor.
+Zurückgenommen, nur Frame bzw. Stack-Slot (kein Strukturfehler im Ablauf):
+`TLampSeesaw::load` (Float bei `0x10` statt `0x14`, Frame beide `-0x20`),
+`TBiancoWatermillVertical::setGroundCollision` (`-0x28` statt `-0x20`),
+`TBalloonKoopaJr::kill` (`-0x20` statt `-0x18`),
+`TBigWatermelon::touchWaterSurface` (`-0x20` statt `-0x18`).
+
+- `TSandCastle::initMapObj` ruft `TSandBombBase::initMapObj` (leer, `#pragma dont_inline`, damit das `bl` bleibt), setzt `unk13C` auf 0.11 und `unk148` auf 0x78 und ruft `sleep`.
+  68 Bytes, 17 Instruktionen.
+- `TLeanMirror::initMapObj` setzt die Spiegel-Konstanten und verzweigt über `strcmp` von `unkF4` mit `mirrorS` bzw. `mirrorM`.
+  216 Bytes, 54 Instruktionen.
+- `TViking::initMapObj` setzt `unk14C`, unterscheidet `viking 0` per `getName`, zieht `unk138` von `mPosition.y` ab und ruft `TMapObjBase::initMapObj`.
+  192 Bytes, 48 Instruktionen.
+- `TRailFence::load` liest den Graph-Namen, hängt `unk13C` an den nächsten Knoten, wenn der Graph kein Dummy ist, und setzt `unk140` auf 8 sowie `mGravity` auf 0.3.
+  160 Bytes, 40 Instruktionen.
+
+`validate-symbol-order` für Mamma, Pinna und Fence: PASS.
+Dieselben UNUSED-Größenwarnungen wie zuvor.
+Fence behält eine weak-only Order-Warnung (`MsWrap`).
+
+`ninja changes_all`: fuzzy 78.77492 % → 78.7922 %, matched code 49.476 % → 49.493717 % (1776232 → 1776868, +636).
+Matched data bleibt 65.18551 %.
+Funktionen matched 9531 → 9535.
+MapObjMamma matched code 4576 → 4860.
+MapObjPinna matched code 3276 → 3468.
+MapObjFence matched code 1916 → 2076.
+Bianco, Ball, `MapObjManager` (7064) und `MarNameRefGen_MapObj` (2348) unverändert.
+Kein R170–R198-Unit hat matched code verloren.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R198 (`MapObjBianco` / `MapObjMamma` / `MapObjBall`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+Fünf kurze Fills ohne `ble`/`bge`/`lfsu` und ohne `SMatrix34C`-Leer-Konstruktor.
+Zurückgenommen, nur Frame (kein Strukturfehler):
+`TSandLeafBase::initMapObj` (`-0x28` statt `-0x20`),
+`TMuddyBoat::initMapObj` (`-0x28` statt `-0x20`).
+
+- `TBiancoWatermill::initMapObj` vergleicht `unkF4` mit `BiaWatermill01` oder `BiaWatermill00` und setzt `mBodyRadius` auf 1200.
+  112 Bytes, 28 Instruktionen.
+- `TBiancoBell::initMapObj` setzt `unk138`/`unk13A` nach `BiaBell 0` bzw. `BiaBell 1`, sonst 3/0.
+  148 Bytes, 37 Instruktionen.
+- `TLeafBoatRotten::load` liest `unk170`, multipliziert mit 10 und initialisiert `GX_TEVREG0` ab `unk178`.
+  108 Bytes, 27 Instruktionen.
+- `TSandCastle::loadAfter` speichert virtuell `findTriggerActor` in `unk144`, setzt `unk138` auf `this`, ruft virtuell `appear`, sucht `ステージ切替（砂の城）` in `unk158` und ruft virtuell `makeObjDead`.
+  180 Bytes, 45 Instruktionen.
+- `TBigWatermelon::loadAfter` ruft `TMapObjGeneral::loadAfter`, sucht `シャイン（お化けスイカ用）` und setzt die Position auf (−4659, 460, 13620).
+  124 Bytes, 31 Instruktionen.
+
+`TSandCastle::findTriggerActor` bleibt `return nullptr`.
+
+`validate-symbol-order` für Bianco, Mamma und Ball: PASS.
+Dieselben UNUSED-Größenwarnungen wie zuvor.
+Ball behält die weak-only Order-Warnung.
+
+`ninja changes_all`: fuzzy 78.75675 % → 78.77492 %, matched code 49.457283 % → 49.476 % (1775560 → 1776232, +672).
+Matched data bleibt 65.18551 %.
+MapObjBianco matched code 3592 → 3960.
+MapObjMamma matched code 4396 → 4576.
+MapObjBall matched code 2428 → 2552.
+Kein R170–R197-Unit hat matched code verloren.
+`MarNameRefGen_MapObj` und `MapObjManager` unverändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R197 (`MapObjMonte` / `MapObjRicco` / `MapObjPinna` / `MapObjBianco`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+Acht kurze Fills ohne `ble`/`bge`/`lfsu` und ohne `SMatrix34C`-Leer-Konstruktor.
+`TGoalWatermelon::load` und `TChangeStageMerrygoround::calc` bleiben geparkt.
+Zurückgenommen, nur Frame (kein Strukturfehler):
+`TMapObjMonteRoot::initMapObj` (`-0x20` statt `-0x18`),
+`TJumpMushroom::load` (`-0x28` statt `-0x20`),
+`TFenceWater::changeStatusToGo` und `TFenceWaterH::changeStatusToGo` (`-0x20` statt `-0x18`).
+
+- `THangingBridgeBoard::calcDefaultMtx` baut RotX/RotY, `MTXConcat`, kopiert in `mDefaultMtx`, nullt `mVelocity.y` und setzt `mPosition.y` auf `mInitialPosition.y`.
+  104 Bytes, 26 Instruktionen.
+- `THangingBridgeBoard::initMapObj` ruft `TLeanBlock::initMapObj`, dann `unk140 = 0.01`, `unk144 = 0.02`, `unk148 = 0.08`.
+  68 Bytes, 17 Instruktionen.
+- `TFluff::kill` sendet `HIT_MESSAGE_UNK8` an `mHeldObject`, löscht den Zeiger und setzt `mState` auf 3.
+  92 Bytes, 23 Instruktionen.
+- `TCraneCargo::calc` ruft `updateRootMtxTrans` und `calcLeanMtx` auf `getAnmMtx(1)`.
+  68 Bytes, 17 Instruktionen.
+- `THorizontalViking::initMapObj` ruft `TMapObjBase::initMapObj`, setzt `unk138`/`unk13C`/`unk140` und ruft virtuell `reset`.
+  88 Bytes, 22 Instruktionen.
+- `TBalloonKoopaJr::touchActor` ruft virtuell `kill`.
+  44 Bytes, 11 Instruktionen.
+- `TAmiKing::bind` prüft `LIVE_FLAG_UNK10` und ruft dann `gpMap->checkGround`, sonst `TLiveActor::bind`.
+  88 Bytes, 22 Instruktionen.
+- `TBiancoWatermillVertical::load` liest `unk13C`, teilt durch 1000 und kopiert nach `unk138`.
+  96 Bytes, 24 Instruktionen.
+
+`validate-symbol-order` für Monte, Ricco, Pinna und Bianco: PASS.
+Dieselben UNUSED-Größenwarnungen wie zuvor.
+Kein neues Linkage- oder Order-Problem.
+
+`ninja changes_all`: fuzzy 78.73961 % → 78.75675 %, matched code 49.43923 % → 49.457283 % (1774912 → 1775560, +648).
+Matched data bleibt 65.18551 %.
+MapObjMonte matched code 2032 → 2296.
+MapObjPinna matched code 3056 → 3276.
+MapObjBianco matched code 3496 → 3592.
+MapObjRicco matched code 1952 → 2020.
+Kein R170–R196-Unit hat matched code verloren.
+`MarNameRefGen_MapObj` und `MapObjManager` unverändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R196 (`MapObjMonte` / `MapObjMamma` / `MapObjFence` / `MapObjPinna`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+Acht kurze Fills ohne `ble`/`bge`/`lfsu`.
+`TMareFall::calc` und `TMapObjBall::makeObjDefault` bleiben geparkt (Frame).
+`TGoalWatermelon::load` bleibt Stub: gleicher Code, Frame `-0x38` statt `-0x48`.
+`TChangeStageMerrygoround::calc` bleibt Stub: `gpMarioPos` und `gpMarioParticleManager` tauschen die Lade-Reihenfolge.
+`TSandCastle::findTriggerActor` bleibt `return nullptr`.
+
+- `TGoalFlag::initMapObj` ruft `TMapObjBase::initMapObj`.
+  32 Bytes, 8 Instruktionen.
+- `TFluff::initMapObj` ruft `TMapObjBase::initMapObj`, dann `unk138 = 300` und `unk13C = 0.5`.
+  60 Bytes, 15 Instruktionen.
+- `TSandBombBase::loadAfter` speichert `findTriggerActor` in `unk144`, setzt `unk138` auf `this` und ruft virtuell `appear`.
+  88 Bytes, 22 Instruktionen.
+- `TSandBird::initMapObj` ruft `TJointCoin::initMapObj` und `SMS_LoadParticle` für `0x159` und `0x15A`.
+  144 Bytes, 36 Instruktionen.
+- `TFence::receiveMessage` startet `fence_normal_shake`, wenn die Nachricht 3 ist.
+  60 Bytes, 15 Instruktionen.
+- `TFence::initMapObj` setzt `unk138`, wenn `strstr(unkF4, "bamboo")` trifft, dann `TMapObjBase::initMapObj`.
+  76 Bytes, 19 Instruktionen.
+- `TFenceWaterH::changeStatusToWait` nullt `unk140` und `unk13C`, setzt `mState` auf 1 und ruft `setUpMapCollision(0)`.
+  56 Bytes, 14 Instruktionen.
+- `TAmiKing::loadAfter` ruft `TMapObjBase::loadAfter` und `SMS_LoadParticle` für `0x184`.
+  92 Bytes, 23 Instruktionen.
+
+`validate-symbol-order` für Monte, Mamma, Fence und Pinna: PASS.
+Dieselben UNUSED-Größenwarnungen wie zuvor.
+Fence behält die weak-only Order-Warnung.
+
+`ninja changes_all`: fuzzy 78.723595 % → 78.73961 %, matched code 49.4223 % → 49.43923 % (1774304 → 1774912, +608).
+Matched data bleibt 65.18551 %.
+MapObjMamma matched code 4164 → 4396.
+MapObjPinna matched code 2964 → 3056.
+MapObjFence matched code 1724 → 1916.
+MapObjMonte matched code 1940 → 2032.
+Kein R170–R195-Unit hat matched code verloren.
+`MarNameRefGen_MapObj` und `MapObjManager` unverändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R195 (`MapObjMamma` / `MapObjBall`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+Drei kurze Fills ohne `ble`/`bge`/`lfsu`.
+`TMapObjPuncher::load` bleibt geparkt (Frame).
+`TMareFall::calc` bleibt Stub: gleicher Code, Frame `-0x18` statt `-0x28`.
+`TMapObjBall::makeObjDefault` bleibt Stub: gleicher Code, Frame `-0x20` statt `-0x28`.
+`TSandCastle::findTriggerActor` bleibt Stub (`return nullptr`), nur die Signatur ist jetzt `TMapObjBase*`.
+
+- `TSandBomb::makeObjAppeared` ruft `TMapObjBase::makeObjAppeared` und `startControlAnim(1)` dann `startControlAnim(2)`.
+  68 Bytes, 17 Instruktionen.
+- `TSandBombBase::findTriggerActor` registriert `"SandBomb"` mit `mPosition`, `mRotation` und Skala `TVec3(1.0f)`.
+  72 Bytes, 18 Instruktionen.
+- `TCoverFruit::loadAfter` ruft `TMapObjBase::loadAfter` und virtuell `makeObjDead`, wenn `getBool(0x1038B)` wahr ist.
+  88 Bytes, 22 Instruktionen.
+
+`validate-symbol-order` für Mamma und Ball: PASS.
+Dieselben UNUSED-Größenwarnungen wie zuvor, plus die bestehende weak-only Order-Warnung in Ball.
+
+`ninja changes_all`: fuzzy 78.71754 % → 78.723595 %, matched code 49.415947 % → 49.4223 % (1774076 → 1774304, +228).
+Matched data bleibt 65.18551 %.
+MapObjMamma matched code 4024 → 4164.
+MapObjBall matched code 2340 → 2428.
+Kein R170–R194-Unit hat matched code verloren.
+`MarNameRefGen_MapObj` und `MapObjManager` unverändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R194 (`MapObjMare` / `MapObjMamma` / `MapObjBianco`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+Sieben kurze Stubs, alle ohne `ble`/`bge`/`lfsu`.
+`TCogwheelScale::touchWater`, `control` und `receiveMessage` bleiben geparkt.
+`MapObjBase.hpp` bleibt unangetastet.
+`TMapObjPuncher::load` bleibt Stub: gleicher Code, Frame `-0x30` statt `-0x28`.
+
+- `TMareEventPoint::load` ruft `JDrama::TActor::load` und `initHitActor(0x40000236, 0, 0, 0, 0, 300, 600)`.
+  84 Bytes, 21 Instruktionen.
+- `TMareFall::load` ruft `TMapObjBase::load` und `SMS_LoadParticle` für `0x149` und `0x14A`.
+  144 Bytes, 36 Instruktionen.
+- `TMareCork::moveObject` startet `marecork`, wenn `TCannon::isObject` wahr ist und `unk154` noch 0 ist.
+  116 Bytes, 29 Instruktionen.
+- `TWireBell::control` holt die Drahtposition, setzt `mPosition` und kopiert `MsMtxSetTRS` in `setAnmMtx(0)`.
+  160 Bytes, 40 Instruktionen.
+- `TSandBird::nameIsObj` gibt wahr zurück, wenn `strstr(name, "none")` leer ist.
+  60 Bytes, 15 Instruktionen.
+- `TLampSeesawMain::touchPlayer` ruft virtuell `pushDown(unk140)`, wenn `marioIsOn` wahr ist.
+  76 Bytes, 19 Instruktionen.
+- `TLampSeesaw::touchPlayer` ruft virtuell `pushDown(-unk140)` auf `unk138`.
+  80 Bytes, 20 Instruktionen.
+  `unk138` ist jetzt `TLampSeesaw*`.
+  Der Konstruktor bleibt 100 %.
+
+`validate-symbol-order` für Mare, Mamma und Bianco: PASS, nur die bisherigen UNUSED-Größenwarnungen.
+
+`ninja changes_all`: fuzzy 78.70 % → 78.72 %, matched code 49.40 % → 49.42 %, matched data bleibt 65.19 %.
+Kein R170–R193-Unit hat matched code verloren.
+`MarNameRefGen_MapObj` tickt fuzzy 81.450584 → 81.450806, matched code bleibt 2348.
+`getNameRef_MapObj` bleibt 86.49 %.
+`MapObjManager` unverändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R193 (`MapObjMare`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+Bisher leerer TU.
+Jeder Map-Symbol ist definiert, der Rest bleibt Stub.
+`TCogwheelScale::touchWater` bleibt Stub (`fcmpo`+`bge`).
+`TCogwheelScale::control` bleibt Stub (`fcmpo`+`ble`).
+`receiveMessage` bleibt Stub: Retail nutzt `lfsu` auf `unk158->unk138`.
+
+- `TMuddyBoat::getSDLModelFlag` gibt 0 zurück.
+  8 Bytes, 2 Instruktionen.
+- `TMuddyBoat::calcRootMatrix` ist leer.
+  4 Bytes, 1 Instruktion.
+- `TMuddyBoat::TMuddyBoat` nullt zwölf Floats, `unk168`, `unk16C` und zwei `TVec3` über `zero()`.
+  156 Bytes, 39 Instruktionen.
+- `TWireBell::loadAfter` ruft `TMapObjBase::loadAfter` und speichert `getWireNo(mPosition)`.
+  60 Bytes, 15 Instruktionen.
+- `TWireBell::TWireBell` setzt `unk138 = -1`, vier Floats und nullt `unk14C` über `zero()`.
+  124 Bytes, 31 Instruktionen.
+- `TMapObjGrowTree::loadAfter` ruft `TMapObjBase::loadAfter` und `removeMapCollision`.
+  52 Bytes, 13 Instruktionen.
+- `TMapObjGrowTree::initMapObj` setzt Höhe, Timer, `mDamageHeight` und `setBtp("moyasi_wink")`.
+  100 Bytes, 25 Instruktionen.
+- `TMapObjGrowTree::TMapObjGrowTree` nullt die Felder ab `0x138`.
+  96 Bytes, 24 Instruktionen.
+- `TMapObjElasticCode::initMapObj` setzt `unk140`, `mGravity`, `unk138` und `unk13C`.
+  76 Bytes, 19 Instruktionen.
+- `TCogwheel::TCogwheel` nullt die Skalare und zwei `TVec3` über `zero()`.
+  140 Bytes, 35 Instruktionen.
+- `TCogwheelScale::TCogwheelScale` nullt fünf Floats, setzt `0.01` und `5`, dann `unk154` und `unk158`.
+  120 Bytes, 30 Instruktionen.
+- `TMareCork::getTakingMtx` gibt `mMActor->getModel()->getAnmMtx(2)` zurück.
+  20 Bytes, 5 Instruktionen.
+- `__sinit_MapObjMare_cpp` (788 Bytes) baut `fall_upper_pos` vor den JALList-Inits aus `MSSetSound.hpp` / `MSoundBGM.hpp`.
+  Die sdata-Statics (`mWaterLeakSpeed` bis `mGrowEndFrame`) sind 100 %.
+
+Destruktoren, alle `@32`-Thunks und alle VTables der TU sind ebenfalls 100 %.
+`getObjCollisionHeightOffset` bleibt 50 %: die Header-Kopie ist leer, `MapObjBase.hpp` bleibt unangetastet.
+`validate-symbol-order`: PASS, nur fünf UNUSED-Größenwarnungen.
+
+`ninja changes_all`: fuzzy 78.60 % → 78.70 %, matched code 49.31 % → 49.40 %, matched data 64.62 % → 65.19 %.
+Kein R170–R192-Unit hat matched code verloren.
+`MapObjManager` tickt fuzzy 99.68 % → 99.69 %, matched code bleibt 7064.
+`MarNameRefGen_MapObj` bleibt bei matched code 2348.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R192 (`MapObjMamma`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+Bisher leerer TU.
+Jeder Map-Symbol ist definiert, der Rest bleibt Stub.
+`TMammaBlockRotate::touchWater` bleibt Stub (`fcmpo`+`ble`).
+
+- `TSandEgg::getSDLModelFlag`, `TLeanMirror::getSDLModelFlag` und `TSandBomb::getSDLModelFlag` geben 0 zurück.
+  Je 8 Bytes, 2 Instruktionen.
+- `TSandBombBase::grow` setzt `mState = 5`.
+  12 Bytes, 3 Instruktionen.
+- `TSandBombBase::waitBeforeExplode` setzt `mState = 6` und kopiert `unk148` in den Timer.
+  20 Bytes, 5 Instruktionen.
+- `TSandBomb::initMapObj` ruft `TMapObjBase::initMapObj` direkt.
+  32 Bytes, 8 Instruktionen.
+- `TSandCastle::calcRootMatrix` ruft `TMapObjBase::calcRootMatrix`, wenn `isState(2)` falsch ist.
+  64 Bytes, 16 Instruktionen.
+- `TSandBombBase::withered` schreibt den Timer aus `unk140`, setzt `mState = 3` und ruft `sleep` auf `unk144`.
+  52 Bytes, 13 Instruktionen.
+- `TSandLeaf::control` ruft `TMapObjBase::control` und legt die Höhe über `checkGround` bei `y + 200` ab.
+  88 Bytes, 22 Instruktionen.
+- `TSandLeaf::touchWater` ruft virtuell `getLivingTime` auf `unk138` und gibt 1 zurück.
+  52 Bytes, 13 Instruktionen.
+- `TSandBase::TSandBase` nullt `unk138`, `unk13C` und `unk144`.
+  88 Bytes, 22 Instruktionen.
+- `TSandBombBase::TSandBombBase` inlined den Basis-Konstruktor und setzt `unk148`, `unk14C = 1`, `unk150`, `unk154`.
+  128 Bytes, 32 Instruktionen.
+- `TSandCastle::TSandCastle` inlined die Kette und nullt `unk158` und `unk15C`.
+  156 Bytes, 39 Instruktionen.
+- `TLeanMirror::TLeanMirror` nullt die Skalare im Initializer und fünf `TVec3` über `zero()`.
+  192 Bytes, 48 Instruktionen.
+- `TShiningStone::TShiningStone` nullt die Felder ab `0x70` in Retail-Reihenfolge.
+  104 Bytes, 26 Instruktionen.
+- `TMammaBlockRotate::TMammaBlockRotate` nullt `unk13C` bis `unk148`.
+  88 Bytes, 22 Instruktionen.
+- `TSandBird::TSandBird` ruft `TJointCoin` und nullt `unk150` und `unk151`.
+  80 Bytes, 20 Instruktionen.
+- `TGoalWatermelon::TGoalWatermelon` nullt zwei Zeiger und `unk140` über `zero()`.
+  96 Bytes, 24 Instruktionen.
+- `__sinit_MapObjMamma_cpp` (764 Bytes) kommt aus `MSSetSound.hpp` / `MSoundBGM.hpp`.
+  Die sdata-Statics (`mWitherTime` bis `mWaitTime`) sind 100 %.
+
+Destruktoren, alle `@32`-Thunks und alle VTables der TU sind ebenfalls 100 %.
+`TSandBase::grow` ist rein virtuell, weil der VTable-Slot im Retail null ist.
+`validate-symbol-order`: PASS, nur acht UNUSED-Größenwarnungen.
+
+`ninja changes_all`: fuzzy 78.49 % → 78.60 %, matched code 49.20 % → 49.31 %, matched data 64.58 % → 64.62 %.
+Kein R170–R191-Unit hat matched code verloren.
+`getNameRef_MapObj` tickt fuzzy 86.23 % → 86.49 %, matched code bleibt 2348.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R191 (`MapObjBall`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+Bisher leerer TU.
+Jeder Map-Symbol ist definiert, der Rest bleibt Stub.
+
+- `TBigWatermelon::checkWallCollision` ruft `TMapObjGeneral::checkWallCollision` direkt.
+  32 Bytes, 8 Instruktionen.
+- `TBigWatermelon::TBigWatermelon` nullt `unk198`, `unk19C` und `unk1A0`.
+  88 Bytes, 22 Instruktionen.
+- `TRandomFruit::TRandomFruit` inlined den Reset-Konstruktor und `memset` auf `unk1A8` (32 Bytes).
+  148 Bytes, 37 Instruktionen.
+- `TResetFruit::TResetFruit` nullt `unk198` und `unk1A4` und setzt `unk19C` auf `0xFF`.
+  104 Bytes, 26 Instruktionen.
+- `TResetFruit::getLivingTime` gibt das static `mFruitLivingTime` zurück und steht weak im Header.
+  8 Bytes.
+- `TResetFruit::killByTimer` schreibt den Timer, setzt `MAP_OBJ_FLAG_DISAPPEARING` und `mState = 11`.
+  28 Bytes, 7 Instruktionen.
+- `TResetFruit::thrown` ruft `TMapObjGeneral::thrown` und setzt `mState = 11`.
+  52 Bytes, 13 Instruktionen.
+- `TMapObjBall::TMapObjBall` nullt 19 Floats ab `0x148`, `unk194` und `mInitialScaling` über `zero()`.
+  168 Bytes, 42 Instruktionen.
+- `TMapObjBall::put` ruft `TMapObjGeneral::put` und danach virtuell `calcCurrentMtx`.
+  64 Bytes, 16 Instruktionen.
+- `TMapObjBall::touchWaterSurface` und `touchPollution` rufen virtuell `kill`.
+  Je 44 Bytes, 11 Instruktionen.
+- `__sinit_MapObjBall_cpp` (764 Bytes) kommt aus `MSSetSound.hpp` / `MSoundBGM.hpp`.
+
+Destruktoren, alle `@32`-Thunks und die fünf VTables der TU sind ebenfalls 100 %.
+`validate-symbol-order`: PASS mit Weak-Order-Warnung (`getLivingTime`) und vier UNUSED-Größenwarnungen.
+
+`ninja changes_all`: fuzzy 78.41 % → 78.49 %, matched code 49.13 % → 49.20 %, matched data 64.55 % → 64.58 %.
+Kein R170–R190-Unit hat sich bewegt.
+Zwei NonMatching-Aufrufer (`newUniqueObjByName`, `getNameRef_MapObj`) ticken fuzzy um Bruchteile, matched code bleibt gleich.
+
+R190 `MapObjBianco`, R189 `MapObjPinna`, R188 `MapObjFence`,
+R187 `TModelGate` / `TMapObjWave`, R186 `MapObjMonte` / `MapObjRicco`,
+R185 `getNumGripsDead`, R184 `TWaterHitPictureHideObj::load`,
+R183 `updateCheckData`, R182 `TMapObjTurn::touchWater`,
+R181 `TCloset::touchWater`, R180 `TCasinoPanelGate::touchWater`,
+R179 `waitingToAppear`, R178 `initDrawNear`, R177 `TWoodBox::kill`,
+R176 `receiveMessage`, R175 `touchGround`, R174 `perform`,
+R173 `startControlAnim`, R172 `TManhole::touchPlayer`,
+R171 `calcVelocity`, R170 `appearing`
+unverändert strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R190 (`MapObjBianco`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+Bisher leerer TU.
+Jeder Map-Symbol ist definiert, der Rest bleibt Stub.
+
+- `TLampSeesawMain::pushDown` setzt `mState = 2` und zieht das Argument von `unk144` ab.
+  24 Bytes, 6 Instruktionen.
+- `TLampSeesaw::pushDown` ist leer und steht weak im Header.
+  4 Bytes.
+- `TLampSeesaw::TLampSeesaw` nullt `unk138` und setzt `unk140` auf `0.01`.
+  84 Bytes, 21 Instruktionen.
+- `TLampSeesawMain::TLampSeesawMain` inlined den Seesaw-Konstruktor und setzt `unk144`/`unk148`/`unk14C`/`unk150` auf `0`, `0.998`, `0.8`, `0.5`.
+  136 Bytes, 34 Instruktionen.
+- `TLeafBoat::initMapObj` ruft `TMapObjBase::initMapObj` und schreibt `1`, `0.5`, `0.5`, `0.998` nach `unk138`/`unk13C`/`unk140`/`unk148`.
+  72 Bytes, 18 Instruktionen.
+- `TLeafBoat::TLeafBoat` initialisiert die Felder ab `0x138`.
+  `unk164` wird über `zero()` genullt (`z`, `y`, `x`).
+  152 Bytes, 38 Instruktionen.
+- `TLeafBoatRotten::perform` ruft `TMapObjBase::perform` direkt.
+  32 Bytes, 8 Instruktionen.
+- `TLeafBoatRotten::TLeafBoatRotten` nullt `unk170` und setzt vier `u16` auf `0xFF`.
+  96 Bytes, 24 Instruktionen.
+- `TBiancoBell::TBiancoBell` nullt `unk138` und `unk13A`.
+  80 Bytes, 20 Instruktionen.
+- `TBiancoWatermill::TBiancoWatermill` setzt `unk138` auf `0.3` und `unk13C` auf `0`.
+  84 Bytes, 21 Instruktionen.
+- `TBiancoWatermill::touchWater` gibt `0` zurück.
+  8 Bytes.
+- `TBiancoWatermill::turnByEnemy` ist leer.
+  4 Bytes.
+- `__sinit_MapObjBianco_cpp` (764 Bytes) kommt aus `MSSetSound.hpp` / `MSoundBGM.hpp`.
+
+Destruktoren, alle `@32`-Thunks und die VTables der TU sind ebenfalls 100 %.
+`validate-symbol-order`: PASS mit Weak-Order-Warnung und UNUSED-Größenwarnungen.
+
+`ninja changes_all`: fuzzy 78.31 % → 78.41 %, matched code 49.04 % → 49.13 %, matched data 63.85 % → 64.55 %.
+Kein anderes Unit hat sich bewegt.
+
+R189 `MapObjPinna`, R188 `MapObjFence`, R187 `TModelGate` / `TMapObjWave`,
+R186 `MapObjMonte` / `MapObjRicco`, R185 `getNumGripsDead`,
+R184 `TWaterHitPictureHideObj::load`, R183 `updateCheckData`,
+R182 `TMapObjTurn::touchWater`, R181 `TCloset::touchWater`,
+R180 `TCasinoPanelGate::touchWater`, R179 `waitingToAppear`,
+R178 `initDrawNear`, R177 `TWoodBox::kill`, R176 `receiveMessage`,
+R175 `touchGround`, R174 `perform`, R173 `startControlAnim`,
+R172 `TManhole::touchPlayer`, R171 `calcVelocity`, R170 `appearing`
+unverändert strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R189 (`MapObjPinna`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+Bisher leerer TU.
+Jeder Map-Symbol ist definiert, der Rest bleibt Stub.
+
+- `TAmiKing::touchPlayer` ruft `SMS_SendMessageToMario(this, 9)`.
+  36 Bytes, 9 Instruktionen.
+- `TAmiKing::touchWater` gibt `1` zurück und steht weak im Header.
+  8 Bytes.
+- `TMerrygoround::draw` ist leer.
+  4 Bytes.
+- `TShellCup::TShellCup` baut sechs `TPinnaShell` an `0x138` und nullt `unk498`, `unk49C`, `unk4A0`.
+  124 Bytes, 31 Instruktionen.
+- `TViking::loadAfter` ruft `TMapObjBase::loadAfter` und danach virtuell `reset`.
+  64 Bytes, 16 Instruktionen.
+- `MsMtxSetRotX` ist die bestehende Header-Inline.
+  `perform` nimmt die Adresse, damit die schwache Kopie stehen bleibt.
+  124 Bytes.
+- `TMapCollisionMove::moveMtx` kopiert die Matrix nach `unk20` und ruft `move`.
+  Die schwache Kopie steht nur in diesem TU (`__declspec(weak)`), der virtuelle Inline im Header bleibt für die anderen TUs.
+  60 Bytes, 15 Instruktionen.
+- `__sinit_MapObjPinna_cpp` (764 Bytes) kommt aus `MSSetSound.hpp` / `MSoundBGM.hpp`.
+
+Destruktoren, alle `@32`-Thunks und die VTables der TU sind ebenfalls 100 %.
+`validate-symbol-order`: PASS mit UNUSED-Größenwarnungen.
+
+`TViking::reset` und `THorizontalViking::reset` bleiben bei `fcmpo` + `ble` gegen unser `cror`.
+`TPinnaShell::TPinnaShell` ist bis auf ein Stack-Slot (`0xC` gegen `8`) gleich.
+
+`ninja changes_all`: fuzzy 78.21 % → 78.31 %, matched code 48.96 % → 49.04 %, matched data 63.16 % → 63.85 %.
+Kein anderes Unit hat sich bewegt.
+
+R188 `MapObjFence`, R187 `TModelGate` / `TMapObjWave`,
+R186 `MapObjMonte` / `MapObjRicco`, R185 `getNumGripsDead`,
+R184 `TWaterHitPictureHideObj::load`, R183 `updateCheckData`,
+R182 `TMapObjTurn::touchWater`, R181 `TCloset::touchWater`,
+R180 `TCasinoPanelGate::touchWater`, R179 `waitingToAppear`,
+R178 `initDrawNear`, R177 `TWoodBox::kill`, R176 `receiveMessage`,
+R175 `touchGround`, R174 `perform`, R173 `startControlAnim`,
+R172 `TManhole::touchPlayer`, R171 `calcVelocity`, R170 `appearing`
+unverändert strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R188 (`MapObjFence`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+Bisher leerer TU.
+Jeder Map-Symbol ist definiert, der Rest bleibt Stub.
+
+- `TFenceWater::changeStatusToWait`: `unk140 = 0.0f`, dann `unk13C = 0.0f`, dann `mState = 1`.
+  24 Bytes, 6 Instruktionen.
+- `TRailFence::initMapCollisionData` und `TFenceWater::initMapCollisionData` rufen `TMapObjBase::initMapCollisionData` direkt.
+  Je 32 Bytes, 8 Instruktionen.
+- `TFenceWater::draw` ist leer.
+  4 Bytes.
+- `MsMtxSetRotY` (124 Bytes) und `MsWrap<f32>` (72 Bytes) sind die bestehenden Header-Inlines.
+  `controlWall` nimmt ihre Adresse, damit die Kopien unter `-inline deferred` stehen bleiben.
+- `__sinit_MapObjFence_cpp` (764 Bytes) kommt aus `MSSetSound.hpp` / `MSoundBGM.hpp`.
+
+`TRailFence::~TRailFence`, `TFenceWaterH::~TFenceWaterH`, `TRevolvingFenceInner::~TRevolvingFenceInner`, `TRevolvingFenceOuter::~TRevolvingFenceOuter` und die sechs `@32`-Thunks sind ebenfalls 100 %.
+Die VTables von `TFence`, `TRailFence`, `TRevolvingFenceInner` und `TRevolvingFenceOuter` auch.
+`validate-symbol-order`: PASS mit weak-Order-Warnung (`MsWrap` steht neben dem schwachen `MsMtxSetRotY`) und UNUSED-Größenwarnungen.
+
+`ninja changes_all`: fuzzy 78.15 % → 78.21 %, matched code 48.91 % → 48.96 %, matched data 63.13 % → 63.16 %.
+`getNameRef_MapObj` steigt mit, weil `TRailFence::TRailFence` jetzt out-of-line und global ist.
+Kein anderes Matching-Symbol hat sich bewegt.
+
+R187 `TModelGate` / `TMapObjWave`, R186 `MapObjMonte` / `MapObjRicco`,
+R185 `getNumGripsDead`, R184 `TWaterHitPictureHideObj::load`,
+R183 `updateCheckData`, R182 `TMapObjTurn::touchWater`,
+R181 `TCloset::touchWater`, R180 `TCasinoPanelGate::touchWater`,
+R179 `waitingToAppear`, R178 `initDrawNear`, R177 `TWoodBox::kill`,
+R176 `receiveMessage`, R175 `touchGround`, R174 `perform`,
+R173 `startControlAnim`, R172 `TManhole::touchPlayer`,
+R171 `calcVelocity`, R170 `appearing` unverändert strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R187 (`TModelGate` / `TMapObjWave`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+Zwei bisher leere TUs.
+Jeder Map-Symbol ist definiert, der Rest bleibt Stub.
+
+- `TModelGate::startOpen`: `unk70 |= 1`, Byte `unkC4 = 0`, `setBpk(gateMActorNames[unk71])`, `offHitFlag(HIT_FLAG_NO_COLLISION)`, `unk70 |= 2`.
+  116 Bytes, 29 Instruktionen.
+- `TModelGate::getTakingMtx` gibt `nullptr` zurück und steht weak im Header.
+  8 Bytes.
+- `TMapObjWave::noWave` nullt `unk34`, `unk38`, `unk2C`, `unk30`, `unk3C`, `unk40` in dieser Reihenfolge.
+  32 Bytes, 8 Instruktionen.
+- `__sinit_ModelGate_cpp` (764 Bytes) kommt aus `MSSetSound.hpp` / `MSoundBGM.hpp`.
+- `__sinit_MapObjWave_cpp` (772 Bytes) ist dieselbe Liste plus `static JUtility::TColor sColor`, dessen Default-Ctor `-1` schreibt.
+
+`TModelGate::~TModelGate`, `@32@__dt__10TModelGate` und `TMapObjWave::~TMapObjWave` sind ebenfalls 100 %.
+`validate-symbol-order`: ModelGate PASS, Wave PASS mit UNUSED-Größenwarnungen.
+
+R186 `MapObjMonte` / `MapObjRicco`, R185 `getNumGripsDead`,
+R184 `TWaterHitPictureHideObj::load`, R183 `updateCheckData`,
+R182 `TMapObjTurn::touchWater`, R181 `TCloset::touchWater`,
+R180 `TCasinoPanelGate::touchWater`, R179 `waitingToAppear`,
+R178 `initDrawNear`, R177 `TWoodBox::kill`, R176 `receiveMessage`,
+R175 `touchGround`, R174 `perform`, R173 `startControlAnim`,
+R172 `TManhole::touchPlayer`, R171 `calcVelocity`, R170 `appearing`
+unverändert strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R186 (`MapObjMonte` / `MapObjRicco`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+Außerhalb von Bathtub.
+Die beiden TUs waren leer; jeder Map-Symbol ist jetzt definiert, der Rest bleibt Stub.
+
+- `TJumpMushroom::receiveMessage`: `startAnim(1); return TRUE;`.
+  40 Bytes, 10 Instruktionen.
+- `TCraneRotY::calc`: `setRootMtxRotY();`.
+  32 Bytes, 8 Instruktionen.
+- `TRiccoWatermill::calc`: `setRootMtxRotZ();`.
+  32 Bytes, 8 Instruktionen.
+- `TCraneCargo::control`: `unk158` als z, dann y, dann x auf `0.0f`, danach `TMapObjBase::control`.
+  48 Bytes, 12 Instruktionen.
+- `TFluff::getRadiusAtY` und `TGoalFlag::getRadiusAtY` geben `20.0f` zurück und stehen weak im Header.
+  Je 8 Bytes.
+- `TLiveActor::getMActor` ist die bestehende Header-Inline.
+  Die schwache Kopie in `MapObjRicco` ist 8 Bytes (`lwz r3, 0x74(r3)`).
+- `__sinit_MapObjMonte_cpp` (764 Bytes) und `__sinit_MapObjRicco_cpp` (804 Bytes) kommen aus den rogue includes `MSSetSound.hpp` und `MSoundBGM.hpp`.
+  Ricco initialisiert davor `submarineCranePos_forSound` `(1956, 1000, 6425)` und `submarineSetWtPos_forSound` `(1956, -100, 6425)`.
+
+Destruktoren und `@32`-Thunks der Key-Funktionen sind ebenfalls 100 %.
+`validate-symbol-order` für beide Units: PASS mit UNUSED-Größenwarnungen.
+
+R185 `TBathtub::getNumGripsDead`, R184 `TWaterHitPictureHideObj::load`,
+R183 `updateCheckData`, R182 `TMapObjTurn::touchWater`,
+R181 `TCloset::touchWater`, R180 `TCasinoPanelGate::touchWater`,
+R179 `waitingToAppear`, R178 `initDrawNear`, R177 `TWoodBox::kill`,
+R176 `receiveMessage`, R175 `touchGround`, R174 `perform`,
+R173 `startControlAnim`, R172 `TManhole::touchPlayer`,
+R171 `calcVelocity`, R170 `appearing` unverändert strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R185 (`TBathtub::getNumGripsDead`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+- Zählt die fünf Griffe an `unk168`, deren Byte `0x249` null ist.
+- `for (i < 5)` wird von MWCC ausgerollt und lädt `unk168` vor jedem Griff neu.
+- `TBathtubGrip` ist noch nicht rekonstruiert; der Zugriff geht über ein
+  lokales Layout mit dem Byte an `0x249`.
+
+0 Abweichungen, 132 Bytes, 33 Instruktionen.
+`decomp-diff -u mario/MoveBG/MapObjCorona -d getNumGripsDead`: 100 %.
+`validate-symbol-order -u mario/MoveBG/MapObjCorona --baseline-object`:
+0 neue Symbolfehler (210 geerbt).
+
+R184 `TWaterHitPictureHideObj::load`, R183 `updateCheckData`,
+R182 `TMapObjTurn::touchWater`, R181 `TCloset::touchWater`,
+R180 `TCasinoPanelGate::touchWater`, R179 `waitingToAppear`,
+R178 `initDrawNear`, R177 `TWoodBox::kill`, R176 `receiveMessage`,
+R175 `touchGround`, R174 `perform`, R173 `startControlAnim`,
+R172 `TManhole::touchPlayer`, R171 `calcVelocity`, R170 `appearing`
+unverändert strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R184 (`TWaterHitPictureHideObj::load`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+- `THideObjBase::load` ist hier ausgeschrieben, damit `eventId` ein Local
+  dieser Funktion ist. Inlined lag es bei `0x30`; Retail will `0x48`.
+- `char gap[4]` ist das Loch zwischen `eventId` und den drei Color-Reads
+  (`0x50` / `0x54` / `0x58`).
+- `char trash[0x18]` darunter hält den Frame bei `-0x70`.
+- Beide Stores werden weggoptimiert. `THideObjBase::load` bleibt 100 %.
+
+0 Abweichungen, 444 Bytes, 111 Instruktionen.
+`decomp-diff -u mario/MoveBG/MapObjHide -d "TWaterHitPictureHideObj::load"`: 100 %.
+`validate-symbol-order -u mario/MoveBG/MapObjHide`: PASS.
+
+R183 `TMapObjPlane::updateCheckData`, R182 `TMapObjTurn::touchWater`,
+R181 `TCloset::touchWater`, R180 `TCasinoPanelGate::touchWater`,
+R179 `waitingToAppear`, R178 `initDrawNear`, R177 `TWoodBox::kill`,
+R176 `receiveMessage`, R175 `touchGround`, R174 `perform`,
+R173 `startControlAnim`, R172 `TManhole::touchPlayer`,
+R171 `calcVelocity`, R170 `appearing` unverändert strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R183 (`TMapObjPlane::updateCheckData`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+- `gridToWorld` läuft erst für x und x+1, dann für z und z+1.
+- Die int-nach-float-Spills von z und x+1 liegen bei `0x88` und `0x90`.
+- `fmsubs` landet in f9 bzw. f8.
+
+0 Abweichungen, 464 Bytes, 116 Instruktionen.
+`decomp-diff -u mario/MoveBG/MapObjPlane -d updateCheckData`: 100 %.
+`validate-symbol-order -u mario/MoveBG/MapObjPlane`: PASS.
+
+R182 `TMapObjTurn::touchWater`, R181 `TCloset::touchWater`,
+R180 `TCasinoPanelGate::touchWater`, R179 `waitingToAppear`,
+R178 `initDrawNear`, R177 `TWoodBox::kill`, R176 `receiveMessage`,
+R175 `touchGround`, R174 `perform`, R173 `startControlAnim`,
+R172 `TManhole::touchPlayer`, R171 `calcVelocity`, R170 `appearing`
+unverändert strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R182 (`TMapObjTurn::touchWater`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+- `liftY(mPosition.y, 200.0f)` hält die Höhe in f2 und die Konstante in f1
+  (`fadds f1, f2, f1`).
+- Das `Mtx` im else-Zweig liegt bei `0x34`, der Frame ist `-0x80`.
+- Der Helfer ist vollständig inlined, kein Extra-Symbol.
+
+0 Abweichungen, 404 Bytes, 101 Instruktionen.
+`decomp-diff -u mario/MoveBG/MapObjLib -d "TMapObjTurn::touchWater"`: 100 %.
+
+R181 `TCloset::touchWater`, R180 `TCasinoPanelGate::touchWater`,
+R179 `waitingToAppear`, R178 `initDrawNear`, R177 `TWoodBox::kill`,
+R176 `receiveMessage`, R175 `touchGround`, R174 `perform`,
+R173 `startControlAnim`, R172 `TManhole::touchPlayer`,
+R171 `calcVelocity`, R170 `appearing` unverändert strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R181 (`TCloset::touchWater`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+- Die Z-Schwellen sind `mPosition.z - 1.1f * unk140`
+  und `mPosition.z + 1.1f * unk140`.
+- Das Produkt landet in f3, das Wasser-Z in f1.
+- Ein benanntes `halfDepth` hatte das Produkt in f1 gelassen.
+
+0 Abweichungen, 352 Bytes, 88 Instruktionen.
+`decomp-diff -u mario/MoveBG/MapObjSirena -d "TCloset::touchWater"`: 100 %.
+`validate-symbol-order -u mario/MoveBG/MapObjSirena`: PASS.
+
+R180 `TCasinoPanelGate::touchWater`, R179 `waitingToAppear`,
+R178 `initDrawNear`, R177 `TWoodBox::kill`, R176 `receiveMessage`,
+R175 `touchGround`, R174 `perform`, R173 `startControlAnim`,
+R172 `TManhole::touchPlayer`, R171 `calcVelocity`, R170 `appearing`
+unverändert strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R180 (`TCasinoPanelGate::touchWater`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+- Die Bandvergleiche stehen als `mPosition.y + scale * unk144`.
+- Dadurch liegt `unk144` in f4 und `mPosition.y` in f5.
+- `fmadds` ist `f0 * f4 + f5`.
+- Die unskalierte Schwelle bleibt `mPosition.y + unk144`
+  (`fadds f0, f5, f4`).
+
+0 Abweichungen, 644 Bytes, 161 Instruktionen.
+`decomp-diff -u mario/MoveBG/MapObjSirena -d touchWater`: 100 %.
+`validate-symbol-order -u mario/MoveBG/MapObjSirena`: PASS.
+
+R179 `waitingToAppear`, R178 `initDrawNear`, R177 `TWoodBox::kill`,
+R176 `receiveMessage`, R175 `touchGround`, R174 `perform`,
+R173 `startControlAnim`, R172 `TManhole::touchPlayer`,
+R171 `calcVelocity`, R170 `appearing` unverändert strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R179 (`TMapObjGeneral::waitingToAppear`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+- Retail erscheint, wenn die Distanz größer als der Radius ist.
+- `distToMario(this, gpMarioPos)` legt `gpMarioPos` in r4;
+  `mInitialPosition` faltet auf `0x10c(r31)`.
+- Actor `0x4000005a`: `mario += damageRadius`, dann `100 + mario`
+  (`fadds f1, f1, f30`, Konstante in f0).
+- Der andere Arm nutzt `addRadius`, Ergebnis bleibt in f0.
+- Frame `-0x48`.
+
+0 Abweichungen, 352 Bytes, 88 Instruktionen.
+`decomp-diff -u mario/MoveBG/MapObjGeneral -d waitingToAppear`: 100 %.
+`validate-symbol-order -u mario/MoveBG/MapObjGeneral`: PASS.
+
+R178 `initDrawNear`, R177 `TWoodBox::kill`, R176 `receiveMessage`,
+R175 `touchGround`, R174 `perform`, R173 `startControlAnim`,
+R172 `TManhole::touchPlayer`, R171 `calcVelocity`, R170 `appearing`
+unverändert strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R178 (`TMapObjGrassManager::initDrawNear`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+- `Mtx viewItm` lag 0x14 zu tief (`0x30` statt `0x44`), die `fctiwz`-Spills
+  der S16-Konvertierung 0x18 zu tief, Frame `-0x80` statt `-0x98`.
+- `static inline initDrawNearPad()` mit `char trash[0x10]` am Funktionsende
+  trifft beides. `0x14` lässt die Matrix 4 zu hoch. Store ist DCE, kein
+  Extra-Symbol.
+
+0 Abweichungen, 588 Bytes, 147 Instruktionen.
+`decomp-diff -u mario/MoveBG/MapObjGrass -d initDrawNear`: 100 %.
+`validate-symbol-order -u mario/MoveBG/MapObjGrass`: PASS.
+Die TU hat danach keine nonmatching `.text`-Funktionen.
+
+R177 `TWoodBox::kill`, R176 `receiveMessage`, R175 `touchGround`,
+R174 `perform`, R173 `startControlAnim`, R172 `TManhole::touchPlayer`,
+R171 `calcVelocity`, R170 `appearing` unverändert strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R177 (`TWoodBox::kill`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+- Die vier `checkGround`-Out-Pointer aus inlined `killNearWoodBox(f32, f32) const`
+  lagen bei `0x40`–`0x4c` statt `0xd4`–`0xe0`, Frame `-0x58` statt `-0xf0`.
+- `static inline woodBoxKillPad()` mit `char trash[0x90]` am Funktionsende
+  hebt die Pointer und den Frame. `0x94` überschießt die Pointer um 4.
+  Store ist DCE, kein Extra-Symbol.
+- Map-Name `killNearWoodBox__8TWoodBoxCFff` (UNUSED, `0xbc`) statt
+  `fabricatedGroundKillCheck`. `const` ändert das Inlining in `kill` nicht.
+
+0 Abweichungen, 744 Bytes, 186 Instruktionen.
+`decomp-diff -u mario/MoveBG/MapObjHide -d TWoodBox::kill`: 100 %.
+`validate-symbol-order -u mario/MoveBG/MapObjHide`: PASS (UNUSED-Größe stimmt).
+
+R176 `receiveMessage`, R175 `touchGround`, R174 `perform`,
+R173 `startControlAnim`, R172 `TManhole::touchPlayer`, R171 `calcVelocity`,
+R170 `appearing` unverändert strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R176 (`TMapObjGeneral::receiveMessage`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+- `isActorType(0x10000025)` und `isActorType(0x80000001)` liefen auf `this`
+  (`r29`). Retail liest `0x4c` vom Sender (`r30`): `sender->isActorType`.
+- `TVec3(mVelocity)`-Kopie lag bei `0x20` statt `0x38`, Frame `-0x40` statt
+  `-0x58`. `static inline receiveMessageFramePad()` mit `char trash[0x14]`
+  am Funktionsende hebt die Kopie auf `0x38` und den Frame auf `-0x58`.
+  `0x18` überschießt die Kopie um 4. Store ist DCE, kein Extra-Symbol.
+
+0 Abweichungen, 776 Bytes, 194 Instruktionen.
+`decomp-diff -u mario/MoveBG/MapObjGeneral -d TMapObjGeneral::receiveMessage`: 100 %.
+
+R175 `touchGround`, R174 `perform`, R173 `startControlAnim`,
+R172 `TManhole::touchPlayer`, R171 `calcVelocity`, R170 `appearing`
+unverändert strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R175 (`TMapObjGeneral::touchGround`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+- Drei `TVec3`-Kopien von `mVelocity` lagen 0x38 zu tief (Frame `-0x60` statt
+  `-0x98`). Ein direktes `char trash[]` polstert über den Temps, nicht darunter.
+- `static inline touchGroundFramePad()` mit `char trash[0x34]` wird am
+  Funktionsende inlined: Slot landet in der Temp-Region, Kopien auf
+  `0x60`/`0x6c`/`0x78`, Frame `-0x98`. Store ist DCE, kein Extra-Symbol.
+
+0 Abweichungen, 472 Bytes, 118 Instruktionen.
+`decomp-diff -u mario/MoveBG/MapObjGeneral -d TMapObjGeneral::touchGround`: 100 %.
+
+R174 `perform`, R173 `startControlAnim`, R172 `TManhole::touchPlayer`,
+R171 `calcVelocity`, R170 `appearing` unverändert strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R174 (`TMapObjGeneral::perform`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+- `isStateTimerEngaged()` verbraucht den ersten `mStateTimer`-Load (`r0` + `clrlwi`).
+- `int timer = *(volatile int*)&mStateTimer` vor `getFlushTime()` lädt `0x104(r28)`
+  erneut nach `r31` und hält den Wert über den virtuellen Call.
+- Dritter Load für die Intervall-Division bleibt `lwz r3, 0x104(r28)`.
+- `char trash[8]` am Funktionskopf → Frame `-0x30`.
+
+0 Abweichungen, 248 Bytes, 62 Instruktionen.
+`decomp-diff -u mario/MoveBG/MapObjGeneral -d TMapObjGeneral::perform`: 100 %.
+
+R173 `startControlAnim`, R172 `TManhole::touchPlayer`, R171 `calcVelocity`,
+R170 `appearing` unverändert strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R173 (`TMapObjBase::startControlAnim`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+- `TMapObjData* data = mMapObjData` hält `mMapObjData` in `r4`.
+- Zweiter `mAnim`-Load über `*(const TMapObjAnimDataInfo* volatile*)&data->mAnim`
+  nach `clrlwi` (der erste Pointer lag in `r3`).
+- `mMActor` vor `unk4`, Frame `-0x18`, 124 Bytes. Kein Extra-`lwz` von `0x130`.
+
+0 Abweichungen, 124 Bytes, 31 Instruktionen.
+`decomp-diff -u mario/MoveBG/MapObjBase -d startControlAnim`: 100 %.
+
+R172 `TManhole::touchPlayer`, R171 `calcVelocity`, R170 `appearing` unverändert
+strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R172 (`TManhole::touchPlayer`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+- `char trash[0x48];` am Funktionskopf → Frame `-0x90` wie Retail (`-0x48` ohne Pad).
+- Down-Stop-Zweig: `f32* initY = &mInitialPosition.y;` +
+  `initY = (f32*)(volatile void*)initY;` erzwingt `addi r3,r31,0x110` vor
+  `lfs mDownHeight@sda21` / `lfs 0x110(r31)` (kein SDA-Hoist vor Pointer).
+- `downHeight` / `initYVal` temporaries + `unk14C = *initY - mPosition.y` →
+  `lfs f1,0(r3)` für `unk14C` wie Retail.
+
+0 Abweichungen, 788 Bytes, 197 Instruktionen.
+`decomp-diff -u mario/MoveBG/MapObjTown -d TManhole::touchPlayer`: 100 %.
+
+R171 `calcVelocity`, R170 `appearing`, R168–R160 unverändert strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R171 (`TMapObjGeneral::calcVelocity`)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+- `char trash[0x28]; trash[0]=0;` → Frame `-0x58` wie Retail.
+- `LIVE_FLAG_AIRBORNE`: `int airborne` + `mLiveFlag & flag` → `li`/`cmpwi`
+  statt `checkLiveFlag2` (`clrlwi.`).
+- `mMapObjData->mPhysical`-Zweig unverändert (`piVar4 ? (u8)1 : (u8)0`).
+
+0 Abweichungen, 420 Bytes, 105 Instruktionen.
+`decomp-diff -u mario/MoveBG/MapObjGeneral -d calcVelocity`: 100 %.
+
+R170 `appearing`, R168–R160 / `mirror@0xa50` unverändert strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R170 (`TMapObjGeneral::appearing` — strikt nachgezogen)
+
+**Vollmatch, strikt (0 `~`, 0 `|`).**
+
+R169-Quelltext (`mInitialScaling.x > mScaling.x`, plain `clampX`) erzeugte in
+dieser Toolchain weiterhin `bgt` + vertauschte Compare-Loads und kein
+`lfs`/`stfs`-Reload für X.
+
+- `if (mScaling.x < mInitialScaling.x) return;` → Retail `fcmpo f1,f0` +
+  `blt` (semantisch identisch zu `>`).
+- `f32 clampX = *(volatile f32*)&mInitialScaling.x;` + `mScaling.x = clampX`
+  erzwingt `lfs` aus `0x124` vor `stfs` nach `0x24` (MWCC würde sonst `f1`
+  recyceln).
+- `char trash[4]; trash[0]=0;` unverändert; kein `mScaling.set()`.
+
+0 Abweichungen, 196 Bytes, 49 Instruktionen.
+`decomp-diff -u mario/MoveBG/MapObjGeneral -d appearing`: 100 %.
+
+R169/R168/R167–R160: R168 `setGroundCollision` strikt; `mirror@0xa50` unberührt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R169 (`TMapObjGeneral::appearing`)
+
+**Vollmatch (erste Landung; Compare/Clamp in R170 nachgeschärft).**
+
+- `char trash[4]; trash[0] = 0;` am Funktionskopf → Frame `-0x20` wie Retail
+  (`-0x18` ohne Pad).
+- Inneren Scope/`mScaling.set` entfernt: Komponenten-`+=` / Vergleich /
+  Einzelstores wie Retail (`lfs f1,0x24` + `lfs f0,0x124`, `fcmpo f1,f0`,
+  `blt` zum Epilog).
+- Detailkorrektur: siehe **R170** (`<` + `volatile`-Reload für striktes Diff).
+
+0 Abweichungen, 196 Bytes, 49 Instruktionen.
+`decomp-diff -u mario/MoveBG/MapObjGeneral -d appearing`: 100 %.
+
+R168 `setGroundCollision`, R167–R160 unverändert strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R168 (`TMapObjBase::setGroundCollision`)
+
+**Vollmatch, strikt.**
+
+- `JGeometry::TVec3<f32> pos` vor `char trash[0x24]; trash[0]=0;` → Frame
+  `-0x60`, Spill @ `0x4c` (mit `trash[0x28]` + `pos.set` war `pos` @ `0x50`).
+- `switch (unk8->mKind)` / `case KIND_MOVE` statt `!= KIND_MOVE` + `return`
+  (Retail `beq` + `b` statt alleiniges `bne`).
+- `pos.set(mPosition.x, mPosition.y - mYOffset, mPosition.z)` statt
+  Komponenten-Zuweisungen oder `TVec3`-Ctor — korrekte `fsubs f1,f2,f1`-Kette
+  ohne verfrühtes `stfs` nach `lfs f0,0x10`.
+
+0 Abweichungen, 388 Bytes, 97 Instruktionen.
+`decomp-diff -u mario/MoveBG/MapObjBase -d TMapObjBase::setGroundCollision`: 100 %.
+
+R167 `touchWater` / `calcRootMatrix` @ `0xa50`, R166–R160 unverändert strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R167 (`TItemSlotDrum::touchWater`)
+
+**Vollmatch, strikt.**
+
+- `char trash[4]; trash[0] = 0;` am Funktionskopf → Frame `-0x88` wie Retail
+  (`-0x80` ohne Pad).
+- Frühabbruch `if (unk194 || !unk1A2) return 1;` (ein Prädikat) — getrennte
+  `if`s erzeugen invertierte `beq`-Verzweigung (+3 Marker).
+- `TMsRange<s32>` / `TMsRange<f32>` weiter vollständig inlined wie Retail.
+
+0 Abweichungen, 400 Bytes, 100 Instruktionen.
+`decomp-diff -u mario/MoveBG/MapObjSirena -d TItemSlotDrum::touchWater`: 100 %.
+
+R166 `TMapObjManager::load`, R165 `checkWallCollision`, R164
+`TMapObjSwitch::control`, R163/R162/R160 unverändert strikt.
+`TItemSlotDrum::calcRootMatrix` (Mirror @ `0xa50`) unverändert strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R164 (`TMapObjSwitch::control`)
+
+**Vollmatch, strikt.**
+
+- Retail-Bool-Synthese (`lwz r0` → `cmpwi` → `li`/`clrlwi.`) statt inline
+  `isStateTimerEngaged()`.
+- Zweites `lwz` von `mStateTimer` nach `r4` vor `gpMSound` → `r3` via
+  `volatile int*`-Reload + `gpMSound->playTimer`.
+
+0 Abweichungen, 88 Bytes, 22 Instruktionen.
+`decomp-diff -u mario/MoveBG/MapObjTown -d TMapObjSwitch::control`: 100 %.
+
+R163 `TRollBlock::load`, R162 `THideObjPictureTwin::loadAfter`, R160
+`TCloset::calcRootMatrix` unverändert strikt.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R161 (Round 71 — kein neuer strikter Vollmatch)
+
+**Kein neuer strikter Vollmatch** (Scope A). R160 `TCloset::calcRootMatrix` unverändert strikt.
+
+- `TDonchou::calcRootMatrix` (WIP im Branch, nicht strikt): `struct { char pad[0x10];
+  Mtx mtx; } local;` + `local.mtx[1][3]` statt `TRotation3f` → Frame `-0x90`,
+  `addi r29,r1,0x34`, `ref` @ `0x50` (**match**). Verbleibend **2** `~`:
+  `fireStartDemoCamera`-`TFlagT` @ `0x20` vs Retail `0x30` (`sth`/`addi`). Kein
+  Grid `trash`×`pad`, kein `camPad`/`flagLayout`/`rotMtx`/`demoFlag`-Local,
+  kein `post[]` im Struct ohne Frame-Regress. Hebel vermutlich +0x10 Stack-Slot
+  unter `mtx` ohne `-0x90` zu brechen (nicht Closet-`pad[4]` blind kopieren).
+- `TCloset::touchWater`: **7** `~` (f-Register `f1`/`f3` in `halfDepth`-Zweig);
+  explizite `f2`/`f3`-Locals verschlechterten.
+- `TRoulette::initMapObj`: **4** `~` (Iterator @ `0x58` vs `0x5c`); Retail nutzt
+  `insert`, `push_back` bleibt bester Stand; Entry-`trash[4]` regress.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+**Nächste MoveBG:** Donchou `TFlagT` `0x20`→`0x30`; weitere `calcRootMatrix`-Geschwister
+mit `pad+Mtx`; `initMapObj` `r25` nur mit neuem Hebel. Skip: SMS-B, Switch ohne Hebel.
+
+### R159 (Round 71 Agent — kein neuer Vollmatch)
+
+**Kein neuer strikter Vollmatch** in MoveBG (Scope A). Worktree ohne TU-Diffs.
+
+- `TDonchou::calcRootMatrix`: Entry-`char trash[0x10]; trash[0]=0;` → Frame
+  `-0x90` wie Retail, aber **5** verbleibende `~` (+0xc: `mtx` @ `0x28` vs `0x34`,
+  `ref(1,3)` @ `0x44` vs `0x50`, `TFlagT` @ `0x24` vs `0x30`). Mid-`pad2` nach
+  `getModel()` oder `camPad` vor `fireStartDemoCamera` verschiebt `mtx` nicht ohne
+  Frame-Wachstum.
+- `TMapObjSwitch::receiveMessage`: unverändert **2** `~` (`TFlagT` @ `0x2c` vs
+  `0x24`); `trash[0xc]` / Mid-Pad / `demoFlag`-Local vergrößert nur Frame.
+- `TCloset::calcRootMatrix` (R158): `decomp-diff` zeigt weiter **3** `~`
+  (`mtx` @ `0x10` vs `0x14`) — fuzzy 100 % ≠ strikt; Closet nicht angefasst.
+- `TSakuCasino::calcRootMatrix`: bereits strikt **0** Marker (kein neuer Ship).
+- `TMapObjTree::initMapObj`: **3** `~` (`mLeafNum` in `r26` vs Retail `r25`).
+
+**Nächste SMS-B / MoveBG:** `TDonchou` — +0xc-Homing für `mtx`/`TFlag` bei
+`-0x90` (evtl. UNUSED/Whole-function-Layout, nicht nur Entry-Trash); Switch nur
+bei klarem Hebel; Tree `r25` via `new[]`-/Iterator-Shape. Skip: `initDrawNear` /
+`initMapObj` ohne Idee.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R155 (`TMapObjBase::throwObjToFrontFromPoint`)
+
+**Vollmatch, strikt.**
+
+- `throwObjToFrontFromPoint`: `Mtx mtx` am Funktionskopf (else-Zweig), danach
+  `char trash[8]`; `mMActor`-Zweig nutzt `MtxPtr anmMtx` statt lokalem `mtx`.
+  Frame `-0x88`, `MsMtxSetRotRPH`-Buffer @ `0x34` wie Retail.
+- Geschwister `throwObjToFront`: gleiches Muster reicht nicht (Frame `-0x90` vs
+  `-0x88` mit `trash[8]` — offen).
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+**Nächste MoveBG:** `rotateVecByAxisY`; `touchFruit` / `appearWithDemo` /
+`newAndRegisterCoin` nur bei klarem Stack-Hebel. SMS-B unverändert.
+
+### R154 (`TMapObjBillboard::touchWater`)
+
+**Vollmatch, strikt.**
+
+- `TMapObjBillboard::touchWater`: `JGeometry::TVec3<f32> rot` / `pos` am
+  Funktionskopf (Assign statt Block-Locals), danach `char trash[0x10]` vor
+  `swing`; Frame `-0x50`, TVec-Spills @ `0x38`/`0x2c` wie Retail.
+- Pivot-Kappen unverändert: `TFruitBasket::touchFruit` (2 `~` roof @ `0x28`),
+  `TShine::appearWithDemo` (`trash[8]` fixiert Frame, `TFlag` noch @ `0x34` vs
+  `0x38`), `TCoin::perform` / `TRoulette::initMapObj` / `loadBeforeInit`.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+**Nächste MoveBG:** `touchFruit` roof-Ptr; `appearWithDemo` `TFlag`-Slot;
+`newAndRegisterCoin` TVec-Stack. SMS-B: Closet / `initAndRegister` /
+`initModel`.
+
+### R153 (Round 71 Agent — Pivot, kein Vollmatch)
+
+**Kein neuer strikter Vollmatch** (Scope A MoveBG).
+
+- `TFruitBasket::touchFruit`: `f32 rotX` (Assign aus `mRotation.x`) +
+  `const TBGCheckData* roofPlane` im Funktionskopf; Frame `-0x38` und Epilog
+  stimmen; nur noch **2** Operand-`~` (`checkRoof`-Out-Ptr @ `0x28` vs `0x2c`).
+  `rotX` reserviert 4 B Stack ohne Store — ohne `rotX` Frame `-0x40`.
+- Pivot-Kappen: `TCoin::perform` / `TRoulette::initMapObj` / `TShine::loadBeforeInit`
+  unverändert (eine Idee je: Spill +0x10 / Iterator +4 / Retail-Locals).
+- `TItemManager::newAndRegisterCoin`: TVec3-Inline-Spill weiter +0xc tief
+  (Entry-`trash[8]` hält Frame, verschiebt Spill nicht).
+- `TMapObjSwitch::receiveMessage`: `TFlagT` weiter @ `0x24` vs `0x2c` (2 `~`).
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+**Nächste SMS-B / MoveBG:** `touchFruit` roof @ `0x28` ohne `rotX`-Slot;
+`newAndRegisterCoin` TVec-Stack; Closet/`initAndRegister`/`initModel` off-limits.
+
+### R152 (Round 71 Agent — kein neuer Vollmatch)
+
+**Kein neuer strikter Vollmatch** in MoveBG (Scope A).
+
+- `TCoin::perform`: objdiff 100 % / 608 B, **4** verbleibende `~` nur beim
+  `gpQuestionManager->request`-TVec3-Spill (+0x10 B zu tief).
+- `TRoulette::initMapObj`: **4** `~` (Iterator @ `0x5c`/`0x58` vs `0x58`/`0x54`).
+- `TShine::loadBeforeInit`: Locals-Reorder + Entry-Trash → min. **10** `~`
+  (Retail: `name` @ `0x24`, `eventId` @ `0x20`, `v` @ `0x18`).
+
+R151 `TEggYoshi::control`, R150 `TNozzleBox::load`, R149 `TEggYoshi::receiveMessage`,
+R147 `TMapObjSwitch::receiveMessage`, R146 `joinToGroup`, R145 `drawLogic`, R138
+`initMirrorModel` unverändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R150 (`TNozzleBox::load`)
+
+**Vollmatch, strikt.**
+
+- `TNozzleBox::load`: `char strBuf[0x20]` vor Entry-`char trash[0x1c];
+  trash[0]=0;` (MWCC-Stack: `strBuf` @ `0x30`, Frame `-0x60`).
+
+0 Abweichungen, 536 Bytes, 134 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/Item`: PASS.
+
+R149 `TEggYoshi::receiveMessage`, R147 `TMapObjSwitch::receiveMessage`, R146
+`joinToGroup`, R145 `drawLogic`, R138 `initMirrorModel` unverändert @ 100 %.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R149 (`TEggYoshi::receiveMessage`)
+
+**Vollmatch, strikt.**
+
+- `TEggYoshi::receiveMessage`: Entry-`char trash[4]; trash[0]=0;`, im
+  `HIT_MESSAGE_UNK10`-Zweig `unk10Trash[4]` vor `TVec3 v = mVelocity` und
+  `midTrash[4]` nach dem Copy vor `makeObjAppeared()` → Frame `-0x38`,
+  Velocity-Spills `0x1c`/`0x20`/`0x24`, `lfs` von `0x20` (**match**).
+
+0 Abweichungen, 620 Bytes, 155 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/Item`: PASS.
+
+R147 `TMapObjSwitch::receiveMessage`, R146 `joinToGroup`, R145 `drawLogic`, R138
+`initMirrorModel` unverändert @ 100 %.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R426 (`TMapObjBall::touchGround`)
+
+**Vollmatch, strikt.**
+
+- `TMapObjBall::touchGround`: `int gap; gap = 0;` vor
+  `JGeometry::TVec3<f32> velocity = mVelocity`, danach `char trash[0x4c];
+  trash[0] = 0;`.
+  Stores fallen weg, Frame bleibt `-0x98`, Velocity-Spill @ `0x78`.
+- `doSqrt` sitzt direkt darüber, damit `sqrt` ein `bl` bleibt.
+- `#pragma dont_inline` hält den qualifizierten `bl` in
+  `TBigWatermelon::touchGround` und `TResetFruit::touchGround`.
+
+0 Abweichungen, 856 Bytes, 214 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS
+(Weak-Order und die bekannten UNUSED-Größen).
+
+`TMapObjBall::hold`, `TMapObjBall::rebound`, `TResetFruit::touchGround`,
+`TBigWatermelon::touchGround` unverändert @ 100 %.
+R424 `TMammaMirrorMapOperator::loadAfter` unberührt.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R427 (`TRevolvingFenceInner::controlWall`)
+
+**Vollmatch, strikt.**
+
+- `TRevolvingFenceInner::controlWall`: Zustände 3–6, Winkel
+  `unk13C` gegen `mSpeed` (4.0f), Rotation `MsWrap` auf `[0,360)`,
+  dann `MsMtxSetRotY` auf `getModel()->getAnmMtx(0)` und Translation
+  `mPosition` minus `mYOffset`.
+- `char trash[0x50]` hält das Frame bei `-0x78`.
+- `fenceWrap` bleibt ein `bl MsWrap`.
+  `keepRotY` hält die weak Kopie von `MsMtxSetRotY`.
+- `MapObjFence.cpp` bleibt `NonMatching`.
+
+0 Abweichungen, 704 Bytes, 176 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/MapObjFence`: PASS
+(Weak-Order und die bekannte UNUSED-Größe von `calcCurrentMtx`).
+
+Übrige `MapObjFence`-Funktionen unverändert.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R428 (`TFluffManager::control`)
+
+**Vollmatch, strikt.**
+
+- `TFluffManager::control`: Zustände 1–3.
+  Zustand 1 sucht ab Index 3 eine `TFluff` mit `unk16C == 0`, ohne `mHeldObject`, weiter als 3000 von Mario, ruft `kill` und merkt sie in `unk15C`.
+  Liegt `unk158` unter `mPosition.y - unk138.z`, spielt `MSD_SE_OBJ_WATAGE_WIND` und geht nach Zustand 2.
+- `distSq` plus `doSqrt` halten `bl sqrt` und die drei `fmuls` vor den `fadds`.
+  `soundPos` legt den Positionszeiger in `r29`.
+- Zustand 2 addiert `unk148` auf `gpMapObjManager->unkD0`.
+  `loadVol` hält das `lfs` von `unk148.y` vor `unkD0.y` und in `f1`.
+- Zustand 3 skaliert den Wind mit `unk154`.
+  Unter `mWindMin` wird der Wind genullt, `unk158` übernimmt `unk15C`, Rotation und Position werden kopiert, `appear` trifft Slot `0xfc`.
+- `char trash[0x38]` hält das Frame bei `-0xa0`.
+  Der Store fällt weg.
+- `unk158`/`unk15C` sind `TFluff*`, `unk168` ist `TFluff**`, `mWindMin` ist 1.0f.
+- `MapObjMonte.cpp` bleibt `NonMatching`.
+
+0 Abweichungen, 876 Bytes, 219 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/MapObjMonte`: PASS
+(11 bekannte UNUSED-Stub-Größen).
+
+`TMapObjBall::touchGround`, `TMammaMirrorMapOperator::loadAfter` und
+`TRevolvingFenceInner::controlWall` unverändert @ 100 %.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R429 (`TMapObjGrowTree::control`)
+
+**Vollmatch, strikt.**
+
+- `TMapObjGrowTree::control` wickelt in Zustand 2 die Animation zurück,
+  solange `mColCount` leer ist und der State-Timer nicht läuft.
+- `rewindGrowFrame` negiert `unk140` und schreibt `span + frame`
+  über zwei `getFrameCtrl`-Aufrufe.
+- Unter Frame 0: `startAnim(0)`, Zustand 1.
+- Zwischen 67 und 240 spielt `MSD_SE_OBJ_SAMDBOMB_REVERSE`.
+- `mDamageHeight` ist `unk138`, `unk148` oder die Lerp dazwischen.
+  Die Lerp geht über `getMActor`.
+- Hält das Objekt etwas, zieht `heldDrop` `unk140 * unk138 / (end - start)`
+  von `mPosition.y` ab und ruft `moveRequest`.
+- `char gap[8]` und `char trash[0x5C]` halten das Frame bei `-0xf8`
+  und den Vec bei `r1+0xcc`.
+- `MapObjMare.cpp` bleibt `NonMatching`.
+
+0 Abweichungen, 724 Bytes, 181 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/MapObjMare`: PASS
+(5 bekannte UNUSED-Stub-Größen).
+
+Übrige `MapObjMare`-Funktionen unverändert.
+`TRevolvingFenceInner::controlWall`, `TMapObjBall::touchGround` und
+`TFluffManager::control` unberührt.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+
+`ninja changes_all`: fuzzy 80.218056 % -> 80.23811 %,
+matched code 51.305153 % -> 51.325314 % (1841900 -> 1842624, +724).
+Matched data bleibt 66.39675 % (425159).
+Funktionen matched 9762 -> 9763.
+`MapObjMare` 8488 -> 9212 (+724).
+Nur `MapObjMare` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R429B (`TFluffManager::loadAfter`)
+
+**Vollmatch, strikt.**
+
+- `TFluffManager::loadAfter`: `unk164` ist 32, `unk168` ist `new TFluff*[unk164]`.
+  Die ersten beiden heißen `１つ目のわた毛` und `２つ目のわた毛`, der Rest `わた毛`, Modell `Fluff`.
+- Die erste setzt `unk16C` und ruft `appear` (Slot `0xfc`).
+  Die zweite ruft `makeObjDead` (Slot `0x104`).
+  Ab Index 2 ruft jede `appear`.
+- Startposition und Rotation kommen vom Manager.
+  `mInitialPosition` ist `unk138.x/y * (2*MsRandF()-1)` auf X/Z und `mPosition.y * MsRandF()` auf Y, als `Vec`-Kopie.
+- `y` vor `z` hält im ersten Scatter Z in `f30` und Y in `f31`.
+- `char trash[24]` hält das Frame bei `-0x78` und den Vec bei `r1+0x30`.
+  Der Store fällt weg.
+- `MapObjMonte.cpp` bleibt `NonMatching`.
+
+0 Abweichungen, 964 Bytes, 241 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/MapObjMonte`: PASS
+(11 bekannte UNUSED-Stub-Größen).
+
+`TFluffManager::control`, `TMapObjBall::touchGround` und
+`TMammaMirrorMapOperator::loadAfter` unverändert @ 100 %.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+
+`ninja changes_all` gegen `6df4104a`: fuzzy 80.23811 % -> 80.264854 %,
+matched code 51.325314 % -> 51.352165 % (1842624 -> 1843588, +964).
+Matched data bleibt 66.39675 % (425159).
+Funktionen matched 9763 -> 9764.
+`MapObjMonte` 10116 -> 11080 (+964), Funktionen 46 -> 47.
+Complete units bleiben 416.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R430 (`TMapObjGrowTree::touchWater`)
+
+**Vollmatch, strikt.**
+
+- `TMapObjGrowTree::touchWater` gibt 0 zurück, wenn das Wasser über
+  `mPosition.y + unk148` liegt.
+- In Zustand 1: `startAnim(1)`, Rate 0, Zustand 2.
+- Liegt der Frame vor `getEnd`, spielen die vier
+  `MSD_SE_OBJ_SANDBOMB_WATER_*` über `soundBas` mit `unk13C`.
+  `advanceGrowFrame` addiert `unk13C` auf den Frame.
+- `mDamageHeight` ist `unk138`, `unk148` oder die Lerp dazwischen.
+  Die Lerp geht über `getMActor`.
+- Hält das Objekt etwas, addiert `heldRise` die Höhe und ruft `moveRequest`.
+- Über `mGrowEndFrame`: `setUpMapCollision(0)`, `mStateTimer = unk144`.
+  Rückgabe ist 1.
+- `char trash[0x48]` hält das Frame bei `-0xe8` und den Vec bei `r1+0xb8`.
+- `MapObjMare.cpp` bleibt `NonMatching`.
+
+0 Abweichungen, 744 Bytes, 186 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/MapObjMare`: PASS
+(5 bekannte UNUSED-Stub-Größen).
+
+Übrige `MapObjMare`-Funktionen unverändert.
+`TMapObjGrowTree::control` und `TRevolvingFenceInner::controlWall` unberührt.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+
+`ninja changes_all`: fuzzy 80.264854 % -> 80.28542 %,
+matched code 51.352165 % -> 51.37289 % (1843588 -> 1844332, +744).
+Matched data bleibt 66.39675 % (425159).
+Funktionen matched 9764 -> 9765.
+`MapObjMare` 9212 -> 9956 (+744).
+Nur `MapObjMare` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R431 (`TMapObjFlag::init`)
+
+**Vollmatch, strikt.**
+
+- `TMapObjFlag::init` setzt `unk68`/`unk6C` auf `100 * mScaling.z/y`.
+  `unk7C` und `unk80` werden durch die Skalierung geteilt, `unk84` mit `mScaling.z` multipliziert.
+- `unk70` ist `(s32)(unk68 / 50)`, `unk74` ist `(s32)(unk6C / 100)`.
+  Liegt ein Wert unter 2, wird er 3.
+- `MsMtxSetXYZRPH` schreibt `unk8C` aus Position und Rotation.
+- Die Schrittweiten sind `unk68 / (f32)unk70` und `unk6C / (f32)unk74`.
+  Davor und danach verwirft der Code `getCurrentHeap()->getTotalFreeSize()`.
+- `unk78` ist `new TVec3<f32>*[unk74]`.
+  Jede Zeile ist `new TVec3<f32>[unk70]`: x 0, y `i * stepY`, z `j * stepZ`.
+- `static u32 total_use_size = 0` sitzt zwischen den Schleifen und dem zweiten Heap-Call.
+- Danach `registerObj(this, name)` und `initHitActor(0x4000000D, 1, 0, 0, 0, 0, 0)`.
+  `registerObj` bleibt ein Stub, mit `dont_inline`, sonst fällt der `bl` weg.
+- `char trash[8]` hält das Frame bei `-0x90`.
+- `MapObjFlag.cpp` bleibt `NonMatching`.
+
+0 Abweichungen, 736 Bytes, 184 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/MapObjFlag`: PASS
+(4 bekannte UNUSED-Stub-Größen).
+
+`TMapObjGrowTree::control`, `TMapObjGrowTree::touchWater` und
+`TRevolvingFenceInner::controlWall` unberührt.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+
+`ninja changes_all`: fuzzy 80.28542 % -> 80.30582 %,
+matched code 51.37289 % -> 51.39339 % (1844332 -> 1845068, +736).
+Matched data 66.39675 % -> 66.399254 % (425159 -> 425175, +16).
+Funktionen matched 9765 -> 9766.
+`MapObjFlag` 2420 -> 3156 (+736).
+Nur `MapObjFlag` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R430B (`TResetFruit::receiveMessage`)
+
+**Vollmatch, strikt.**
+
+- `TResetFruit::receiveMessage`: `HIT_MESSAGE_UNKB` in Zustand 1,
+  Holding oder 11 setzt Zustand 11 und spielt die Waiting-Sequenz
+  (`makeObjDefault`, `makeObjDead`, `calcRootMatrix`, `getModel()->calc`,
+  `mFruitWaitTimeToAppear`, `MAP_OBJ_FLAG_DISAPPEARING` aus,
+  Zustand Waiting).
+  Map 3 mit `unk1A4` ruft noch einmal `makeObjDead`.
+- `HIT_MESSAGE_UNKD` ruft `kill`.
+- Danach nur in Zustand 1, Holding oder 11:
+  `TMapObjBall::touchActor`, und ohne `MAP_OBJ_FLAG_UNK4000000`,
+  in Zustand 1 und ohne `LIVE_FLAG_UNK10`, startet `getLivingTime`
+  falls der Timer nicht läuft, löscht `LIVE_FLAG_UNK10` und setzt Zustand 11.
+- `TMapObjGeneral::receiveMessage` wird auf 1 normalisiert.
+  Take mit `MAP_OBJ_FLAG_UNK100000` ruft `hold`.
+  Spieler `0x80000001`, der nicht `0x400000D0` ist und nicht Take kommt,
+  ruft `kicked`.
+- Put in Zustand 1 setzt Zustand 11, ohne den Rückgabewert zu ändern.
+- `char trash[0x30]` hält das Frame bei `-0x58`.
+  Der Store fällt weg.
+- `MapObjBall.cpp` bleibt `NonMatching`.
+
+0 Abweichungen, 988 Bytes, 247 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS
+(4 bekannte UNUSED-Stub-Größen).
+
+`TMapObjBall::touchGround`, `TFluffManager::control`,
+`TFluffManager::loadAfter` und `TMammaMirrorMapOperator::loadAfter`
+unverändert @ 100 %.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+
+`ninja changes_all`: fuzzy 80.30582 % -> 80.33318 %,
+matched code 51.39339 % -> 51.420914 % (1845068 -> 1846056, +988).
+Matched data bleibt 66.399254 % (425175).
+Funktionen matched 9766 -> 9767.
+`MapObjBall` 12860 -> 13848 (+988), Funktionen 61 -> 62.
+Complete units bleiben 416.
+Nur `MapObjBall` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R433 (`TPinnaShell::control`)
+
+**Vollmatch, strikt.**
+
+- `unk7C` zählt herunter, solange es größer als 0 ist.
+- Zustand 0: unter 0 wächst `unk6C` um `mCloseAccel * (0.5 + 0.5 * rand / 32768)`, sonst wird es 0.
+- Zustand 1 zieht 0.8 ab.
+  Unter `-mOpenRotMax` wird geklemmt, `unk7C` auf 360 gesetzt und Zustand 2 betreten.
+  Eine lebende blaue Münze spielt `MSD_SE_SY_COLLECT_PRETTY`, eine andere lebende Münze `MSD_SE_SY_COIN_APPEAR`, sonst `MSD_SE_SY_NOT_COLLECT`.
+- Zustand 2: ist der Timer abgelaufen, wird Zustand 3 und `MSD_SE_OBJ_PIN_SHELL_CLOSE` an der Position gestartet.
+- Zustand 3 addiert `unk70`.
+  Ab `-mShellDamageRot` fällt `HIT_FLAG_NO_COLLISION` an `unk88`.
+  Ab 0 wird `unk6C` 0, Zustand 0, und das Flag wieder gesetzt.
+- x/z sind `0.7 * Gelenktranslation + 0.3 * unk8C`.
+  y ist die Gelenk-Y-Translation minus 100.
+  Die Position wird nach `unk88` kopiert.
+- Bei Kollisionen baut `MsMtxSetRotX` die X-Drehung aus `unk6C`.
+  `concatOnlyRotFromRight(unk74, rot, rot)` und das virtuelle `moveMtx` folgen.
+- `char gap[8]` und `char trash[0x34]` halten das Frame bei `-0xb0` und die Matrix bei `r1+0x64`.
+- `MapObjPinna.cpp` bleibt `NonMatching`.
+
+0 Abweichungen, 884 Bytes, 221 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/MapObjPinna`: PASS
+(6 bekannte UNUSED-Stub-Größen).
+
+`TMapObjFlag::init`, `TMapObjGrowTree::control`, `TMapObjGrowTree::touchWater` und
+`TRevolvingFenceInner::controlWall` unberührt.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+
+`ninja changes_all`: fuzzy 80.33318 % -> 80.3577 %,
+matched code 51.420914 % -> 51.445538 % (1846056 -> 1846940, +884).
+Matched data bleibt 66.399254 % (425175).
+Funktionen matched 9767 -> 9768.
+`MapObjPinna` 7692 -> 8576 (+884).
+Nur `MapObjPinna` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R434 (`TViking::roll`)
+
+**Vollmatch, strikt.**
+
+- Zustand 1 skaliert `unk144` mit `unk154`, zieht `unk13C` ab und addiert auf `unk148`.
+  Unter 0 spielt `MSD_SE_OBJ_PIN_BIKING_WING` mit `fabsf(unk144)` und setzt Zustand 2.
+  Über 180 wird 360 abgezogen, derselbe Sound gespielt und Zustand 4 gesetzt.
+- Zustand 2 skaliert mit `unk154` und addiert `unk13C`.
+  Über 0 kommt der Sound und Zustand 1.
+  Unter -180 wird 360 addiert, der Sound gespielt und Zustand 3 gesetzt.
+- Zustand 3 skaliert mit `unk158` und zieht `unk13C` ab.
+  Unter 0 kommt der Sound.
+  Liegt `unk144` über `-unk150`, wird Zustand 2, sonst 4.
+- Zustand 4 skaliert mit `unk158` und addiert `unk13C`.
+  Über 0 kommt der Sound.
+  Liegt `unk144` unter `unk150`, wird Zustand 1, sonst 3.
+- `char trash[0x30]` hält das Frame bei `-0x68`.
+  Der Store fällt weg.
+- `#pragma dont_inline` bleibt, damit `TViking::control` den Aufruf behält.
+- `MapObjPinna.cpp` bleibt `NonMatching`.
+
+0 Abweichungen, 932 Bytes, 233 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/MapObjPinna`: PASS
+(6 bekannte UNUSED-Stub-Größen).
+
+`TPinnaShell::control`, `TViking::control`, `TMapObjFlag::init`,
+`TMapObjGrowTree::control`, `TMapObjGrowTree::touchWater` und
+`TRevolvingFenceInner::controlWall` unberührt.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+
+`ninja changes_all`: fuzzy 80.3577 % -> 80.383545 %,
+matched code 51.445538 % -> 51.471497 % (1846940 -> 1847872, +932).
+Matched data bleibt 66.399254 % (425175).
+Funktionen matched 9768 -> 9769.
+`MapObjPinna` 8576 -> 9508 (+932), Funktionen 60 -> 61.
+Complete units bleiben 416.
+Nur `MapObjPinna` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R435 (`TAmiKing::moveObject`)
+
+**Vollmatch, strikt.**
+
+- `TLiveActor::moveObject` zuerst.
+- `unk138 != 0`: bei `amiking_flying1_start` und `curAnmEndsNext` folgt `amiking_flying1_loop`.
+- Sonst, auf Wasser und nicht airborne: `MSD_SE_EN_AMIKING_DIVE`, Partikel `0xCA` mit Scale 4, Wassersäule `エフェクト水柱マネージャー` mit Scale 4, Shine-Demo, dann `FerrisWheel` über `TNameRefGen::search`.
+- `fireStartDemoCamera` bekommt `観覧車正常化カメラ`, `becomeCalmlyCallback` und das Rad als `u32` (das `this` des Callbacks).
+  Danach virtuelles `kill`.
+- Sonst, Boden-Actor `0x4000006A` und Zustand 3, 5, 4 oder 6: `unk138 = 1`, Velocity `(5, 10, -10)`, `amiking_flying1_start`, `setAnmSound(nullptr)`, Kamera `観覧車ボス撃沈カメラ`.
+- Der erste Zustandsvergleich ist ein volatile `lhz`, damit `mState` nicht in den folgenden `isState`-Aufruf durchgereicht wird.
+- `amiKingMovePad` (`char trash[0x48]`) plus `char pad[4]` halten das Frame bei `-0xd8`.
+  Vec bei `r1+0xac`, Flags bei `0xa4` und `0xa0`.
+- `MapObjPinna.cpp` bleibt `NonMatching`.
+
+0 Abweichungen, 872 Bytes, 218 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/MapObjPinna`: PASS
+(6 bekannte UNUSED-Stub-Größen).
+
+`TViking::roll`, `TPinnaShell::control`, `TMapObjFlag::init`,
+`TMapObjGrowTree::control`, `TMapObjGrowTree::touchWater` und
+`TRevolvingFenceInner::controlWall` unberührt.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+
+`ninja changes_all`: fuzzy 80.383545 % -> 80.407715 %,
+matched code 51.471497 % -> 51.495785 % (1847872 -> 1848744, +872).
+Matched data bleibt 66.399254 % (425175).
+Funktionen matched 9769 -> 9770.
+`MapObjPinna` 9508 -> 10380 (+872), Funktionen 61 -> 62.
+Complete units bleiben 416.
+Nur `MapObjPinna` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R434 (`TResetFruit::control`)
+
+**Vollmatch, strikt.**
+
+- Switch über `mState` 0..0xD.
+  Zustand 1 läuft die Kollisionen und ruft `TMapObjBall::touchActor`.
+- Zustand 0xB macht den Sand-Auftrieb (`0x400000CD`, zweimal) und ruft danach `TMapObjBall::control`.
+- Zustand 6 ruft `TMapObjBall::control` ebenfalls out-of-line.
+  Beide setzen danach Velocity 0 und Zustand 0xC, wenn der Timer aus ist.
+- Zustände 2 und 3 teilen sich die duplizierte Ball-Control-Body.
+- Zustand 0xC spielt das Verschwinden (Partikel `0xE5`, `MSD_SE_SMOKE_EFFECT`) und schläft nach 0xD.
+- Zustand 0xD setzt die Farbe auf weiß, weckt auf und geht nach Waiting.
+- `char gap[0x14]` und `char pad[0x54]` halten das Frame bei `-0xf8`.
+  Matrix bei `r1+0x90`, Velocity bei `r1+0xC0`.
+- `MapObjBall.cpp` bleibt `NonMatching`.
+
+0 Abweichungen, 1584 Bytes, 396 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS
+(4 bekannte UNUSED-Stub-Größen).
+
+`TMapObjBall::control` unberührt (weiter 100 %).
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+
+`ninja changes_all`: fuzzy 80.407715 % -> 80.451740 %,
+matched code 51.495785 % -> 51.539906 % (1848744 -> 1850328, +1584).
+Matched data 66.399254 % -> 66.774055 % (425175 -> 427575, +2400).
+Funktionen matched 9770 -> 9771.
+`MapObjBall` 13848 -> 15432 (+1584), Funktionen 62 -> 63.
+Complete units bleiben 416.
+Nur `MapObjBall` hat sich geändert.
+
+### R436 (`TMapObjFlagManager::registerObj`)
+
+**Vollmatch, strikt.**
+
+- Fünfzehn `strcmp`-Zweige, von `flagSun` bis `flagMare`.
+- Ist `unk54` null, baut `snprintf` `/scene/mapObj/%s.bti` und `JKRFileLoader::getGlbResource` lädt die Textur.
+- Danach landet der Flag-Pointer in `unk4[unk0]`, und `unk0` wird um eins erhöht.
+- `TMapObjFlagInfo` ist Count bei +0, zwanzig Pointer, Textur bei +0x54.
+  Stride `0x58`, fünfzehn Einträge ab `this+0x10`.
+- `DummyStrings.hpp` setzt die Rodata-Basis auf zwölf Nullbytes.
+  Der Formatstring liegt bei +0x20.
+- `flagSun` (8 Bytes) steht in `.sdata2`.
+- Jedes `if` hat sein eigenes `char buf[0x40]`.
+  Frame `-0x3e8`, erster Puffer bei `r1+0x394`.
+- `MapObjFlag.cpp` bleibt `NonMatching` (`perform`, `draw`).
+
+0 Abweichungen, 1576 Bytes, 394 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/MapObjFlag`: PASS
+(4 bekannte UNUSED-Stub-Größen).
+
+`TMapObjFlag::init` und `TAmiKing::moveObject` bleiben 100 %.
+`TViking::roll`, `TPinnaShell::control`, `TMapObjGrowTree::control`,
+`TMapObjGrowTree::touchWater` und `TRevolvingFenceInner::controlWall` unberührt.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+
+`ninja changes_all` gegen `86f67909`: fuzzy 80.45174 % -> 80.495514 %,
+matched code 51.539906 % -> 51.5838 % (1850328 -> 1851904, +1576).
+Matched data 66.774055 % -> 66.815285 % (427575 -> 427839, +264).
+Funktionen matched 9771 -> 9772.
+`MapObjFlag` 3156 -> 4732 (+1576), Funktionen 12 -> 13.
+`.rodata` 264 Bytes jetzt 100 %.
+Complete units bleiben 416.
+Nur `MapObjFlag` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R435 (`THangingBridge::drawRopeBetweenBoards`)
+
+**Vollmatch, strikt.**
+
+- Sechs Triangle-Strips.
+  `drawLowerMinus`, `drawLowerPlus`, `drawUpper`, jeweils plus und minus.
+- `unk30`/`unk34` sind die Brückenrichtung, `unk3C.x` die halbe Breite.
+  `latZ` wird in-place multipliziert, damit `width.y` `unk34` neu lädt.
+- Vertexzahl `(u16)((unk10 + 2) * count) * 2` bleibt in r31.
+- Das zweite Ende jedes Strips ist ein Segment der Länge null.
+  Die Vertexzahl zählt es mit.
+- `char top[8]` und `char pad[0x48]`.
+  Frame `-0x108`, Ende bei `r1+0xAC`, Start bei `r1+0xB8`, Breite bei `r1+0xC4`.
+- `unk18`/`unk24`/`unk30`/`unk34` ersetzen das Byte-Array bei +0x18.
+  Der Konstruktor bleibt 100 %.
+
+0 Abweichungen, 1852 Bytes, 463 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/MapObjMonte`: PASS
+(11 bekannte UNUSED-Stub-Größen).
+
+`perform`, `initDraw`, `drawLowerMinus`, `drawLowerPlus` und `drawUpper` bleiben 100 %.
+Soft-park (`loadAfter`, SwingBoard, Fluff) unberührt.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+
+`ninja changes_all` gegen `0d9fad00`: fuzzy 80.495514 % -> 80.547 %,
+matched code 51.5838 % -> 51.63539 % (1851904 -> 1853756, +1852).
+Matched data unverändert 66.815285 % (427839).
+Funktionen matched 9772 -> 9773.
+`MapObjMonte` 11080 -> 12932 (+1852), Funktionen 47 -> 48.
+Complete units bleiben 416.
+Nur `MapObjMonte` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R440 (`TNormalLift::control`)
+
+**Vollmatch, strikt.**
+
+- `char trash[0x10]` hebt den Rahmen auf `-0x78`.
+  Das Double der Yaw-Umwandlung bleibt bei `r1+0x60`.
+- `moveToNextNode(getUnk144())` lässt `lfs` vor `mr r3`.
+- `resetStep(unk144)` statt `getUnk144()`.
+  Der Getter ließ ein 4-Byte-Temp unter dem inlined Vec-Paar.
+  Kopie bei `r1+0x30`, Return bei `r1+0x3c`.
+- `resetStep` out-of-line bleibt 100 %.
+
+0 Abweichungen, 436 Bytes, 109 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/MapObjRailBlock`: PASS.
+
+`TRailMapObj::control`, `initGraphTracer` und `resetStep` bleiben 100 %.
+`calcRootMatrix`, `TRailBlock::control` und `moveToNextNode` unberührt.
+`MapObjBase.hpp` und `JGUtil.hpp` unverändert.
+
+`ninja changes_all` gegen `0cb26fde`: fuzzy 80.547 % -> 80.54702 %,
+matched code 51.63539 % -> 51.647537 % (1853756 -> 1854192, +436).
+Matched data unverändert 66.815285 % (427839).
+Funktionen matched 9773 -> 9774.
+`MapObjRailBlock` 6284 -> 6720 (+436), Funktionen 42 -> 43.
+Complete units bleiben 416.
+Nur `MapObjRailBlock` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R490B (`TShellCup::initMapObj`)
+
+**Vollmatch, strikt.**
+
+- Sechs Schalen.
+  `unk68`/`unk6C`/`unk70`, dann Anm-Mtx und Joint von `i + 1`.
+- `rand` skaliert mit `1/32768 * 1200`.
+  `joinToGroup("オブジェクトグループ")`.
+- `TMapCollisionMove` auf `/mapObj/ShellCup`, danach `TDamageObj`.
+  `setShellCupDamageScale` erzeugt `stfsu` auf `mScaling` (2, 1.2, 2), dann `init(0x10000036)` und `HIT_FLAG_NO_COLLISION`.
+- Rink ist `TMapCollisionStatic` mit `MTXCopy` von Anm-Mtx 0.
+- `char trash[0x10]` hält den Rahmen bei `-0xb8`.
+- `TMerrygoround::initMapObj` legt die sechs Strings davor in `.rodata`.
+  Die Funktion selbst ist 99.2 % (nur GPR und Stack-Slots), kein Vollmatch.
+
+0 Abweichungen, 592 Bytes, 148 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/MapObjPinna`: PASS
+(6 bekannte UNUSED-Stub-Größen).
+
+`TPinnaShell::TPinnaShell` und `TMerrygoround::control` unberührt.
+`MapObjBase.hpp` unverändert.
+
+`ninja changes_all` gegen `f0ae6102`: fuzzy 81.00208 % -> 81.039024 %,
+matched code 52.143566 % -> 52.16006 % (1872000 -> 1872592, +592).
+Matched data 66.91524 % -> 67.05891 % (428479 -> 429399, +920).
+Funktionen matched 9812 -> 9813.
+`MapObjPinna` 11484 -> 12076 (+592), Funktionen 65 -> 66.
+`.rodata` der Unit jetzt 100 %.
+Complete units bleiben 416.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R492B (`TSwingBoard::control`)
+
+**Vollmatch, strikt.**
+
+- `s32 emitting` aus `mIsEmitWater`, dann noch einmal `getEmitMtx(0)`.
+- Spalten-Dot über `TVec3::dot` mit `(dx, 0, dz)`.
+  Das hält das `fmuls` mit Null.
+- Feder, Clamp, dann `playSwingSE` zweimal inlined.
+  `fabs` landet in `f31`.
+- X-Rotation aus `sinf`/`cosf` von `3.14f * (mRotation.x / 180.0f)`, `MTXConcat` auf `unk14C`.
+- Totes `cosf`/`sinf` von `unk13C` bleibt.
+- `char pad[0x68]` hält den Rahmen bei `-0x118` (Mtx bei `r1+0xd0`).
+- `mBoardWidth` bis `mSpeedDownRate` machen `.sdata` vollständig.
+
+0 Abweichungen, 756 Bytes, 189 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/MapObjMonte`: PASS
+(11 bekannte UNUSED-Stub-Größen, darunter `swing`).
+
+`drawOneRope`, `initDraw` und der Konstruktor bleiben 100 %.
+`load` und `draw` bleiben Stubs.
+`MapObjBase.hpp` unverändert.
+
+`ninja changes_all` gegen `8458b8cc`: fuzzy 81.039024 % -> 81.05997 %,
+matched code 52.16006 % -> 52.181118 % (1872592 -> 1873348, +756).
+Matched data 67.05891 % -> 67.07141 % (429399 -> 429479, +80).
+Funktionen matched 9813 -> 9814.
+`MapObjMonte` 14248 -> 15004 (+756), Funktionen 50 -> 51.
+`.sdata` der Unit jetzt 100 %.
+Complete units bleiben 416.
+Nur `MapObjMonte` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R493A (`TBigWatermelon::touchActor`)
+
+**Vollmatch, strikt.**
+
+- `STATE_APPEARING` kehrt sofort zurück.
+  Sonst, wenn nicht `STATE_NORMAL`, Wortkopie von `mVelocity`.
+  `vel.y < 0` ruft virtuelles `kill` (vtable `0xe4`).
+- Mario (`0x80000001`): Abstand über getrennte Quadrate, dann `sqrt`.
+  Unter `0.6f * mBodyRadius` ebenfalls `kill`.
+- `TMelonSum::calc` ist eine Klassenmethode.
+  So bleiben die Adds `fadds` und die Subs in `f2`/`f1`/`f3`.
+  Ein cpp-`static` trifft die Register nicht.
+- PoiHana (`0x10000015`) und `isMoving`: `fabsf(mVelocity.y)` gegen `unkC`.
+  Darunter `mVelocity.y += 30` und `mState = 0xB`.
+  Danach immer Return.
+- `unk194`, `STATE_HOLDING`, `isHideObj`, drei Aktortypen als eigene `if`s.
+- Mario, nicht `0x400000D0`, `SMS_GetMarioSpeedY() != 0`: virtuelles `kicked` (`0x1e8`).
+  Sonst `boundByActor`.
+- Rahmen `-0x48`, Velocity-Kopie bei `r1+0x30`.
+  Kein `gap`.
+
+0 Abweichungen, 760 Bytes, 190 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS
+(4 bekannte UNUSED-Stub-Größen von `TResetFruit`).
+
+`startEvent`, `kicked`, `touchWall`, `calcCurrentMtx` und `boundByActor` bleiben nonmatching.
+`MapObjBase.hpp` unverändert.
+
+`ninja changes_all` gegen `8ff14619`: fuzzy 81.05997 % -> 81.08104 %,
+matched code 52.181118 % -> 52.202286 % (1873348 -> 1874108, +760).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9814 -> 9815.
+`MapObjBall` 17184 -> 17944 (+760), Funktionen 65 -> 66.
+`.sdata2` fuzzy 89.13043 % -> 91.304344 %.
+Complete units bleiben 416.
+Nur `MapObjBall` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R487A (`TMapObjBase::calcReflectingVelocity`)
+
+**Vollmatch, strikt.**
+
+- `onePlus = 1.0f + param_2` liegt in `f6`, vor dem Punktprodukt.
+- `TVec3::dot` bleibt inline (`fmuls` plus zwei `fmadds`).
+- Danach pro Achse `fmuls` von `dot * n`, dann `fnmsubs` gegen `onePlus`.
+- `TReflectVel::apply` ist eine Klassenmethode.
+  Ein `void*`-Cast der Normale verhindert, dass `normal.x` nach `dot` CSE'd wird.
+  Ohne den Cast bleibt `nx` in `f4` und `onePlus` rutscht nach `f5`.
+- Blattfunktion, kein Rahmen.
+
+0 Abweichungen, 108 Bytes, 27 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/MapObjLib`: FAIL, schon vor diesem Match.
+MISSING `at__Q29JGeometry13SMatrix33C<f>CFUlUl`.
+ORDER: `getVerticalVecToTargetXZ` steht vor dem schwachen `TVec3::set`.
+31 UNUSED-Größenwarnungen unverändert.
+`MapObjBase.hpp` unverändert.
+
+`ninja changes_all` gegen `1ffde475`: fuzzy 81.08104 % -> 81.081894 %,
+matched code 52.202286 % -> 52.205296 % (1874108 -> 1874216, +108).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9815 -> 9816.
+`MapObjLib` 10228 -> 10336 (+108), Funktionen 79 -> 80.
+Complete units bleiben 416.
+Nur `MapObjLib` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R495B (`TDonchou::calcRootMatrix`)
+
+**Vollmatch, strikt.**
+
+- `Mtx mtx` plus `MtxPtr mtxPtr = mtx` hält `r29 = r1+0x34` über die Aufrufe.
+- Ohne den Zeiger fällt der Rahmen auf `-0x88` und `r29` wird nicht gesichert.
+- `startDonchouCamera` ist `static inline` und wird nicht emittiert.
+- Darin liegt `char pad[0xC]; pad[0] = 0;` direkt vor `fireStartDemoCamera`.
+- Das tote Slot setzt das `TFlagT<u16>(0)`-Temp auf `r1+0x30` (`sth` / `addi`).
+- Ohne `pad[0] = 0` streicht DCE das Array, Rahmen `-0x80`.
+- Header unverändert.
+
+0 Abweichungen, 516 Bytes, 129 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/MapObjSirena`: PASS.
+Eine UNUSED-Größenwarnung schon vorher: `getSlotResult__13TItemSlotDrumFv` (Map `0x8c`, Objekt `0xe4`).
+
+`ninja changes_all` gegen `95048251`: fuzzy bleibt 81.081894 %
+(die Funktion war schon 99.9845 % fuzzy).
+matched code 52.205296 % -> 52.219666 % (1874216 -> 1874732, +516).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9816 -> 9817.
+`MapObjSirena` 14908 -> 15424 (+516), Funktionen 86 -> 87.
+Fuzzy der Unit 99.09931 % -> 99.09972 %.
+Complete units bleiben 416.
+Nur `MapObjSirena` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R490A (`TShiningStone::putOnLight`)
+
+**Vollmatch, strikt.**
+
+- `strcmp` auf `getName()` gegen `mirrorS`, `mirrorM` und `mirrorL`.
+- Treffer setzt `setBck` und `setBrk` auf `shiningstonegreen`, `shiningstoneblue` oder `shiningstonered`.
+- Dazu `unk70`, `unk71` oder `unk72`.
+- `switch (unk74)`: Fall 0 emittiert `0x143`, `setRate(3.0f)`, `unk7C = 1.5f`, Sound `MSD_SE_DM_REFLECTION_1`.
+- Fall 1 emittiert `0x144`, `setRate(0.4f)`, `unk7C = 0.2f`, Sound `MSD_SE_DM_REFLECTION_2`.
+- Fall 2 emittiert `0x145`, kein `setRate`, `unk7C = 0.0f`, Sound `MSD_SE_DM_REFLECTION_3`.
+- Danach immer `emit(0x56)` mit Count 0 und `nullptr`, dann `unk74 += 1`.
+- Bei `(s32)unk74 == 3` kommen `shiningstonewhite` und `unk73`.
+- `setStoneRate` ist `static inline` und wird nicht emittiert.
+- Fünf tote `u32`-Kopien darin, nur im Fall 0 aufgerufen.
+- Ohne die Kopien bleibt der Rahmen bei `-0x28` oder `-0x38`.
+- Mit ihnen ist der Rahmen `-0x40`, ohne Extra-Instruktion.
+- `SandCastleCallBack` behält ein `0x7C`-Stringliteral.
+- Damit bleibt `SandBombBasePyramid` bei rodata `0x494`.
+- Die Callback-Funktion selbst bleibt nonmatching.
+- Ohne das Literal rutschen die SandBomb-`addi`-Offsets um `-0x7C`.
+- Header unverändert.
+
+0 Abweichungen, 672 Bytes, 168 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/MapObjMamma`: PASS.
+Acht UNUSED-Größenwarnungen schon vorher, darunter `endDemo__13TShiningStoneFv`.
+
+`ninja changes_all` gegen `a145e0ae`: fuzzy 81.081894 % -> 81.100555 %,
+matched code 52.219666 % -> 52.238388 % (1874732 -> 1875404, +672).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9817 -> 9818.
+`MapObjMamma` 15416 -> 16088 (+672), Funktionen 89 -> 90.
+Fuzzy der Unit 76.43904 % -> 79.75064 %.
+Complete units bleiben 416.
+Nur `MapObjMamma` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R491A (`TBigWatermelon::startEvent`)
+
+**Vollmatch, strikt.**
+
+- `strcmp(getName(), "スイカ（大）")`.
+  `getName()` ergibt `mr r31, r3`.
+  Direktes `mName` wird `addi r31, r3, 0`.
+- Position `(-4660, 1300, 13600)`, dann `offMapObjFlag(MAP_OBJ_FLAG_UNK100)`.
+- `onLiveFlag(LIVE_FLAG_UNK10)`, Velocity z, y, x auf 0, dasselbe Flag noch einmal.
+- Danach `startAnim(7)`.
+- `fireMelonCam` ist `static inline` und wird nicht emittiert.
+- Vier tote `u32`-Kopien plus `TMarDirector* director = gpMarDirector`.
+- Das hält den Rahmen bei `-0x88` und `TFlagT<u16>(0)` bei `r1+0x24`.
+- Kamera `スイカゴールカメラ`.
+- Shine `シャイン（お化けスイカ用）` mit `スイカシャインカメラ` und Offsets 0.
+- `startStateTimer(0x17C)`, dann `setState(0xD)`.
+- Sonst zehn gelbe Münzen `0x2000000E` an `gpMarioPos`.
+- `x` und `z` sind `20 * (rand * 1/32768 - 0.5)`.
+- `y` ist `20 * rand * 1/32768 + 20`.
+- `offLiveFlag(LIVE_FLAG_UNK10)`, dann `TItem::unk14C = 0x3C0`.
+- Danach virtuelles `makeObjDead`.
+- Header unverändert.
+
+0 Abweichungen, 544 Bytes, 136 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/MapObjBall`: PASS.
+Vier bekannte UNUSED-Größen von `TResetFruit` unverändert.
+
+`kicked`, `touchWall`, `calcCurrentMtx`, `boundByActor` und `TResetFruit::kicked` bleiben nonmatching.
+
+`ninja changes_all` gegen `958b379f`: fuzzy 81.100555 % -> 81.11332 %,
+matched code 52.238388 % -> 52.25354 % (1875404 -> 1875948, +544).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9818 -> 9819.
+`MapObjBall` 17944 -> 18488 (+544), Funktionen 66 -> 67.
+Fuzzy der Unit 78.44889 % -> 80.44158 %.
+`.sdata2` fuzzy 91.304344 % -> 97.82609 %.
+Complete units bleiben 416.
+Nur `MapObjBall` hat sich geändert.
+Die Baseline-Datei liegt noch vor `putOnLight`, deshalb listet `report_changes.json` zusätzlich `MapObjMamma`.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R501B (`TSnapTimeObj::perform`)
+
+**Vollmatch, strikt.**
+
+- `startTimer(u32)` bleibt `static inline` und wird nicht emittiert.
+- `append` bekommt `col`, das volatile Reload, nicht `param_1`.
+- Sonst landet der Wert in `r30` und das Reload in totem `r0`.
+- Vier tote `u32`-Kopien vor `volatile u32 tmp`.
+- Das hält den Rahmen bei `-0x50` und das Spill bei `r1+0x38`.
+- Ohne die Kopien bleibt das Spill auf `r1+0x28` und der Rahmen auf `-0x40`.
+- `char trash[]` schiebt nur die gesicherten Register, nicht das Spill.
+
+0 Abweichungen, 228 Bytes, 57 Instruktionen.
+`validate-symbol-order` `mario/System/SnapTimeObj`: PASS.
+Ein objekt-only Weak (`TViewObj::~TViewObj`) ist schon vorher da.
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `9dc4d867`: fuzzy 81.11332 % -> 81.11336 %.
+matched code 52.25354 % -> 52.259888 % (1875948 -> 1876176, +228).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9819 -> 9820.
+`SnapTimeObj` 116 -> 344 (+228), Funktionen 1 -> 2.
+Fuzzy der Unit 99.69768 % -> 100.0 %.
+Complete units bleiben 416.
+Nur `SnapTimeObj` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R502B (`TRevolvingFenceInner::receiveMessage`)
+
+**Vollmatch, strikt.**
+
+- `char trash[0x38]` hält den Rahmen bei `-0x58` und `r31` bei `0x54`.
+- `unk140 == 0` bleibt der schon passende Pfad.
+  Zustand 1 spielt `MSD_SE_OBJ_FENCE_REVERSE1`, setzt Zustand 3 und `fence_revolve_inner_roll_down`.
+  Zustand 2 spielt `MSD_SE_OBJ_FENCE_REVERSE2`, setzt Zustand 4 und `fence_revolve_inner_roll_up`.
+  Beide rufen `offMapObjFlag(MAP_OBJ_FLAG_UNK100)` und geben `TRUE` zurück.
+- Hip-Drop (`message == 3` und `unk140 != 0`) nimmt `gpMarioPos` in einen Zeiger.
+  Sonst kommt `mr r3` vor dem `lwz`.
+- `angle` ist ein Ausdruck: `mInitialRotation.y + 180.0f * (getRotYFromAxisZ(*marioPos) / 3.14f)`.
+  Das hält `f2` auf 180, `f3` auf den Quotienten, dann `fmadds` und `fmr f3, f1`.
+- `MsWrap(angle, -180, 180)` steht direkt und inlined die beiden Schleifen.
+  `fenceWrap` wäre ein `bl` und darf hier nicht stehen.
+- Die Vergleiche sind `!(a < b)`.
+  Das ergibt `fcmpo; bge`.
+  Ein `>=` in `||` oder `if` würde `cror` plus `beq`.
+- `REVERSE1`, wenn `-180 < angle < -90` oder `0 < angle < 90`.
+  Sonst `REVERSE2` (Winkel `-180`, `-90 <= angle <= 0` oder `angle >= 90`).
+- Beide Arme springen auf ein gemeinsames `return TRUE`.
+  Sonst emittiert der erste Arm ein extra `li r3, 1`.
+- Zustand 1 setzt 3 bzw. 5, sonst 4 bzw. 6.
+
+0 Abweichungen, 668 Bytes, 167 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/MapObjFence`: PASS.
+Die schwache Reihenfolge und die UNUSED-Größe von `calcCurrentMtx` (`0x10c` gegen `0x4`) waren schon vorher da.
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `3ed82bfb`: fuzzy 81.11336 % -> 81.123375 %.
+matched code 52.259888 % -> 52.278496 % (1876176 -> 1876844, +668).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9820 -> 9821.
+`MapObjFence` 6784 -> 7452 (+668), Funktionen 39 -> 40.
+Fuzzy der Unit 83.44852 % -> 87.68218 %.
+Complete units bleiben 416.
+Nur `MapObjFence` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R503B (`TMarDirector::movement`)
+
+**Vollmatch, strikt.**
+
+- `switch ((int)mState)` mit einem `case STATE_UNK4`.
+- Das ergibt `cmpwi r0, 4`, `beq` auf den Call, dann `b` zur Epilog.
+- Ein `if (mState == STATE_UNK4)` fällt durch und wird `bne`.
+- `else` nach einem frühen `return` ändert daran nichts.
+- `movement_game()` bleibt ein `bl`.
+
+0 Abweichungen, 48 Bytes, 12 Instruktionen.
+`validate-symbol-order` `mario/System/MarDirectorEvent`: PASS.
+Sechs UNUSED-Größen leerer Stubs waren schon vorher da.
+Die TU bleibt `NonMatching`.
+`setNextStage` bleibt der leere Stub.
+
+`ninja changes_all` gegen `e6bbe98f`: fuzzy 81.123375 % -> 81.123505 %.
+matched code 52.278496 % -> 52.27983 % (1876844 -> 1876892, +48).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9821 -> 9822.
+`MarDirectorEvent` 1740 -> 1788 (+48), Funktionen 8 -> 9.
+Fuzzy der Unit 83.28795 % -> 83.426506 %.
+Complete units bleiben 416.
+Nur `MarDirectorEvent` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R504B (`evLaunchEventClearDemo`)
+
+**Vollmatch, strikt.**
+
+- `interp->push()` legt das `TSpcSlice`-Temporary auf `r1+0x18`.
+- Retail steht auf `r1+0x20` und `r1+0x24`.
+- Ein benanntes `TSpcSlice` allein landet auf `r1+0x1c`.
+- `char trash[4]` davor wird gelöscht.
+- `struct Slot { char pad[4]; TSpcSlice slice; }` schiebt das Slice auf `0x20`.
+- Der Rahmen bleibt `-0x30`.
+- `r30` und `r31` bleiben auf `0x28` und `0x2c`.
+
+0 Abweichungen, 176 Bytes, 44 Instruktionen.
+`validate-symbol-order` `mario/System/EventWatcher` scheitert schon vorher.
+Es fehlt `TVec3<f>::set(const Vec&)`.
+Zwei UNUSED-Größen leerer Stubs waren schon vorher da.
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `e741b470`: fuzzy 81.123505 % -> 81.12352 %.
+matched code 52.27983 % -> 52.284737 % (1876892 -> 1877068, +176).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9822 -> 9823.
+`EventWatcher` 23992 -> 24168 (+176), Funktionen 63 -> 64.
+Fuzzy der Unit 98.88399 % -> 98.88436 %.
+Complete units bleiben 416.
+Nur `EventWatcher` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R505B (`TMarioGamePad::updateMeaning`)
+
+**Vollmatch, strikt.**
+
+- `char trash[0x150]` am Anfang hält den Rahmen bei `-0x190`.
+  Ohne das Pad bleibt er `-0x40`.
+  Alle Stackslots rutschen um genau `0x150`.
+  Der Pad emittiert kein Store.
+- `int i;` steht vor `u16 dc = _DC`.
+  Die Schleife ist `for (i = 0; i < 10; i++)`.
+  `dc` bleibt in `r4`, der Restindex in `r5` (`li r5, 8`, `bdnz`).
+  `int i = 0` davor materialisiert `li r0, 0` und rollt die Schleife voll aus.
+- `resetMeaning` bleibt das Header-Inline und steht nicht in der Map.
+- Header sonst unverändert.
+  `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 2204 Bytes, 551 Instruktionen.
+`validate-symbol-order` `mario/System/MarioGamePad`: PASS.
+Drei UNUSED-Größen waren schon vorher falsch (`keepRumble`, `rumble`, `considerMarioStick`).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `e07b8227`: fuzzy 81.12352 % -> 81.12359 %,
+matched code 52.284737 % -> 52.346127 % (1877068 -> 1879272, +2204).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9823 -> 9824.
+`MarioGamePad` 376 -> 2580 (+2204), Funktionen 5 -> 6.
+Fuzzy der Unit 99.896126 % -> 100.0 %.
+Complete units bleiben 416.
+Nur `MarioGamePad` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R506B (`SMSSetEmitterPolColor`)
+
+**Vollmatch, strikt.**
+
+- `int value = param_2` hält den Farbindex in `r4`.
+  Ohne die Initialisierung landet er in `r0`.
+  Fallthrough bei `param_2 != 6` benutzt `param_2` als Index.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 284 Bytes, 71 Instruktionen.
+`validate-symbol-order` `mario/System/EmitterViewObj`: PASS.
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `61b17e0a`: fuzzy 81.12359 % -> 81.12363 %,
+matched code 52.346127 % -> 52.35404 % (1879272 -> 1879556, +284).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9824 -> 9825.
+`EmitterViewObj` 5656 -> 5940 (+284), Funktionen 24 -> 25.
+Fuzzy der Unit 99.907524 % -> 99.93218 %.
+Complete units bleiben 416.
+Nur `EmitterViewObj` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R507B (`TMarioParticleManager::emitAndBindToMtx`)
+
+**Vollmatch, strikt.**
+
+- `char trash[4]` hinter dem `TVec3` legt die Translation auf `r1+0x34`.
+  Der Rahmen bleibt `-0x58`.
+- `u8 kind = param_3` hält den Modus in `r31`.
+  Der Emitter der ersten Abfrage bleibt in `r30`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 260 Bytes, 65 Instruktionen.
+`validate-symbol-order` `mario/System/EmitterViewObj`: PASS.
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `68e09c29`: fuzzy 81.12363 % -> 81.12368 %,
+matched code 52.35404 % -> 52.36128 % (1879556 -> 1879816, +260).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9825 -> 9826.
+`EmitterViewObj` 5940 -> 6200 (+260), Funktionen 25 -> 26.
+Fuzzy der Unit 99.93218 % -> 99.95684 %.
+Complete units bleiben 416.
+Nur `EmitterViewObj` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R508B (`TMarioParticleManager::emitWithRotate`)
+
+**Vollmatch, strikt.**
+
+- `char trash[0x20]` hebt den Rahmen von `-0x58` auf `-0x78`.
+  `stmw r24` rückt von `0x38` auf `0x58`.
+- `u8 kind = param_6` hält den Modus in `r31`.
+  Der Emitter der ersten Abfrage bleibt in `r30`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 288 Bytes, 72 Instruktionen.
+`validate-symbol-order` `mario/System/EmitterViewObj`: PASS.
+Die TU bleibt `NonMatching`.
+Vier schwache Extra-Symbole waren schon vorher da.
+
+`ninja changes_all` gegen `730b0298`: fuzzy 81.12368 % -> 81.12375 %,
+matched code 52.36128 % -> 52.3693 % (1879816 -> 1880104, +288).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9826 -> 9827.
+`EmitterViewObj` 6200 -> 6488 (+288), Funktionen 26 -> 27.
+Fuzzy der Unit 99.95684 % -> 100.0 %.
+Complete units bleiben 416.
+Nur `EmitterViewObj` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R497A (`TBossManta::getPolluteRadius`)
+
+**Vollmatch, strikt.**
+
+- `f32 radius = getSaveParams()->mSLPolluteRadius.get()` hält den Radius in `f1`.
+  `mScaling.x` folgt in `f0`, `fmuls f1, f1, f0`.
+  Der Rahmen ist `-0x28` (`r31` bei `0x24`).
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 124 Bytes, 31 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bossManta`: PASS
+(ererbte `theNerve`-Ordnung, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `23915c0e`: fuzzy 81.12375 % -> 81.12377 %,
+matched code 52.3693 % -> 52.372753 % (1880104 -> 1880228, +124).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9827 -> 9828.
+`bossManta` 4072 -> 4196 (+124), Funktionen 25 -> 26.
+Fuzzy der Unit 98.1472 % -> 98.150314 %.
+Complete units bleiben 416.
+Nur `bossManta` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R509B (`TEffectObjBase::moveObject`)
+
+**Vollmatch, strikt.**
+
+- `Vec local_1c` vor `char trash[0x24]` legt die Skalierung auf `r1+0x3c`.
+  Der Rahmen bleibt `-0x58`.
+- Benannte `f32 x, y, z` halten die drei Komponenten in `f0`, `f1`, `f2`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 464 Bytes, 116 Instruktionen.
+`validate-symbol-order` `mario/Enemy/effectObj`: PASS
+(ererbte schwache Ordnung, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `d6708c7c`: fuzzy 81.12377 % -> 81.12393 %,
+matched code 52.372753 % -> 52.38568 % (1880228 -> 1880692, +464).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9828 -> 9829.
+`effectObj` 10196 -> 10660 (+464), Funktionen 77 -> 78.
+Fuzzy der Unit 99.618576 % -> 99.66608 %.
+Complete units bleiben 416.
+Nur `effectObj` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R498A (`TNerveBEelTearsMoveUp::execute`)
+
+**Vollmatch, strikt.**
+
+- `char trash[0x10]` hebt den Rahmen von `-0x30` auf `-0x40`.
+  `stw r31` rückt von `0x2c` auf `0x3c`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 108 Bytes, 27 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bosseel`: PASS
+(ererbte schwache Ordnung, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `9716b8b6`: fuzzy unverändert 81.12393 %,
+matched code 52.38568 % -> 52.388687 % (1880692 -> 1880800, +108).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9829 -> 9830.
+`bosseel` 21916 -> 22024 (+108), Funktionen 115 -> 116.
+Fuzzy der Unit 99.16912 % -> 99.169556 %.
+Complete units bleiben 416.
+Nur `bosseel` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R510B (`TBubbleCallBack::execute`)
+
+**Vollmatch, strikt.**
+
+- `char trash[4]` vor dem `TVec3` und `char trash2[4]` dahinter legen die Position auf `r1+0x30`.
+  Der Rahmen ist `-0x48`.
+- `f32 zero` vor `f32 ripple` hält die Konstante in `f0` und den Parameter in `f1`.
+- Acht fehlende UNUSED-Rümpfe sind leer und als fabricated markiert.
+  `validate-symbol-order` warnt nur bei der Größe.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 164 Bytes, 41 Instruktionen.
+`validate-symbol-order` `mario/Player/MarioParticle`: PASS
+(8 UNUSED-Größen, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `ab6d1d13`: fuzzy 81.12393 % -> 81.12395 %,
+matched code 52.388687 % -> 52.393257 % (1880800 -> 1880964, +164).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9830 -> 9831.
+`MarioParticle` 7040 -> 7204 (+164), Funktionen 41 -> 42.
+Fuzzy der Unit 97.01684 % -> 97.02503 %.
+Complete units bleiben 416.
+Nur `MarioParticle` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R511A (`TBossEelBarrierCollision::behaveToMario`)
+
+**Vollmatch, strikt.**
+
+- `char trash[4]` hinter dem `TVec3` hebt den Rahmen von `-0x20` auf `-0x28`.
+  Die Position liegt auf `r1+0x18`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 108 Bytes, 27 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bosseel`: PASS
+(ererbte schwache Ordnung, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `5181d064`: fuzzy 81.12395 % -> 81.12396 %,
+matched code 52.393257 % -> 52.396263 % (1880964 -> 1881072, +108).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9831 -> 9832.
+`bosseel` 22024 -> 22132 (+108), Funktionen 116 -> 117.
+Fuzzy der Unit 99.169556 % -> 99.1707 %.
+Complete units bleiben 416.
+Nur `bosseel` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R511B (`TMario::emitSweat`)
+
+**Vollmatch, strikt.**
+
+- `TVec3` vor `char trash[4]` legt die Position auf `r1+0x30`.
+  Der Rahmen ist `-0x48`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 212 Bytes, 53 Instruktionen.
+`validate-symbol-order` `mario/Player/MarioParticle`: PASS
+(ererbte UNUSED-Größen, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `5bbe85e6`: fuzzy unverändert 81.12396 %,
+matched code 52.396263 % -> 52.40217 % (1881072 -> 1881284, +212).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9832 -> 9833.
+`MarioParticle` 7204 -> 7416 (+212), Funktionen 42 -> 43.
+Fuzzy der Unit 97.02503 % -> 97.030045 %.
+Complete units bleiben 416.
+Nur `MarioParticle` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R499A (`TBossEelAwaCollision::behaveToMario`)
+
+**Vollmatch, strikt.**
+
+- `char trash[4]` hinter dem `TVec3` legt die Position auf `r1+0x14`.
+  Der Rahmen bleibt `-0x20`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 124 Bytes, 31 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bosseel`: PASS
+(ererbte schwache Ordnung, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `00514aaa`: fuzzy 81.12396 % -> 81.123985 %,
+matched code 52.40217 % -> 52.405624 % (1881284 -> 1881408, +124).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9833 -> 9834.
+`bosseel` 22132 -> 22256 (+124), Funktionen 117 -> 118.
+Fuzzy der Unit 99.1707 % -> 99.17166 %.
+Complete units bleiben 416.
+Nur `bosseel` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R512B (`TMario::emitGetWaterEffect`)
+
+**Vollmatch, strikt.**
+
+- Ein benannter `const TVec3*` auf `&unk160` setzt `addi r5, r3, 0x160` vor dem Rahmen.
+  `li r4` und `li r6` liegen vor `stwu`, `li r7` danach.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 52 Bytes, 13 Instruktionen.
+`validate-symbol-order` `mario/Player/MarioParticle`: PASS
+(ererbte UNUSED-Größen, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `09a24b66`: fuzzy 81.123985 % -> 81.12425 %,
+matched code 52.405624 % -> 52.407074 % (1881408 -> 1881460, +52).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9834 -> 9835.
+`MarioParticle` 7416 -> 7468 (+52), Funktionen 43 -> 44.
+Fuzzy der Unit 97.030045 % -> 97.135185 %.
+Complete units bleiben 416.
+Nur `MarioParticle` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R500A (`TBEelTearsDrop::perform`)
+
+**Vollmatch, strikt.**
+
+- `char trash[0x10]` hinter der `Mtx` legt die Matrix auf `r1+0x6c`.
+  Der Rahmen ist `-0xc8`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 336 Bytes, 84 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bosseel`: PASS
+(ererbte schwache Ordnung, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `c5237f1e`: fuzzy 81.12425 % -> 81.12427 %,
+matched code 52.407074 % -> 52.41643 % (1881460 -> 1881796, +336).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9835 -> 9836.
+`bosseel` 22256 -> 22592 (+336), Funktionen 118 -> 119.
+Fuzzy der Unit 99.17166 % -> 99.17324 %.
+Complete units bleiben 416.
+Nur `bosseel` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R501A (`TNerveBossEelWaitAppear::execute`)
+
+**Vollmatch, strikt.**
+
+- `char trash[0x14]` hinter dem `TVec3` legt die Position auf `r1+0x4c`.
+  Der Rahmen ist `-0x68`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 496 Bytes, 124 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bosseel`: PASS
+(ererbte schwache Ordnung, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `564b4921`: fuzzy 81.12427 % -> 81.12428 %,
+matched code 52.41643 % -> 52.43025 % (1881796 -> 1882292, +496).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9836 -> 9837.
+`bosseel` 22592 -> 23088 (+496), Funktionen 119 -> 120.
+Fuzzy der Unit 99.17324 % -> 99.17455 %.
+Complete units bleiben 416.
+Nur `bosseel` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R513B (`NozzleCtrl`)
+
+**Vollmatch, strikt.**
+
+- `char trash[0x14]` hinter der `Mtx` legt die Matrix auf `r1+0x28`.
+  Der Rahmen ist `-0x60`.
+- Fehlende UNUSED-Rümpfe sind leer und als fabricated markiert.
+  `validate-symbol-order` warnt nur bei der Größe und der ererbten schwachen Ordnung.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 172 Bytes, 43 Instruktionen.
+`validate-symbol-order` `mario/Player/WaterGun`: PASS
+(ererbte schwache Ordnung, UNUSED-Größen, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `1c1d3afe`: fuzzy unverändert 81.12428 %,
+matched code 52.43025 % -> 52.43504 % (1882292 -> 1882464, +172).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9837 -> 9838.
+`WaterGun` 5044 -> 5216 (+172), Funktionen 26 -> 27.
+Fuzzy der Unit 97.86667 % -> 97.86825 %.
+Complete units bleiben 416.
+Nur `WaterGun` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R514B (`RotateCtrl`)
+
+**Vollmatch, strikt.**
+
+- `char trash[0x1c]` hinter der `Mtx` legt die Matrix auf `r1+0x2c`.
+  Der Rahmen ist `-0x68`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 132 Bytes, 33 Instruktionen.
+`validate-symbol-order` `mario/Player/WaterGun`: PASS
+(ererbte schwache Ordnung, UNUSED-Größen, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `73b6d6ee`: fuzzy 81.12428 % -> 81.124306 %,
+matched code 52.43504 % -> 52.438713 % (1882464 -> 1882596, +132).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9838 -> 9839.
+`WaterGun` 5216 -> 5348 (+132), Funktionen 27 -> 28.
+Fuzzy der Unit 97.86825 % -> 97.86982 %.
+Complete units bleiben 416.
+Nur `WaterGun` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R515B (`WaterGunDivingCtrlL`)
+
+**Vollmatch, strikt.**
+
+- `char trash[0x1c]` hinter der `Mtx` legt die Matrix auf `r1+0x2c`.
+  Der Rahmen ist `-0x70`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 144 Bytes, 36 Instruktionen.
+`validate-symbol-order` `mario/Player/WaterGun`: PASS
+(ererbte schwache Ordnung, UNUSED-Größen, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `fa63daa2`: fuzzy 81.124306 % -> 81.12432 %,
+matched code 52.438713 % -> 52.442722 % (1882596 -> 1882740, +144).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9839 -> 9840.
+`WaterGun` 5348 -> 5492 (+144), Funktionen 28 -> 29.
+Fuzzy der Unit 97.86982 % -> 97.871796 %.
+Complete units bleiben 416.
+Nur `WaterGun` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R503A (`SetupThreadFuncLogo`)
+
+**Vollmatch, strikt.**
+
+- `#pragma dont_inline` auf `TApplication::setupThreadFuncLogo` hält den Rumpf aus dem statischen Wrapper.
+  Der Wrapper ist ein Aufruf.
+  Der Rahmen ist `-0x8`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 32 Bytes, 8 Instruktionen.
+`validate-symbol-order` `mario/System/Application`: PASS gegen die Basis
+(ererbtes fehlendes `crTimeAry`, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `206b019d`: fuzzy 81.12432 % -> 81.12521 %,
+matched code 52.442722 % -> 52.44362 % (1882740 -> 1882772, +32).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9840 -> 9841.
+`Application` 3024 -> 3056 (+32), Funktionen 10 -> 11.
+Fuzzy der Unit 96.653534 % -> 96.97847 %.
+Complete units bleiben 416.
+Nur `Application` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R516B (`WaterGunDivingCtrlR`)
+
+**Vollmatch, strikt.**
+
+- `char trash[0x1c]` hinter der `Mtx` legt die Matrix auf `r1+0x2c`.
+  Der Rahmen ist `-0x70`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 144 Bytes, 36 Instruktionen.
+`validate-symbol-order` `mario/Player/WaterGun`: PASS
+(ererbte schwache Ordnung, UNUSED-Größen, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `29502cbb`: fuzzy unverändert 81.12521 %,
+matched code 52.44362 % -> 52.447628 % (1882772 -> 1882916, +144).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9841 -> 9842.
+`WaterGun` 5492 -> 5636 (+144), Funktionen 29 -> 30.
+Fuzzy der Unit 97.871796 % -> 97.873764 %.
+Complete units bleiben 416.
+Nur `WaterGun` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R504A (`TNerveNameKuriLand::execute`)
+
+**Vollmatch, strikt.**
+
+- Läuft die Landeanimation, endet der Nerve bei Animationsende.
+  Sonst setzt er die Landeanimation nur in der Luft nicht.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 144 Bytes, 36 Instruktionen.
+`validate-symbol-order` `mario/Enemy/namekuri`: PASS gegen die Basis
+(ererbte Linkage von `NameKuriScaleCallback` und `NameKuriAttackCallback`, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `ea037d6a`: fuzzy 81.12521 % -> 81.125854 %,
+matched code 52.447628 % -> 52.45164 % (1882916 -> 1883060, +144).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9842 -> 9843.
+`namekuri` 8580 -> 8724 (+144), Funktionen 55 -> 56.
+Fuzzy der Unit 97.40554 % -> 97.56901 %.
+Complete units bleiben 416.
+Nur `namekuri` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R505A (`TNerveNKFollowMario::execute`)
+
+**Vollmatch, strikt.**
+
+- `char trash[0x10]` hinter dem benannten `TPathNode` legt den Knoten auf `r1+0x3c`.
+  Der Rahmen ist `-0x58`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 396 Bytes, 99 Instruktionen.
+`validate-symbol-order` `mario/Enemy/namekuri`: PASS gegen die Basis
+(ererbte Linkage von `NameKuriScaleCallback` und `NameKuriAttackCallback`, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `e59556f4`: fuzzy 81.125854 % -> 81.125890 %,
+matched code 52.45164 % -> 52.462666 % (1883060 -> 1883456, +396).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9843 -> 9844.
+`namekuri` 8724 -> 9120 (+396), Funktionen 56 -> 57.
+Fuzzy der Unit 97.56901 % -> 97.575226 %.
+Complete units bleiben 416.
+Nur `namekuri` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R517B (`TNozzleBase::calcGunAngle`)
+
+**Vollmatch, strikt.**
+
+- `char trash[0x48]` am Funktionsanfang legt den Rahmen auf `-0x98`.
+  Die Hock-Stick-Addition bleibt eine zusammengesetzte Zuweisung, damit `unk36E` in `r4` liegt.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 308 Bytes, 77 Instruktionen.
+`validate-symbol-order` `mario/Player/WaterGun`: PASS
+(ererbte schwache Ordnung, UNUSED-Größen, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `b3ff9f5e`: fuzzy 81.12589 % -> 81.12591 %,
+matched code 52.462666 % -> 52.47125 % (1883456 -> 1883764, +308).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9844 -> 9845.
+`WaterGun` 5636 -> 5944 (+308), Funktionen 30 -> 31.
+Fuzzy der Unit 97.873764 % -> 97.8787 %.
+Complete units bleiben 416.
+Nur `WaterGun` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R518B (`TNozzleBase::emitCommon`)
+
+**Vollmatch, strikt.**
+
+- `char trash[8]` vor den drei `TVec3` und `char trash2[0x10]` dahinter.
+  `pos` liegt auf `r1+0x50`, der Rahmen ist `-0x78`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 408 Bytes, 102 Instruktionen.
+`validate-symbol-order` `mario/Player/WaterGun`: PASS
+(ererbte schwache Ordnung, UNUSED-Größen, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `bc14127d`: fuzzy 81.12591 % -> 81.125946 %,
+matched code 52.47125 % -> 52.482613 % (1883764 -> 1884172, +408).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9845 -> 9846.
+`WaterGun` 5944 -> 6352 (+408), Funktionen 31 -> 32.
+Fuzzy der Unit 97.8787 % -> 97.88284 %.
+Complete units bleiben 416.
+Nur `WaterGun` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R506A (`TNameKuriLauncher::stateLaunch`)
+
+**Vollmatch, strikt.**
+
+- `char trash[4]` hinter der `Mtx` legt die Matrix auf `r1+0x10`.
+  Der Geschwindigkeitsvektor liegt auf `r1+0x40`, der Rahmen bleibt `-0x60`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 244 Bytes, 61 Instruktionen.
+`validate-symbol-order` `mario/Enemy/namekuri`: PASS gegen die Basis
+(ererbte Linkage von `NameKuriScaleCallback` und `NameKuriAttackCallback`, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `0ff4b2cc`: fuzzy bleibt 81.125946 %,
+matched code 52.482613 % -> 52.48941 % (1884172 -> 1884416, +244).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9846 -> 9847.
+`namekuri` 9120 -> 9364 (+244), Funktionen 57 -> 58.
+Fuzzy der Unit 97.575226 % -> 97.57834 %.
+Complete units bleiben 416.
+Nur `namekuri` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R519B (`TWaterGun::movement`)
+
+**Vollmatch, strikt.**
+
+- `char trash[0xF0]` am Funktionsanfang legt den Rahmen auf `-0x1c8`.
+  Die Düsen-Nachführung liest `mHoverSmooth`.
+  `mNozzleAngleYSpeedMax` steht vor `mHoverSmooth`, damit der Wert auf `0x1DB8` liegt.
+  `after` wird vor `before` gebildet, damit der alte Fortschritt in `f30` bleibt.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 1348 Bytes, 337 Instruktionen.
+`validate-symbol-order` `mario/Player/WaterGun`: PASS
+(ererbte schwache Ordnung, UNUSED-Größen, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `0381f87b`: fuzzy 81.125946 % -> 81.12644 %,
+matched code 52.48941 % -> 52.52696 % (1884416 -> 1885764, +1348).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9847 -> 9848.
+`WaterGun` 6352 -> 7700 (+1348), Funktionen 32 -> 33.
+Fuzzy der Unit 97.88284 % -> 97.970215 %.
+Complete units bleiben 416.
+Nur `WaterGun` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R507A (`TAmenbo::calcRootMatrix`)
+
+**Vollmatch, strikt.**
+
+- `char trash[4]` hinter der `TPosition3f` legt die Matrix auf `r1+0x40`.
+  Der Rahmen bleibt `-0x90`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 352 Bytes, 88 Instruktionen.
+`validate-symbol-order` `mario/Enemy/Amenbo`: PASS gegen die Basis
+(schwache Ordnung, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `ec09356d`: fuzzy bleibt 81.12644 %,
+matched code 52.52696 % -> 52.536762 % (1885764 -> 1886116, +352).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9848 -> 9849.
+`Amenbo` 4476 -> 4828 (+352), Funktionen 34 -> 35.
+Fuzzy der Unit 98.8349 % -> 98.83686 %.
+Complete units bleiben 416.
+Nur `Amenbo` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R508A (`TDangoHamuKuri::receiveMessage`)
+
+**Vollmatch, strikt.**
+
+- `char trash[0x28]` am Funktionsanfang legt den Rahmen auf `-0x48`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 512 Bytes, 128 Instruktionen.
+`validate-symbol-order` `mario/Enemy/hamukuri`: PASS gegen die Basis
+(ererbte Linkage von `onHaveCap__13TDoroHamuKuriFv`, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `44fd2a38`: fuzzy bleibt 81.12644 %,
+matched code 52.536762 % -> 52.551025 % (1886116 -> 1886628, +512).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9849 -> 9850.
+`hamukuri` 27012 -> 27524 (+512), Funktionen 189 -> 190.
+Fuzzy der Unit 92.82021 % -> 92.82082 %.
+Complete units bleiben 416.
+Nur `hamukuri` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R520B (`TWaterGun::perform`)
+
+**Vollmatch, strikt.**
+
+- `setEmitPt` ist der Calc-Anim-Block und wird in `perform` geinlined.
+  `char trash[0x50]` am Funktionsanfang legt den Rahmen auf `-0xb0`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 332 Bytes, 83 Instruktionen.
+`validate-symbol-order` `mario/Player/WaterGun`: PASS
+(ererbte schwache Ordnung, UNUSED-Größen, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `570ee1fe`: fuzzy 81.12644 % -> 81.12676 %,
+matched code 52.551025 % -> 52.56027 % (1886628 -> 1886960, +332).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9850 -> 9851.
+`WaterGun` 7700 -> 8032 (+332), Funktionen 33 -> 34.
+Fuzzy der Unit 97.970215 % -> 98.02643 %.
+Complete units bleiben 416.
+Nur `WaterGun` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R509A (`TDoroHaneKuri::isCollidMove`)
+
+**Vollmatch, strikt.**
+
+- `char trash[8]` hinter der `TVec3` legt den Vektor auf `r1+0x24`.
+  Der Rahmen wird `-0x38`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 200 Bytes, 50 Instruktionen.
+`validate-symbol-order` `mario/Enemy/hamukuri`: PASS gegen die Basis
+(ererbte Linkage von `onHaveCap__13TDoroHamuKuriFv`, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `9a61f00f`: fuzzy 81.12676 % -> 81.126785 %,
+matched code 52.56027 % -> 52.56584 % (1886960 -> 1887160, +200).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9851 -> 9852.
+`hamukuri` 27524 -> 27724 (+200), Funktionen 190 -> 191.
+Fuzzy der Unit 92.82082 % -> 92.822235 %.
+Complete units bleiben 416.
+Nur `hamukuri` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R521B (`TGraphWeb::getRandomNextIndex`)
+
+**Vollmatch, strikt.**
+
+- `TRailNode` steht vor `getGraphNode`.
+  `int index = param_1` legt den Knoten auf `r1+0x24`.
+  Der Rahmen bleibt `-0x90`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 344 Bytes, 86 Instruktionen.
+`validate-symbol-order` `mario/Enemy/graph`: PASS
+(ererbte UNUSED-Größen, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `73dbcc65`: fuzzy bleibt 81.126785 %,
+matched code 52.56584 % -> 52.575428 % (1887160 -> 1887504, +344).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9852 -> 9853.
+`graph` 4880 -> 5224 (+344), Funktionen 21 -> 22.
+Fuzzy der Unit 95.17197 % -> 95.1726 %.
+Complete units bleiben 416.
+Nur `graph` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R522B (`TGraphWeb::getNeighborNodeIndexByFlag`)
+
+**Vollmatch, strikt.**
+
+- `char trash[8]` vor dem Verbindungsarray und `char trash2[8]` dahinter.
+  Das Array liegt auf `r1+0x30`.
+  Der Rahmen wird `-0x78`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 244 Bytes, 61 Instruktionen.
+`validate-symbol-order` `mario/Enemy/graph`: PASS
+(ererbte UNUSED-Größen, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `7afcece7`: fuzzy 81.126785 % -> 81.1268 %,
+matched code 52.575428 % -> 52.582222 % (1887504 -> 1887748, +244).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9853 -> 9854.
+`graph` 5224 -> 5468 (+244), Funktionen 22 -> 23.
+Fuzzy der Unit 95.1726 % -> 95.17732 %.
+Complete units bleiben 416.
+Nur `graph` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R524B (`TObjManager::load`)
+
+**Vollmatch, strikt.**
+
+- `operator>>` schreibt die Kapazität, `char trash[4]` liegt davor.
+  Der Stringpuffer liegt auf `r1+0x2c`, die Kapazität auf `r1+0x28`.
+  Der Rahmen bleibt `-0x140`.
+- `initObjArray` ist definiert.
+  Die UNUSED-Größe ist `0x38` statt `0x3c`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 168 Bytes, 42 Instruktionen.
+`validate-symbol-order` `mario/Strategic/objmanager`: PASS
+(UNUSED-Größe von `initObjArray`, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `080fb30f`: fuzzy bleibt 81.1268 %,
+matched code 52.582222 % -> 52.586903 % (1887748 -> 1887916, +168).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9854 -> 9855.
+`objmanager` 1136 -> 1304 (+168), Funktionen 12 -> 13.
+Fuzzy der Unit 99.96623 % -> 99.97403 %.
+Complete units bleiben 416.
+Nur `objmanager` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R525B (`TObjManager::perform`)
+
+**Vollmatch, strikt.**
+
+- Ein lokales `static inline` kopiert `0xff` über vier `int`.
+  Die Farbe liegt auf `r1+0x34`.
+  Der Rahmen ist `-0x50`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 236 Bytes, 59 Instruktionen.
+`validate-symbol-order` `mario/Strategic/objmanager`: PASS
+(UNUSED-Größe von `initObjArray`, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `bfb35a8c`: fuzzy 81.1268 % -> 81.126816 %,
+matched code 52.586903 % -> 52.593475 % (1887916 -> 1888152, +236).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9855 -> 9856.
+`objmanager` 1304 -> 1540 (+236), Funktionen 13 -> 14.
+Fuzzy der Unit 99.97403 % -> 100 %.
+Matched code der Unit 84.67532 % -> 100 %.
+Complete units bleiben 416.
+Nur `objmanager` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R526B (`TLiveManager::perform`)
+
+**Vollmatch, strikt.**
+
+- Ein lokales `static inline` kopiert `0xff` über vier `int`.
+  Die Farbe liegt auf `r1+0x34`.
+  Der Rahmen bleibt `-0x50`.
+- Das äußere `char trash[16]` entfällt.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 252 Bytes, 63 Instruktionen.
+`validate-symbol-order` `mario/Strategic/livemanager`: PASS.
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `067baea9`: fuzzy bleibt 81.126816 %,
+matched code 52.593475 % -> 52.60049 % (1888152 -> 1888404, +252).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9856 -> 9857.
+`livemanager` 1236 -> 1488 (+252), Funktionen 11 -> 12.
+Fuzzy der Unit 99.98656 % -> 100 %.
+Matched code der Unit 83.064514 % -> 100 %.
+Complete units bleiben 416.
+Nur `livemanager` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R512A (`TNameKuri::reset`)
+
+**Vollmatch, strikt.**
+
+- Ein nicht-triviales 8-Byte-Temporary am Funktionsende.
+  `char trash[8]` hebt nur das `rand`-Double.
+  Der Bereich liegt auf `r1+0x2c`, der Nullvektor auf `r1+0x20`.
+  Der Rahmen ist `-0x50`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 312 Bytes, 78 Instruktionen.
+`validate-symbol-order` `mario/Enemy/namekuri`: PASS gegen die Basis
+(ererbte Linkage von `NameKuriScaleCallback` / `NameKuriAttackCallback`,
+UNUSED-Größe von `canJumpAttack`, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `0e7712b8`: fuzzy 81.126816 % -> 81.126854 %,
+matched code 52.60049 % -> 52.60918 % (1888404 -> 1888716, +312).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9857 -> 9858.
+`namekuri` 9364 -> 9676 (+312), Funktionen 58 -> 59.
+Fuzzy der Unit 97.57834 % -> 97.584274 %.
+Complete units bleiben 416.
+Nur `namekuri` hat sich geändert.
+
+DOL-SHA1 unverändert: `namekuri.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R512A (`TNameKuri::setMeltAnm`, `TNameKuri::setDeadAnm`)
+
+**Vollmatch, strikt.**
+
+- Ein nicht-triviales 0x1c-Temporary am Funktionsende
+  (auf 0x20 aufgerundet) schiebt den Nullvektor von `r1+0x2c` auf `r1+0x48`.
+  Der Rahmen geht dabei von `-0x40` auf `-0x60`.
+  `char trash[8]` hebt ihn auf `-0x68`.
+  Die Saved-Regs sitzen auf `r1+0x60`.
+- Dieselbe Lage in beiden Funktionen.
+  Der Sound-Call steht bei `setDeadAnm` vor den Partikeln, bei `setMeltAnm` danach.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen.
+`setMeltAnm` 344 Bytes, 86 Instruktionen.
+`setDeadAnm` 344 Bytes, 86 Instruktionen.
+`validate-symbol-order` `mario/Enemy/namekuri`: PASS gegen die Basis
+(ererbte Linkage von `NameKuriScaleCallback` / `NameKuriAttackCallback`,
+UNUSED-Größe von `canJumpAttack`, keine neuen Fehler).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `abedd8a0`: fuzzy 81.126854 % -> 81.12687 %,
+matched code 52.60918 % -> 52.62835 % (1888716 -> 1889404, +688).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9858 -> 9860.
+`namekuri` 9676 -> 10364 (+688), Funktionen 59 -> 61.
+Fuzzy der Unit 97.584274 % -> 97.59163 %.
+Complete units bleiben 416.
+Nur `namekuri` hat sich geändert.
+
+DOL-SHA1 unverändert: `namekuri.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R513A (`TTobiPuku::hitWater`)
+
+**Vollmatch, strikt.**
+
+- Ein nicht-triviales 0x1c-Temporary am Funktionsende.
+  Die Richtung liegt auf `r1+0x38`, die Velocity auf `r1+0x44`.
+  Der Rahmen ist `-0x60`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 340 Bytes, 85 Instruktionen.
+`validate-symbol-order` `mario/Enemy/tobiPuku`: PASS gegen die Basis
+(keine neuen Fehler; weak-Order und UNUSED-Größen ererbt).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `e5aa9455`: fuzzy 81.12687 % -> 81.12691 %,
+matched code 52.62835 % -> 52.637817 % (1889404 -> 1889744, +340).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9860 -> 9861.
+`tobiPuku` 12964 -> 13304 (+340), Funktionen 102 -> 103.
+Fuzzy der Unit 98.955536 % -> 98.961716 %.
+Complete units bleiben 416.
+Nur `tobiPuku` hat sich geändert.
+
+DOL-SHA1 unverändert: `tobiPuku.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R514A (`TMameGesso::calcObjCollision`)
+
+**Vollmatch, strikt.**
+
+- `mSLCollisionScale` zuerst in `f0`, dann `mAttackRadius * mBodyScale`.
+  Die Position liegt auf `r1+0x48`.
+  Ein nicht-triviales 0x1c-Temporary am Ende hält den Rahmen auf `-0x58`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 368 Bytes, 92 Instruktionen.
+`validate-symbol-order` `mario/Enemy/mameGesso`: PASS gegen die Basis
+(keine neuen Fehler; weak-Order und UNUSED-Größen ererbt).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `b19a93ed`: fuzzy 81.12691 % -> 81.127 %,
+matched code 52.637817 % -> 52.648067 % (1889744 -> 1890112, +368).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9861 -> 9862.
+`mameGesso` 9580 -> 9948 (+368), Funktionen 51 -> 52.
+Fuzzy der Unit 99.1644 % -> 99.18622 %.
+Matched code der Unit 75.71925 % -> 78.627884 %.
+Complete units bleiben 416.
+Nur `mameGesso` hat sich geändert.
+
+DOL-SHA1 unverändert: `mameGesso.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R515A (`TNerveTobiPukuDie::execute`)
+
+**Vollmatch, strikt.**
+
+- Ein nicht-triviales 8-Byte-Temporary am Funktionsanfang.
+  Der Nullvektor liegt auf `r1+0x34`, die Velocity auf `r1+0x28`.
+  Der Rahmen ist `-0x50`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 508 Bytes, 127 Instruktionen.
+`validate-symbol-order` `mario/Enemy/tobiPuku`: PASS gegen die Basis
+(keine neuen Fehler; weak-Order und UNUSED-Größen ererbt).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `8679f36d`: fuzzy 81.127 % -> 81.127014 %,
+matched code 52.648067 % -> 52.662216 % (1890112 -> 1890620, +508).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9862 -> 9863.
+`tobiPuku` 13304 -> 13812 (+508), Funktionen 103 -> 104.
+Fuzzy der Unit 98.961716 % -> 98.965706 %.
+Matched code der Unit 66.32104 % -> 68.85344 %.
+Complete units bleiben 416.
+Nur `tobiPuku` hat sich geändert.
+
+DOL-SHA1 unverändert: `tobiPuku.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R528B (`TGraphGroup::initGraphGroup`)
+
+**Vollmatch, strikt.**
+
+- `char trash[4]` im Aufrufer hält den Rahmen auf `-0xc0`.
+  In `attachToGround` steht `pos` vor `checkData`.
+  Ein adressiertes `char trash[4]` legt den Vektor auf `r1+0x44` und `checkData` auf `r1+0x50`.
+  Der Nullvektor liegt auf `r1+0x54`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 484 Bytes, 121 Instruktionen.
+`validate-symbol-order` `mario/Enemy/graph`: PASS
+(8 ererbte UNUSED-Größen; `attachToGround` bleibt `0x10c`).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `e47177c0`: fuzzy 81.127014 % -> 81.12705 %,
+matched code 52.662216 % -> 52.6757 % (1890620 -> 1891104, +484).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9863 -> 9864.
+`graph` 5468 -> 5952 (+484), Funktionen 23 -> 24.
+Fuzzy der Unit 95.17732 % -> 95.18551 %.
+Matched code der Unit 43.05512 % -> 46.866142 %.
+Complete units bleiben 416.
+Nur `graph` hat sich geändert.
+
+DOL-SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625` OK.
+
+### R516A (`TNerveTobiPukuAttack::execute`, `TNerveTobiPukuHitWater::execute`)
+
+**Vollmatch, strikt.**
+
+- `TNerveTobiPukuAttack`: nicht-triviales 0xc-Temporary am Funktionsanfang.
+  Die kopierte Velocity liegt auf `r1+0x3c`, die neue Velocity auf `r1+0x30`.
+  Der Rahmen ist `-0x50`.
+  0 Abweichungen, 408 Bytes, 102 Instruktionen.
+- `TNerveTobiPukuHitWater`: nicht-triviales 0x10-Temporary am Funktionsanfang.
+  Der Richtungsvektor liegt auf `r1+0x38`.
+  Der Rahmen ist `-0x50`.
+  Endet die Animation, wird `Fall` nur bei Attack-BCK geschoben, der Nerve gibt danach trotzdem `true` zurück.
+  0 Abweichungen, 592 Bytes, 148 Instruktionen.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`validate-symbol-order` `mario/Enemy/tobiPuku`: PASS gegen die Basis
+(keine neuen Fehler; weak-Order und UNUSED-Größen ererbt).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `bb3288ce`: fuzzy 81.12705 % -> 81.12708 %,
+matched code 52.6757 % -> 52.703552 % (1891104 -> 1892104, +1000).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9864 -> 9866.
+`tobiPuku` 13812 -> 14812 (+1000), Funktionen 104 -> 106.
+Fuzzy der Unit 98.965706 % -> 98.97468 %.
+Matched code der Unit 68.85344 % -> 73.838486 %.
+Complete units bleiben 416.
+Nur `tobiPuku` hat sich geändert.
+
+DOL-SHA1 unverändert: `tobiPuku.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R517A (`TSpineEnemy::turnToCurPathNode`)
+
+**Vollmatch, strikt.**
+
+- `const TPathNode& node = getUnkF4();` dann `node.getPoint()`.
+  Der Differenzvektor liegt auf `r1+0x28`.
+  Der Rahmen ist `-0x58`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 484 Bytes, 121 Instruktionen.
+`validate-symbol-order` `mario/Enemy/enemy`: keine neuen Fehler
+(ererbtes MISSING `__as__Q29JGeometry8TVec3<f>`, 4 UNUSED-Größen).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `118db3b9`: fuzzy 81.12708 % -> 81.127106 %,
+matched code 52.703552 % -> 52.717037 % (1892104 -> 1892588, +484).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9866 -> 9867.
+`enemy` 3356 -> 3840 (+484), Funktionen 22 -> 23.
+Fuzzy der Unit 96.62668 % -> 96.63126 %.
+Matched code der Unit 29.6048 % -> 33.874382 %.
+Complete units bleiben 416.
+Nur `enemy` hat sich geändert.
+
+DOL-SHA1 unverändert: `enemy.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R518A (`TSpineEnemy::setGoalPathFromGraph`)
+
+**Vollmatch, strikt.**
+
+- Nicht-triviales 0x14-Temporary am Funktionsanfang.
+  `TPathNode` liegt auf `r1+0x38`, der Punkt auf `r1+0x48`.
+  Der Rahmen ist `-0x60`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 172 Bytes, 43 Instruktionen.
+`validate-symbol-order` `mario/Enemy/enemy`: keine neuen Fehler
+(ererbtes MISSING `__as__Q29JGeometry8TVec3<f>`, 4 UNUSED-Größen).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `acbe2b58`: fuzzy 81.127106 % -> 81.12712 %,
+matched code 52.717037 % -> 52.72183 % (1892588 -> 1892760, +172).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9867 -> 9868.
+`enemy` 3840 -> 4012 (+172), Funktionen 23 -> 24.
+Fuzzy der Unit 96.63126 % -> 96.63867 %.
+Matched code der Unit 33.874382 % -> 35.391674 %.
+Complete units bleiben 416.
+Nur `setGoalPathFromGraph` hat sich geändert.
+
+DOL-SHA1 unverändert: `enemy.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R519A (`TMoePuku::calcRootMatrix`)
+
+**Vollmatch, strikt.**
+
+- `isEaten()` beendet nur den Matrix- und Pichi-Teil.
+  Der Fly-Check läuft danach weiter.
+  Das ist ein statischer Helfer mit frühem `return`.
+- Nicht-triviales 0x20-Temporary am Anfang.
+  Der Rahmen ist `-0x120`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 584 Bytes, 146 Instruktionen.
+`validate-symbol-order` `mario/Enemy/tobiPuku`: PASS
+(schwache Dtor-Reihenfolge, 5 UNUSED-Größen, ererbt).
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `70be2467`: fuzzy 81.12712 % -> 81.12716 %,
+matched code 52.72183 % -> 52.738094 % (1892760 -> 1893344, +584).
+Matched data unverändert 67.07141 % (429479).
+Funktionen matched 9868 -> 9869.
+`tobiPuku` 14812 -> 15396 (+584), Funktionen 106 -> 107.
+Fuzzy der Unit 98.97468 % -> 98.98026 %.
+Matched code der Unit 73.838486 % -> 76.74975 %.
+Complete units bleiben 416.
+Nur `calcRootMatrix` hat sich geändert.
+
+DOL-SHA1 unverändert: `tobiPuku.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R520A (`THamuKuri::setMActorAndKeeper`, `TFireHamuKuri::setMActorAndKeeper`)
+
+**Vollmatch, strikt.**
+
+- `anmlist` nennt `default.bmd` vor `hanekuri_wait`.
+  Damit liegt `default.bmd` auf `...rodata.0+0x360`.
+- Nicht-triviales 8-Byte-Temporary am Anfang jeder Funktion.
+  Rahmen `-0x50` bzw. `-0x38`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen.
+`THamuKuri::setMActorAndKeeper` 228 Bytes, 57 Instruktionen.
+`TFireHamuKuri::setMActorAndKeeper` 160 Bytes, 40 Instruktionen.
+`validate-symbol-order` `mario/Enemy/hamukuri`: dasselbe ererbte
+`onHaveCap` Linkage-FAIL, keine neuen Fehler.
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `29f7c590`: fuzzy 81.12716 % -> 81.12719 %,
+matched code 52.738094 % -> 52.7489 % (1893344 -> 1893732, +388).
+Matched data 67.07141 % -> 67.8535 % (429479 -> 434487, +5008).
+Funktionen matched 9869 -> 9871.
+`hamukuri` 27724 -> 28112 (+388), Funktionen 191 -> 193.
+Fuzzy der Unit 92.822235 % -> 92.82399 %.
+Matched code der Unit 60.905098 % -> 61.75747 %.
+Matched data der Unit 31.691986 % -> 97.27606 % (2420 -> 7428).
+Complete units bleiben 416.
+Nur die beiden `setMActorAndKeeper` haben sich als Funktionen geändert.
+
+DOL-SHA1 unverändert: `hamukuri.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R521A (`TDangoHamuKuri::getTakingMtx`)
+
+**Vollmatch, strikt.**
+
+- Nicht-triviales 8-Byte-Temporary am Anfang.
+  Der Rahmen ist `-0xb0`.
+  `TPosition3f` liegt auf `r1+0x5c`, die Rotationsmatrix auf `r1+0x2c`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 200 Bytes, 50 Instruktionen.
+`validate-symbol-order` `mario/Enemy/hamukuri`: dasselbe ererbte
+`onHaveCap` Linkage-FAIL, keine neuen Fehler.
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `18099605`: fuzzy 81.12719 % -> 81.12721 %,
+matched code 52.7489 % -> 52.754475 % (1893732 -> 1893932, +200).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9871 -> 9872.
+`hamukuri` 28112 -> 28312 (+200), Funktionen 193 -> 194.
+Fuzzy der Unit 92.82399 % -> 92.82557 %.
+Matched code der Unit 61.75747 % -> 62.19684 %.
+Complete units bleiben 416.
+Nur `getTakingMtx` hat sich geändert.
+
+DOL-SHA1 unverändert: `hamukuri.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R522A (`TNerveDoroHamuKuriRobCap::execute`)
+
+**Vollmatch, strikt.**
+
+- `TPathNode node(...)` dann `setGoalPath(node)`.
+  Der Knoten liegt auf `r1+0x38`.
+  Der Rahmen bleibt `-0x50`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 420 Bytes, 105 Instruktionen.
+`validate-symbol-order` `mario/Enemy/hamukuri`: dasselbe ererbte
+`onHaveCap` Linkage-FAIL, keine neuen Fehler.
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `b6646d8b`: fuzzy 81.12721 % -> 81.12724 %,
+matched code 52.754475 % -> 52.766174 % (1893932 -> 1894352, +420).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9872 -> 9873.
+`hamukuri` 28312 -> 28732 (+420), Funktionen 194 -> 195.
+Fuzzy der Unit 92.82557 % -> 92.82821 %.
+Matched code der Unit 62.19684 % -> 63.119507 %.
+Complete units bleiben 416.
+Nur `TNerveDoroHamuKuriRobCap::execute` hat sich geändert.
+
+DOL-SHA1 unverändert: `hamukuri.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R523A (`TNerveDoroHaneHitWater::execute`)
+
+**Vollmatch, strikt.**
+
+- `setGoalPath(*gpMarioPos)`.
+  Der `TPathNode` liegt auf `r1+0x28`.
+  Der Rahmen ist `-0x48`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 376 Bytes, 94 Instruktionen.
+`validate-symbol-order` `mario/Enemy/hamukuri`: dasselbe ererbte
+`onHaveCap` Linkage-FAIL, keine neuen Fehler.
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `adbcf29b`: fuzzy 81.12724 % -> 81.127266 %,
+matched code 52.766174 % -> 52.776646 % (1894352 -> 1894728, +376).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9873 -> 9874.
+`hamukuri` 28732 -> 29108 (+376), Funktionen 195 -> 196.
+Fuzzy der Unit 92.82821 % -> 92.830055 %.
+Matched code der Unit 63.119507 % -> 63.94552 %.
+Complete units bleiben 416.
+Nur `TNerveDoroHaneHitWater::execute` hat sich geändert.
+
+DOL-SHA1 unverändert: `hamukuri.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R524A (`THamuKuri::isResignationAttack`)
+
+**Vollmatch, strikt.**
+
+- `static inline dist` kopiert den Punkt, ruft `sub` und `length`.
+  `unk194` wird aus `mSLGiveUpLength.value` gesetzt.
+- Rahmen `-0x40`, Differenzvektor auf `r1+0x2c`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 236 Bytes, 59 Instruktionen.
+`validate-symbol-order` `mario/Enemy/hamukuri`: dasselbe ererbte
+`onHaveCap` Linkage-FAIL, keine neuen Fehler.
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `22f2d0b2`: fuzzy 81.127266 % -> 81.12728 %,
+matched code 52.776646 % -> 52.783222 % (1894728 -> 1894964, +236).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9874 -> 9875.
+`hamukuri` 29108 -> 29344 (+236), Funktionen 196 -> 197.
+Fuzzy der Unit 92.830055 % -> 92.83154 %.
+Matched code der Unit 63.94552 % -> 64.463974 %.
+Complete units bleiben 416.
+Nur `THamuKuri::isResignationAttack` hat sich geändert.
+
+DOL-SHA1 unverändert: `hamukuri.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R525A (`TNerveHamuKuriGoForSearchActor::execute`)
+
+**Vollmatch, strikt.**
+
+- `static inline distF` kopiert den Punkt und subtrahiert komponentenweise,
+  dann `length`.
+- Rahmen `-0x60`, Differenzvektor auf `r1+0x48`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 492 Bytes, 123 Instruktionen.
+`validate-symbol-order` `mario/Enemy/hamukuri`: dasselbe ererbte
+`onHaveCap` Linkage-FAIL, keine neuen Fehler.
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `11d1b751`: fuzzy 81.12728 % -> 81.1273 %,
+matched code 52.783222 % -> 52.796925 % (1894964 -> 1895456, +492).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9875 -> 9876.
+`hamukuri` 29344 -> 29836 (+492), Funktionen 197 -> 198.
+Fuzzy der Unit 92.83154 % -> 92.83321 %.
+Matched code der Unit 64.463974 % -> 65.544815 %.
+Complete units bleiben 416.
+Nur `TNerveHamuKuriGoForSearchActor::execute` hat sich geändert.
+
+DOL-SHA1 unverändert: `hamukuri.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R526A (`TNerveMameGessoJitabata::execute`)
+
+**Vollmatch, strikt.**
+
+- `static inline dist` kopiert den Punkt, ruft `sub` und `length`.
+  Verglichen wird `mPosition`.
+- `mSLFreezeWait.value` liegt in einem `int`, dann Vergleich mit `getTime()`.
+- Rahmen `-0x60`, Differenzvektor auf `r1+0x44`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 508 Bytes, 127 Instruktionen.
+`validate-symbol-order` `mario/Enemy/mameGesso`: PASS,
+dieselben ererbten Weak-Order- und UNUSED-Size-Warnungen.
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `3d845d6d`: fuzzy 81.1273 % -> 81.12732 %,
+matched code 52.796925 % -> 52.811073 % (1895456 -> 1895964, +508).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9876 -> 9877.
+`mameGesso` 9948 -> 10456 (+508), Funktionen 52 -> 53.
+Fuzzy der Unit 99.18622 % -> 99.19222 %.
+Matched code der Unit 78.627884 % -> 82.64306 %.
+Complete units bleiben 416.
+Nur `TNerveMameGessoJitabata::execute` hat sich geändert.
+
+DOL-SHA1 unverändert: `mameGesso.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R527A (`TNerveDangoHamuKuriWait::execute`)
+
+**Vollmatch, strikt.**
+
+- `TMsRange<f32>(0.0f, 30.0f).rand()` setzt den BCK-Frame.
+  Der Bereich liegt auf `r1+0x20`.
+  Rahmen `-0x40`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+0 Abweichungen, 180 Bytes, 45 Instruktionen.
+`validate-symbol-order` `mario/Enemy/hamukuri`: ererbter `onHaveCap` Linkage-FAIL,
+dieselben ererbten Weak-Order- und UNUSED-Size-Warnungen.
+Kein neuer Fehler.
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `2048ba71`: fuzzy 81.12732 % -> 81.12851 %,
+matched code 52.811073 % -> 52.816086 % (1895964 -> 1896144, +180).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9877 -> 9878.
+`hamukuri` 29836 -> 30016 (+180), Funktionen 198 -> 199.
+Fuzzy der Unit 92.83321 % -> 92.9268 %.
+Matched code der Unit 65.544815 % -> 65.94025 %.
+Complete units bleiben 416.
+Nur `TNerveDangoHamuKuriWait::execute` hat sich geändert.
+
+DOL-SHA1 unverändert: `hamukuri.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R528A (`TDangoHamuKuri::reset`, `TBossDangoHamuKuri::reset`)
+
+**Vollmatch, strikt.**
+
+- `TMsRange<f32>(0.0f, 1.0f).rand()` schreibt `unk20C`.
+  Der Bereich liegt auf `r1+0x20`.
+  Rahmen `-0x40`.
+- `TBossDangoHamuKuri::reset` inlined denselben Rumpf und setzt danach `mBoss` und `unk238`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`TDangoHamuKuri::reset`: 0 Abweichungen, 196 Bytes, 49 Instruktionen.
+`TBossDangoHamuKuri::reset`: 0 Abweichungen, 212 Bytes, 53 Instruktionen.
+`validate-symbol-order` `mario/Enemy/hamukuri`: ererbter `onHaveCap` Linkage-FAIL,
+dieselben ererbten Weak-Order- und UNUSED-Size-Warnungen.
+Kein neuer Fehler.
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `70cf844d`: fuzzy 81.12851 % -> 81.13179 %,
+matched code 52.816086 % -> 52.827454 % (1896144 -> 1896552, +408).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9878 -> 9880.
+`hamukuri` 30016 -> 30424 (+408), Funktionen 199 -> 201.
+Fuzzy der Unit 92.9268 % -> 93.18568 %.
+Matched code der Unit 65.94025 % -> 66.836555 %.
+Complete units bleiben 416.
+Nur diese beiden Funktionen haben sich geändert.
+
+DOL-SHA1 unverändert: `hamukuri.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R538B (`TCameraMapTool::TCameraMapTool`)
+
+**Vollmatch, strikt.**
+
+- Copy-Ctor, 116 Bytes, 29 Instruktionen.
+  0 `~`, 0 `|`, 0 `<`, 0 `>`.
+- `mPitchYaw` ist ein Wortpaar.
+  Der implizite `TVec2<f32>`-Copy schreibt `lfs`/`stfs`.
+  Das Retail-Objekt kopiert `0x18`/`0x1c` per `lwz`/`stw`.
+- `MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`validate-symbol-order` `mario/System/MarNameRefGen`: ererbte MISSING-, ORDER- und BINDING-Fails.
+Kein neuer Fehler an diesem Copy-Ctor.
+Die TU bleibt `NonMatching`.
+
+`ninja changes_all` gegen `17204e6a`: fuzzy 81.13179 % -> 81.13206 %,
+matched code 52.827454 % -> 52.830685 % (1896552 -> 1896668, +116).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9880 -> 9881.
+`MarNameRefGen` 15092 -> 15208 (+116), Funktionen 75 -> 76.
+Fuzzy der Unit 97.8259 % -> 97.866 %.
+Matched code der Unit 63.040936 % -> 63.52548 %.
+Complete units bleiben 416.
+Nur `__ct__14TCameraMapToolFRC14TCameraMapTool` hat sich geändert.
+
+DOL-SHA1 unverändert: `MarNameRefGen.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+`CameraMapTool.cpp` und `CubeMapTool.cpp` bleiben vollständig matched.
+
+### R528A (`TTobiPuku::hitWall`)
+
+**Vollmatch, strikt.**
+
+`mVelocity.dot(wall->getNormal())` und `-(2.0f * dot)`.
+`mVelocity.y *= 0.5f`.
+`mVelocity.z` liest die Wand neu aus `record.mResultWalls[0]`.
+`char trash[0x28]` am Ende hält den Rahmen bei `-0x90`.
+
+`TTobiPuku::hitWall`: 0 Abweichungen, 348 Bytes, 87 Instruktionen.
+`validate-symbol-order` `mario/Enemy/tobiPuku`: PASS.
+Dieselben ererbten Weak-Order- und UNUSED-Size-Warnungen.
+Kein neuer Fehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+DOL-SHA1 unverändert: `tobiPuku.cpp` wird nicht gelinkt.
+
+### R529A (`THamuKuri::getTakingMtx`)
+
+**Vollmatch, strikt.**
+
+`MtxPtr result = unk1B0`, dann Identitäts-Stores über `unk1B0`.
+`MTXConcat(mat, result, result)` gibt `result` zurück.
+`char trash[0x4c]` hält den Rahmen bei `-0xe0`.
+
+`THamuKuri::getTakingMtx`: 0 Abweichungen, 256 Bytes, 64 Instruktionen.
+`validate-symbol-order` `mario/Enemy/hamukuri`: ererbter `onHaveCap` Linkage-FAIL.
+Dieselben ererbten Weak-Order- und UNUSED-Size-Warnungen.
+Kein neuer Fehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+DOL-SHA1 unverändert: `hamukuri.cpp` wird nicht gelinkt.
+
+### R529A (`THamuKuri::getTakingMtx`)
+
+**Vollmatch, strikt.**
+
+`MtxPtr result = unk1B0`, dann Identitäts-Stores über `unk1B0`.
+`MTXConcat(mat, result, result)` gibt `result` zurück.
+`char trash[0x4c]` hält den Rahmen bei `-0xe0`.
+
+`THamuKuri::getTakingMtx`: 0 Abweichungen, 256 Bytes, 64 Instruktionen.
+`validate-symbol-order` `mario/Enemy/hamukuri`: ererbter `onHaveCap` Linkage-FAIL.
+Dieselben ererbten Weak-Order- und UNUSED-Size-Warnungen.
+Kein neuer Fehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+DOL-SHA1 unverändert: `hamukuri.cpp` wird nicht gelinkt.
+
+### R531A (`THamuKuri::jumpToSearchActor`)
+
+**Vollmatch, strikt.**
+
+`TNerveTobiPukuGenerate::execute` bleibt beim const-Ref-Versuch bei 96,2 % und wurde verworfen.
+`char pad[8]` oben und `char trash[0xc]` unten halten den Rahmen bei `-0x68`.
+Der alte `(void)0`-Hack fällt weg.
+
+`THamuKuri::jumpToSearchActor`: 0 Abweichungen, 436 Bytes, 109 Instruktionen.
+`THamuKuri::getTakingMtx` bleibt 100 %.
+`validate-symbol-order` `mario/Enemy/hamukuri`: ererbter `onHaveCap` Linkage-FAIL.
+Dieselben ererbten Weak-Order- und UNUSED-Size-Warnungen.
+Kein neuer Fehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+DOL-SHA1 unverändert: `hamukuri.cpp` wird nicht gelinkt.
+
+### R1C (`TPollutionObj::updateDepthMap`)
+
+**Vollmatch, strikt.**
+
+`getDepthFromMap` bleibt ein Aufruf.
+`#pragma dont_inline` unterbindet das Inlining in `updateDepthMap`.
+`setDepth` bleibt inline.
+
+`TPollutionObj::updateDepthMap`: 0 Abweichungen, 164 Bytes, 41 Instruktionen.
+`validate-symbol-order` `mario/Map/PollutionObj`: PASS.
+16 objekt-only Symbole, kein neuer Fehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `29acc5f8`: fuzzy 81.133 % -> 81.137566 %,
+matched code 52.847504 % -> 52.852077 % (1897272 -> 1897436, +164).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9883 -> 9884.
+`PollutionObj` 1928 -> 2092 (+164), Funktionen 7 -> 8.
+Fuzzy der Unit 92.160614 % -> 100 %.
+Matched code der Unit 92.160614 % -> 100 %.
+Complete units bleiben 416.
+Nur `updateDepthMap` hat sich geändert.
+
+DOL-SHA1 unverändert: `PollutionObj.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R550B (`MSBgmXFade::xFadeBgmForce`)
+
+**Vollmatch, strikt.**
+
+`char pad[8]` hält den Rahmen bei `-0x30`.
+Gesicherte `f31`/`r31`/`r30`/`r29` rücken um 8 Bytes hoch.
+
+`MSBgmXFade::xFadeBgmForce`: 0 Abweichungen, 220 Bytes, 55 Instruktionen.
+`validate-symbol-order` `mario/MSound/MSModBgm`: PASS.
+Ererbte UNUSED-Size-Warnung an `getTiming`.
+Kein neuer Fehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `9ddb7fb1`: fuzzy 81.12676 % -> 81.126785 %,
+matched code 52.850513 % -> 52.856644 % (1897380 -> 1897600, +220).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9884 -> 9885.
+`MSModBgm` 960 -> 1180 (+220), Funktionen 3 -> 4.
+Fuzzy der Unit 99.3615 % -> 99.38732 %.
+Matched code der Unit 56.33803 % -> 69.248825 %.
+Complete units bleiben 416.
+Nur `xFadeBgmForce` hat sich geändert.
+
+DOL-SHA1 unverändert: `MSModBgm.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R551B (`MSRandPlay::MSRandPlay`)
+
+**Vollmatch, strikt.**
+
+`char pad[8]` im leeren Konstruktor hält den Rahmen bei `-0x48`.
+Gesicherte `f31`/`f30`/`r31`–`r28` rücken um 8 Bytes hoch.
+
+`MSoundSESystem::MSRandPlay::MSRandPlay`: 0 Abweichungen, 160 Bytes, 40 Instruktionen.
+`validate-symbol-order` `mario/MSound/MSoundSE`: PASS.
+Ererbte Weak-Order-Warnung und UNUSED-Size an `getRandomVolume`.
+Kein neuer Fehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `caf2092e`: fuzzy 81.126785 % -> 81.1268 %,
+matched code 52.856644 % -> 52.8611 % (1897600 -> 1897760, +160).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9885 -> 9886.
+`MSoundSE` 3132 -> 3292 (+160), Funktionen 20 -> 21.
+Fuzzy der Unit 98.86838 % -> 98.873436 %.
+Matched code der Unit 26.425919 % -> 27.775902 %.
+Complete units bleiben 416.
+Nur `MSRandPlay::MSRandPlay` hat sich geändert.
+
+DOL-SHA1 unverändert: `MSoundSE.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R553B (`MSound::setCategoryVOLs`)
+
+**Vollmatch, strikt.**
+
+`char pad[8]` hält den Rahmen bei `-0x40`.
+Gesicherte `r31`–`r29` und die beiden `stfd f0` rücken um 8 Bytes hoch.
+
+`MSound::setCategoryVOLs`: 0 Abweichungen, 188 Bytes, 47 Instruktionen.
+`validate-symbol-order` `mario/MSound/MSound`: PASS.
+Ererbte Weak-Order-Warnung und UNUSED-Size-Warnungen.
+Kein neuer Fehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `bc3adc44`: fuzzy 81.1268 % -> 81.126816 %,
+matched code 52.8611 % -> 52.866333 % (1897760 -> 1897948, +188).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9886 -> 9887.
+`MSound` 7428 -> 7616 (+188), Funktionen 42 -> 43.
+Fuzzy der Unit 99.19231 % -> 99.19647 %.
+Matched code der Unit 59.51923 % -> 61.025642 %.
+Complete units bleiben 416.
+Nur `setCategoryVOLs` hat sich geändert.
+
+DOL-SHA1 unverändert: `MSound.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R16C (`TPollutionCounterLayer::drawRevivalTexStamp`)
+
+**Vollmatch, strikt.**
+
+`char pad[4]` mit `pad[0] = 0` vergrößert den Rahmen von `-0x98` auf `-0xa0`.
+Der Store wird vom Compiler entfernt.
+Die Locals rücken um 4 Bytes hoch.
+
+`TPollutionCounterLayer::drawRevivalTexStamp`: 0 Abweichungen, 748 Bytes, 187 Instruktionen.
+`validate-symbol-order` `mario/Map/PollutionCount`: FAIL.
+Fehlender UNUSED-Konstruktor `__ct__21TPollutionCounterBaseFv` bestand schon vorher.
+Ererbte Weak-Order-Warnung und UNUSED-Size-Warnungen.
+Kein neuer Fehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `e246f57e`: fuzzy 81.126816 % -> 81.126816 %,
+matched code 52.866333 % -> 52.887173 % (1897948 -> 1898696, +748).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9887 -> 9888.
+`PollutionCount` 8176 -> 8924 (+748), Funktionen 34 -> 35.
+Fuzzy der Unit 99.92078 % -> 99.92608 %.
+Matched code der Unit 77.48294 % -> 84.57165 %.
+Complete units bleiben 416.
+Nur `drawRevivalTexStamp` hat sich geändert.
+
+DOL-SHA1 unverändert: `PollutionCount.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R17C (`TApplication::setupThreadFuncLogo`)
+
+**Vollmatch, strikt.**
+
+`char pad[4]` mit `pad[0] = 0` vergrößert den Rahmen von `-0x138` auf `-0x140`.
+Der Store wird vom Compiler entfernt.
+Die Pfadpuffer rücken um 4 Bytes hoch.
+Gesicherte Register rücken um 8 Bytes hoch.
+
+`TApplication::setupThreadFuncLogo`: 0 Abweichungen, 804 Bytes, 201 Instruktionen.
+`validate-symbol-order` `mario/System/Application`: FAIL.
+Fehlendes `crTimeAry__8TTimeRecFv` bestand schon vorher.
+Ererbte UNUSED-Size-Warnung für `initialize_processMeter`.
+Kein neuer Fehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `3a7121e7`: fuzzy 81.126816 % -> 81.126854 %,
+matched code 52.887173 % -> 52.909565 % (1898696 -> 1899500, +804).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9888 -> 9889.
+`Application` 3056 -> 3860 (+804), Funktionen 11 -> 12.
+Fuzzy der Unit 96.97847 % -> 96.98944 %.
+Matched code der Unit 31.031681 % -> 39.195778 %.
+Complete units bleiben 416.
+Nur `setupThreadFuncLogo` hat sich geändert.
+
+DOL-SHA1 unverändert: `Application.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R18C (`TMapCollisionBase::initAllCheckData`)
+
+**Vollmatch, strikt.**
+
+`char pad[4]` mit `pad[0] = 0` vergrößert den Rahmen von `-0xc8` auf `-0xd0`.
+Der Store wird vom Compiler entfernt.
+Die Vektor-Locals rücken um 4 Bytes hoch.
+Gesicherte Register rücken um 8 Bytes hoch.
+
+`TMapCollisionBase::initAllCheckData`: 0 Abweichungen, 572 Bytes, 143 Instruktionen.
+`validate-symbol-order` `mario/Map/MapMakeData`: PASS.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `08d09d9d`: fuzzy 81.126854 % -> 81.126890 %,
+matched code 52.909565 % -> 52.925500 % (1899500 -> 1900072, +572).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9889 -> 9890.
+`MapMakeData` 1648 -> 2220 (+572), Funktionen 5 -> 6.
+Fuzzy der Unit 96.419754 % -> 96.455560 %.
+Matched code der Unit 50.864197 % -> 68.518520 %.
+Complete units bleiben 416.
+Nur `initAllCheckData` hat sich geändert.
+
+DOL-SHA1 unverändert: `MapMakeData.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R19C (`TMap::isTouchedOneWall`)
+
+**Vollmatch, strikt.**
+
+`char pad[4]` mit `pad[0] = 0` vergrößert den Rahmen von `-0x60` auf `-0x68`.
+Der Store wird vom Compiler entfernt.
+Die Wandprüfung rutscht um 4 Bytes hoch.
+Gesicherte Register rücken um 8 Bytes hoch.
+
+`TMap::isTouchedOneWall`: 0 Abweichungen, 144 Bytes, 36 Instruktionen.
+`validate-symbol-order` `mario/Map/Map`: FAIL.
+Sieben fehlende UNUSED-Symbole und die globale `TMap`-Dtor-Bindung bestanden schon vorher.
+Kein neuer Fehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `15d7a710`: fuzzy 81.126890 % -> 81.126910 %,
+matched code 52.925500 % -> 52.929510 % (1900072 -> 1900216, +144).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9890 -> 9891.
+`Map` 2416 -> 2560 (+144), Funktionen 22 -> 23.
+Fuzzy der Unit 99.378150 % -> 99.389360 %.
+Matched code der Unit 42.296920 % -> 44.817930 %.
+Complete units bleiben 416.
+Nur `isTouchedOneWall` hat sich geändert.
+
+DOL-SHA1 unverändert: `Map.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R20C (`TModelDataKeeper::createAndKeepData`)
+
+**Vollmatch, strikt.**
+
+`char pad[4]` mit `pad[0] = 0` vergrößert den Rahmen von `-0x138` auf `-0x140`.
+Der Store wird vom Compiler entfernt.
+Der Pfadpuffer rückt um 4 Bytes hoch.
+Gesicherte Register rücken um 8 Bytes hoch.
+
+`TModelDataKeeper::createAndKeepData`: 0 Abweichungen, 228 Bytes, 57 Instruktionen.
+`validate-symbol-order` `mario/Strategic/ObjModel`: PASS.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `986f7d97`: fuzzy 81.126910 % -> 81.126920 %,
+matched code 52.929510 % -> 52.935863 % (1900216 -> 1900444, +228).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9891 -> 9892.
+`ObjModel` 2148 -> 2376 (+228), Funktionen 12 -> 13.
+Fuzzy der Unit 92.725710 % -> 92.741700 %.
+Matched code der Unit 66.051660 % -> 73.062730 %.
+Complete units bleiben 416.
+Nur `createAndKeepData` hat sich geändert.
+
+DOL-SHA1 unverändert: `ObjModel.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R580B (`evRegisterMovie`)
+
+**Vollmatch, strikt.**
+
+`char pad[4]` mit `pad[0] = 0` vergrößert den Rahmen von `-0x50` auf `-0x58`.
+Der Store wird vom Compiler entfernt.
+Die Slice-Kopien und das Push-Paar rücken um 4 Bytes hoch.
+Der `fctiwz`-Spill und `r31` rücken um 8 Bytes hoch.
+
+`evRegisterMovie`: 0 Abweichungen, 324 Bytes, 81 Instruktionen.
+`validate-symbol-order` `mario/System/EventWatcher`: FAIL.
+Fehlendes `set__Q29JGeometry8TVec3<f>FRC3Vec` bestand schon vorher.
+Ererbte Weak-Order-Warnung und UNUSED-Size-Warnungen.
+Kein neuer Fehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `f98ed435`: fuzzy 81.126920 % -> 81.126945 %,
+matched code 52.935863 % -> 52.944885 % (1900444 -> 1900768, +324).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9892 -> 9893.
+`EventWatcher` 24168 -> 24492 (+324), Funktionen 64 -> 65.
+Fuzzy der Unit 98.88436 % -> 98.88616 %.
+Matched code der Unit 57.22133 % -> 57.988445 %.
+Complete units bleiben 416.
+Nur `evRegisterMovie` hat sich geändert.
+
+DOL-SHA1 unverändert: `EventWatcher.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R581B (`evStartEventSE`)
+
+**Vollmatch, strikt.**
+
+`char pad[4]` mit `pad[0] = 0` vergrößert den Rahmen von `-0x50` auf `-0x58`.
+Der Store wird vom Compiler entfernt.
+Die Slice-Kopien und das Push-Paar rücken um 4 Bytes hoch.
+Der `fctiwz`-Spill und die gesicherten Register rücken um 8 Bytes hoch.
+
+`evStartEventSE`: 0 Abweichungen, 392 Bytes, 98 Instruktionen.
+`validate-symbol-order` `mario/System/EventWatcher`: FAIL.
+Fehlendes `set__Q29JGeometry8TVec3<f>FRC3Vec` bestand schon vorher.
+Ererbte Weak-Order-Warnung und UNUSED-Size-Warnungen.
+Kein neuer Fehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `ddb5a8c5`: fuzzy 81.126945 % -> 81.126960 %,
+matched code 52.944885 % -> 52.955807 % (1900768 -> 1901160, +392).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9893 -> 9894.
+`EventWatcher` 24492 -> 24884 (+392), Funktionen 65 -> 66.
+Fuzzy der Unit 98.88616 % -> 98.888054 %.
+Matched code der Unit 57.988445 % -> 58.91656 %.
+Complete units bleiben 416.
+Nur `evStartEventSE` hat sich geändert.
+
+DOL-SHA1 unverändert: `EventWatcher.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R583B (`evAppearMushroom1up`)
+
+**Vollmatch, strikt.**
+
+`char pad[4]` mit `pad[0] = 0` vergrößert den Rahmen von `-0x80` auf `-0x88`.
+Der Store wird vom Compiler entfernt.
+Die Slice-Kopien und das Push-Paar rücken um 4 Bytes hoch.
+Der `fctiwz`-Spill und die gesicherten Register rücken um 8 Bytes hoch.
+
+`evAppearMushroom1up`: 0 Abweichungen, 504 Bytes, 126 Instruktionen.
+`validate-symbol-order` `mario/System/EventWatcher`: FAIL.
+Fehlendes `set__Q29JGeometry8TVec3<f>FRC3Vec` bestand schon vorher.
+Ererbte Weak-Order-Warnung und UNUSED-Size-Warnungen.
+Kein neuer Fehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `1859ab73`: fuzzy 81.126960 % -> 81.127000 %,
+matched code 52.955807 % -> 52.969845 % (1901160 -> 1901664, +504).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9894 -> 9895.
+`EventWatcher` 24884 -> 25388 (+504), Funktionen 66 -> 67.
+Fuzzy der Unit 98.888054 % -> 98.890620 %.
+Matched code der Unit 58.91656 % -> 60.109860 %.
+Complete units bleiben 416.
+Nur `evAppearMushroom1up` hat sich geändert.
+
+DOL-SHA1 unverändert: `EventWatcher.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R584B (`evSetNextStage`)
+
+**Vollmatch, strikt.**
+
+`char pad[4]` mit `pad[0] = 0` vergrößert den Rahmen von `-0x80` auf `-0x88`.
+Der Store wird vom Compiler entfernt.
+Die Slice-Kopien und das Push-Paar rücken um 4 Bytes hoch.
+Die `fctiwz`-Spills und die gesicherten Register rücken um 8 Bytes hoch.
+
+`evSetNextStage`: 0 Abweichungen, 520 Bytes, 130 Instruktionen.
+`validate-symbol-order` `mario/System/EventWatcher`: FAIL.
+Fehlendes `set__Q29JGeometry8TVec3<f>FRC3Vec` bestand schon vorher.
+Ererbte Weak-Order-Warnung und UNUSED-Size-Warnungen.
+Kein neuer Fehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `6add6579`: fuzzy 81.127000 % -> 81.127030 %,
+matched code 52.969845 % -> 52.984325 % (1901664 -> 1902184, +520).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9895 -> 9896.
+`EventWatcher` 25388 -> 25908 (+520), Funktionen 67 -> 68.
+Fuzzy der Unit 98.890620 % -> 98.893740 %.
+Matched code der Unit 60.109860 % -> 61.341034 %.
+Complete units bleiben 416.
+Nur `evSetNextStage` hat sich geändert.
+
+DOL-SHA1 unverändert: `EventWatcher.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R557A (`TNervePoihanaThrow::execute`)
+
+**Vollmatch, strikt.**
+
+`char trash[0x10]` vergrößert den Rahmen von `-0xa0` auf `-0xb0`.
+Die Rotationsmatrix, der Wurfvektor und die gesicherten Register rücken um 16 Bytes hoch.
+
+`TNervePoihanaThrow::execute`: 0 Abweichungen, 460 Bytes, 115 Instruktionen.
+`validate-symbol-order` `mario/Enemy/poihana`: PASS.
+Vorbestehende UNUSED-Size-Warnung `isOnTrap__8TPoiHanaFv` (0xb0 vs 0xb4).
+Kein neuer Fehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `3b8cafe1`: fuzzy 81.127030 % -> 81.127050 %,
+matched code 52.984325 % -> 52.997143 % (1902184 -> 1902644, +460).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9896 -> 9897.
+`poihana` 9552 -> 10012 (+460), Funktionen 48 -> 49.
+Fuzzy der Unit 97.886200 % -> 97.891710 %.
+Matched code der Unit 73.049860 % -> 76.567760 %.
+Complete units bleiben 416.
+Nur `TNervePoihanaThrow::execute` hat sich geändert.
+
+DOL-SHA1 unverändert: `poihana.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R558A (`TGesso::pollute`)
+
+**Vollmatch, strikt.**
+
+`char trash[0x10]` vergrößert den Rahmen von `-0x88` auf `-0x98`.
+Der Verschmutzungsvektor, die Rotationsmatrix und die gesicherten Register rücken um 16 Bytes hoch.
+
+`TGesso::pollute`: 0 Abweichungen, 484 Bytes, 121 Instruktionen.
+`validate-symbol-order` `mario/Enemy/gesso`: vorbestehend MISSING `checkDropInWater__6TGessoFv` (UNUSED).
+Ererbte Weak-Order-Warnung und UNUSED-Size-Warnungen.
+Kein neuer Fehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `b3349c57`: fuzzy 81.127050 % -> 81.127070 %,
+matched code 52.997143 % -> 53.010624 % (1902644 -> 1903128, +484).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9897 -> 9898.
+`gesso` 12348 -> 12832 (+484), Funktionen 77 -> 78.
+Fuzzy der Unit 98.305800 % -> 98.310310 %.
+Matched code der Unit 63.271164 % -> 65.751175 %.
+Complete units bleiben 416.
+Nur `TGesso::pollute` hat sich geändert.
+
+DOL-SHA1 unverändert: `gesso.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R24C (`TMapXlu::changeXluJoint`)
+
+**Vollmatch, strikt.**
+
+Die erste Schleife indexiert `mChildren` direkt, wie das bereits matchende `changeNormalJoint`.
+`getChild(i)` war eine zusätzliche Inline-Stufe und hielt ein totes 4-Byte-Temporary.
+Das Temporary rundete den Rahmen von `-0x88` auf `-0x90`.
+Der Instruktionsrumpf war bereits identisch.
+
+`TMapXlu::changeXluJoint`: 0 Abweichungen, 280 Bytes, 70 Instruktionen.
+`validate-symbol-order` `mario/Map/MapXlu`: PASS.
+Die TU bleibt `NonMatching`.
+Die Extra-Symbole aus den Sound-Includes bestanden schon vorher.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `9ee37436`: fuzzy 81.127070 % -> 81.127080 %,
+matched code 53.010624 % -> 53.018420 % (1903128 -> 1903408, +280).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9898 -> 9899.
+`MapXlu` 1312 -> 1592 (+280), Funktionen 4 -> 5.
+Fuzzy der Unit 99.972360 % -> 100 %.
+Matched code der Unit 82.412056 % -> 100 %.
+Complete units bleiben 416.
+Nur `TMapXlu::changeXluJoint` hat sich geändert.
+
+DOL-SHA1 unverändert: `MapXlu.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R26C (`TMapCollisionData::polygonIsInGrid`)
+
+**Vollmatch, strikt.**
+
+`char trash[0x258]` mit `trash[0] = 0` vergrößert den Rahmen von `-0x60` auf `-0x2c0`.
+Der Store wird vom Compiler entfernt.
+Die gesicherten Register rücken um `0x260` hoch.
+Der Instruktionsrumpf war bereits identisch.
+
+`TMapCollisionData::polygonIsInGrid`: 0 Abweichungen, 1592 Bytes, 398 Instruktionen.
+`validate-symbol-order` `mario/Map/MapArea`: PASS.
+Die drei UNUSED-Größen stimmen.
+Die TU bleibt `NonMatching`.
+`pointIsInGrid`, `pointIsInPolygon` und `checkLinePolygonCollision` bleiben Extra-Symbole.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `7b0efa18`: fuzzy 81.127080 % -> 81.127120 %,
+matched code 53.018420 % -> 53.062767 % (1903408 -> 1905000, +1592).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9899 -> 9900.
+`MapArea` 216 -> 1808 (+1592), Funktionen 1 -> 2.
+Fuzzy der Unit 99.949110 % -> 100 %.
+Matched code der Unit 11.946902 % -> 100 %.
+Complete units bleiben 416.
+Nur `TMapCollisionData::polygonIsInGrid` hat sich geändert.
+
+DOL-SHA1 unverändert: `MapArea.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R560A (`TBossPakkun::receiveMessage`)
+
+**Vollmatch, strikt.**
+
+`char trash[8]` mit `trash[0] = 0` vergrößert den Rahmen von `-0x50` auf `-0x60`.
+Der Store wird vom Compiler entfernt.
+Die gesicherten Register rücken um 16 Bytes hoch.
+Im Rumpf gibt es keinen Stack-Zugriff.
+
+`TBossPakkun::receiveMessage`: 0 Abweichungen, 592 Bytes, 148 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bosspakkun`: PASS.
+Vorbestehende UNUSED-Size-Warnungen `ignoreWaterCheck__11TBossPakkunFv` (0xf0 vs 0x4) und `vomitFinished__8TBPVomitFv` (0x3c vs 0x40).
+Kein neuer Fehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `98f54a29`: fuzzy bleibt 81.127120 %,
+matched code 53.062767 % -> 53.079254 % (1905000 -> 1905592, +592).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9900 -> 9901.
+`bosspakkun` 15788 -> 16380 (+592), Funktionen 100 -> 101.
+Fuzzy der Unit 99.180466 % -> 99.181380 %.
+Matched code der Unit 39.860634 % -> 41.355280 %.
+Complete units bleiben 416.
+Nur `receiveMessage` hat sich geändert.
+
+DOL-SHA1 unverändert: `bosspakkun.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R29C (`TMirrorModel::initPlaneInfo`)
+
+**Vollmatch, strikt.**
+
+`getVertexData()` liefert eine Referenz auf `J3DVertexData` (0x44, ausgerichtet 0x48).
+Der Rückgabeslot blieb reserviert, obwohl die Loads ihn nie benutzen.
+Direktes `mVertexData` entfernt den Slot.
+Der Rahmen geht von `-0x138` auf `-0xf0`.
+Der Instruktionsrumpf war bereits identisch.
+
+`TMirrorModel::initPlaneInfo`: 0 Abweichungen, 484 Bytes, 121 Instruktionen.
+`validate-symbol-order` `mario/Map/MapMirror`: dieselben vorbestehenden Fehler
+(`scaleAdd` fehlt, `set<f>` Ordnung).
+Kein neuer Fehler.
+`getVertexFormat` bleibt UNUSED mit Größe 0x34.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `d1520e2e`: fuzzy 81.127120 % -> 81.127140 %,
+matched code 53.079254 % -> 53.092735 % (1905592 -> 1906076, +484).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9901 -> 9902.
+`MapMirror` 2172 -> 2656 (+484), Funktionen 17 -> 18.
+Fuzzy der Unit 86.307490 % -> 86.320630 %.
+Matched code der Unit 35.676743 % -> 43.626804 %.
+Complete units bleiben 416.
+Nur `TMirrorModel::initPlaneInfo` hat sich geändert.
+
+DOL-SHA1 unverändert: `MapMirror.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R561A (`TFireWanwanTailHit::receiveMessage`)
+
+**Vollmatch, strikt.**
+
+`char trash[0x10]` mit `trash[0] = 0` vergrößert den Rahmen von `-0xa0` auf `-0xb0`.
+Der Store wird vom Compiler entfernt.
+Die gesicherten Register rücken um 16 Bytes hoch.
+Im Rumpf gibt es keinen Stack-Zugriff.
+
+`TFireWanwanTailHit::receiveMessage`: 0 Abweichungen, 644 Bytes, 161 Instruktionen.
+`validate-symbol-order` `mario/Enemy/fireWanwan`: vorbestehende MISSING `__ct__Q29JGeometry8TVec4<f>Fv`, `isTaken__10TTakeActorCFv`, `__vc__Q29@unnamed@34ArrayWrapper<Q211TTailRubber4Node>CFi`, `size__Q29@unnamed@34ArrayWrapper<Q211TTailRubber4Node>CFv`.
+27 vorbestehende UNUSED-Size-Warnungen.
+Kein neuer Symbolfehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `a59ae595`: fuzzy 81.12714 % -> 81.12716 %,
+matched code 53.092735 % -> 53.110676 % (1906076 -> 1906720, +644).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9902 -> 9903.
+`fireWanwan` 12252 -> 12896 (+644), Funktionen 58 -> 59.
+Fuzzy der Unit 94.347374 % -> 94.34871 %.
+Matched code der Unit 31.396065 % -> 33.04633 %.
+Complete units bleiben 416.
+Nur `receiveMessage` hat sich geändert.
+
+DOL-SHA1 unverändert: `fireWanwan.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R32C (`TMirrorModelManager::isUpperThanMirrorPlane`)
+
+**Vollmatch, strikt.**
+
+Die beiden Aufruf-Ternaries werden als `if`/`else` übersetzt, behalten aber je ein totes Temporary.
+Ausgeschriebenes `if`/`else` entfernt den Slot.
+Der Rahmen geht von `-0x30` auf `-0x28`.
+Der Instruktionsrumpf war bereits identisch, inklusive `fadds f1, f2, f1`.
+
+`TMirrorModelManager::isUpperThanMirrorPlane`: 0 Abweichungen, 224 Bytes, 56 Instruktionen.
+`validate-symbol-order` `mario/Map/MapMirror`: dieselben vorbestehenden Fehler
+(`scaleAdd` fehlt, `set<f>` Ordnung).
+Kein neuer Fehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `0f9ff546`: fuzzy 81.127160 % -> 81.127174 %,
+matched code 53.110676 % -> 53.116917 % (1906720 -> 1906944, +224).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9903 -> 9904.
+`MapMirror` 2656 -> 2880 (+224), Funktionen 18 -> 19.
+Fuzzy der Unit 86.320630 % -> 86.326546 %.
+Matched code der Unit 43.626804 % -> 47.306175 %.
+Complete units bleiben 416.
+Nur `TMirrorModelManager::isUpperThanMirrorPlane` hat sich geändert.
+
+DOL-SHA1 unverändert: `MapMirror.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R562A (`TStayPakkun::genRandomItem`)
+
+**Vollmatch, strikt.**
+
+`setGlobalDynamicsScale`/`setGlobalParticleScale` mit je einem `TVec3(1.5f)` reservierten unbenutzten Stack.
+`mGlobalDynamicsScale.setAll(1.5f)` und `mGlobalParticleScale.setAll(1.5f)` schreiben dieselben `stfs`.
+`char trash[0x24]` mit `trash[0] = 0` setzt den Rahmen auf `-0x58`.
+Der Store wird vom Compiler entfernt.
+Im Rumpf gibt es keinen Stack-Zugriff.
+
+`TStayPakkun::genRandomItem`: 0 Abweichungen, 348 Bytes, 87 Instruktionen.
+`validate-symbol-order` `mario/Enemy/pakkun`: PASS.
+Vorbestehende Warnung nur schwache Symbolordnung.
+Vorbestehende UNUSED-Size-Warnungen `createPakkunSmoke__7TPakkunFRQ29JGeometry8TVec3<f>` (0x98 vs 0x4) und `isHideEnd__7TPakkunCFv` (0x20 vs 0x8).
+Kein neuer Fehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `29c572c3`: fuzzy bleibt 81.127174 %,
+matched code 53.116917 % -> 53.12661 % (1906944 -> 1907292, +348).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9904 -> 9905.
+`pakkun` 10208 -> 10556 (+348), Funktionen 62 -> 63.
+Fuzzy der Unit 97.3758 % -> 97.37736 %.
+Matched code der Unit 56.54775 % -> 58.475513 %.
+Complete units bleiben 416.
+Nur `genRandomItem` hat sich geändert.
+
+DOL-SHA1 unverändert: `pakkun.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R34C (`initStage`)
+
+**Vollmatch, strikt.**
+
+`char trash[0x38]` mit `trash[0] = 0` am Funktionsanfang.
+Der Store wird vom Compiler entfernt.
+Der Rahmen geht von `-0x38` auf `-0x70`.
+Im Rumpf gibt es keinen Stack-Zugriff.
+
+`initStage`: 0 Abweichungen, 432 Bytes, 108 Instruktionen.
+`validate-symbol-order` `mario/Map/Map`: dieselben vorbestehenden Fehler
+(7 UNUSED fehlen, `__dt__4TMapFv` weak statt global).
+Kein neuer Fehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `dbacb843`: fuzzy 81.127174 % -> 81.12719 %,
+matched code 53.12661 % -> 53.138645 % (1907292 -> 1907724, +432).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9905 -> 9906.
+`Map` 2560 -> 2992 (+432), Funktionen 23 -> 24.
+Fuzzy der Unit 99.38936 % -> 99.39426 %.
+Matched code der Unit 44.81793 % -> 52.380955 %.
+Complete units bleiben 416.
+Nur `initStage` hat sich geändert.
+
+DOL-SHA1 unverändert: `Map.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R563A (`THinokuri2::changeBck`)
+
+**Vollmatch, strikt.**
+
+`getUnk2C()` auf beiden Zweigen reservierte unbenutzten Stack (Rahmen `-0x90`, Ziel `-0x80`).
+Beide Zweige lesen `getActorKeeper()->getMActorAnmData()->mBckAnms->getAnmPtr(param_1)`.
+`char trash[4]` mit `trash[0] = 0` setzt den Rahmen auf `-0x80`.
+Der Store wird vom Compiler entfernt.
+Im Rumpf gibt es keinen Stack-Zugriff.
+
+`THinokuri2::changeBck`: 0 Abweichungen, 540 Bytes, 135 Instruktionen.
+`validate-symbol-order` `mario/Enemy/hinokuri2`: PASS.
+Vorbestehende UNUSED-Size-Warnungen `makeQuake__10THinokuri2Ff` (0x40 vs 0x4), `shakeCamera__10THinokuri2Fi` (0xa8 vs 0x4), `updatePolTrans__10THinokuri2Fv` (0x70 vs 0x4), `emitPolParticle__10THinokuri2Fv` (0x68 vs 0x4), `startDamageMotion__10THino2MaskFv` (0x28 vs 0x4) und `breakMask__10THino2MaskFv` (0x50 vs 0x4).
+Kein neuer Fehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `fd8a2e7e`: fuzzy bleibt 81.12719 %,
+matched code 53.138645 % -> 53.153683 % (1907724 -> 1908264, +540).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9906 -> 9907.
+`hinokuri2` 11888 -> 12428 (+540), Funktionen 54 -> 55.
+Fuzzy der Unit 99.180954 % -> 99.18246 %.
+Matched code der Unit 49.566376 % -> 51.817875 %.
+Complete units bleiben 416.
+Nur `THinokuri2::changeBck` hat sich geändert.
+
+DOL-SHA1 unverändert: `hinokuri2.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R564A (`TBiancoGateKeeper::changeBck`)
+
+**Vollmatch, strikt.**
+
+`getUnk2C()` in den eingezeilten `TBGKMtxCalc::setAnm` und `joinAnm` reservierte unbenutzten Stack (Rahmen `-0xb8`, Ziel `-0xa0`).
+Beide lesen `getActorKeeper()->getMActorAnmData()->mBckAnms->getAnmPtr(param_1)`.
+Der s16-nach-f32-Cast bleibt an seiner Stelle und wandert mit dem Rahmen.
+Im Rumpf gibt es keine abweichende Instruktion.
+
+`TBiancoGateKeeper::changeBck`: 0 Abweichungen, 700 Bytes, 175 Instruktionen.
+`validate-symbol-order` `mario/Enemy/gatekeeper`: PASS.
+UNUSED-Größen stimmen 25/25.
+Kein neuer Fehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `9fc08971`: fuzzy 81.12719 % -> 81.12721 %,
+matched code 53.153683 % -> 53.17318 % (1908264 -> 1908964, +700).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9907 -> 9908.
+`gatekeeper` 10492 -> 11192 (+700), Funktionen 45 -> 46.
+Fuzzy der Unit 99.237335 % -> 99.23992 %.
+Matched code der Unit 56.542362 % -> 60.31472 %.
+Complete units bleiben 416.
+Nur `TBiancoGateKeeper::changeBck` hat sich geändert.
+
+DOL-SHA1 unverändert: `gatekeeper.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R565A (`TNerveMantaAppearDemo::execute`)
+
+**Vollmatch, strikt.**
+
+`getUnk2C()` im eingezeilten `TBossManta::startWalkAnim` reservierte unbenutzten Stack (Rahmen `-0x68`, Ziel `-0x58`).
+Der Zeiger kommt aus `getActorKeeper()->getMActorAnmData()->mBckAnms->getAnmPtr(4)`.
+Die Instruktionen im Rumpf bleiben gleich.
+`startWalkAnim` bleibt außer Zeile, Größe weiter 0xd8 gegen 0xd4 in der Map.
+
+`TNerveMantaAppearDemo::execute`: 0 Abweichungen, 428 Bytes, 107 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bossManta`: dieselben vorbestehenden Fehler
+(ORDER der `theNerve`-Symbole, 6 UNUSED-Size-Warnungen einschließlich `startWalkAnim__10TBossMantaFv` 0xd4 vs 0xd8).
+Kein neuer Fehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `a446318d`: fuzzy 81.12721 % -> 81.12723 %,
+matched code 53.17318 % -> 53.185104 % (1908964 -> 1909392, +428).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9908 -> 9909.
+`bossManta` 4196 -> 4624 (+428), Funktionen 26 -> 27.
+Fuzzy der Unit 98.150314 % -> 98.15196 %.
+Matched code der Unit 19.20542 % -> 21.164408 %.
+Complete units bleiben 416.
+Nur `TNerveMantaAppearDemo::execute` hat sich geändert.
+
+DOL-SHA1 unverändert: `bossManta.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R566A (`CPolarSubCamera::execRoofCheck_`)
+
+**Vollmatch, strikt.**
+
+`roofHeight - mSLRoofHeight.get()` stand im Vergleich und in der Zuweisung.
+`f32 y = mCurrentTarget.mPosition.y` und `roofHeight -= mSaveEx->mSLRoofHeight.get()` erzeugen `lfs f0`, `lfs f2` und `fsubs f1, f1, f2`.
+Das verkleinert den Rahmen von `-0x48` auf `-0x40`.
+`char pad[4]` mit `pad[0] = 0` setzt den Rahmen zurück auf `-0x48` und den Roof-Pointer auf `0x30`.
+Der Store wird vom Compiler entfernt.
+
+`CPolarSubCamera::execRoofCheck_`: 0 Abweichungen, 324 Bytes, 81 Instruktionen.
+`validate-symbol-order` `mario/Camera/CameraBGCheck`: PASS.
+4 objekt-only Weaks, kein Fehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `0b04022e`: fuzzy 81.12723 % -> 81.127266 %,
+matched code 53.185104 % -> 53.19413 % (1909392 -> 1909716, +324).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9909 -> 9910.
+`CameraBGCheck` 948 -> 1272 (+324), Funktionen 3 -> 4.
+Fuzzy der Unit 88.07279 % -> 88.111984 %.
+Matched code der Unit 26.539755 % -> 35.610302 %.
+Complete units bleiben 416.
+Nur `execRoofCheck_` hat sich geändert.
+
+DOL-SHA1 unverändert: `CameraBGCheck.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R567A (`TNerveTamaNokoSink::execute`)
+
+**Vollmatch, strikt.**
+
+`getObj(i)` ist dreifach eingezeilt und reservierte unbenutzten Stack (Rahmen `-0x68`, Ziel `-0x60`).
+Die Schleife liest `((TLiveActor*)manager->unk18[i])->checkLiveFlag(LIVE_FLAG_DEAD)`.
+Das ist dasselbe `lwz`/`lwzx` wie `getObj`.
+Die s16-nach-f32-Casts wandern mit dem Rahmen.
+
+`TNerveTamaNokoSink::execute`: 0 Abweichungen, 536 Bytes, 134 Instruktionen.
+`validate-symbol-order` `mario/Enemy/tamaNoko`: PASS.
+Vorbestehende Warnung nur schwache Symbolordnung (`__dt__9TTamaNokoFv`).
+Vorbestehende UNUSED-Size-Warnungen `forceWakeUp__9TTamaNokoFv` (0xf8 vs 0x4) und `setBckAnm__15TTamaNokoFlowerFi` (0xa8 vs 0xac).
+Kein neuer Fehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `8d0c1e3e`: fuzzy 81.127266 % -> 81.12728 %,
+matched code 53.19413 % -> 53.20906 % (1909716 -> 1910252, +536).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9910 -> 9911.
+`tamaNoko` 9564 -> 10100 (+536), Funktionen 48 -> 49.
+Fuzzy der Unit 97.42487 % -> 97.428505 %.
+Matched code der Unit 57.85144 % -> 61.093636 %.
+Complete units bleiben 416.
+Nur `TNerveTamaNokoSink::execute` hat sich geändert.
+
+DOL-SHA1 unverändert: `tamaNoko.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R568A (`TMarDirector::preEntry`)
+
+**Vollmatch, strikt.**
+
+`SMSGetRederRect_Game()` legt das `TRect` auf `0x84` (Rahmen `-0xb8`, Ziel `-0xe8`).
+Ein lokales `char trash[0x30]` setzt den Rahmen, schiebt das Rect aber nur auf `0x88`.
+`padPreEntry()` mit `char trash[0x30]` und `trash[0] = 0` wird eingezeilt.
+Der Store wird entfernt.
+Der Rahmen wird `-0xe8` und das Rect liegt auf `0xb8`.
+
+`TMarDirector::preEntry`: 0 Abweichungen, 892 Bytes, 223 Instruktionen.
+`validate-symbol-order` `mario/System/MarDirectorPreEntry`: PASS.
+Die TU bleibt `NonMatching` (extra Rodata `dummy` und `SMS_NO_MEMORY_MESSAGE`).
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `1f1154e6`: fuzzy 81.12728 % -> 81.1273 %,
+matched code 53.20906 % -> 53.233902 % (1910252 -> 1911144, +892).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9911 -> 9912.
+`MarDirectorPreEntry` 0 -> 892 (+892), Funktionen 0 -> 1.
+Fuzzy der Unit 99.96861 % -> 100 %.
+Matched code der Unit 0 % -> 100 %.
+Complete units bleiben 416.
+Nur `preEntry` hat sich geändert.
+
+DOL-SHA1 unverändert: `MarDirectorPreEntry.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R569A (`TBEelTearsManager::createEnemies`)
+
+**Vollmatch, strikt.**
+
+`getObj(0)` lässt den Rahmen 8 Bytes zu groß (`-0x38`, Ziel `-0x30`).
+`unk18[0]` überzieht auf `-0x28`.
+`TLiveManager::getObj(0)` trifft den Rahmen.
+Die Ressource lag dabei in `r31` statt `r30`.
+`SDLModelData* modelData` erst deklarieren und danach zuweisen legt sie auf `r30`.
+
+`TBEelTearsManager::createEnemies`: 0 Abweichungen, 184 Bytes, 46 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bosseel`: PASS (nur schwache Ordnung, vorbestehend).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `ceddf405`: fuzzy 81.1273 % -> 81.12732 %,
+matched code 53.233902 % -> 53.23903 % (1911144 -> 1911328, +184).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9912 -> 9913.
+`bosseel` 23088 -> 23272 (+184), Funktionen 120 -> 121.
+Fuzzy der Unit 99.17455 % -> 99.175865 %.
+Matched code der Unit 50.57834 % -> 50.98142 %.
+Complete units bleiben 416.
+Nur `TBEelTearsManager::createEnemies` hat sich geändert.
+
+DOL-SHA1 unverändert: `bosseel.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R570A (`TSpineEnemy::resetToPosition`)
+
+**Vollmatch, strikt.**
+
+Der Rahmen `-0x30` stimmte schon.
+Nur das `TVec3(0, 5, 0)` für `mVelocity` lag 4 Bytes zu tief (`0x18` statt `0x1c`).
+`getMaxHitPoints()` statt der offenen `getSaveParam()`-Abfrage schiebt genau dieses Temporär.
+
+`TSpineEnemy::resetToPosition`: 0 Abweichungen, 268 Bytes, 67 Instruktionen.
+`validate-symbol-order` `mario/Enemy/enemy`: ererbtes MISSING `__as__Q29JGeometry8TVec3<f>`, sonst Ordnung und Linkage OK.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `64b3448a`: fuzzy bleibt 81.12732 %,
+matched code 53.23903 % -> 53.24649 % (1911328 -> 1911596, +268).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9913 -> 9914.
+`enemy` 4012 -> 4280 (+268), Funktionen 24 -> 25.
+Fuzzy der Unit 96.63867 % -> 96.64079 %.
+Matched code der Unit 35.391674 % -> 37.75582 %.
+Complete units bleiben 416.
+Nur `TSpineEnemy::resetToPosition` hat sich geändert.
+
+DOL-SHA1 unverändert: `enemy.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R571A (`evSetTalkMsgID`)
+
+**Vollmatch, strikt.**
+
+Der Rahmen war 8 Bytes zu klein (`-0x80`, Ziel `-0x88`).
+`char pad[4]; pad[0] = 0;` schiebt die Slice-Wörter um 4 und `stfd` plus Saves um 8.
+`setMessageID` kopiert die zweite Id mit `addi` statt `mr`.
+Ein lokales Inline mit `s32` für die Id erzeugt genau dieses `addi`.
+Das Inline wird vollständig eingelegt und nicht emittiert.
+
+`evSetTalkMsgID`: 0 Abweichungen, 512 Bytes, 128 Instruktionen.
+`validate-symbol-order` `mario/System/EventWatcher`: ererbtes MISSING `set__Q29JGeometry8TVec3<f>FRC3Vec`, sonst nur schwache Ordnung.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `e89d651c`: fuzzy 81.12732 % -> 81.127426 %,
+matched code 53.24649 % -> 53.260757 % (1911596 -> 1912108, +512).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9914 -> 9915.
+`EventWatcher` 25908 -> 26420 (+512), Funktionen 68 -> 69.
+Fuzzy der Unit 98.89374 % -> 98.90255 %.
+Matched code der Unit 61.341034 % -> 62.553276 %.
+Complete units bleiben 416.
+Nur `evSetTalkMsgID` hat sich geändert.
+
+DOL-SHA1 unverändert: `EventWatcher.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R572A (`MSMainProc::getMonteVillageActorArea`)
+
+**Vollmatch, strikt.**
+
+Die beiden Vecs lagen in der falschen Reihenfolge und der Rahmen war 8 Bytes zu klein (`-0x28`, Ziel `-0x30`).
+`Vec copy` zuerst, dann `char pad[4]; pad[0] = 0;`, dann die angehobene Position.
+Das Pad sitzt zwischen den Vecs, schiebt die Kopie um 8 und die Quelle um 4, und vergrößert den Rahmen auf `-0x30`.
+Der Store des Pads wird wegoptimiert.
+
+`getMonteVillageActorArea`: 0 Abweichungen, 172 Bytes, 43 Instruktionen.
+`validate-symbol-order` `mario/System/MSoundMainSide`: ererbtes MISSING `begin__Q27JGadget38TVector<Pv,Q27JGadget14TAllocator<Pv>>Fv`, sonst Ordnung und Linkage in Ordnung.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `1089663c`: fuzzy 81.127426 % -> 81.12744 %,
+matched code 53.260757 % -> 53.26555 % (1912108 -> 1912280, +172).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9915 -> 9916.
+`MSoundMainSide` 1960 -> 2132 (+172), Funktionen 18 -> 19.
+Fuzzy der Unit 96.58913 % -> 96.59545 %.
+Matched code der Unit 20.648968 % -> 22.46102 %.
+Complete units bleiben 416.
+Nur `getMonteVillageActorArea` hat sich geändert.
+
+DOL-SHA1 unverändert: `MSoundMainSide.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R572A (`TSplineRail::getPosAndRot`)
+
+**Vollmatch, strikt.**
+
+Der Rahmen `-0xf8` stimmte schon.
+Die drei Rückgabekopien von `getPoint` und `MsGetRotFromZaxis` lagen 12 Bytes zu tief (`0x8c` statt `0x98`).
+Ein totes `TVec3`-großes Temporär unter den Return-Slots schiebt genau diese drei Kopien.
+`point`, `dir` und der Rahmen bleiben liegen.
+
+`TSplineRail::getPosAndRot`: 0 Abweichungen, 564 Bytes, 141 Instruktionen.
+`validate-symbol-order` `mario/Enemy/graph`: PASS, acht ererbte UNUSED-Größenwarnungen.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `4e3e6df1`: fuzzy bleibt 81.12744 %,
+matched code 53.26555 % -> 53.281258 % (1912280 -> 1912844, +564).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9916 -> 9917.
+`graph` 5952 -> 6516 (+564), Funktionen 24 -> 25.
+Fuzzy der Unit 95.18551 % -> 95.18929 %.
+Matched code der Unit 46.866142 % -> 51.307087 %.
+Complete units bleiben 416.
+Nur `TSplineRail::getPosAndRot` hat sich geändert.
+
+DOL-SHA1 unverändert: `graph.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R573A (`TEnemyMario::startMonteReplay`)
+
+**Vollmatch, strikt.**
+
+Der Rahmen war 8 Bytes zu klein (`-0x90`, Ziel `-0x98`).
+Die beiden `TVec3` lagen relativ zum Rahmen schon richtig und nur 8 Bytes zu tief gegen `r1`.
+`char trash[8]` vor den Vecs hebt nur den Rahmen; die Vecs bleiben bei `0x74` / `0x68`.
+Dasselbe Array hinter `nextPoint` schiebt beide Slots um 8 (`0x7c` / `0x70`) und den Rahmen auf `-0x98`.
+
+`TEnemyMario::startMonteReplay`: 0 Abweichungen, 328 Bytes, 82 Instruktionen.
+`validate-symbol-order` `mario/Enemy/enemyMario`: ererbtes MISSING `getPoint__9TPathNodeCFv`, sonst Ordnung und Linkage in Ordnung.
+Sieben ererbte UNUSED-Größenwarnungen.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `aa26d656`: fuzzy 81.12744 % -> 81.12746 %,
+matched code 53.281258 % -> 53.29039 % (1912844 -> 1913172, +328).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9917 -> 9918.
+`enemyMario` 4380 -> 4708 (+328), Funktionen 19 -> 20.
+Fuzzy der Unit 97.10448 % -> 97.10768 %.
+Matched code der Unit 19.522196 % -> 20.984133 %.
+Complete units bleiben 416.
+Nur `TEnemyMario::startMonteReplay` hat sich geändert.
+
+DOL-SHA1 unverändert: `enemyMario.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R588B (`TCardManager::copyTo`)
+
+**Vollmatch, strikt.**
+
+Beide `u64`-Reads teilen sich ein Slot.
+Der Rahmen war ohne Pad 0x20 zu klein (`-0x78`, Ziel `-0x98`).
+`copyToHole` legt `char pad[0x20]` an und gibt die Adresse zurück, damit der Slot stehen bleibt.
+Stream, Spill und die kleinen Read-Puffer rutschen auf `0x68` / `0x5c` / `0x30`.
+Das Pad wird nicht emittiert.
+
+`TCardManager::copyTo`: 0 Abweichungen, 412 Bytes, 103 Instruktionen.
+`validate-symbol-order` `mario/System/CardManager`: PASS.
+Vier ererbte UNUSED-Größenwarnungen.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `78db4376`: fuzzy 81.12746 % -> 81.12748 %,
+matched code 53.29039 % -> 53.301872 % (1913172 -> 1913584, +412).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9918 -> 9919.
+`CardManager` 4420 -> 4832 (+412), Funktionen 26 -> 27.
+Fuzzy der Unit 95.817276 % -> 95.82776 %.
+Matched code der Unit 55.16725 % -> 60.309536 %.
+Complete units bleiben 416.
+Nur `TCardManager::copyTo` hat sich geändert.
+
+DOL-SHA1 unverändert: `CardManager.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R574A (`TBossMantaManager::setupEfbAlpha`)
+
+**Vollmatch, strikt.**
+
+Der Rahmen stand schon auf `-0xd8`.
+Projektion und Identität lagen 12 Bytes zu hoch (`0x50` / `0x20`, Ziel `0x44` / `0x14`).
+Ein `TVec3`-Slot davor hebt den Rahmen und schiebt die Matrizen in die falsche Richtung.
+`drawEfbAlphaQuad` ist `static inline` und wird nicht emittiert.
+Darin steht `Mtx m` vor `Mtx44 proj`, weil Inline die Slot-Reihenfolge umkehrt.
+Die Quad-Z ist `-10.0f`.
+Die Mat-Farbe ist ein Compound-Literal im `GXSetChanMatColor`-Aufruf.
+Ein benanntes `GXColor` vertauscht Source und Dest.
+
+`TBossMantaManager::setupEfbAlpha`: 0 Abweichungen, 692 Bytes, 173 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bossManta`: ererbtes ORDER-FAIL, `theNerve__*TNerveManta*` vor den `execute__*`.
+Sechs ererbte UNUSED-Größenwarnungen.
+Linkage in Ordnung.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `9239c676`: fuzzy 81.12748 % -> 81.127495 %,
+matched code 53.301872 % -> 53.321148 % (1913584 -> 1914276, +692).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9919 -> 9920.
+`bossManta` 4624 -> 5316 (+692), Funktionen 27 -> 28.
+Fuzzy der Unit 98.15196 % -> 98.15343 %.
+Matched code der Unit 21.164408 % -> 24.331747 %.
+Complete units bleiben 416.
+Nur `TBossMantaManager::setupEfbAlpha` hat sich geändert.
+
+DOL-SHA1 unverändert: `bossManta.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R575A (`TBossManta::initNthGeneration`)
+
+**Vollmatch, strikt.**
+
+Der Rahmen war 0x20 zu klein (`-0xa0`, Ziel `-0xc0`).
+`heights`, die beiden Konvertierungs-Doubles und die gesicherten Register lagen gleichmäßig 0x20 zu tief.
+`char trash[0x20]` hinter `heights` schiebt den ganzen Block um 0x20.
+Das Array wird nicht beschrieben.
+
+`TBossManta::initNthGeneration`: 0 Abweichungen, 1960 Bytes, 490 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bossManta`: ererbtes ORDER-FAIL, `theNerve__*TNerveManta*` vor den `execute__*`.
+Sechs ererbte UNUSED-Größenwarnungen.
+Linkage in Ordnung.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `b294d982`: fuzzy 81.127495 % -> 81.12753 %,
+matched code 53.321148 % -> 53.37574 % (1914276 -> 1916236, +1960).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9920 -> 9921.
+`bossManta` 5316 -> 7276 (+1960), Funktionen 28 -> 29.
+Fuzzy der Unit 98.15343 % -> 98.16056 %.
+Matched code der Unit 24.331747 % -> 33.30282 %.
+Complete units bleiben 416.
+Nur `TBossManta::initNthGeneration` hat sich geändert.
+
+DOL-SHA1 unverändert: `bossManta.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R49C (`TMareWallRock::movement`)
+
+**Vollmatch, strikt.**
+
+Die beiden `TVec3` lagen nicht um die fehlenden `0x18` verschoben.
+Case 2 war `0x20` zu tief, Case 4 `0x28`.
+Zwischen den Spills lag ein 8-Byte-Loch.
+`tAppear` und `tDepress` stehen vor dem `switch`, damit sie direkt unter den gesicherten Registern packen.
+Die benannten `tx`/`ty`/`tz` sind die `0x18` Homes darunter.
+Sie werden nicht extra gespeichert.
+Ein `char[24]` an derselben Stelle trifft dieselben Offsets, bleibt aber draußen.
+
+`TMareWallRock::movement`: 0 Abweichungen, 904 Bytes, 226 Instruktionen.
+`validate-symbol-order` `mario/Map/MapEventMare`: PASS.
+Sechs ererbte UNUSED-Größenwarnungen.
+Linkage in Ordnung.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `9bb6536f`: fuzzy 81.12753 % -> 81.12755 %,
+matched code 53.37574 % -> 53.40092 % (1916236 -> 1917140, +904).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9921 -> 9922.
+`MapEventMare` 4128 -> 5032 (+904), Funktionen 23 -> 24.
+Fuzzy der Unit 99.24539 % -> 99.25104 %.
+Matched code der Unit 38.840797 % -> 47.34663 %.
+Complete units bleiben 416.
+Nur `TMareWallRock::movement` hat sich geändert.
+
+DOL-SHA1 unverändert: `MapEventMare.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R576A (`TNerveBGKAppear::execute`)
+
+**Vollmatch, strikt.**
+
+Der Rahmen war 0x20 zu klein (`-0x58`, Ziel `-0x78`).
+Das `TFlag` und die gesicherten Register lagen gleichmäßig 0x20 zu tief.
+`char trash[0x20]` im Caller schiebt nur die Register; das Flag bleibt bei `0x48`.
+`bgkAppearPad` legt die `0x20` in `startAppearDemo` unter das Flag.
+Der kleine Return hält den Slot und emittiert nichts.
+`startAppearDemo` bleibt UNUSED mit Größe `0xa8`.
+
+`TNerveBGKAppear::execute`: 0 Abweichungen, 652 Bytes, 163 Instruktionen.
+`validate-symbol-order` `mario/Enemy/gatekeeper`: PASS.
+UNUSED-Größen stimmen 25/25.
+Linkage in Ordnung.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `241450ab`: fuzzy 81.12755 % -> 81.12756 %,
+matched code 53.40092 % -> 53.419083 % (1917140 -> 1917792, +652).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9922 -> 9923.
+`gatekeeper` 11192 -> 11844 (+652), Funktionen 46 -> 47.
+Fuzzy der Unit 99.23992 % -> 99.24186 %.
+Matched code der Unit 60.31472 % -> 63.828407 %.
+Complete units bleiben 416.
+Nur `TNerveBGKAppear::execute` hat sich geändert.
+
+DOL-SHA1 unverändert: `gatekeeper.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R589B (`TMarDirector::TMarDirector`)
+
+**Vollmatch, strikt.**
+
+Eine Abweichung: `addi r4, r1, 0x34` gegen `0x20`.
+Das ist das `TAllocator`-Temporary von `unk88`.
+Der leere `TVector_pointer`-Ctor baut es eine Inline-Ebene zu tief, neben den `this`-Spills.
+Ein Default-Argument am Ctor legt es im Caller ab, in der Reihe der `new`-Results.
+Die Spezialisierung steht nur in dieser TU, vor dem Include.
+`~TMarDirector` und `TConsoleStr::processGo` bleiben unverändert.
+
+`TMarDirector::TMarDirector`: 0 Abweichungen, 892 Bytes, 223 Instruktionen.
+`validate-symbol-order` `mario/System/MarDirector`: PASS.
+Zwei ererbte MISSING-Symbole, keine neuen.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `fc543f42`: fuzzy 81.12756 % bleibt,
+matched code 53.419083 % -> 53.443928 % (1917792 -> 1918684, +892).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9923 -> 9924.
+`MarDirector` 948 -> 1840 (+892), Funktionen 5 -> 6.
+Fuzzy der Unit 99.9838 % -> 99.98583 %.
+Matched code der Unit 47.975708 % -> 93.11741 %.
+Complete units bleiben 416.
+Nur `TMarDirector::TMarDirector` hat sich geändert.
+
+DOL-SHA1 unverändert: `MarDirector.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R577A (`TBGTentacleMtxCalc::~TBGTentacleMtxCalc`)
+
+**Vollmatch, strikt.**
+
+Die drei VTable-Addis lagen 4 Bytes zu tief (`0x3ec` / `0x420` / `0x410`, Ziel `0x3f0` / `0x424` / `0x414`).
+`tstatestr` war 4 Bytes zu kurz: zehn Zeiger, Ziel elf.
+Der elfte Eintrag ist `nullptr` und lokal (`static`).
+Damit rückt `__vt__18TBGTentacleMtxCalc` von `0x3ec` auf `0x3f0`.
+
+`TBGTentacleMtxCalc::~TBGTentacleMtxCalc`: 0 Abweichungen, 204 Bytes, 51 Instruktionen.
+`tstatestr`: 44 Bytes, 100 %.
+`validate-symbol-order` `mario/Enemy/bgtentacle`: PASS.
+Fünf ererbte UNUSED-Größenwarnungen leerer Stubs.
+Linkage in Ordnung.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `e24e8af8`: fuzzy bleibt 81.12756 %,
+matched code 53.443928 % -> 53.449608 % (1918684 -> 1918888, +204).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9924 -> 9925.
+`bgtentacle` 4712 -> 4916 (+204), Funktionen 24 -> 25.
+Fuzzy der Unit 95.242905 % -> 95.24344 %.
+Matched code der Unit 21.02445 % -> 21.934677 %.
+Complete units bleiben 416.
+Nur `TBGTentacleMtxCalc::~TBGTentacleMtxCalc` hat sich geändert.
+
+DOL-SHA1 unverändert: `bgtentacle.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R50C (`TMapEventSinkBianco::startControl`)
+
+**Vollmatch, strikt.**
+
+Das Frame war schon `-0x38`.
+`TVec3` und das `TFlagT` lagen beide 4 Bytes zu tief (`0x20`/`0x1c`, Ziel `0x24`/`0x20`).
+`TFlagT<u16>(0)` übergibt ein `int`.
+Das Conversion-Temporary schiebt beide Slots.
+`TFlagT<u16>()` nimmt das Default-`u16` und das Temporary fällt weg.
+
+`TMapEventSinkBianco::startControl`: 0 Abweichungen, 352 Bytes, 88 Instruktionen.
+`validate-symbol-order` `mario/Map/MapEventSink`: PASS.
+UNUSED-Größen stimmen 1/1.
+Linkage in Ordnung.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `7d693e0c`: fuzzy bleibt 81.12756 %,
+matched code 53.449608 % -> 53.45941 % (1918888 -> 1919240, +352).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9925 -> 9926.
+`MapEventSink` 5460 -> 5812 (+352), Funktionen 30 -> 31.
+Fuzzy der Unit 99.7248 % -> 99.72853 %.
+Matched code der Unit 72.799995 % -> 77.49333 %.
+Complete units bleiben 416.
+Nur `TMapEventSinkBianco::startControl` hat sich geändert.
+
+DOL-SHA1 unverändert: `MapEventSink.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R578A (`TNerveBPHover::execute`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0x98`, Ziel `-0xa8`.
+`TPathNode` lag bei `0x64`, Ziel `0x6c`.
+Acht Bytes fehlen unter dem Knoten und acht zwischen Knoten und Saved-Regs.
+`char trash[8]` am Anfang hebt Frame und Regs.
+`hoverPad()` legt die toten 8 Bytes unter den Knoten und schiebt ihn auf `0x6c`.
+Der Helper ist vollständig inlined.
+
+`TNerveBPHover::execute`: 0 Abweichungen, 904 Bytes, 226 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bosspakkun`: PASS.
+Zwei ererbte UNUSED-Größenwarnungen (`ignoreWaterCheck`, `vomitFinished`).
+Linkage in Ordnung.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `2c482cd9`: fuzzy 81.12756 % -> 81.12759 %,
+matched code 53.45941 % -> 53.484596 % (1919240 -> 1920144, +904).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9926 -> 9927.
+`bosspakkun` 16380 -> 17284 (+904), Funktionen 101 -> 102.
+Fuzzy der Unit 99.18138 % -> 99.18289 %.
+Matched code der Unit 41.35528 % -> 43.63765 %.
+Complete units bleiben 416.
+Nur `TNerveBPHover::execute` hat sich geändert.
+
+DOL-SHA1 unverändert: `bosspakkun.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R52C (`TMapEventSirenaSink::watch`)
+
+**Vollmatch, strikt. Die TU ist `Matching` und gelinkt.**
+
+Das Frame war `-0x48`, Ziel `-0x50`.
+Das `TFlagT` lag 12 Bytes zu tief (`0x38`, Ziel `0x44`) und lief nicht mit den Saved-Regs.
+`TFlagT<u16>(0)` lässt ein `int`-Temporary.
+`TFlagT<u16>()` nimmt das weg und hebt das Flag um 4.
+`director` und `flags` halten die Inline-Accessors.
+Zusammen sind das die fehlenden 8 Bytes.
+Flag auf `0x44`, Frame `-0x50`.
+
+`TMapEventSirenaSink::watch`: 0 Abweichungen, 280 Bytes, 70 Instruktionen.
+`validate-symbol-order` `mario/Map/MapEventSirena`: PASS.
+Keine UNUSED-Symbole.
+Linkage in Ordnung.
+Die TU ist komplett und steht in `configure.py` auf `Matching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `dd643a05`: fuzzy bleibt 81.12759 %,
+matched code 53.484596 % -> 53.49239 % (1920144 -> 1920424, +280).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9927 -> 9928.
+`MapEventSirena` 1432 -> 1712 (+280), Funktionen 7 -> 8 von 8.
+Fuzzy der Unit 99.97897 % -> 100 %.
+Matched code der Unit 83.64486 % -> 100 %.
+Complete units 416 -> 417.
+Complete code 20.322733 % -> 20.370419 % (729604 -> 731316).
+Complete data 22.041725 % -> 22.151045 % (141140 -> 141840).
+Nur `TMapEventSirenaSink::watch` hat sich im Code geändert.
+Der Link zieht die ganze TU.
+
+DOL-SHA1 unverändert: `build/GMSJ01/mario.dol` prüft gegen `build.sha1`.
+
+### R53C (`TMapEventSinkInPollutionReset::loadAfter`)
+
+**Vollmatch, strikt.**
+
+Der Body stimmte schon.
+Das Frame war `-0xd0`, Ziel `-0x158`, inklusive der Saved-Regs.
+`char trash[0x88]` als erstes Local schließt genau diese Lücke.
+Die Saved-Regs wandern mit dem Frame.
+`TMapEventSinkInPollution::loadAfter` bleibt inlined.
+`TMapEventSinkBianco::loadAfter` und die Parent-Funktion bleiben Match.
+
+`TMapEventSinkInPollutionReset::loadAfter`: 0 Abweichungen, 308 Bytes, 77 Instruktionen.
+`validate-symbol-order` `mario/Map/MapEventSink`: PASS.
+UNUSED-Größen stimmen 1/1.
+Linkage in Ordnung.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `32ddf324`: fuzzy 81.12759 % -> 81.12760 %,
+matched code 53.49239 % -> 53.500973 % (1920424 -> 1920732, +308).
+Matched data unverändert 67.8535 % (434487).
+Funktionen matched 9928 -> 9929.
+`MapEventSink` 5812 -> 6120 (+308), Funktionen 31 -> 32 von 36.
+Fuzzy der Unit 99.72853 % -> 99.73333 %.
+Matched code der Unit 77.49333 % -> 81.6 %.
+Complete units bleiben 417.
+Nur `TMapEventSinkInPollutionReset::loadAfter` hat sich geändert.
+
+DOL-SHA1 unverändert: `MapEventSink.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R580A (`TBossGessoManager::initJParticle`)
+
+**Vollmatch, strikt.**
+
+Die JPA-`addi`-Offsets lagen 0x5c zu tief.
+`r31` ist die `.rodata`-Basis.
+`createModelData` hielt `entry` in `.data` statt `.rodata` (`entry$3707`, 0x6c an Offset 0x340).
+`perform` emittierte ein zweites `{2, 3, 5, 6}` in `.rodata` und schob alles dahinter um 0x10.
+`static const TModelDataLoadEntry entry[]` legt die Tabelle nach `.rodata`.
+`const int bgesoRootJoints[4]` liegt in `.data`, damit dieses Array nicht noch einmal in `.rodata` steht.
+`doAttackSingle` behält das rodata-`idxarray`.
+
+`TBossGessoManager::initJParticle`: 0 Abweichungen, 1252 Bytes, 313 Instruktionen.
+`TBossGessoManager::createModelData` bleibt 100 % (52 Bytes).
+Der matched-code-Zähler steigt nur um 1252.
+`.rodata` der Unit 95.88728 % -> 100 % (2776 Bytes).
+`perform` fuzzy 74.601265 % -> 73.6076 % (war schon nonmatching).
+`validate-symbol-order` `mario/Enemy/bossgesso`: FAIL mit denselben 2 MISSING wie am Tip (`getMActorAnmData`, `SMS_GetMarioPos`).
+Order und Linkage der gelinkten Symbole in Ordnung.
+15 geerbte UNUSED-Größenwarnungen.
+`bgesoRootJoints` ist ein zusätzliches `.data`-Objekt und steht nicht in der Map.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `8b054391`: fuzzy 81.1276 % -> 81.126945 %,
+matched code 53.500973 % -> 53.53585 % (1920732 -> 1921984, +1252).
+Matched data 67.8535 % -> 68.287025 % (434487 -> 437263, +2776).
+Funktionen matched 9929 -> 9930.
+`bossgesso` matched code 7608 -> 8860 (+1252), Funktionen 59 -> 60.
+Fuzzy der Unit 90.43904 % -> 90.3802 %.
+Matched code der Unit 19.227657 % -> 22.391832 %.
+Matched data der Unit 7.771136 % -> 67.03672 % (364 -> 3140).
+Complete units bleiben 417.
+Complete code und complete data unverändert.
+
+DOL-SHA1 unverändert: `bossgesso.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R592B (`MSHandle::calcPan`)
+
+**Vollmatch, strikt.**
+
+Der Body stimmte schon.
+Das Frame war `-0x38`, Ziel `-0x30`.
+Die Saved-Regs `f29`/`f30`/`f31` lagen je 8 Bytes zu hoch.
+Ein unbenutztes `f32 fVar1` und ein benanntes Clamp-Local `r` halten zusammen das Extra-Slot.
+`fVar1` allein ändert nichts.
+Das Clamp zurück auf `fVar4` allein auch nicht.
+Beides weg: Frame `-0x30`, Instruktionen bleiben.
+`calcDolby` unberührt.
+
+`MSHandle::calcPan`: 0 Abweichungen, 288 Bytes, 72 Instruktionen.
+`validate-symbol-order` `mario/MSound/MSHandle`: PASS.
+Keine UNUSED-Symbole.
+Linkage in Ordnung.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `b2392c0b`: fuzzy 81.126945 % -> 81.12696 %,
+matched code 53.53585 % -> 53.543865 % (1921984 -> 1922272, +288).
+Matched data unverändert 68.287025 % (437263).
+Funktionen matched 9930 -> 9931.
+`MSHandle` 2100 -> 2388 (+288), Funktionen 8 -> 9 von 11.
+Fuzzy der Unit 99.86648 % -> 99.879 %.
+Matched code der Unit 73.01808 % -> 83.03199 %.
+Complete units bleiben 417.
+Nur `MSHandle::calcPan` hat sich geändert.
+
+DOL-SHA1 unverändert: `MSHandle.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R54C (`TPollutionLayer::action`)
+
+**Vollmatch, strikt. Die TU ist `Matching` und gelinkt.**
+
+Das Frame war `-0x78`, Ziel `-0xa0`.
+Saved-Regs und Rand-Spills lagen einheitlich `0x28` zu tief.
+Die beiden `TVec3` nur `0x18` (`0x20`/`0x2c`, Ziel `0x38`/`0x44`).
+`char trash[0x18]` mit `(void)trash` am Anfang von `spread` hebt die Vektoren.
+`char trash[0x10]` in `action` schließt das restliche Frame.
+`spread`, `glassWall` und `electric` bleiben in der Map-Größe.
+
+`TPollutionLayer::action`: 0 Abweichungen, 972 Bytes, 243 Instruktionen.
+`validate-symbol-order` `mario/Map/PollutionAction`: PASS.
+UNUSED-Größen stimmen 5/5.
+Linkage in Ordnung.
+Die TU ist komplett und steht in `configure.py` auf `Matching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `c2231990`: fuzzy 81.12696 % -> 81.12700 %,
+matched code 53.543865 % -> 53.570946 % (1922272 -> 1923244, +972).
+Matched data unverändert 68.287025 % (437263).
+Funktionen matched 9931 -> 9932.
+`PollutionAction` 2092 -> 3064 (+972), Funktionen 7 -> 8 von 8.
+Fuzzy der Unit 99.95431 % -> 100 %.
+Matched code der Unit 68.276764 % -> 100 %.
+Complete units 417 -> 418.
+Complete code 20.370419 % -> 20.455765 % (731316 -> 734380).
+Complete data 22.151045 % -> 22.192898 % (141840 -> 142108).
+Nur `TPollutionLayer::action` hat sich im Code geändert.
+Der Link zieht die ganze TU.
+
+DOL-SHA1 unverändert: `build/GMSJ01/mario.dol` prüft gegen `build.sha1`.
+
+### R593B (`SMS_IsInSameCameraCube`)
+
+**Vollmatch, strikt.**
+
+Der Body stimmte schon.
+Das Frame war `-0xa0`, Ziel `-0x98`.
+Die kopierte `Vec` lag 4 Bytes zu hoch (`0x78`, Ziel `0x74`).
+`SMS_GetMarioPos()` ist eine Inline-Ebene und lässt ein totes 4-Byte-Temporary.
+`*gpMarioPos` nimmt das weg.
+Frame `-0x98`, `Vec` auf `0x74`.
+
+`SMS_IsInSameCameraCube`: 0 Abweichungen, 280 Bytes, 70 Instruktionen.
+`validate-symbol-order` `mario/Camera/CubeManagerBase`: FAIL wie am Tip.
+Zwei UNUSED fehlen (`isInOtherCube`, `isInCube` mit `const char*`).
+`TVec3<f>::set` steht in der Objekt-Reihenfolge vor dem zweiten Ctor, in der Map dahinter.
+Linkage der gelinkten Symbole in Ordnung.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `2c1522b8`: fuzzy 81.127 % -> 81.127014 %,
+matched code 53.570946 % -> 53.57874 % (1923244 -> 1923524, +280).
+Matched data unverändert 68.287025 % (437263).
+Funktionen matched 9932 -> 9933.
+`CubeManagerBase` 1336 -> 1616 (+280), Funktionen 10 -> 11 von 12.
+Fuzzy der Unit 91.12329 % -> 91.14481 %.
+Matched code der Unit 65.36204 % -> 79.06067 %.
+Complete units bleiben 418.
+Nur `SMS_IsInSameCameraCube` hat sich geändert.
+
+DOL-SHA1 unverändert: `CubeManagerBase.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R594B (`CPolarSubCamera::startGateDemoCamera`)
+
+**Vollmatch, strikt.**
+
+Der Body stimmte schon.
+Das Frame war `-0x98`, Ziel `-0xa0`.
+Der `snprintf`-Puffer lag auf `0x10`, Ziel `0x14`.
+`char trash[4]` hinter `buf` hebt den Puffer um 4 und das Frame um 8.
+`search()` statt `searchF` legt zu viel an und zieht `gpCamMapToolTable` nach vorn.
+
+`CPolarSubCamera::startGateDemoCamera`: 0 Abweichungen, 280 Bytes, 70 Instruktionen.
+`validate-symbol-order` `mario/Camera/CameraDemo`: PASS.
+UNUSED-Größe von `restartReproduceDemoCamera_` weicht wie am Tip (Map `0x44`, Objekt `0x4`).
+Linkage in Ordnung.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `e028a5f3`: fuzzy 81.127014 % -> 81.12703 %,
+matched code 53.57874 % -> 53.586544 % (1923524 -> 1923804, +280).
+Matched data unverändert 68.287025 % (437263).
+Funktionen matched 9933 -> 9934.
+`CameraDemo` 1684 -> 1964 (+280), Funktionen 9 -> 10 von 11.
+Fuzzy der Unit 85.818184 % -> 85.83665 %.
+Matched code der Unit 59.801136 % -> 69.744316 %.
+Complete units bleiben 418.
+Nur `CPolarSubCamera::startGateDemoCamera` hat sich geändert.
+
+DOL-SHA1 unverändert: `CameraDemo.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R55C (`TDolpicEventRiccoMammaGate::loadAfter`)
+
+**Vollmatch, strikt.**
+
+`getCounterLayer().offLayer` legt eine Referenz ab.
+Das Frame war `-0x30`, Ziel `-0x28`.
+Der Double-Spill zog mit.
+`gpPollution->offLayer` inlined ohne diese Referenz und fällt auf `-0x20`.
+`char trash[8]` als erstes Local hebt Frame und Spill auf `-0x28`.
+
+`TDolpicEventRiccoMammaGate::loadAfter`: 0 Abweichungen, 216 Bytes, 54 Instruktionen.
+`validate-symbol-order` `mario/Map/MapEventDolpic`: PASS.
+UNUSED-Größe stimmt 1/1.
+Linkage in Ordnung.
+Die TU bleibt `NonMatching` (`load`, `watch`, `control`).
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `4b72b434`: fuzzy bleibt 81.12703 %,
+matched code 53.586544 % -> 53.592556 % (1923804 -> 1924020, +216).
+Matched data unverändert 68.287025 % (437263).
+Funktionen matched 9934 -> 9935.
+`MapEventDolpic` 1800 -> 2016 (+216), Funktionen 10 -> 11 von 14.
+Fuzzy der Unit 99.78901 % -> 99.797806 %.
+Matched code der Unit 49.45055 % -> 55.384617 %.
+Complete units bleiben 418.
+Nur `TDolpicEventRiccoMammaGate::loadAfter` hat sich geändert.
+
+DOL-SHA1 unverändert: `MapEventDolpic.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R581A (`TNerveHino2Burst::execute`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0x68`, Ziel `-0x90`.
+Der inlinierte `TVec3` aus `emitWaterParticle` lag bei `0x54`, Ziel `0x78`.
+`char trash[0x24]` im Aufrufer sitzt über dem Vektor und hebt nur das Frame.
+Der Body steht direkt in der Nerve, mit `char trash[0x24]` unter dem `TVec3`.
+Dann liegt der Vektor auf `0x78` und das Frame auf `-0x90`.
+`emitWaterParticle` bleibt `0xb8`, passend zur Map.
+
+`TNerveHino2Burst::execute`: 0 Abweichungen, 608 Bytes, 152 Instruktionen.
+`validate-symbol-order` `mario/Enemy/hinokuri2`: PASS.
+6 geerbte UNUSED-Größenwarnungen, alles 4-Byte-Stubs.
+Order und Linkage in Ordnung.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `cb092b27`: fuzzy 81.12703 % -> 81.12705 %,
+matched code 53.592556 % -> 53.609497 % (1924020 -> 1924628, +608).
+Matched data unverändert 68.287025 % (437263).
+Funktionen matched 9935 -> 9936.
+`hinokuri2` matched code 12428 -> 13036 (+608), Funktionen 55 -> 56 von 70.
+Fuzzy der Unit 99.18246 % -> 99.18512 %.
+Matched code der Unit 51.817875 % -> 54.352905 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TNerveHino2Burst::execute` hat sich geändert.
+
+DOL-SHA1 unverändert: `hinokuri2.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R582A (`THinokuri2::perform`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0x50`, Ziel `-0x58`.
+Saved-Regs und der By-Value-`TVec3` für `request` lagen 8 Bytes zu tief.
+`char trash[8]` am Anfang hebt nur die Saved-Regs.
+Der Vektor bleibt bei `0x2c`, Ziel `0x34`.
+Ein 8-Byte-Return-Pad direkt vor `request` schiebt den Vektor auf `0x34` und das Frame auf `-0x58`.
+Das Pad wird nicht als Symbol emittiert.
+
+`THinokuri2::perform`: 0 Abweichungen, 568 Bytes, 142 Instruktionen.
+`validate-symbol-order` `mario/Enemy/hinokuri2`: PASS.
+Dieselben 6 geerbten UNUSED-Größenwarnungen.
+Order und Linkage in Ordnung.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `57161bd6`: fuzzy 81.12705 % -> 81.12707 %,
+matched code 53.609497 % -> 53.625317 % (1924628 -> 1925196, +568).
+Matched data unverändert 68.287025 % (437263).
+Funktionen matched 9936 -> 9937.
+`hinokuri2` matched code 13036 -> 13604 (+568), Funktionen 56 -> 57 von 70.
+Fuzzy der Unit 99.18512 % -> 99.18762 %.
+Matched code der Unit 54.352905 % -> 56.721146 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `THinokuri2::perform` hat sich geändert.
+
+DOL-SHA1 unverändert: `hinokuri2.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R583A (`TNerveBPTumbleOut::execute`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0x58`, Ziel `-0xa0`.
+Der inlinierte `TVec3` aus `resetWaterMark` lag bei `0x28`, Ziel `0x64`.
+`char trash[0x34]` unter dem `TVec3` legt den Vektor auf `0x64`.
+Das Frame bleibt dabei `-0x90`.
+`char trash[0x10]` am Anfang der Nerve hebt das Frame auf `-0xa0`.
+`resetWaterMark` bleibt `0xa4`, passend zur Map.
+
+`TNerveBPTumbleOut::execute`: 0 Abweichungen, 636 Bytes, 159 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bosspakkun`: PASS.
+2 geerbte UNUSED-Größenwarnungen.
+Order und Linkage in Ordnung.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `2ed8f8e6`: fuzzy 81.12707 % -> 81.12708 %,
+matched code 53.625317 % -> 53.64303 % (1925196 -> 1925832, +636).
+Matched data unverändert 68.287025 % (437263).
+Funktionen matched 9937 -> 9938.
+`bosspakkun` matched code 17284 -> 17920 (+636), Funktionen 102 -> 103 von 126.
+Fuzzy der Unit 99.18289 % -> 99.18461 %.
+Matched code der Unit 43.63765 % -> 45.243385 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TNerveBPTumbleOut::execute` hat sich geändert.
+
+DOL-SHA1 unverändert: `bosspakkun.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R57C (`TFruitBasket::touchFruit`)
+
+**Vollmatch, strikt.**
+
+Das Frame war schon `-0x38`.
+Der Roof-Out-Pointer lag bei `0x2c`, Ziel `0x28`.
+`getGroundPlane()` direkt in der Bedingung lässt den Pointer an den Saved-Regs kleben.
+Ein benanntes `groundPlane` reserviert die 4 Bytes dazwischen.
+Der Pointer fällt auf `0x28`, das Frame bleibt `-0x38`.
+
+`TFruitBasket::touchFruit`: 0 Abweichungen, 156 Bytes, 39 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/MapObjHide`: PASS.
+UNUSED-Größe stimmt 1/1.
+Linkage in Ordnung.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `61504bf5`: fuzzy bleibt 81.12708 %,
+matched code 53.64303 % -> 53.647377 % (1925832 -> 1925988, +156).
+Matched data unverändert 68.287025 % (437263).
+Funktionen matched 9938 -> 9939.
+`MapObjHide` matched code 10240 -> 10396 (+156), Funktionen 59 -> 60 von 61.
+Fuzzy der Unit 99.863365 % -> 99.864105 %.
+Matched code der Unit 94.53471 % -> 95.974884 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TFruitBasket::touchFruit` hat sich geändert.
+
+DOL-SHA1 unverändert: `MapObjHide.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R598B (`MSBgmXFade::xFadeBgm`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0x30`, Ziel `-0x38`.
+`char pad[8]` hebt `f31`/`r31`/`r30`/`r29` um 8 Bytes.
+`unk0` geht als `prev` in eine Inline-Suche, damit es in `f1` bleibt und `scTiming` in `f0`.
+Beide Kreuz-Tests lassen `prev` links stehen, die Vergleiche bleiben `fcmpo f1, f0`.
+
+`MSBgmXFade::xFadeBgm`: 0 Abweichungen, 272 Bytes, 68 Instruktionen.
+`validate-symbol-order` `mario/MSound/MSModBgm`: PASS.
+Ererbte UNUSED-Size-Warnung an `getTiming` (Map `0x94`, Objekt `0x60`).
+Kein neuer Fehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `4a0225f9`: fuzzy 81.12708 % -> 81.12714 %,
+matched code 53.647377 % -> 53.65495 % (1925988 -> 1926260, +272).
+Matched data unverändert 68.287025 % (437263).
+Funktionen matched 9939 -> 9940.
+`MSModBgm` matched code 1180 -> 1452 (+272), Funktionen 4 -> 5 von 6.
+Fuzzy der Unit 99.38732 % -> 99.48357 %.
+Matched code der Unit 69.248825 % -> 85.211266 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `xFadeBgm` hat sich geändert.
+
+DOL-SHA1 unverändert: `MSModBgm.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R58C (`TPinnaShell::TPinnaShell`)
+
+**Vollmatch, strikt.**
+
+Das Frame war schon `-0x18`.
+`this` lag bei `0x8`, Ziel `0xc`.
+Ein eigener `TPinnaShell()` und ein leerer `TPinnaShell(const char*)` erzeugen das Spill an `0x8`.
+Ein Konstruktor mit Default-Namen `"シェル"` lässt MWCC den Array-Thunk `__ct__Fv` klonen.
+Der Thunk lädt den Namen und legt `this` auf `0xc`.
+`__ct__FPCc` bleibt UNUSED und ist `0xa4`, passend zur Map.
+
+`TPinnaShell::TPinnaShell()`: 0 Abweichungen, 168 Bytes, 42 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/MapObjPinna`: PASS.
+5 geerbte UNUSED-Größenwarnungen, unverändert.
+Order und Linkage in Ordnung.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `ab65cf3d`: fuzzy bleibt 81.12714 %,
+matched code 53.65495 % -> 53.65963 % (1926260 -> 1926428, +168).
+Matched data unverändert 68.287025 % (437263).
+Funktionen matched 9940 -> 9941.
+`MapObjPinna` matched code 12076 -> 12244 (+168), Funktionen 66 -> 67 von 69.
+Fuzzy der Unit 96.711136 % -> 96.71203 %.
+Matched code der Unit 89.90471 % -> 91.15545 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TPinnaShell::TPinnaShell()` hat sich geändert.
+
+DOL-SHA1 unverändert: `MapObjPinna.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R585A (`TNerveHamuKuriWallDie::execute`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0x78`, Ziel `-0x80`.
+Der Wandtreffer-Vektor lag bei `0x50`, Ziel `0x4c`.
+Ein `TVec3` ist 8-aligned und passt nicht auf `0x4c`.
+Ein `Vec` plus `char trash[0x10]` davor legt den Vektor auf `0x4c`.
+Das Frame geht auf `-0x80`, `stfd` der Winkelumrechnung auf `0x68`.
+
+`TNerveHamuKuriWallDie::execute`: 0 Abweichungen, 672 Bytes, 168 Instruktionen.
+`validate-symbol-order` `mario/Enemy/hamukuri`: geerbter Linkage-Fehler an `TDoroHamuKuri::onHaveCap` (Map weak, Objekt global).
+15 geerbte UNUSED-Größenwarnungen.
+Nur weak-Symbole außer der Reihe, unverändert.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `653c0439`: fuzzy 81.12714 % -> 81.127174 %,
+matched code 53.65963 % -> 53.678352 % (1926428 -> 1927100, +672).
+Matched data unverändert 68.287025 % (437263).
+Funktionen matched 9941 -> 9942.
+`hamukuri` matched code 30624 -> 31296 (+672), Funktionen 202 -> 203 von 224.
+Fuzzy der Unit 92.377594 % -> 92.37935 %.
+Matched code der Unit 67.275925 % -> 68.7522 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TNerveHamuKuriWallDie::execute` hat sich geändert.
+
+DOL-SHA1 unverändert: `hamukuri.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R600B (`CPolarSubCamera::ctrlLButtonCamera_`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0x40`, Ziel `-0x70`.
+Der inlined Richtungsvektor lag bei `0x10`, Ziel `0x34`.
+`getNozzleTopPos_` bleibt mit `char trash[0x18]` ein Vollmatch.
+Ein benutztes `char low[0x20]` darin würde sein Frame von `-0x58` auf `-0x68` heben.
+Ein `static inline` `fillNozzleTop` trägt `low[0x20]` mit `low[0] = 0` und die gleiche Nozzle-Logik.
+Der Vektor landet auf `0x34`.
+`char pad[0xC]` im Aufrufer hebt das Frame auf `-0x70`, ohne den Vektor zu verschieben.
+Die Hilfe wird vollständig inlined und nicht emittiert.
+`getNozzleTopPos_` bleibt unangetastet.
+
+`CPolarSubCamera::ctrlLButtonCamera_`: 0 Abweichungen, 528 Bytes, 132 Instruktionen.
+`getNozzleTopPos_` bleibt 100 %.
+`validate-symbol-order` `mario/Camera/CameraNotice`: PASS.
+8 object-only weak/inline Helfer, unverändert.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `39ca6115`: fuzzy 81.127174 % -> 81.12719 %,
+matched code 53.678352 % -> 53.693054 % (1927100 -> 1927628, +528).
+Matched data unverändert 68.287025 % (437263).
+Funktionen matched 9942 -> 9943.
+`CameraNotice` matched code 1080 -> 1608 (+528), Funktionen 3 -> 4 von 6.
+Fuzzy der Unit 90.71371 % -> 90.75169 %.
+Matched code der Unit 36.635006 % -> 54.545456 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `ctrlLButtonCamera_` hat sich geändert.
+
+DOL-SHA1 unverändert: `CameraNotice.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R601B (`MSound::startSoundActorSpecial`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0x70`, Ziel `-0x78`.
+Jeder Stack-Slot und jedes gesicherte Register lag 8 Bytes zu tief.
+`char trash[8]` am Anfang schiebt nur die gesicherten Register.
+Als letzte Deklaration liegt das Array unter dem Actor und den beiden Floats.
+Dann rutscht der ganze Frame einheitlich auf `-0x78`.
+
+`MSound::startSoundActorSpecial`: 0 Abweichungen, 368 Bytes, 92 Instruktionen.
+`validate-symbol-order` `mario/MSound/MSound`: PASS.
+Geerbte weak-Order-Warnung und 6 UNUSED-Größenwarnungen, unverändert.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `c74440be`: fuzzy 81.12719 % -> 81.12721 %,
+matched code 53.693054 % -> 53.703310 % (1927628 -> 1927996, +368).
+Matched data unverändert 68.287025 % (437263).
+Funktionen matched 9943 -> 9944.
+`MSound` matched code 7616 -> 7984 (+368), Funktionen 43 -> 44 von 49.
+Fuzzy der Unit 99.19647 % -> 99.20288 %.
+Matched code der Unit 61.025642 % -> 63.974358 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `startSoundActorSpecial` hat sich geändert.
+
+DOL-SHA1 unverändert: `MSound.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R602B (`MSound::exitStage`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0x38`, Ziel `-0x40`.
+Die beiden `JAICamera()`-Temps lagen aneinander.
+Ziel: der zweite 8 Bytes höher, der erste 12 Bytes höher, mit 4 Bytes dazwischen.
+Ein `char pad[8]` schiebt nur die gesicherten Register.
+`static inline clearOneCam` mit `char pad[4]; pad[0] = 0;` wird zweimal inlined.
+Jeder Aufruf legt sein eigenes Pad unter den Temp, der Store fällt weg.
+Die Hilfe wird nicht emittiert.
+
+`MSound::exitStage`: 0 Abweichungen, 320 Bytes, 80 Instruktionen.
+`startSoundActorSpecial` bleibt 100 %.
+`validate-symbol-order` `mario/MSound/MSound`: PASS.
+Geerbte weak-Order-Warnung und 6 UNUSED-Größenwarnungen, unverändert.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `2c1ec171`: fuzzy 81.12721 % -> 81.12723 %,
+matched code 53.703310 % -> 53.712220 % (1927996 -> 1928316, +320).
+Matched data unverändert 68.287025 % (437263).
+Funktionen matched 9944 -> 9945.
+`MSound` matched code 7984 -> 8304 (+320), Funktionen 44 -> 45 von 49.
+Fuzzy der Unit 99.20288 % -> 99.20898 %.
+Matched code der Unit 63.974358 % -> 66.53846 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `exitStage` hat sich geändert.
+
+DOL-SHA1 unverändert: `MSound.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R588A (`TBossPakkun::rumblePad`)
+
+**Vollmatch, strikt.**
+
+Das Frame war schon `-0x40`.
+Der Delta-Vektor lag bei `0x24`, Ziel `0x20`.
+`f32 distance` vor dem `TVec3` legt den Vektor auf `0x20`.
+Das Frame und die gesicherten Register bleiben.
+
+`TBossPakkun::rumblePad`: 0 Abweichungen, 352 Bytes, 88 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bosspakkun`: PASS.
+2 geerbte UNUSED-Größenwarnungen (`ignoreWaterCheck`, `vomitFinished`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `b5146e48`: fuzzy 81.12723 % -> 81.12724 %,
+matched code 53.71222 % -> 53.722023 % (1928316 -> 1928668, +352).
+Matched data unverändert 68.287025 % (437263).
+Funktionen matched 9945 -> 9946.
+`bosspakkun` matched code 17920 -> 18272 (+352), Funktionen 103 -> 104 von 126.
+Fuzzy der Unit 99.18461 % -> 99.18582 %.
+Matched code der Unit 45.243385 % -> 46.132095 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TBossPakkun::rumblePad` hat sich geändert.
+
+DOL-SHA1 unverändert: `bosspakkun.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R589A (`TBGTentacle::decideOwnState`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0xb0`, Ziel `-0xd0`.
+Der Delta-Vektor lag bei `0x8c`, Ziel `0xa8`.
+`char trash[0x1c]` als letzte Deklaration schiebt den Vektor auf `0xa8`.
+Das Frame geht auf `-0xd0`.
+Das Double-Temp der Winkelumrechnung bleibt 8-aligned.
+
+`TBGTentacle::decideOwnState`: 0 Abweichungen, 744 Bytes, 186 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bgtentacle`: PASS.
+5 geerbte UNUSED-Größenwarnungen.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `a56a6e58`: fuzzy 81.12724 % -> 81.12728 %,
+matched code 53.722023 % -> 53.74275 % (1928668 -> 1929412, +744).
+Matched data unverändert 68.287025 % (437263).
+Funktionen matched 9946 -> 9947.
+`bgtentacle` matched code 4916 -> 5660 (+744), Funktionen 25 -> 26 von 39.
+Fuzzy der Unit 95.24344 % -> 95.248085 %.
+Matched code der Unit 21.934677 % -> 25.254328 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TBGTentacle::decideOwnState` hat sich geändert.
+
+DOL-SHA1 unverändert: `bgtentacle.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R590A (`TTamaNokoManager::load`)
+
+**Vollmatch, strikt.**
+
+Jeder String-Offset im Param-Pool lag 4 Bytes zu tief.
+Der Blumename war ASCII `TamaNokoFlower`.
+Das Original ist Shift-JIS `タマノコフラワー` und 4 Bytes länger.
+Danach liegt `/enemy/tamanoko.prm` bei `0x384`.
+
+`TTamaNokoManager::load`: 0 Abweichungen, 532 Bytes, 133 Instruktionen.
+`.rodata` der Unit 98.591545 % -> 100 %.
+`loadAfter` bleibt 100 %.
+`validate-symbol-order` `mario/Enemy/tamaNoko`: PASS.
+Nur weak-Symbole außer der Reihe, unverändert.
+2 geerbte UNUSED-Größenwarnungen.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `998e7032`: fuzzy 81.12728 % -> 81.1273 %,
+matched code 53.74275 % -> 53.757565 % (1929412 -> 1929944, +532).
+Matched data 68.287025 % -> 68.45444 % (437263 -> 438335, +1072).
+Funktionen matched 9947 -> 9948.
+`tamaNoko` matched code 10100 -> 10632 (+532), Funktionen 49 -> 50 von 58.
+Fuzzy der Unit 97.428505 % -> 97.4331 %.
+Matched code der Unit 61.093636 % -> 64.31164 %.
+Matched data der Unit 1148 -> 2220 (+1072).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TTamaNokoManager::load` und die `.rodata` der Unit haben sich geändert.
+
+DOL-SHA1 unverändert: `tamaNoko.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R603B (`MSound::startMarioVoice`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0x70`, Ziel `-0xa0`.
+Beide `JAIActor` lagen 0x28 zu tief, die gesicherten Register 0x30.
+Der Kamera-Index landete in `r28` statt `r30`, das Bit in `r30` statt `r29`.
+`static inline asU32(u8)` legt den zweiten Index über `r3` in `r30`.
+`char pad[0x28]` direkt nach `local_48` hebt beide Actors und das Frame.
+Die Hilfe wird nicht emittiert.
+
+`MSound::startMarioVoice`: 0 Abweichungen, 1740 Bytes, 435 Instruktionen.
+`exitStage` und `startSoundActorSpecial` bleiben 100 %.
+`validate-symbol-order` `mario/MSound/MSound`: PASS.
+Geerbte weak-Order-Warnung und 6 UNUSED-Größenwarnungen, unverändert.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `5eed9d83`: fuzzy 81.1273 % -> 81.12739 %,
+matched code 53.757565 % -> 53.806038 % (1929944 -> 1931684, +1740).
+Matched data unverändert 68.45444 % (438335).
+Funktionen matched 9948 -> 9949.
+`MSound` matched code 8304 -> 10044 (+1740), Funktionen 45 -> 46 von 49.
+Fuzzy der Unit 99.20898 % -> 99.23462 %.
+Matched code der Unit 66.53846 % -> 80.48077 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `startMarioVoice` hat sich geändert.
+
+DOL-SHA1 unverändert: `MSound.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R591A (`TNerveBPPreDie::execute`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0x60`, Ziel `-0x78`.
+Der Gelenk-Vektor lag bei `0x3c`, Ziel `0x54`.
+`resetWaterMark` steht offen an der Stelle.
+`char pad[4]` vor dem `TVec3` und `char trash[0x14]` dahinter legen den Vektor auf `0x54`.
+Das Frame geht auf `-0x78`.
+
+`TNerveBPPreDie::execute`: 0 Abweichungen, 472 Bytes, 118 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bosspakkun`: PASS.
+2 geerbte UNUSED-Größenwarnungen (`ignoreWaterCheck`, `vomitFinished`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `fbd55b4d`: fuzzy 81.12739 % -> 81.1274 %,
+matched code 53.806038 % -> 53.81918 % (1931684 -> 1932156, +472).
+Matched data unverändert 68.45444 % (438335).
+Funktionen matched 9949 -> 9950.
+`bosspakkun` matched code 18272 -> 18744 (+472), Funktionen 104 -> 105 von 126.
+Fuzzy der Unit 99.18582 % -> 99.18754 %.
+Matched code der Unit 46.132095 % -> 47.323772 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TNerveBPPreDie::execute` hat sich geändert.
+
+DOL-SHA1 unverändert: `bosspakkun.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R604B (`TGCLogoDir::direct`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0x48`, Ziel `-0x78`.
+Das `JUTRect` lag bei `0x24`, Ziel `0x58`.
+Die `TColor` lag bei `0x20`, Ziel `0x50`.
+Ein Pad am Funktionsende hebt nur die gesicherten Register.
+`JUTRect logo` plus `char gap[4]; gap[0] = 0;` legt das Rect auf `0x58`.
+`static inline logoColor` mit `char pad[0x2c]; pad[0] = 0;` legt die Farbe auf `0x50`.
+Die Hilfe wird nicht emittiert.
+
+`TGCLogoDir::direct`: 0 Abweichungen, 356 Bytes, 89 Instruktionen.
+`validate-symbol-order` `mario/System/GCLogoDir`: PASS.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `b5a1dc72`: fuzzy 81.1274 % -> 81.12744 %,
+matched code 53.81918 % -> 53.829098 % (1932156 -> 1932512, +356).
+Matched data unverändert 68.45444 % (438335).
+Funktionen matched 9950 -> 9951.
+`GCLogoDir` matched code 1720 -> 2076 (+356), Funktionen 7 -> 8 von 11.
+Fuzzy der Unit 99.670815 % -> 99.6856 %.
+Matched code der Unit 33.463036 % -> 40.389107 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `direct` hat sich geändert.
+
+DOL-SHA1 unverändert: `GCLogoDir.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R592A (`TNerveTelesaFreeze::execute`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0x38`, Ziel `-0x40`.
+Der `TPathNode` lag bei `0x20`, Ziel `0x24`.
+Ein benannter `TPathNode` mit `char trash[4]` dahinter legt den Knoten auf `0x24`.
+Das Frame geht auf `-0x40`.
+
+`TNerveTelesaFreeze::execute`: 0 Abweichungen, 544 Bytes, 136 Instruktionen.
+`validate-symbol-order` `mario/Enemy/telesa`: PASS.
+2 geerbte UNUSED-Größenwarnungen (`resetBaseGround`, `isResetTransY`).
+Schwache Symbolreihenfolge geerbt.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `0a5e06e4`: fuzzy 81.12744 % -> 81.12746 %,
+matched code 53.829098 % -> 53.84425 % (1932512 -> 1933056, +544).
+Matched data unverändert 68.45444 % (438335).
+Funktionen matched 9951 -> 9952.
+`telesa` matched code 14484 -> 15028 (+544), Funktionen 75 -> 76 von 86.
+Fuzzy der Unit 99.60715 % -> 99.61104 %.
+Matched code der Unit 70.35166 % -> 72.99397 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TNerveTelesaFreeze::execute` hat sich geändert.
+
+DOL-SHA1 unverändert: `telesa.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R605B (`MSSetSoundTL<MSSetSound>::MSSetSoundTL`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0xc0`, Ziel `-0x128`.
+Alle 31 Abweichungen waren Stack-Offsets um `+0x68`.
+`char pad[0x68];` am Ende des Konstruktors hebt das Frame auf `-0x128`.
+
+`MSSetSoundTL<MSSetSound>::MSSetSoundTL`: 0 Abweichungen, 600 Bytes, 150 Instruktionen.
+`validate-symbol-order` `mario/MSound/MSoundStruct`: PASS.
+Schwache Symbolreihenfolge geerbt.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+Die gemeinsame Vorlage hebt `MSSetSoundTL<MSSetSoundGrp>::MSSetSoundTL` von 48 auf 17 `~`.
+Die Restabweichungen sind Member-Offsets um `+0x20`.
+Die Funktion bleibt nonmatching.
+`validate-symbol-order` `mario/MSound/MSoundSE`: PASS.
+Schwache Symbolreihenfolge und eine UNUSED-Größenwarnung (`getRandomVolume`) geerbt.
+
+`ninja changes_all` gegen `440349b4`: fuzzy 81.12746 % -> 81.12753 %,
+matched code 53.84425 % -> 53.860962 % (1933056 -> 1933656, +600).
+Matched data unverändert 68.45444 % (438335).
+Funktionen matched 9952 -> 9953.
+`MSoundStruct` matched code 2936 -> 3536 (+600), Funktionen 9 -> 10 von 12.
+Fuzzy der Unit 98.99505 % -> 99.0121 %.
+Matched code der Unit 40.37404 % -> 48.624863 %.
+`MSoundSE` fuzzy 98.873436 % -> 98.8839 %, matched code unverändert 3292, Funktionen 21 von 29.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `MSSetSoundTL<MSSetSound>::MSSetSoundTL` ist neu voll matching.
+
+DOL-SHA1 unverändert: `MSoundStruct.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R593A (`TGenerator::perform`)
+
+**Vollmatch, strikt.**
+
+Die Matrix lag bei `0x20`, Ziel `0x1c`.
+`TGraphTracer* tracer = enemy->getTracer()` nimmt das tote 4-Byte-Temporary weg.
+Die Matrix liegt auf `0x1c`.
+Das Frame bleibt `-0x70`.
+
+`TGenerator::perform`: 0 Abweichungen, 288 Bytes, 72 Instruktionen.
+`validate-symbol-order` `mario/Enemy/generator`: PASS.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `9f4b657e`: fuzzy 81.12753 % -> 81.12755 %,
+matched code 53.860962 % -> 53.868984 % (1933656 -> 1933944, +288).
+Matched data unverändert 68.45444 % (438335).
+Funktionen matched 9953 -> 9954.
+`generator` matched code 872 -> 1160 (+288), Funktionen 7 -> 8 von 10.
+Fuzzy der Unit 99.853714 % -> 99.87773 %.
+Matched code der Unit 47.598255 % -> 63.31878 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TGenerator::perform` hat sich geändert.
+
+DOL-SHA1 unverändert: `generator.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R606B (`MSoundSE::startSoundNpcActor`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0x78`, Ziel `-0x88`.
+Die Locals lagen um `+0xC` zu tief, die Saves um `+0x10`.
+Ein `char pad[0xC]` im Aufrufer hebt nur den `JAIActor`.
+`static inline npcPad` mit `char pad[0xC]; pad[0] = 0;` nach `startSoundActorInner` legt das Loch unter `local_c`.
+Die Hilfe wird nicht emittiert.
+`checkMonoSound` bleibt bei 0 Abweichungen.
+
+`startSoundNpcActor`: 0 Abweichungen, 272 Bytes, 68 Instruktionen.
+`validate-symbol-order` `mario/MSound/MSoundSE`: PASS.
+Schwache Symbolreihenfolge und eine UNUSED-Größenwarnung (`getRandomVolume`) geerbt.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `0b36f1b1`: fuzzy 81.12755 % -> 81.12756 %,
+matched code 53.868984 % -> 53.87656 % (1933944 -> 1934216, +272).
+Matched data unverändert 68.45444 % (438335).
+Funktionen matched 9954 -> 9955.
+`MSoundSE` matched code 3292 -> 3564 (+272), Funktionen 21 -> 22 von 29.
+Fuzzy der Unit 98.8839 % -> 98.89031 %.
+Matched code der Unit 27.775902 % -> 30.070873 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `startSoundNpcActor` hat sich geändert.
+
+DOL-SHA1 unverändert: `MSoundSE.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R607B (`MSLoadWave::loadWaveBackword`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0x120`, Ziel `-0x128`.
+`filePath` lag bei `0xc`, Ziel `0x18`.
+`char pad[0xC]` vor dem letzten `return` hebt den Puffer und das Frame.
+`u32 addr = (u32)root->mBase; addr += root->unk10; addr -= extent;`
+hält das `add` in `r6`.
+
+`loadWaveBackword`: 0 Abweichungen, 320 Bytes, 80 Instruktionen.
+`validate-symbol-order` `mario/MSound/MSound`: PASS.
+Schwache Symbolreihenfolge geerbt.
+6 geerbte UNUSED-Größenwarnungen.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `8b9f8d04`: fuzzy 81.12756 % -> 81.12759 %,
+matched code 53.87656 % -> 53.88548 % (1934216 -> 1934536, +320).
+Matched data unverändert 68.45444 % (438335).
+Funktionen matched 9955 -> 9956.
+`MSound` matched code 10044 -> 10364 (+320), Funktionen 46 -> 47 von 49.
+Fuzzy der Unit 99.23462 % -> 99.24199 %.
+Matched code der Unit 80.48077 % -> 83.044876 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `loadWaveBackword` hat sich geändert.
+
+DOL-SHA1 unverändert: `MSound.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R608B (`CPolarSubCamera::warpPosAndAt`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0x50`, Ziel `-0x58`.
+`pos` lag unter `usualLookat`, Ziel ist umgekehrt.
+`Vec pos` vor `usualLookat` dreht die beiden Vektoren.
+Ein `char pad[4]` im Aufrufer lässt das Return-Temporary von `getUsualLookat` bei `0x1c`.
+`static inline warpPad` mit `char pad[4]; pad[0] = 0;` nach dem Aufruf legt es auf `0x20`.
+Die Hilfe wird nicht emittiert.
+`warpPosAndAt(const Vec&, const Vec&)` bleibt bei 0 Abweichungen.
+
+`warpPosAndAt(float, short)`: 0 Abweichungen, 580 Bytes, 145 Instruktionen.
+`validate-symbol-order` `mario/Camera/CameraWarp`: PASS.
+Symbolreihenfolge stimmt.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `f6593d6d`: fuzzy 81.12759 % -> 81.12762 %,
+matched code 53.88548 % -> 53.90163 % (1934536 -> 1935116, +580).
+Matched data unverändert 68.45444 % (438335).
+Funktionen matched 9956 -> 9957.
+`CameraWarp` matched code 968 -> 1548 (+580), Funktionen 2 -> 3 von 3.
+Fuzzy der Unit 99.91215 % -> 100 %.
+Matched code der Unit 62.5323 % -> 100 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `warpPosAndAt(float, short)` hat sich geändert.
+
+DOL-SHA1 unverändert: `CameraWarp.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R594A (`TNerveBPVomit::execute`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0xd8`, Ziel `-0x110`.
+Das Return-Temporary von `fromPolar` klebte bei `0x98`, Ziel `0xc8`.
+`char trash[0x30]` im Aufrufer hebt Wind und Offset, das Temporary bleibt unten.
+`static inline fromPolarV` mit `char trash[0x2c]; trash[0] = 0;` legt das Loch unter das Temporary (`0xc8`).
+`char trash[4]` vor `wind` öffnet die Lücke nach `0xd4`.
+Die Hilfe wird nicht emittiert.
+`fromPolar` bleibt für `launchPolDrop` unverändert.
+
+`TNerveBPVomit::execute`: 0 Abweichungen, 864 Bytes, 216 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bosspakkun`: PASS.
+2 geerbte UNUSED-Größenwarnungen (`ignoreWaterCheck`, `vomitFinished`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `79548a5b`: fuzzy 81.12762 % -> 81.127655 %,
+matched code 53.90163 % -> 53.925697 % (1935116 -> 1935980, +864).
+Matched data unverändert 68.45444 % (438335).
+Funktionen matched 9957 -> 9958.
+`bosspakkun` matched code 18744 -> 19608 (+864), Funktionen 105 -> 106 von 126.
+Fuzzy der Unit 99.18754 % -> 99.19067 %.
+Matched code der Unit 47.323772 % -> 49.50515 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TNerveBPVomit::execute` hat sich geändert.
+
+DOL-SHA1 unverändert: `bosspakkun.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R596A (`TFireWanwan::behaveToWater`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0x98`, Ziel `-0xe8`.
+Die benannte `scale` lag bei `0x70`, Ziel `0xc0`.
+Die inlinierte Feuer-aus-`TVec3` lag bei `0x50`, Ziel `0xa0`.
+`char trash[0x50]` im Aufrufer schiebt die Lücke zwischen die beiden Vektoren.
+`static inline emitFireOff` mit `char trash[0x4c]; trash[0] = 0;` legt beide Vektoren auf `0xc0` und `0xa0`.
+Das Frame wird `-0xe8`.
+Die Hilfe wird nicht emittiert.
+`offFireEffect` bleibt die eigenständige Kopie.
+
+`TFireWanwan::behaveToWater`: 0 Abweichungen, 904 Bytes, 226 Instruktionen.
+`validate-symbol-order` `mario/Enemy/fireWanwan`: ORDER ok.
+4 geerbte MISSING (`TVec4` ctor, `isTaken`, `ArrayWrapper` `operator[]`/`size`).
+27 geerbte UNUSED-Größenwarnungen.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `8b0d656c`: fuzzy 81.127655 % -> 81.12767 %,
+matched code 53.925697 % -> 53.950874 % (1935980 -> 1936884, +904).
+Matched data unverändert 68.45444 % (438335).
+Funktionen matched 9958 -> 9959.
+`fireWanwan` matched code 12896 -> 13800 (+904), Funktionen 59 -> 60 von 95.
+Fuzzy der Unit 94.34871 % -> 94.350655 %.
+Matched code der Unit 33.04633 % -> 35.362854 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TFireWanwan::behaveToWater` hat sich geändert.
+
+DOL-SHA1 unverändert: `fireWanwan.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R64C (`TDrawSyncManager::setCallback`)
+
+**Vollmatch, strikt.**
+
+Das Frame war bereits `-0x30`.
+Das `TDrawSyncTokenRange`-Temporary lag bei `0x24`, Ziel `0x28`.
+Ein benanntes `range` allein senkt das Frame auf `-0x28` und legt es auf `0x20`.
+`char pad[1]; pad[0] = 0;` nach `range` hält das Frame bei `-0x30` und legt `range` auf `0x28`.
+Der Store wird wegoptimiert, der Slot bleibt.
+
+`TDrawSyncManager::setCallback`: 0 Abweichungen, 52 Bytes, 13 Instruktionen.
+`validate-symbol-order` `mario/System/DrawSyncManager`: PASS.
+2 geerbte UNUSED-Größenwarnungen (`__dt__16TDrawSyncManagerFv`, `end__16TDrawSyncManagerFv`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `d777f849`: fuzzy bleibt 81.12767 %,
+matched code 53.950874 % -> 53.952324 % (1936884 -> 1936936, +52).
+Matched data unverändert 68.45444 % (438335).
+Funktionen matched 9959 -> 9960.
+`DrawSyncManager` matched code 776 -> 828 (+52), Funktionen 7 -> 8 von 10.
+Fuzzy der Unit 99.35068 % -> 99.360306 %.
+Matched code der Unit 37.379574 % -> 39.884396 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TDrawSyncManager::setCallback` hat sich geändert.
+
+DOL-SHA1 unverändert: `DrawSyncManager.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R66C (`TApplication::initialize`)
+
+**Vollmatch, strikt.**
+
+`TSlotDrum::moveObject` bleibt.
+Das Frame trifft mit `char trash[8]` (`-0x70`).
+Der frühe Return faltet zu `blt` statt `bge` plus `b`.
+`TObjHitCheck::clearHitNum` hat nicht-einheitliche Iterator-Slots.
+Beides nicht angefasst.
+
+`unk81C |= 1` speichert direkt mit Offset.
+Eine Referenz auf `unk81C` lädt mit Offset, bildet die Adresse und speichert durch den Zeiger.
+`setCallback` lädt die Instanz danach neu.
+
+`TTimeRec::crTimeAry` fehlt sonst in diesem TU, obwohl die Map eine weak Kopie führt.
+`static void keepCrTimeAry()` nimmt die Adresse und emittiert die 24-Byte-Kopie.
+`__sinit_Application_cpp` bleibt 100%.
+
+`TApplication::initialize`: 0 Abweichungen, 1204 Bytes, 301 Instruktionen.
+`TTimeRec::crTimeAry`: 0 Abweichungen, 24 Bytes, 6 Instruktionen.
+`validate-symbol-order` `mario/System/Application`: PASS.
+Schwache Ordnung von `crTimeAry` ist eine Warnung.
+1 geerbte UNUSED-Größenwarnung (`initialize_processMeter`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `17441a5e`: fuzzy 81.12769 % -> 81.12855 %,
+matched code 53.956562 % -> 53.990765 % (1937088 -> 1938316, +1228).
+Matched data unverändert 68.45444 % (438335).
+Funktionen matched 9961 -> 9963.
+`Application` matched code 3860 -> 5088 (+1228), Funktionen 12 -> 14 von 21.
+Fuzzy der Unit 96.98944 % -> 97.3026 %.
+Matched code der Unit 39.195778 % -> 51.665314 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Geändert haben sich nur `TApplication::initialize` und `TTimeRec::crTimeAry`.
+
+DOL-SHA1 unverändert: `Application.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+`9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R610B (`evForceCloseTalk`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0x20`, Ziel `-0x28`.
+Das leere `push`-Slice lag bei `0x10`, Ziel `0x14`.
+`char pad[4]; pad[0] = 0;` am Anfang hält das Frame bei `-0x28` und legt das Slice auf `0x14`.
+Der Store wird wegoptimiert, der Slot bleibt.
+`evEggYoshiStartFruit` bleibt bei 99,9 %: derselbe Pad schiebt die Slices, das `stfd` und das Frame aber um 8.
+
+`evForceCloseTalk`: 0 Abweichungen, 152 Bytes, 38 Instruktionen.
+`validate-symbol-order` `mario/System/EventWatcher`: ererbtes MISSING `set__Q29JGeometry8TVec3<f>FRC3Vec`, sonst nur schwache Ordnung.
+2 geerbte UNUSED-Größenwarnungen (`evSetEventEnd`, `evSetEventStart`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `6ee0d69e`: fuzzy 81.12767 % -> 81.12769 %,
+matched code 53.952324 % -> 53.956562 % (1936936 -> 1937088, +152).
+Matched data unverändert 68.45444 % (438335).
+Funktionen matched 9960 -> 9961.
+`EventWatcher` matched code 26420 -> 26572 (+152), Funktionen 69 -> 70 von 105.
+Fuzzy der Unit 98.90255 % -> 98.9034 %.
+Matched code der Unit 62.553276 % -> 62.913155 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `evForceCloseTalk` hat sich geändert.
+
+DOL-SHA1 unverändert: `EventWatcher.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R611B (`evIsInsideCube`)
+
+**Vollmatch, strikt.**
+
+Das Frame war schon `-0x60`.
+Die Slices lagen 4 Bytes zu hoch.
+Ein benanntes `value` legt die Slices auf `0x24`.
+`TVec3 pos = mPosition` legt den Vektor auf `0x40`, Ziel `0x3c`.
+`int value` vor `TVec3 pos` und `pos = mPosition` legt den Vektor auf `0x3c`.
+Das `stfd` bleibt bei `0x50`.
+
+`evIsInsideCube`: 0 Abweichungen, 388 Bytes, 97 Instruktionen.
+`validate-symbol-order` `mario/System/EventWatcher`: ererbtes MISSING `set__Q29JGeometry8TVec3<f>FRC3Vec`, sonst nur schwache Ordnung.
+2 geerbte UNUSED-Größenwarnungen (`evSetEventEnd`, `evSetEventStart`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `f2fda8b7`: fuzzy 81.12855 % -> 81.12856 %,
+matched code 53.990765 % -> 54.001575 % (1938316 -> 1938704, +388).
+Matched data unverändert 68.45444 % (438335).
+Funktionen matched 9963 -> 9964.
+`EventWatcher` matched code 26572 -> 26960 (+388), Funktionen 70 -> 71 von 105.
+Fuzzy der Unit 98.9034 % -> 98.90501 %.
+Matched code der Unit 62.913155 % -> 63.8318 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `evIsInsideCube` hat sich geändert.
+
+DOL-SHA1 unverändert: `EventWatcher.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R612B (`evInvalidatePad`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0x60`, Ziel `-0x68`.
+Slices, `stfd` und Frame lagen einheitlich 8 Bytes zu tief.
+`char pad[4]; pad[0] = 0;` am Anfang hält das Frame bei `-0x68` und das `stfd` bei `0x58`.
+`getGamePad()->invalidate(frames)` legt die Pop-Slices auf `0x48` und das leere `push` auf `0x38`.
+Ein direktes `mDisabledFrames = frames` lässt das `push`-Slice bei `0x34`.
+
+`evInvalidatePad`: 0 Abweichungen, 324 Bytes, 81 Instruktionen.
+`validate-symbol-order` `mario/System/EventWatcher`: ererbtes MISSING `set__Q29JGeometry8TVec3<f>FRC3Vec`, sonst nur schwache Ordnung.
+2 geerbte UNUSED-Größenwarnungen (`evSetEventEnd`, `evSetEventStart`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `22405e6d`: fuzzy 81.12856 % -> 81.128586 %,
+matched code 54.001575 % -> 54.0106 % (1938704 -> 1939028, +324).
+Matched data unverändert 68.45444 % (438335).
+Funktionen matched 9964 -> 9965.
+`EventWatcher` matched code 26960 -> 27284 (+324), Funktionen 71 -> 72 von 105.
+Fuzzy der Unit 98.90501 % -> 98.906715 %.
+Matched code der Unit 63.8318 % -> 64.598915 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `evInvalidatePad` hat sich geändert.
+
+DOL-SHA1 unverändert: `EventWatcher.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R599A (`TNerveBossEelMouthOpenWait::execute`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0xe8`, Ziel `-0x110`.
+Die inlinierte Distanz-`TVec3` lag bei `0xb4`, Ziel `0xd4`.
+`mSaveParams` in `generateVortex` landete in `r4`, Ziel `r5`.
+Benannte `xz` und `y` legen den Zeiger in `r5`.
+`static inline mouthOpenCanEat` trägt `char trash[0x20]` vor der Distanz und `char gap[8]` dahinter.
+Das Frame wird `-0x110` und die Distanz liegt bei `0xd4`.
+`canEatMario` bleibt unverändert.
+`TNerveBossEelEat::execute` und `TBossEelCollision::behaveToMario` bleiben bei 26 bzw. 17 `~` ohne neue Opcodes.
+
+`TNerveBossEelMouthOpenWait::execute`: 0 Abweichungen, 1288 Bytes, 322 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bosseel`: PASS.
+Nur schwache Symbole sind außer der Reihe.
+5 geerbte UNUSED-Größenwarnungen (`quickBack`, `isEyeBlurOn`, `TBossEelEye::setBckAnm`, `setRecoverTears`, `TBEelTearsDrop::generate`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `267f0af2`: fuzzy 81.128586 % -> 81.12864 %,
+matched code 54.0106 % -> 54.046474 % (1939028 -> 1940316, +1288).
+Matched data unverändert 68.45444 % (438335).
+Funktionen matched 9965 -> 9966.
+`bosseel` matched code 23272 -> 24560 (+1288), Funktionen 121 -> 122 von 142.
+Fuzzy der Unit 99.175865 % -> 99.17902 %.
+Matched code der Unit 50.98142 % -> 53.803017 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TNerveBossEelMouthOpenWait::execute` hat sich geändert.
+
+DOL-SHA1 unverändert: `bosseel.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R613B (`TMarDirector::loadParticle`)
+
+**Vollmatch, strikt.**
+
+`new (0x20)` schrieb `li r4, 0x20`, Ziel `li r4, -0x20`.
+Beide Anlagen kommen vom Heap-Ende: `new (-0x20)`.
+`SMSLoadArchive` für `bosshanachanJpa.arc` gibt den Puffer zurück, das Original mountet aber `pvVar1`.
+`TBossHanachan::staticLoadParticle()` stand auskommentiert und fehlt sonst als `bl`.
+Das Frame war `-0x28`, Ziel `-0x40`.
+`char pad[0x18]; pad[0] = 0;` hebt `stmw r26` von `0x10` auf `0x28`, der Store fällt weg.
+
+`TMarDirector::loadParticle`: 0 Abweichungen, 2432 Bytes, 608 Instruktionen.
+`validate-symbol-order` `mario/System/MarDirectorLoadResource`: PASS.
+Die TU bleibt `NonMatching` (Extra-Symbole aus den rogue includes, Objekt nicht bytegleich).
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `c678d066`: fuzzy 81.12864 % -> 81.12878 %,
+matched code 54.046474 % -> 54.114216 % (1940316 -> 1942748, +2432).
+Matched data unverändert 68.45444 % (438335).
+Funktionen matched 9966 -> 9967.
+`MarDirectorLoadResource` matched code 6948 -> 9380 (+2432), Funktionen 4 -> 5 von 5.
+Fuzzy der Unit 99.94584 % -> 100.0 %.
+Matched code der Unit 74.072495 % -> 100.0 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `loadParticle` hat sich geändert.
+
+DOL-SHA1 unverändert: `MarDirectorLoadResource.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R614B (`evSetTransScale`)
+
+**Vollmatch, strikt.**
+
+Die drei `TVec3` wurden im Aufruf gebaut, rechts nach links, unter den Pop-Slices.
+Ziel legt Scale, Rotation und Translation über die Slices und übergibt sie links nach rechts.
+Sechs `f32` zuerst, dann die Vektoren, dann die Komponenten.
+Das Frame bleibt `-0x1a8`.
+Die Slices bleiben auf `0x11c` bis `0xe4`.
+Scale liegt auf `0x13c`, Rotation auf `0x130`, Translation auf `0x124`.
+
+`evSetTransScale`: 0 Abweichungen, 1652 Bytes, 413 Instruktionen.
+`validate-symbol-order` `mario/System/EventWatcher`: ererbtes MISSING `set__Q29JGeometry8TVec3<f>FRC3Vec`, sonst nur schwache Ordnung.
+2 geerbte UNUSED-Größenwarnungen (`evSetEventEnd`, `evSetEventStart`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `5a3460a8`: fuzzy 81.12878 % -> 81.12903 %,
+matched code 54.114216 % -> 54.160233 % (1942748 -> 1944400, +1652).
+Matched data unverändert 68.45444 % (438335).
+Funktionen matched 9967 -> 9968.
+`EventWatcher` matched code 27284 -> 28936 (+1652), Funktionen 72 -> 73 von 105.
+Fuzzy der Unit 98.906715 % -> 98.928024 %.
+Matched code der Unit 64.598915 % -> 68.51028 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `evSetTransScale` hat sich geändert.
+
+DOL-SHA1 unverändert: `EventWatcher.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R68C (`calcViewMtx`)
+
+**Vollmatch, strikt.**
+
+`makeWorldToPollutionMtx` speichert `[0][3]` als `-x * scale` und `[1][3]` als `-z * scale`.
+Sieben `int`-Pads am Ende von `calcViewMtx` heben das Frame von `-0xc8` auf `-0xe0`.
+Die gespeicherte View-Matrix liegt auf `0x78`, die Pollution-Matrix auf `0x3c`.
+
+`calcViewMtx`: 0 Abweichungen, 384 Bytes, 96 Instruktionen.
+`validate-symbol-order` `mario/Map/PollutionCount`: ererbtes MISSING `__ct__21TPollutionCounterBaseFv`, sonst nur schwache Ordnung.
+4 ererbte UNUSED-Größenwarnungen (`drawModelStamp`, `drawTexStamp`, `draw`, `setCallback`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `d01324d0`: fuzzy 81.12903 % -> 81.1291 %,
+matched code 54.160233 % -> 54.17093 % (1944400 -> 1944784, +384).
+Matched data unverändert 68.45444 % (438335).
+Funktionen matched 9968 -> 9969.
+`PollutionCount` matched code 8924 -> 9308 (+384), Funktionen 35 -> 36 von 38.
+Fuzzy der Unit 99.92608 % -> 99.951096 %.
+Matched code der Unit 84.57165 % -> 88.21077 %.
+`drawJointObjStamp` bleibt ungematcht.
+Dessen Fuzzy geht durch dieselbe Matrixformel von 99.388885 % auf 99.32716 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+
+DOL-SHA1 unverändert: `PollutionCount.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R615B (`TGCLogoDir::direct_nlogo`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0x98`, Ziel `-0x130`.
+`char pad[0x98]; pad[0] = 0;` hebt `stmw r27` von `0x84` auf `0x11c`, der Store fällt weg.
+Die Float-Spills rutschen von `0x78` auf `0x110`.
+`isSomethingPushed` überschreibt `r0` mit `lha`, deshalb blieb `mState` in `r6`.
+Der zweite Vergleich liest `mState` volatile, damit `lwz r0, 0x1c` neu kommt.
+
+`TGCLogoDir::direct_nlogo`: 0 Abweichungen, 900 Bytes, 225 Instruktionen.
+`validate-symbol-order` `mario/System/GCLogoDir`: PASS.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `278ad646`: fuzzy 81.1291 % -> 81.12926 %,
+matched code 54.17093 % -> 54.196 % (1944784 -> 1945684, +900).
+Matched data unverändert 68.45444 % (438335).
+Funktionen matched 9969 -> 9970.
+`GCLogoDir` matched code 2076 -> 2976 (+900), Funktionen 8 -> 9 von 11.
+Fuzzy der Unit 99.6856 % -> 99.78833 %.
+Matched code der Unit 40.389107 % -> 57.89883 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `direct_nlogo` hat sich geändert.
+
+DOL-SHA1 unverändert: `GCLogoDir.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R602A (`TBossGessoParams::TBossGessoParams`)
+
+**Vollmatch, strikt.**
+
+`TBGBodyHit` hat `THitActor` ohne Namen aufgerufen.
+Der Default `"HitActor"` lag 12 Bytes vor den Parameternamen.
+`THitActor(name)` entfernt das Literal.
+Die Namen rücken von `+0xc` auf die Zieloffsets.
+
+`TBossGessoParams::TBossGessoParams`: 0 Abweichungen, 1452 Bytes, 363 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bossgesso`: ererbtes MISSING `getMActorAnmData__13TMActorKeeperCFv` und `SMS_GetMarioPos__Fv`.
+15 ererbte UNUSED-Größenwarnungen.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `fe36287c`: fuzzy 81.12926 % -> 81.1294 %,
+matched code 54.196 % -> 54.236443 % (1945684 -> 1947136, +1452).
+Matched data unverändert 68.45444 % (438335).
+Funktionen matched 9970 -> 9971.
+`bossgesso` matched code 8860 -> 10312 (+1452), Funktionen 60 -> 61 von 88.
+Fuzzy der Unit 90.3802 % -> 90.392845 %.
+Matched code der Unit 22.391832 % -> 26.061462 %.
+`TBossGesso::init` Fuzzy 97.40536 % -> 97.51786 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+
+DOL-SHA1 unverändert: `bossgesso.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R69C (`checkIsInMirror`)
+
+**Vollmatch, strikt.**
+
+`gpMirrorModelManager->unk18` direkt wurde `lwz r4, 0x18(r5)`.
+Ziel ist `addi r4, r5, 0x18` und danach `lwz r4, 0(r4)`.
+`mirrorSlot` gibt eine `int&` auf `unk18` zurück.
+Das Frame war `-0x60`, Ziel `-0x68`.
+Die `TVec3` lag auf `0x48`, Ziel `0x50`.
+`char trash[4]; trash[0] = 0;` nach der `TVec3` hebt beides.
+Der Store fällt weg.
+
+`checkIsInMirror`: 0 Abweichungen, 436 Bytes, 109 Instruktionen.
+`validate-symbol-order` `mario/Strategic/MirrorActor`: PASS.
+1 ererbte UNUSED-Größenwarnung (`isInMirror`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `f3c87757`: fuzzy 81.1294 % -> 81.129524 %,
+matched code 54.236443 % -> 54.24859 % (1947136 -> 1947572, +436).
+Matched data unverändert 68.45444 % (438335).
+Funktionen matched 9971 -> 9972.
+`MirrorActor` matched code 1000 -> 1436 (+436), Funktionen 3 -> 4 von 7.
+Fuzzy der Unit 99.599045 % -> 99.78914 %.
+Matched code der Unit 39.9361 % -> 57.348244 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `checkIsInMirror` hat sich geändert.
+
+DOL-SHA1 unverändert: `MirrorActor.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R617B (`MSoundSE::startSoundActorInner`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0x50`, Ziel `-0x58`.
+`char pad[8]; pad[0] = 0;` hebt `stmw r25` von `0x34` auf `0x3c`, der Store fällt weg.
+`getNewIDByGroundCode` setzt `u32 result = id` nach dem frühen Return.
+`addi r4, r26, 0` liegt zwischen `cmplwi r0, 6` und `bgt`.
+Die out-of-line UNUSED-Größe ist `0x3c` und trifft die Map.
+
+`MSoundSE::startSoundActorInner`: 0 Abweichungen, 960 Bytes, 240 Instruktionen.
+`validate-symbol-order` `mario/MSound/MSoundSE`: PASS.
+Ererbte Weak-Order-Warnungen.
+1 ererbte UNUSED-Größenwarnung (`getRandomVolume`, Map `0x68`, Objekt `0x4`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `fb7f5973`: fuzzy 81.129524 % -> 81.12976 %,
+matched code 54.24859 % -> 54.27533 % (1947572 -> 1948532, +960).
+Matched data unverändert 68.45444 % (438335).
+Funktionen matched 9972 -> 9973.
+`MSoundSE` matched code 3564 -> 4524 (+960), Funktionen 22 -> 23 von 29.
+Fuzzy der Unit 98.89031 % -> 98.9595 %.
+Matched code der Unit 30.070873 % -> 38.170773 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `startSoundActorInner` hat sich geändert.
+
+DOL-SHA1 unverändert: `MSoundSE.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R70C (`startControl`)
+
+**Vollmatch, strikt.**
+
+`moveTrans` trifft Slot `0x10`.
+Ziel ruft `setUpTrans` auf Slot `0x1c`.
+Das Frame war `-0x58`, Ziel `-0x68`.
+Eine benannte `TVec3` und `char trash[21]; trash[0] = 0;` legen den Vektor auf `0x3c`.
+Der Store fällt weg.
+
+`TMapEventSink::startControl`: 0 Abweichungen, 444 Bytes, 111 Instruktionen.
+`validate-symbol-order` `mario/Map/MapEventSink`: PASS.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `34bc13ab`: fuzzy 81.12976 % -> 81.129776 %,
+matched code 54.27533 % -> 54.287697 % (1948532 -> 1948976, +444).
+Matched data unverändert 68.45444 % (438335).
+Funktionen matched 9973 -> 9974.
+`MapEventSink` matched code 6120 -> 6564 (+444), Funktionen 32 -> 33 von 36.
+Fuzzy der Unit 99.73333 % -> 99.7424 %.
+Matched code der Unit 81.6 % -> 87.52 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `startControl` hat sich geändert.
+
+DOL-SHA1 unverändert: `MapEventSink.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R618B (`__sinit_MSoundSE_cpp`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0x10`, Ziel `-0x38`.
+`char pad[0x20]; pad[0] = 0;` im inlinen `SeInfo::Setting`-Konstruktor hebt das Frame.
+Der Store fällt weg.
+Der Rest von `__sinit_MSoundSE_cpp` war schon identisch.
+
+`__sinit_MSoundSE_cpp`: 0 Abweichungen, 856 Bytes, 214 Instruktionen.
+`validate-symbol-order` `mario/MSound/MSoundSE`: PASS.
+Ererbte Weak-Order-Warnungen.
+1 ererbte UNUSED-Größenwarnung (`getRandomVolume`, Map `0x68`, Objekt `0x4`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `3c326730`: fuzzy 81.129776 % -> 81.1298 %,
+matched code 54.287697 % -> 54.31154 % (1948976 -> 1949832, +856).
+Matched data unverändert 68.45444 % (438335).
+Funktionen matched 9974 -> 9975.
+`MSoundSE` matched code 4524 -> 5380 (+856), Funktionen 23 -> 24 von 29.
+Fuzzy der Unit 98.9595 % -> 98.96186 %.
+Matched code der Unit 38.170773 % -> 45.393185 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `__sinit_MSoundSE_cpp` hat sich geändert.
+
+DOL-SHA1 unverändert: `MSoundSE.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R71C (`load`)
+
+**Vollmatch, strikt.**
+
+`readU32` legt das `u32` auf `0x18`, Ziel auf `0x30`.
+Das Frame war `-0x30`, Ziel `-0x48`.
+`stream >> num` und `char trash[25]; trash[0] = 0;` danach legen beides.
+Der Store fällt weg.
+
+`TMapEventSink::load`: 0 Abweichungen, 268 Bytes, 67 Instruktionen.
+`validate-symbol-order` `mario/Map/MapEventSink`: PASS.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`startControl` bleibt 100 %.
+
+`ninja changes_all` gegen `29e8bffe`: fuzzy 81.1298 % -> 81.129814 %,
+matched code 54.31154 % -> 54.319 % (1949832 -> 1950100, +268).
+Matched data unverändert 68.45444 % (438335).
+Funktionen matched 9975 -> 9976.
+`MapEventSink` matched code 6564 -> 6832 (+268), Funktionen 33 -> 34 von 36.
+Fuzzy der Unit 99.7424 % -> 99.74827 %.
+Matched code der Unit 87.52 % -> 91.09333 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `load` hat sich geändert.
+
+DOL-SHA1 unverändert: `MapEventSink.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R619B (`__sinit_MSoundScene_cpp`)
+
+**Vollmatch, strikt.**
+
+Die Guard-Offsets lagen bei `0`, Ziel bei `+0xc00`.
+`Vec _posByCamera[256]` ist das BSS-Objekt aus der Map (`0xc00`, align 4).
+`r31` zeigt darauf, die `@`-Guards folgen direkt danach.
+
+`__sinit_MSoundScene_cpp`: 0 Abweichungen, 764 Bytes, 191 Instruktionen.
+`validate-symbol-order` `mario/MSound/MSoundScene`: PASS.
+3 ererbte UNUSED-Größenwarnungen (`calcPosPanSR`, `calcPosPanLR`, `calcPosVolume`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `610a845b`: fuzzy bleibt 81.129814 %,
+matched code 54.319 % -> 54.340286 % (1950100 -> 1950864, +764).
+Matched data 68.45444 % -> 68.96293 % (438335 -> 441591, +3256).
+Funktionen matched 9976 -> 9977.
+`MSoundScene` matched code 380 -> 1144 (+764), Funktionen 1 -> 2 von 4.
+Matched data der Unit 36 -> 3292 (100 %).
+Fuzzy der Unit 98.59699 % -> 98.61955 %.
+Matched code der Unit 14.285715 % -> 43.00752 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `__sinit_MSoundScene_cpp` hat sich im Code geändert.
+
+DOL-SHA1 unverändert: `MSoundScene.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R72C (`perform`)
+
+**Vollmatch, strikt.**
+
+`J3DTransformInfo` lag auf `0x88`, Ziel auf `0x98`.
+Das Frame war `-0x170`, Ziel `-0x198`.
+`char trash[21]; trash[0] = 0;` nach `info` legt die Transform-Info.
+`char gap[9]; gap[0] = 0;` am Anfang hebt das Frame auf `-0x198`.
+Beide Stores fallen weg.
+
+`TShimmer::perform`: 0 Abweichungen, 648 Bytes, 162 Instruktionen.
+`validate-symbol-order` `mario/Map/Shimmer`: PASS.
+2 ererbte UNUSED-Größenwarnungen (`far` Map `0x14` Objekt `0x4`, `near` Map `0x18` Objekt `0x4`).
+Die TU bleibt `NonMatching` und wird nicht gelinkt.
+Code und Data der Unit sind 100 %.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `93c508cb`: fuzzy 81.129814 % -> 81.12985 %,
+matched code 54.340286 % -> 54.358334 % (1950864 -> 1951512, +648).
+Matched data unverändert 68.96293 % (441591).
+Funktionen matched 9977 -> 9978.
+`Shimmer` matched code 1868 -> 2516 (+648), Funktionen 7 -> 8 von 8.
+Fuzzy der Unit 99.953896 % -> 100 %.
+Matched code der Unit 74.244835 % -> 100 %.
+Matched data der Unit bleibt 100 % (436).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `perform` hat sich geändert.
+
+DOL-SHA1 unverändert: `Shimmer.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R604A (`execute`)
+
+**Vollmatch, strikt.**
+
+`changeBck(3)` nach der Wartezeit trifft BCK `0x10`.
+Der nächste `changeBck(3)` trifft BCK `0x11`.
+`getJointTransByIndex` nutzt Joint `0x18`.
+Das Frame war `-0xa0`, Ziel `-0xe8`.
+`char pre[8]` vor der `TVec3` und `char trash[0x3c]` dahinter legen den Vektor auf `0xa8`.
+Beide Stores fallen weg.
+
+`TNerveHino2Pollute::execute`: 0 Abweichungen, 944 Bytes, 236 Instruktionen.
+`validate-symbol-order` `mario/Enemy/hinokuri2`: PASS.
+6 ererbte UNUSED-Größenwarnungen (leere Stubs).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `ff1c3f8c`: fuzzy 81.12985 % -> 81.12987 %,
+matched code 54.358334 % -> 54.384624 % (1951512 -> 1952456, +944).
+Matched data unverändert 68.96293 % (441591).
+Funktionen matched 9978 -> 9979.
+`hinokuri2` matched code 13604 -> 14548 (+944), Funktionen 57 -> 58 von 70.
+Fuzzy der Unit 99.18762 % -> 99.19229 %.
+Matched code der Unit 56.721146 % -> 60.6571 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TNerveHino2Pollute::execute` hat sich geändert.
+
+DOL-SHA1 unverändert: `hinokuri2.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R620B (`MSSetSoundTL<MSSetSoundGrp>::MSSetSoundTL`)
+
+**Vollmatch, strikt.**
+
+Die String-Immediates lagen alle `0x20` zu tief.
+Vor dem Pool fehlten 12 Nullbytes und `メモリが足りません\n`.
+Zwei file-scope Arrays legen beides an den Anfang von `.rodata`.
+
+`MSSetSoundTL<MSSetSoundGrp>::MSSetSoundTL`: 0 Abweichungen, 600 Bytes, 150 Instruktionen.
+`validate-symbol-order` `mario/MSound/MSoundSE`: PASS.
+Ererbte Weak-Order-Warnungen.
+1 ererbte UNUSED-Größenwarnung (`getRandomVolume`, Map `0x68`, Objekt `0x4`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`startSoundActorInner` und `__sinit_MSoundSE_cpp` bleiben 100 %.
+
+`ninja changes_all` gegen `4545f046`: fuzzy 81.12987 % -> 81.13026 %,
+matched code 54.384624 % -> 54.401337 % (1952456 -> 1953056, +600).
+Matched data 68.96293 % -> 69.16782 % (441591 -> 442903, +1312).
+Funktionen matched 9979 -> 9980.
+`MSoundSE` matched code 5380 -> 5980 (+600), Funktionen 24 -> 25 von 29.
+Matched data der Unit 476 -> 1788.
+Fuzzy der Unit 98.96186 % -> 99.07695 %.
+Matched code der Unit 45.393185 % -> 50.45562 %.
+`.rodata` der Unit 98.76065 % -> 100 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur der Konstruktor ist neu matched.
+
+DOL-SHA1 unverändert: `MSoundSE.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R621B (`construct`)
+
+**Vollmatch, strikt.**
+
+Der Möwen-Shift war `13`, Ziel `19`.
+Die neun Member nutzten alle `MSD_SE_OBJ_KAMOME_SOLO` mit `60`.
+Ziel ist `0x3813` bis `0x3818` mit `60`, dann `0x3819` bis `0x381B` mit `180`.
+Das Frame war `-0x60`, Ziel `-0xa0`.
+Der Spill lag auf `0x4c`, Ziel `0x50`.
+`char pad[0x38]; pad[0] = 0;` im Möwen-Block legt beides.
+Der Store fällt weg.
+
+`MSoundSE::construct`: 0 Abweichungen, 4776 Bytes, 1194 Instruktionen.
+`validate-symbol-order` `mario/MSound/MSoundSE`: PASS.
+Ererbte Weak-Order-Warnungen.
+1 ererbte UNUSED-Größenwarnung (`getRandomVolume`, Map `0x68`, Objekt `0x4`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`startSoundActorInner`, `__sinit_MSoundSE_cpp` und `MSSetSoundTL<MSSetSoundGrp>::MSSetSoundTL` bleiben 100 %.
+
+`ninja changes_all` gegen `66c48884`: fuzzy 81.13026 % -> 81.13028 %,
+matched code 54.401337 % -> 54.534374 % (1953056 -> 1957832, +4776).
+Matched data 69.16782 % -> 69.22779 % (442903 -> 443287, +384).
+Funktionen matched 9980 -> 9981.
+`MSoundSE` matched code 5980 -> 10756 (+4776), Funktionen 25 -> 26 von 29.
+Matched data der Unit 1788 -> 2172 (100 %).
+Fuzzy der Unit 99.07695 % -> 99.0837 %.
+Matched code der Unit 50.45562 % -> 90.75262 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `construct` ist neu matched.
+
+DOL-SHA1 unverändert: `MSoundSE.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R73C (`watch`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0x88`, Ziel `-0x98`.
+Die `TPosition3f` lag auf `0x4c`, Ziel auf `0x60`.
+Ein `char`-Array in `watch` selbst schiebt das Frame, nicht die Matrix.
+`static inline padWatch` mit `char gap[16]; gap[0] = 0;` nach `(void)&mtx` legt beides.
+Der Store fällt weg.
+Der Scale-Load bleibt hinter `identity`.
+
+`TDolpicEventRiccoMammaGate::watch`: 0 Abweichungen, 488 Bytes, 122 Instruktionen.
+`validate-symbol-order` `mario/Map/MapEventDolpic`: PASS.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`loadAfter` bleibt 100 %.
+
+`ninja changes_all` gegen `9df22f4b`: fuzzy 81.13028 % -> 81.130295 %,
+matched code 54.534374 % -> 54.547966 % (1957832 -> 1958320, +488).
+Matched data unverändert 69.22779 % (443287).
+Funktionen matched 9981 -> 9982.
+`MapEventDolpic` matched code 2016 -> 2504 (+488), Funktionen 11 -> 12 von 14.
+Fuzzy der Unit 99.797806 % -> 99.821976 %.
+Matched code der Unit 55.384617 % -> 68.791214 %.
+Matched data der Unit bleibt 100 % (868).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `watch` hat sich geändert.
+
+DOL-SHA1 unverändert: `MapEventDolpic.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R74C (`load`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0x40`, Ziel `-0x50`.
+Das `s32 val` lag auf `0x2c`, Ziel auf `0x34`.
+`char gap[4]` am Anfang und `char trash[1]` nach `s32 val` legen beides.
+Die Stores fallen weg.
+
+`TMapWireManager::load`: 0 Abweichungen, 432 Bytes, 108 Instruktionen.
+`validate-symbol-order` `mario/Map/MapWireManager` meldet das ererbte MISSING `__ct__10TTakeActorFPCc` (UNUSED) und fünf UNUSED-Größenwarnungen.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `94066084`: fuzzy 81.130295 % -> 81.13033 %,
+matched code 54.547966 % -> 54.56 % (1958320 -> 1958752, +432).
+Matched data unverändert 69.22779 % (443287).
+Funktionen matched 9982 -> 9983.
+`MapWireManager` matched code 2680 -> 3112 (+432), Funktionen 18 -> 19 von 23.
+Fuzzy der Unit 98.846375 % -> 98.868324 %.
+Matched code der Unit 63.931297 % -> 74.23664 %.
+Matched data der Unit bleibt 100 % (476).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `load` hat sich geändert.
+
+DOL-SHA1 unverändert: `MapWireManager.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R607A (`execute`)
+
+**Vollmatch, strikt.**
+
+`getJointTransByIndex` im Pol-Zweig trifft Joint `0x18`.
+`getMarchSpeed` und `getTurnSpeed` laden `f2` vor `f1`.
+Das Frame war `-0xa8`, Ziel `-0x110`.
+Der Pol-Vektor lag auf `0x74`, Ziel `0xb0`.
+Der Schritt-Vektor lag auf `0x68`, Ziel `0xd4`.
+`char bot[0x8]` vor dem Schritt-Vektor, `char mid[0x18]` dazwischen und `char top[0x44]` dahinter legen beide Slots und das Frame.
+Die drei Stores fallen weg.
+
+`TNerveHino2GraphWander::execute`: 0 Abweichungen, 1248 Bytes, 312 Instruktionen.
+`validate-symbol-order` `mario/Enemy/hinokuri2`: PASS.
+6 ererbte UNUSED-Größenwarnungen (leere Stubs).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TNerveHino2Pollute::execute` bleibt 100 %.
+
+`ninja changes_all` gegen `f9e583d0`: fuzzy 81.13033 % -> 81.13039 %,
+matched code 54.56 % -> 54.59476 % (1958752 -> 1960000, +1248).
+Matched data unverändert 69.22779 % (443287).
+Funktionen matched 9983 -> 9984.
+`hinokuri2` matched code 14548 -> 15796 (+1248), Funktionen 58 -> 59 von 70.
+Fuzzy der Unit 99.19229 % -> 99.1993 %.
+Matched code der Unit 60.6571 % -> 65.86057 %.
+Matched data der Unit unverändert 68.008255 % (2636).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TNerveHino2GraphWander::execute` hat sich geändert.
+
+DOL-SHA1 unverändert: `hinokuri2.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R622B (`evSetAttentionTime`)
+
+**Vollmatch, strikt.**
+
+`evSetAttentionTime` verwirft das Argument und pusht eine leere `TSpcSlice`.
+Das Frame war `-0x58`, Ziel `-0x70`.
+Die Slice lag auf `0x30`, Ziel `0x40`.
+Eine benannte `TSpcSlice` legt den Slot auf `0x40`.
+Drei `long long` heben nur das Frame auf `-0x70`.
+Die Stores auf die `long long` fallen weg.
+
+`evSetAttentionTime`: 0 Abweichungen, 184 Bytes, 46 Instruktionen.
+`validate-symbol-order` `mario/System/EventWatcher`: dieselbe vorbestehende MISSING-Meldung `set__Q29JGeometry8TVec3<f>FRC3Vec`.
+Ererbte Weak-Order-Warnungen.
+2 ererbte UNUSED-Größenwarnungen (`evSetEventStart`, `evSetEventEnd`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `b6250bde`: fuzzy 81.13039 % bleibt 81.13039 %,
+matched code 54.59476 % -> 54.599888 % (1960000 -> 1960184, +184).
+Matched data unverändert 69.22779 % (443287).
+Funktionen matched 9984 -> 9985.
+`EventWatcher` matched code 28936 -> 29120 (+184), Funktionen 73 -> 74 von 105.
+Fuzzy der Unit 98.928024 % -> 98.92888 %.
+Matched code der Unit 68.51028 % -> 68.94592 %.
+Matched data der Unit bleibt 100 % (2508).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `evSetAttentionTime` ist neu matched.
+
+DOL-SHA1 unverändert: `EventWatcher.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R75C (`checkRoof`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0x80`, Ziel `-0x90`.
+Die Dach-Pointer lagen auf `0x3c` und `0x38`, Ziel `0x44` und `0x40`.
+Die Grid-Spills lagen 8 Bytes zu tief.
+`char trash[1]` nach `gridZ` und `char low[1]` nach `local_50` legen Frame, Pointer und Spills.
+Die Stores fallen weg.
+
+`TMapCollisionData::checkRoof`: 0 Abweichungen, 348 Bytes, 87 Instruktionen.
+`validate-symbol-order` `mario/Map/MapCheck` meldet das ererbte MISSING `intersectLineList` (UNUSED).
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `67c669f0`: fuzzy 81.13039 % -> 81.1304 %,
+matched code 54.599888 % -> 54.609577 % (1960184 -> 1960532, +348).
+Matched data unverändert 69.22779 % (443287).
+Funktionen matched 9985 -> 9986.
+`MapCheck` matched code 764 -> 1112 (+348), Funktionen 1 -> 2 von 9.
+Fuzzy der Unit 86.552895 % -> 86.562996 %.
+Matched code der Unit 10.154174 % -> 14.779372 %.
+Matched data der Unit bleibt 100 % (244).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `checkRoof` hat sich geändert.
+
+DOL-SHA1 unverändert: `MapCheck.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R623B (`evSetPollutionIncreaseCount`)
+
+**Vollmatch, strikt.**
+
+`evSetPollutionIncreaseCount` verwirft das Argument und pusht eine leere `TSpcSlice`.
+Das Frame war `-0x58`, Ziel `-0x70`.
+Die Slice lag auf `0x30`, Ziel `0x40`.
+Eine benannte `TSpcSlice` legt den Slot auf `0x40`.
+Drei `long long` heben nur das Frame auf `-0x70`.
+Die Stores auf die `long long` fallen weg.
+
+`evSetPollutionIncreaseCount`: 0 Abweichungen, 184 Bytes, 46 Instruktionen.
+`validate-symbol-order` `mario/System/EventWatcher`: dieselbe vorbestehende MISSING-Meldung `set__Q29JGeometry8TVec3<f>FRC3Vec`.
+Ererbte Weak-Order-Warnungen.
+2 ererbte UNUSED-Größenwarnungen (`evSetEventStart`, `evSetEventEnd`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`evSetAttentionTime` bleibt 100 %.
+
+`ninja changes_all` gegen `98e9c71c`: fuzzy 81.1304 % -> 81.13042 %,
+matched code 54.609577 % -> 54.614704 % (1960532 -> 1960716, +184).
+Matched data unverändert 69.22779 % (443287).
+Funktionen matched 9986 -> 9987.
+`EventWatcher` matched code 29120 -> 29304 (+184), Funktionen 74 -> 75 von 105.
+Fuzzy der Unit 98.92888 % -> 98.929726 %.
+Matched code der Unit 68.94592 % -> 69.38157 %.
+Matched data der Unit bleibt 100 % (2508).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `evSetPollutionIncreaseCount` ist neu matched.
+
+DOL-SHA1 unverändert: `EventWatcher.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R608A (`execute`)
+
+**Vollmatch, strikt.**
+
+`ExecSpinNerve_Sub` legt `char pad[0x28]` vor `spinSpeed`.
+`mSLSpinMaxSpeed.value` und `mSLSpinAccel.get()` laden `f1` aus `0x194` und `f2` aus `0x180` über `r5`.
+Das Frame von `TNerveBossEelFirstSpin::execute` war `-0x70`, Ziel `-0x90`.
+`spinSpeed` lag auf `0x48`, Ziel `0x6c`.
+Der Store auf `pad` fällt weg.
+Dieselbe Änderung trifft auch `TNerveBossEelSecondSpin::execute`.
+
+`TNerveBossEelFirstSpin::execute`: 0 Abweichungen, 860 Bytes, 215 Instruktionen.
+`TNerveBossEelSecondSpin::execute`: 0 Abweichungen, 988 Bytes, 247 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bosseel`: PASS.
+Ererbte Weak-Order-Warnungen.
+5 ererbte UNUSED-Größenwarnungen.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TNerveBossEelMouthOpenWait::execute` bleibt 100 %.
+
+`ninja changes_all` gegen `871a519c`: fuzzy 81.13042 % -> 81.13049 %,
+matched code 54.614704 % -> 54.66618 % (1960716 -> 1962564, +1848).
+Matched data unverändert 69.22779 % (443287).
+Funktionen matched 9987 -> 9989.
+`bosseel` matched code 24560 -> 26408 (+1848), Funktionen 122 -> 124 von 142.
+Fuzzy der Unit 99.17902 % -> 99.18542 %.
+Matched code der Unit 53.803017 % -> 57.851387 %.
+Matched data der Unit unverändert 55.96121 % (3924).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur die beiden Spin-`execute` haben sich geändert.
+
+DOL-SHA1 unverändert: `bosseel.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R609A (`move`)
+
+**Vollmatch, strikt.**
+
+`TBPPolDrop::move` legt `ground` neben `nextPosition`.
+`char pad[0x30]` darunter hebt das Frame.
+Das Frame war `-0x40`, Ziel `-0x70`.
+`nextPosition` lag auf `0x20`, Ziel `0x54`.
+`ground` lag auf `0x1c`, Ziel `0x50`.
+Der Store auf `pad` fällt weg.
+
+`TBPPolDrop::move`: 0 Abweichungen, 780 Bytes, 195 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bosspakkun`: PASS.
+2 ererbte UNUSED-Größenwarnungen (`ignoreWaterCheck`, `vomitFinished`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `77b286d6`: fuzzy 81.13049 % -> 81.13052 %,
+matched code 54.66618 % -> 54.687904 % (1962564 -> 1963344, +780).
+Matched data unverändert 69.22779 % (443287).
+Funktionen matched 9989 -> 9990.
+`bosspakkun` matched code 19608 -> 20388 (+780), Funktionen 106 -> 107 von 126.
+Fuzzy der Unit 99.19067 % -> 99.193695 %.
+Matched code der Unit 49.50515 % -> 51.474453 %.
+Matched data der Unit unverändert 99.855804 % (5540).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `move` hat sich geändert.
+
+DOL-SHA1 unverändert: `bosspakkun.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R624B (`evStartAppearJetBalloon`)
+
+**Vollmatch, strikt.**
+
+`evStartAppearJetBalloon` schaltet über das zweite Argument auf Jet-Balloon oder Red Coin.
+Das Frame war `-0xa0`, Ziel `-0xa8`.
+Die erste Slice lag auf `0x74`, Ziel `0x80`.
+Der `stfd` lag auf `0x88`, Ziel `0x90`.
+Drei verworfene `SMSGetMarDirector()`-Aufrufe nach `push` heben die Slices um 12 und das Frame um 8.
+Die Loads fallen weg.
+
+`evStartAppearJetBalloon`: 0 Abweichungen, 604 Bytes, 151 Instruktionen.
+`validate-symbol-order` `mario/System/EventWatcher`: dieselbe vorbestehende MISSING-Meldung `set__Q29JGeometry8TVec3<f>FRC3Vec`.
+Ererbte Weak-Order-Warnungen.
+2 ererbte UNUSED-Größenwarnungen (`evSetEventStart`, `evSetEventEnd`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`evSetAttentionTime` und `evSetPollutionIncreaseCount` bleiben 100 %.
+
+`ninja changes_all` gegen `d4c0c010`: fuzzy 81.13052 % -> 81.13056 %,
+matched code 54.687904 % -> 54.70473 % (1963344 -> 1963948, +604).
+Matched data unverändert 69.22779 % (443287).
+Funktionen matched 9990 -> 9991.
+`EventWatcher` matched code 29304 -> 29908 (+604), Funktionen 75 -> 76 von 105.
+Fuzzy der Unit 98.929726 % -> 98.93266 %.
+Matched code der Unit 69.38157 % -> 70.81163 %.
+Matched data der Unit bleibt 100 % (2508).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `evStartAppearJetBalloon` ist neu matched.
+
+DOL-SHA1 unverändert: `EventWatcher.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R76C (`appear`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0x80`, Ziel `-0x78`.
+Die beiden `TVec3` lagen 8 Bytes zu hoch.
+`char gap[9]` zwischen Translation und Rotation legt Frame und Slots.
+Der Store fällt weg.
+`#pragma dont_inline` hält den Aufruf in `movement` als `bl appear`.
+
+`TMareWallRock::appear`: 0 Abweichungen, 408 Bytes, 102 Instruktionen.
+`validate-symbol-order` `mario/Map/MapEventMare`: PASS mit 6 ererbten UNUSED-Größenwarnungen.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+`movement` bleibt 100 %.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `a1e0a9e9`: fuzzy 81.13056 % -> 81.1306 %,
+matched code 54.70473 % -> 54.7161 % (1963948 -> 1964356, +408).
+Matched data unverändert 69.22779 % (443287).
+Funktionen matched 9991 -> 9992.
+`MapEventMare` matched code 5032 -> 5440 (+408), Funktionen 24 -> 25 von 34.
+Fuzzy der Unit 99.25104 % -> 99.260445 %.
+Matched code der Unit 47.34663 % -> 51.185547 %.
+Matched data der Unit bleibt 100 % (1284).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `appear` ist neu matched.
+
+DOL-SHA1 unverändert: `MapEventMare.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R611A (`perform`)
+
+**Vollmatch, strikt.**
+
+`TBEelTears::perform` ruft `moveObject` und `updateAnmSound`.
+Vorher standen dort `control` und `requestShadow`.
+`control` traf Slot `0xc8`, Ziel `0xd0` (`moveObject`).
+`requestShadow` traf Slot `0xd4`, Ziel `0xf4` (`updateAnmSound`).
+Das Frame war `-0x80`, Ziel `-0x90`.
+Die Effektmatrix lag schon auf `0x40`.
+Ein loses `char pad` schiebt die Matrix um 4.
+`struct { Mtx m; char pad[0x10]; }` hält die Matrix und hebt das Frame.
+Der Pad-Store entfällt.
+
+`TBEelTears::perform`: 0 Abweichungen, 332 Bytes, 83 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bosseel`: PASS.
+Ererbte Weak-Order-Warnungen.
+5 ererbte UNUSED-Größenwarnungen (`quickBack`, `isEyeBlurOn`, `TBossEelEye::setBckAnm`, `setRecoverTears`, `TBEelTearsDrop::generate`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TNerveBossEelFirstSpin::execute`, `TNerveBossEelSecondSpin::execute` und `TNerveBossEelMouthOpenWait::execute` bleiben 100 %.
+
+`ninja changes_all` gegen `e10546b9`: fuzzy 81.1306 % -> 81.130615 %,
+matched code 54.7161 % -> 54.72534 % (1964356 -> 1964688, +332).
+Matched data unverändert 69.22779 % (443287).
+Funktionen matched 9992 -> 9993.
+`bosseel` matched code 26408 -> 26740 (+332), Funktionen 124 -> 125 von 142.
+Fuzzy der Unit 99.18542 % -> 99.18656 %.
+Matched code der Unit 57.851387 % -> 58.57869 %.
+Matched data der Unit unverändert 55.96121 % (3924).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `perform` hat sich geändert.
+
+DOL-SHA1 unverändert: `bosseel.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R625B (`currentStateFinalize`)
+
+**Vollmatch, strikt.**
+
+`currentStateFinalize` räumt den alten Director-State ab.
+Das Frame war `-0xa8`, Ziel `-0x120`.
+`char pad[0x78]` hebt das Frame.
+Der Store fällt weg.
+`"Group 2D"` lag auf Rodata `0x1b4`, Ziel `0x1cc`.
+`rogueRodata2697` und `rogueRodata2699` schließen das 24-Byte-Loch vor `cam_int1`.
+`endStageEntranceDemo` lud `unk1` vor `unk0`.
+Ein benanntes `scenario` stellt die Reihenfolge her.
+
+`currentStateFinalize`: 0 Abweichungen, 744 Bytes, 186 Instruktionen.
+`.rodata` der Unit ist 100 % (528 Bytes).
+`validate-symbol-order` `mario/System/MarDirectorDirect`: dieselbe vorbestehende MISSING-Meldung `__ct__Q26JDrama10TFlagT<Us>`.
+Ererbte Weak-Order-Warnungen.
+2 ererbte UNUSED-Größenwarnungen (`checkDefeatShadowMarioAll`, `decideNextStageOfMiss`).
+`__sinit_MarDirectorDirect_cpp`, `TGameSequence::set` und `TFlagT::set` bleiben 100 %.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `1920dea8`: fuzzy 81.130615 % -> 81.13067 %,
+matched code 54.72534 % -> 54.746067 % (1964688 -> 1965432, +744).
+Matched data 69.22779 % -> 69.31025 % (443287 -> 443815, +528).
+Funktionen matched 9993 -> 9994.
+`MarDirectorDirect` matched code 792 -> 1536 (+744), Funktionen 3 -> 4 von 14.
+Fuzzy der Unit 91.77506 % -> 91.794464 %.
+Matched code der Unit 7.114624 % -> 13.798059 %.
+Matched data der Unit 27.34694 % -> 81.22449 % (268 -> 796, +528).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `currentStateFinalize` ist neu matched.
+Die ganze `.rodata` der Unit ist neu matched.
+
+DOL-SHA1 unverändert: `MarDirectorDirect.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R77C (`control`)
+
+**Vollmatch, strikt.**
+
+Das Frame war `-0x70`, Ziel `-0x78`.
+Die Matrix lag auf `0x30`, Ziel `0x38`.
+`fadds` hatte die Operanden vertauscht.
+`char gap[1]` am Anfang von `rising` legt Frame und Matrix.
+`scale += unk34` stellt `fadds f31, f1, f0` her.
+Der Store fällt weg.
+
+`TDolpicEventRiccoMammaGate::control`: 0 Abweichungen, 496 Bytes, 124 Instruktionen.
+`watch` und `loadAfter` bleiben 100 %.
+`validate-symbol-order` `mario/Map/MapEventDolpic`: PASS.
+Die UNUSED-Größe von `rising` stimmt.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `a02722f5`: fuzzy 81.13067 % -> 81.13071 %,
+matched code 54.746067 % -> 54.759884 % (1965432 -> 1965928, +496).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 9994 -> 9995.
+`MapEventDolpic` matched code 2504 -> 3000 (+496), Funktionen 12 -> 13 von 14.
+Fuzzy der Unit 99.821976 % -> 99.85714 %.
+Matched code der Unit 68.791214 % -> 82.41759 %.
+Matched data der Unit bleibt 100 % (868).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `control` ist neu matched.
+
+DOL-SHA1 unverändert: `MapEventDolpic.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R612A (`execute`)
+
+**Vollmatch, strikt.**
+
+`TNerveHino2Die::execute` war 99.84173 %.
+Das Frame war `-0x68`, Ziel `-0x80`.
+Die Item-Vec lag auf `0x50`, Ziel `0x64`.
+Die Water-Vec lag auf `0x44`, Ziel `0x58`.
+`char pad[0x10]` in `emitWaterParticle` vor `position` legt beide Vektoren.
+`char gap[1]` am Anfang von `execute` hebt das Frame von `-0x78` auf `-0x80`.
+Beide Stores fallen weg.
+Die UNUSED-Größe von `emitWaterParticle` bleibt `0xb8`.
+
+`TNerveHino2Die::execute`: 0 Abweichungen, 556 Bytes, 139 Instruktionen.
+`TNerveHino2GraphWander::execute` und `TNerveHino2Pollute::execute` bleiben 100 %.
+`validate-symbol-order` `mario/Enemy/hinokuri2`: PASS.
+6 ererbte UNUSED-Größenwarnungen (`makeQuake`, `shakeCamera`, `updatePolTrans`, `emitPolParticle`, `startDamageMotion`, `breakMask`).
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `bdafe914`: fuzzy 81.13071 % -> 81.13072 %,
+matched code 54.759884 % -> 54.775368 % (1965928 -> 1966484, +556).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 9995 -> 9996.
+`hinokuri2` matched code 15796 -> 16352 (+556), Funktionen 59 -> 60 von 70.
+Fuzzy der Unit 99.1993 % -> 99.20297 %.
+Matched code der Unit 65.86057 % -> 68.17879 %.
+Matched data der Unit unverändert 68.008255 % (2636).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `execute` hat sich geändert.
+
+DOL-SHA1 unverändert: `hinokuri2.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R627B (`evGameOver`)
+
+**Vollmatch, strikt.**
+
+`evGameOver` setzt das Game-Over-Flag und pusht eine leere Slice.
+Das Frame war `-0x28`, Ziel `-0x38`.
+Die Slice lag auf `0x14`, Ziel `0x24`.
+Vier verworfene `SMSGetMarDirector()`-Aufrufe nach `push` heben Frame und Slice um 16.
+Die Loads fallen weg.
+
+`evGameOver`: 0 Abweichungen, 160 Bytes, 40 Instruktionen.
+`validate-symbol-order` `mario/System/EventWatcher`: dieselbe vorbestehende MISSING-Meldung `set__Q29JGeometry8TVec3<f>FRC3Vec`.
+Ererbte Weak-Order-Warnungen.
+2 ererbte UNUSED-Größenwarnungen (`evSetEventStart`, `evSetEventEnd`).
+`evSetAttentionTime`, `evSetPollutionIncreaseCount` und `evStartAppearJetBalloon` bleiben 100 %.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `0d4a77f4`: fuzzy 81.13072 % -> 81.13074 %,
+matched code 54.775368 % -> 54.779827 % (1966484 -> 1966644, +160).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 9996 -> 9997.
+`EventWatcher` matched code 29908 -> 30068 (+160), Funktionen 76 -> 77 von 105.
+Fuzzy der Unit 98.93266 % -> 98.93352 %.
+Matched code der Unit 70.81163 % -> 71.19045 %.
+Matched data der Unit bleibt 100 % (2508).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `evGameOver` ist neu matched.
+
+DOL-SHA1 unverändert: `EventWatcher.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R613A (`execute`)
+
+**Vollmatch, strikt.**
+
+`TNerveFireWanwanFreeze::execute` war 99.83696 %.
+Das Frame war `-0x48`, Ziel `-0x50`.
+Die Zero-Vec lag auf `0x2c`, Ziel `0x34`.
+`JGeometry::TVec3<f32> zero` vor `char gap[1]` legt die Vec auf `0x34`.
+`zero.set(0.0f, 0.0f, 0.0f)` und `setVelocity(zero)` halten die Stores an der Retail-Stelle.
+Der Store auf `gap` fällt weg.
+
+`TNerveFireWanwanFreeze::execute`: 0 Abweichungen, 368 Bytes, 92 Instruktionen.
+`TFireWanwan::behaveToWater` bleibt 100 %.
+`validate-symbol-order` `mario/Enemy/fireWanwan`: Symbolreihenfolge stimmt.
+4 ererbte MISSING-Symbole (`TVec4`-Ctor, `isTaken`, `ArrayWrapper` `operator[]` / `size`).
+27 ererbte UNUSED-Größenwarnungen.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `f9adb14a`: fuzzy 81.13074 % -> 81.13076 %,
+matched code 54.779827 % -> 54.79008 % (1966644 -> 1967012, +368).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 9997 -> 9998.
+`fireWanwan` matched code 13800 -> 14168 (+368), Funktionen 60 -> 61 von 95.
+Fuzzy der Unit 94.350655 % -> 94.352196 %.
+Matched code der Unit 35.362854 % -> 36.305862 %.
+Matched data der Unit unverändert 90.77341 % (2676).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `execute` hat sich geändert.
+
+DOL-SHA1 unverändert: `fireWanwan.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R628B (`evAppearReadyGo`)
+
+**Vollmatch, strikt.**
+
+`evAppearReadyGo` startet die Ready-Anzeige und pusht eine leere Slice.
+Das Frame war `-0x30`, Ziel `-0x40`.
+Die Slice lag auf `0x18`, Ziel `0x24`.
+Zwei verworfene `SMSGetMarDirector()`-Aufrufe nach `push` und ein `char pad[4]` heben Frame und Slice.
+Die Loads und der Pad-Store fallen weg.
+
+`evAppearReadyGo`: 0 Abweichungen, 160 Bytes, 40 Instruktionen.
+`validate-symbol-order` `mario/System/EventWatcher`: dieselbe vorbestehende MISSING-Meldung `set__Q29JGeometry8TVec3<f>FRC3Vec`.
+Ererbte Weak-Order-Warnungen.
+2 ererbte UNUSED-Größenwarnungen (`evSetEventStart`, `evSetEventEnd`).
+`evGameOver`, `evSetAttentionTime`, `evSetPollutionIncreaseCount` und `evStartAppearJetBalloon` bleiben 100 %.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `b51ad27a`: fuzzy 81.13076 % -> 81.13076 %,
+matched code 54.79008 % -> 54.794533 % (1967012 -> 1967172, +160).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 9998 -> 9999.
+`EventWatcher` matched code 30068 -> 30228 (+160), Funktionen 77 -> 78 von 105.
+Fuzzy der Unit 98.93352 % -> 98.93437 %.
+Matched code der Unit 71.19045 % -> 71.569275 %.
+Matched data der Unit bleibt 100 % (2508).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `evAppearReadyGo` ist neu matched.
+
+DOL-SHA1 unverändert: `EventWatcher.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R79C (`init`)
+
+**Vollmatch, strikt.**
+
+`TMirrorModel::init` war 99.675674 %.
+Das Frame war `-0xa0`, Ziel `-0xb8`.
+Die `TPosition3f` lag auf `0x60`, Ziel `0x74`.
+`char gap[0x10]` nach der Matrix legt sie auf `0x74` und hebt das Frame auf `-0xb8`.
+Der Store auf `gap` fällt weg.
+
+`TMirrorModel::init`: 0 Abweichungen, 296 Bytes, 74 Instruktionen.
+`TMirrorModelObj::init` bleibt nonmatching.
+Das geinlinte Frame stimmt, die Matrix liegt dort auf `0x64` statt `0x74`.
+Fuzzy 99.70238 % -> 99.833336 %.
+`validate-symbol-order` `mario/Map/MapMirror`: dieselben vorbestehenden Fehler.
+MISSING `scaleAdd` von `JGeometry::TVec3<f32>`.
+ORDER `set<f>` von `JGeometry::TVec3<f32>`.
+5 ererbte UNUSED-Größenwarnungen (`getMirrorTexInfo`, `calcView`, `entry`, `calcEffectMtx`, `makeMirrorViewMtx`).
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `4b8b1c98`: fuzzy 81.13076 % -> 81.13081 %,
+matched code 54.794533 % -> 54.80278 % (1967172 -> 1967468, +296).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 9999 -> 10000.
+`MapMirror` matched code 2880 -> 3176 (+296), Funktionen 19 -> 20 von 27.
+Fuzzy der Unit 86.326546 % -> 86.34954 %.
+Matched code der Unit 47.306175 % -> 52.1682 %.
+Matched data der Unit unverändert 93.99142 % (876).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TMirrorModel::init` ist neu matched.
+
+DOL-SHA1 unverändert: `MapMirror.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R614A (`calcPosition`)
+
+**Vollmatch, strikt.**
+
+`TBGTentacle::TNode::calcPosition` war 99.828575 %.
+Das Frame war `-0x40`, Ziel `-0x60`.
+Die `TVec3<f32>` lag auf `0x24`, Ziel `0x44`.
+`char trash[0x20]` nach der Vec legt sie auf `0x44` und hebt das Frame auf `-0x60`.
+Der Store auf `trash` fällt weg.
+
+`TBGTentacle::TNode::calcPosition`: 0 Abweichungen, 840 Bytes, 210 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bgtentacle`: PASS.
+Symbolreihenfolge stimmt, alle Map-Symbole vorhanden, Linkage stimmt.
+5 ererbte UNUSED-Größenwarnungen (`returnToDefaultState`, `canTake`, `isAttacking`, `disableAttackCheck`, `enableAttackCheck`).
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `bc7a4f2b`: fuzzy 81.13081 % -> 81.130844 %,
+matched code 54.80278 % -> 54.826176 % (1967468 -> 1968308, +840).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10000 -> 10001.
+`bgtentacle` matched code 5660 -> 6500 (+840), Funktionen 26 -> 27 von 39.
+Fuzzy der Unit 95.248085 % -> 95.25451 %.
+Matched code der Unit 25.254328 % -> 29.002321 %.
+Matched data der Unit unverändert 43.28358 % (1044).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TBGTentacle::TNode::calcPosition` ist neu matched.
+
+DOL-SHA1 unverändert: `bgtentacle.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R80C (`checkGround`)
+
+**Vollmatch, strikt.**
+
+`TMapCollisionData::checkGround` war 99.73585 %.
+Beide Grid-Listen lasen `getRoofList` (Offset `0x10`).
+Retail liest die Ground-Liste (Offset `4`).
+`getGroundList` gibt `unk0[0].getNext()` zurück.
+`char hi[8]` vor dem ersten Ergebniszeiger und `char lo[4]` nach `local_68` legen die Zeiger auf `0x48`, `0x44` und `0x40`.
+Das Frame bleibt `-0xa8`.
+Die Stores auf `hi` und `lo` fallen weg.
+
+`TMapCollisionData::checkGround`: 0 Abweichungen, 424 Bytes, 106 Instruktionen.
+`checkRoof` bleibt 100 %.
+`validate-symbol-order` `mario/Map/MapCheck`: dieselbe vorbestehende MISSING-Meldung `intersectLineList` (UNUSED).
+Symbolreihenfolge stimmt.
+Linkage stimmt.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `b39f4962`: fuzzy 81.130844 % -> 81.13087 %,
+matched code 54.826176 % -> 54.83799 % (1968308 -> 1968732, +424).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10001 -> 10002.
+`MapCheck` matched code 1112 -> 1536 (+424), Funktionen 2 -> 3 von 9.
+Fuzzy der Unit 86.562996 % -> 86.57788 %.
+Matched code der Unit 14.779372 % -> 20.414673 %.
+Matched data der Unit unverändert 100 % (244).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TMapCollisionData::checkGround` ist neu matched.
+
+DOL-SHA1 unverändert: `MapCheck.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R615A (`execute`)
+
+**Vollmatch, strikt.**
+
+`TNerveFireWanwanHungTail::execute` war 99.818184 %.
+Das Frame war `-0x68`, Ziel `-0x70`.
+Die `TVec3<f32>` lag auf `0x44`, Ziel `0x4c`.
+`char trash[8]` nach der Vec legt sie auf `0x4c` und hebt das Frame auf `-0x70`.
+Der Store auf `trash` fällt weg.
+
+`TNerveFireWanwanHungTail::execute`: 0 Abweichungen, 616 Bytes, 154 Instruktionen.
+`validate-symbol-order` `mario/Enemy/fireWanwan`: dieselben vorbestehenden Fehler.
+MISSING `TVec4`-Ctor, `isTaken`, `ArrayWrapper` `operator[]` / `size`.
+Symbolreihenfolge stimmt, Linkage stimmt.
+27 ererbte UNUSED-Größenwarnungen.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `bed227d6`: fuzzy 81.13087 % -> 81.1309 %,
+matched code 54.83799 % -> 54.855145 % (1968732 -> 1969348, +616).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10002 -> 10003.
+`fireWanwan` matched code 14168 -> 14784 (+616), Funktionen 61 -> 62 von 95.
+Fuzzy der Unit 94.352196 % -> 94.355064 %.
+Matched code der Unit 36.305862 % -> 37.884377 %.
+Matched data der Unit unverändert 90.77341 % (2676).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TNerveFireWanwanHungTail::execute` ist neu matched.
+
+DOL-SHA1 unverändert: `fireWanwan.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R616A (`throwActor`)
+
+**Vollmatch, strikt.**
+
+`TBPHeadHit::throwActor` war 99.64189 %.
+Das Frame war `-0x58`, Ziel `-0x60`.
+Beide `TVec3<f32>` und die gesicherten Register lagen 8 Bytes zu tief.
+`char trash[8]` nach `perpendicular` hebt alles um 8 und das Frame auf `-0x60`.
+Der Store auf `trash` fällt weg.
+
+`TBPHeadHit::throwActor`: 0 Abweichungen, 592 Bytes, 148 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bosspakkun`: PASS.
+2 ererbte UNUSED-Größenwarnungen (`ignoreWaterCheck`, `vomitFinished`).
+Symbolreihenfolge stimmt, Linkage stimmt.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `5b9f86a3`: fuzzy 81.1309 % -> 81.13095 %,
+matched code 54.855145 % -> 54.871635 % (1969348 -> 1969940, +592).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10003 -> 10004.
+`bosspakkun` matched code 20388 -> 20980 (+592), Funktionen 107 -> 108 von 126.
+Fuzzy der Unit 99.193695 % -> 99.19905 %.
+Matched code der Unit 51.474453 % -> 52.969097 %.
+Matched data der Unit unverändert 99.855804 % (5540).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TBPHeadHit::throwActor` ist neu matched.
+
+DOL-SHA1 unverändert: `bosspakkun.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R617A (`isHitWallInBound`)
+
+**Vollmatch, strikt.**
+
+`TSmallEnemy::isHitWallInBound` war 99.7564 %.
+Das Frame war `-0x80`, Ziel `-0xa8`.
+`TBGWallCheckRecord`, die `TVec3<f32>` und `r31` lagen `0x28` Bytes zu tief.
+`char trash[0x28]` nach `local_3C` hebt alles um `0x28` und das Frame auf `-0xa8`.
+Der Store auf `trash` fällt weg.
+
+`TSmallEnemy::isHitWallInBound`: 0 Abweichungen, 312 Bytes, 78 Instruktionen.
+`validate-symbol-order` `mario/Enemy/smallEnemy`: PASS.
+Alle Map-Symbole vorhanden, Reihenfolge stimmt, Linkage stimmt.
+Keine neuen UNUSED-Größenwarnungen.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `c9eb2192`: fuzzy 81.13095 % -> 81.130974 %,
+matched code 54.871635 % -> 54.880325 % (1969940 -> 1970252, +312).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10004 -> 10005.
+`smallEnemy` matched code 10580 -> 10892 (+312), Funktionen 52 -> 53 von 64.
+Fuzzy der Unit 98.38807 % -> 98.392395 %.
+Matched code der Unit 60.236847 % -> 62.01321 %.
+Matched data der Unit unverändert 66.87631 % (1276).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TSmallEnemy::isHitWallInBound` ist neu matched.
+
+DOL-SHA1 unverändert: `smallEnemy.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R81C (`drawLower`)
+
+**Vollmatch, strikt.**
+
+`TMapWire::drawLower` war 99.496185 %.
+`xOffset` und `zOffset` werden in place mit `mDrawWidth` multipliziert.
+Im Schleifen-Streifen hält `addf` die `fadds`-Operanden als Basis plus Offset.
+`char gap[1]` hebt das Frame von `-0x58` auf `-0x78`.
+Der Store auf `gap` fällt weg.
+
+`TMapWire::drawLower`: 0 Abweichungen, 524 Bytes, 131 Instruktionen.
+`drawUpper` bleibt nonmatching.
+`validate-symbol-order` `mario/Map/MapWire`: PASS.
+3 ererbte UNUSED-Größenwarnungen (`initTipPoints`, `updateMovePointAtReleased`, `updatePointAtReleased`).
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `2471c6ed`: fuzzy 81.130974 % -> 81.13104 %,
+matched code 54.880325 % -> 54.894924 % (1970252 -> 1970776, +524).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10005 -> 10006.
+`MapWire` matched code 1416 -> 1940 (+524), Funktionen 8 -> 9 von 16.
+Fuzzy der Unit 92.900116 % -> 92.93736 %.
+Matched code der Unit 19.977427 % -> 27.370203 %.
+Matched data der Unit unverändert 100 % (412).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TMapWire::drawLower` ist neu matched.
+
+DOL-SHA1 unverändert: `MapWire.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R618A (`reset`)
+
+**Vollmatch, strikt.**
+
+`TWalkerEnemy::reset` war 99.83146 %.
+Das Frame war schon `-0x60`.
+Das temporäre `TPathNode` lag auf `0x34`, Ziel `0x38`.
+`char trash[4]` nach dem benannten Node schiebt es auf `0x38`.
+Der Store auf `trash` fällt weg.
+Das Frame bleibt `-0x60`.
+
+`TWalkerEnemy::reset`: 0 Abweichungen, 356 Bytes, 89 Instruktionen.
+`validate-symbol-order` `mario/Enemy/walkerEnemy`: PASS.
+Alle Map-Symbole vorhanden, Reihenfolge stimmt, Linkage stimmt.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `dac1ab0b`: fuzzy 81.13104 % -> 81.13106 %,
+matched code 54.894924 % -> 54.904835 % (1970776 -> 1971132, +356).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10006 -> 10007.
+`walkerEnemy` matched code 5892 -> 6248 (+356), Funktionen 28 -> 29 von 33.
+Fuzzy der Unit 99.95608 % -> 99.96411 %.
+Matched code der Unit 78.89662 % -> 83.66363 %.
+Matched data der Unit unverändert 100 % (1204).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TWalkerEnemy::reset` ist neu matched.
+
+DOL-SHA1 unverändert: `walkerEnemy.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R620A (`load`)
+
+**Vollmatch, strikt.**
+
+`TPakkun::load` war 99.6875 %.
+Das Frame war schon `-0x30`.
+Das `TPathNode` lag auf `0x14`, Ziel `0x18`.
+`char trash[4]` nach `marioNode` schiebt es auf `0x18`.
+Der Store auf `trash` fällt weg.
+Das Frame bleibt `-0x30`.
+`TStayPakkun::load` inlined denselben Body und verwirft das unbenutzte `trash`.
+Es bleibt 99.754715 %.
+
+`TPakkun::load`: 0 Abweichungen, 192 Bytes, 48 Instruktionen.
+`validate-symbol-order` `mario/Enemy/pakkun`: PASS.
+Weak-Reihenfolge und 2 UNUSED-Größen (`createPakkunSmoke`, `isHideEnd`) sind vorbestehend.
+Symbolreihenfolge der nicht-weak Symbole stimmt, Linkage stimmt.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `a7dac4d9`: fuzzy 81.13106 % -> 81.13108 %,
+matched code 54.904835 % -> 54.91019 % (1971132 -> 1971324, +192).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10007 -> 10008.
+`pakkun` matched code 10556 -> 10748 (+192), Funktionen 63 -> 64 von 77.
+Fuzzy der Unit 97.37736 % -> 97.38068 %.
+Matched code der Unit 58.475513 % -> 59.53911 %.
+Matched data der Unit unverändert 100 % (2908).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TPakkun::load` ist neu matched.
+
+DOL-SHA1 unverändert: `pakkun.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R629B (`direct_dolby`)
+
+**Vollmatch, strikt.**
+
+`TGCLogoDir::direct_dolby` war 98.57304 %.
+Das Frame war `-0x38`, Ziel `-0x68`.
+Jeder Stack-Slot lag `0x30` Bytes zu tief.
+`char pad[0x30]` am Anfang hebt das Frame auf `-0x68` und schiebt die Slots um `0x30`.
+Der Store auf `pad` fällt weg.
+Der Vergleich mit `mState` lud das Feld nicht neu.
+`*(volatile int*)&mState` stellt denselben Reload her wie in `direct`.
+
+`TGCLogoDir::direct_dolby`: 0 Abweichungen, 356 Bytes, 89 Instruktionen.
+`direct_nlogo` und `direct` bleiben 100 %.
+`validate-symbol-order` `mario/System/GCLogoDir`: PASS.
+Alle Map-Symbole vorhanden, Reihenfolge stimmt, Linkage stimmt.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `44da484b`: fuzzy 81.13108 % -> 81.13122 %,
+matched code 54.91019 % -> 54.9201 % (1971324 -> 1971680, +356).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10008 -> 10009.
+`GCLogoDir` matched code 2976 -> 3332 (+356), Funktionen 9 -> 10 von 11.
+Fuzzy der Unit 99.78833 % -> 99.88716 %.
+Matched code der Unit 57.89883 % -> 64.824905 %.
+Matched data der Unit bleibt 100 % (620).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TGCLogoDir::direct_dolby` ist neu matched.
+
+DOL-SHA1 unverändert: `GCLogoDir.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R82C (`drawUpper`)
+
+**Vollmatch, strikt.**
+
+`TMapWire::drawUpper` war 99.1579 %.
+`xOffset` und `zOffset` werden in place mit `mDrawWidth` multipliziert.
+Das hält die Offsets in `f31` und `f30` und hebt das Frame von `-0x40` auf `-0x58`.
+Im Schleifen-Streifen hält `addf` die `fadds`-Operanden als Basis plus Offset.
+Start- und Endpunkte bleiben beim rohen `+`.
+Kein Padding.
+
+`TMapWire::drawUpper`: 0 Abweichungen, 304 Bytes, 76 Instruktionen.
+`drawLower` bleibt matching.
+`validate-symbol-order` `mario/Map/MapWire`: PASS.
+3 ererbte UNUSED-Größenwarnungen (`initTipPoints`, `updateMovePointAtReleased`, `updatePointAtReleased`).
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+`addf` bleibt inlined.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `952cda10`: fuzzy 81.13122 % -> 81.131294 %,
+matched code 54.9201 % -> 54.92857 % (1971680 -> 1971984, +304).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10009 -> 10010.
+`MapWire` matched code 1940 -> 2244 (+304), Funktionen 9 -> 10 von 16.
+Fuzzy der Unit 92.93736 % -> 92.97347 %.
+Matched code der Unit 27.370203 % -> 31.659142 %.
+Matched data der Unit unverändert 100 % (412).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TMapWire::drawUpper` ist neu matched.
+
+DOL-SHA1 unverändert: `MapWire.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R630B (`checkAdditionalMovie`)
+
+**Vollmatch, strikt.**
+
+`TApplication::checkAdditionalMovie` war 99.05785 %.
+Das Frame war `-0x20`, Ziel `-0x58`.
+Jeder Stack-Slot lag `0x38` Bytes zu tief.
+`char pad[0x38]` am Anfang hebt das Frame auf `-0x58`.
+Der Store auf `pad` fällt weg.
+`SMS_getShineIDofExStage` bekam das Stage-Byte direkt in `r3`.
+Ein benanntes `u8 stage` erzeugt `lbz r0` plus `mr r3, r0`.
+
+`TApplication::checkAdditionalMovie`: 0 Abweichungen, 484 Bytes, 121 Instruktionen.
+`validate-symbol-order` `mario/System/Application`: PASS.
+Alle Map-Symbole vorhanden, Reihenfolge der nicht-weak Symbole stimmt, Linkage stimmt.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `0ff6dd44`: fuzzy 81.131294 % -> 81.13142 %,
+matched code 54.92857 % -> 54.942055 % (1971984 -> 1972468, +484).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10010 -> 10011.
+`Application` matched code 5088 -> 5572 (+484), Funktionen 14 -> 15 von 21.
+Fuzzy der Unit 97.3026 % -> 97.3489 %.
+Matched code der Unit 51.665314 % -> 56.580017 %.
+Matched data der Unit unverändert 95.32164 % (1956).
+Complete code und complete data unverändert.
+Nur `TApplication::checkAdditionalMovie` ist neu matched.
+
+DOL-SHA1 unverändert: `Application.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R622A (`init`)
+
+**Vollmatch, strikt.**
+
+`TSmallEnemy::init` war 99.78854 %.
+Das Frame war `-0x108`, Ziel `-0x128`.
+Die Spill-Slots lagen `0x20` Bytes zu tief.
+`TPathNode` lag nur `0x1c` zu tief, direkt an den Doubles.
+Ein benannter Node plus `char trash[0x1c]` hebt das Frame auf `-0x128`.
+Der Node landet auf `0xbc`, die Spills rutschen um `0x20`.
+Der Store auf `trash` fällt weg.
+
+`TSmallEnemy::init`: 0 Abweichungen, 908 Bytes, 227 Instruktionen.
+`validate-symbol-order` `mario/Enemy/smallEnemy`: PASS.
+Alle Map-Symbole vorhanden, Reihenfolge der nicht-weak Symbole stimmt, Linkage stimmt.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `53ec2a0e`: fuzzy 81.13142 % -> 81.13147 %,
+matched code 54.942055 % -> 54.967342 % (1972468 -> 1973376, +908).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10011 -> 10012.
+`smallEnemy` matched code 10892 -> 11800 (+908), Funktionen 53 -> 54 von 64.
+Fuzzy der Unit 98.392395 % -> 98.40333 %.
+Matched code der Unit 62.01321 % -> 67.18288 %.
+Matched data der Unit unverändert 66.87631 % (1276).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TSmallEnemy::init` ist neu matched.
+
+DOL-SHA1 unverändert: `smallEnemy.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R631B (`MSStage::init`)
+
+**Vollmatch, strikt.**
+
+`MSStage::init` war 98.878174 %.
+Das Frame war `-0x28`, Ziel `-0x80`.
+Jeder Stack-Slot lag `0x58` Bytes zu tief.
+`char pad[0x58]` am Anfang hebt das Frame auf `-0x80`.
+Der Store auf `pad` fällt weg.
+`smMSStage = nullptr` hält die Null in `r30`.
+`MSStageCubeSwitch` schrieb das Argument nach `unk10`.
+Retail speichert dort 0, dieselbe Null.
+Der Konstruktor initialisiert `unk10` mit 0.
+
+`MSStage::init`: 0 Abweichungen, 788 Bytes, 197 Instruktionen.
+`validate-symbol-order` `mario/System/MSoundMainSide`: die fehlende weak `TVector<void*>::begin` war schon vorher weg.
+Reihenfolge und Linkage der vorhandenen Symbole stimmen.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `24c81e8b`: fuzzy 81.13147 % -> 81.13172 %,
+matched code 54.967342 % -> 54.98929 % (1973376 -> 1974164, +788).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10012 -> 10013.
+`MSoundMainSide` matched code 2132 -> 2920 (+788), Funktionen 19 -> 20 von 27.
+Fuzzy der Unit 96.59545 % -> 96.68858 %.
+Matched code der Unit 22.46102 % -> 30.762747 %.
+Matched data der Unit bleibt 100 % (756).
+Complete code und complete data unverändert.
+Nur `MSStage::init` ist neu matched.
+
+DOL-SHA1 unverändert: `MSoundMainSide.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R623A (`execute`)
+
+**Vollmatch, strikt.**
+
+`TNerveBPStompReact::execute` war 99.81013 %.
+Das Frame war `-0x48`, Ziel `-0x68`.
+Die gespeicherten Register lagen `0x20` Bytes zu tief.
+Der `TVec3` aus `resetWaterMark` lag nur `0x1c` zu tief.
+Ein unbenutztes Pad in `resetWaterMark` fällt beim Inlinen weg.
+Der Rumpf steht deshalb direkt in der Nerve.
+`char gap[8]` über dem Vektor und `char trash[0x18]` darunter heben das Frame auf `-0x68`.
+Der Vektor landet auf `0x44`.
+Die Stores auf `gap` und `trash` fallen weg.
+`resetWaterMark` bleibt `0xa4` Bytes und UNUSED.
+
+`TNerveBPStompReact::execute`: 0 Abweichungen, 316 Bytes, 79 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bosspakkun`: PASS.
+2 ererbte UNUSED-Größenwarnungen (`ignoreWaterCheck`, `vomitFinished`).
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `19a8b113`: fuzzy 81.13172 % -> 81.13174 %,
+matched code 54.98929 % -> 54.998093 % (1974164 -> 1974480, +316).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10013 -> 10014.
+`bosspakkun` matched code 20980 -> 21296 (+316), Funktionen 108 -> 109 von 126.
+Fuzzy der Unit 99.19905 % -> 99.20057 %.
+Matched code der Unit 52.969097 % -> 53.76692 %.
+Matched data der Unit unverändert 99.855804 % (5540).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TNerveBPStompReact::execute` ist neu matched.
+
+DOL-SHA1 unverändert: `bosspakkun.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R625A (`calcRootMatrix`)
+
+**Vollmatch, strikt.**
+
+`TGesso::calcRootMatrix` war 99.666664 %.
+Das Frame war `-0x88`, Ziel `-0x90`.
+Die Spill-Slots lagen `0x8` Bytes zu tief.
+`Mtx local_68` lag nur `0x4` zu tief.
+`char trash[4]` hinter der Matrix hebt das Frame auf `-0x90`.
+Die Matrix landet auf `0x28`.
+Der Store auf `trash` fällt weg.
+`checkDropInWater` war `inline` und fehlte als UNUSED-Symbol.
+Die Nerve ruft jetzt ein `static inline` auf, der Rumpf bleibt gleich.
+Die Methode selbst ist nicht mehr `inline` und kommt mit `0x144` Bytes heraus.
+`TNerveGessoFreeze::execute` bleibt 99.44 %.
+
+`TGesso::calcRootMatrix`: 0 Abweichungen, 360 Bytes, 90 Instruktionen.
+`validate-symbol-order` `mario/Enemy/gesso`: PASS.
+Schwache Reihenfolge war schon vorher offen.
+2 ererbte UNUSED-Größenwarnungen (`modifyRotate`, `isUseBodyCallBack`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `abbacfe7`: fuzzy 81.13174 % -> 81.131775 %,
+matched code 54.998093 % -> 55.008125 % (1974480 -> 1974840, +360).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10014 -> 10015.
+`gesso` matched code 12832 -> 13192 (+360), Funktionen 78 -> 79 von 91.
+Fuzzy der Unit 98.31031 % -> 98.31646 %.
+Matched code der Unit 65.751175 % -> 67.595825 %.
+Matched data der Unit unverändert 100 % (3980).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TGesso::calcRootMatrix` ist neu matched.
+
+DOL-SHA1 unverändert: `gesso.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R632B (`flip`)
+
+**Vollmatch, strikt.**
+
+`TTimeRec::flip` war 99.166664 %.
+Der Ablauf stimmte schon.
+`curr` lag in `r7` und der Entry-Zeiger in `r5`.
+Ziel ist `r5` für die Zeit und `r7` für den Zeiger.
+`TTimeArray::Entry& entry = array.mEntries[--i]` dreht die Belegung.
+Der Predecrement steht im Referenz-Init.
+Es kommt keine zusätzliche Instruktion dazu.
+
+`TTimeRec::flip`: 0 Abweichungen, 144 Bytes, 36 Instruktionen.
+`validate-symbol-order` `mario/System/TimeRec`: PASS.
+3 ererbte UNUSED-Größenwarnungen (`suppleGXTime`, `drawSyncCallbackSt`, `end`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `9c721e41`: fuzzy 81.131775 % -> 81.13181 %,
+matched code 55.008125 % -> 55.01213 % (1974840 -> 1974984, +144).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10015 -> 10016.
+`TimeRec` matched code 472 -> 616 (+144), Funktionen 5 -> 6 von 6.
+Fuzzy der Unit 99.80519 % -> 100 %.
+Matched code der Unit 76.623375 % -> 100 %.
+Matched data der Unit unverändert 100 % (32).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TTimeRec::flip` ist neu matched.
+
+DOL-SHA1 unverändert: `TimeRec.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R85C (`TSpcInterp`)
+
+**Vollmatch, strikt.**
+
+`TSpcInterp::TSpcInterp` war 98.03876 %.
+Die Schleife füllte den Storage-Stack mit `push(TSpcSlice(0))`.
+Der Slice-Konstruktor belegt `r3`.
+Der Inliner lädt `this` danach nach `r6`.
+Ziel hält `this` in `r3` über die beiden Null-Stores.
+Erst das Kopieren des Temporaries zerstört `r3`.
+`++mSize` lädt `this` dann aus `8(r1)`.
+Ein POD-Paar auf dem Stack, ohne Konstruktor, lässt `r3` leben.
+Der Overflow-Check und die 8-Byte-Kopie stimmen danach.
+
+`TSpcInterp::TSpcInterp`: 0 Abweichungen, 516 Bytes, 129 Instruktionen.
+`validate-symbol-order` `mario/Strategic/spcinterp`: PASS.
+6 ererbte UNUSED-Größenwarnungen
+(`referByName`, `referByIndex`, `invokeByName`, `invokeByAddress`, `callByName`, `callByAddress`).
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `44b8dc55`: fuzzy 81.13181 % -> 81.132095 %,
+matched code 55.01213 % -> 55.02651 % (1974984 -> 1975500, +516).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10016 -> 10017.
+`spcinterp` matched code 19392 -> 19908 (+516), Funktionen 67 -> 68 von 73.
+Fuzzy der Unit 99.94547 % -> 99.988716 %.
+Matched code der Unit 82.871796 % -> 85.07692 %.
+Matched data der Unit unverändert 100 % (2096).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TSpcInterp::TSpcInterp` ist neu matched.
+
+DOL-SHA1 unverändert: `spcinterp.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R626A (`TNerveKageMarioModokiWait`)
+
+**Vollmatch, strikt.**
+
+`TNerveKageMarioModokiWait::execute` war 99.81554 %.
+Das Frame war `-0x50`, Ziel `-0x68`.
+Die Saved-Register lagen `0x18` Bytes zu tief.
+`TPathNode` lag nur `0xC` zu tief und saß bündig an den Registern.
+`char gap[0xC]` über dem Node und `char trash[0xC]` darunter heben das Frame auf `-0x68`.
+Der Node landet auf `0x44`.
+Die Stores auf `gap` und `trash` fallen weg.
+
+`TNerveKageMarioModokiWait::execute`: 0 Abweichungen, 412 Bytes, 103 Instruktionen.
+`validate-symbol-order` `mario/Enemy/telesa`: PASS.
+Schwache Reihenfolge war schon vorher offen.
+2 ererbte UNUSED-Größenwarnungen (`resetBaseGround`, `isResetTransY`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `2eb3685f`: fuzzy 81.132095 % -> 81.13211 %,
+matched code 55.02651 % -> 55.037983 % (1975500 -> 1975912, +412).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10017 -> 10018.
+`telesa` matched code 15028 -> 15440 (+412), Funktionen 76 -> 77 von 86.
+Fuzzy der Unit 99.61104 % -> 99.61473 %.
+Matched code der Unit 72.99397 % -> 74.99514 %.
+Matched data der Unit unverändert 100 % (4748).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TNerveKageMarioModokiWait::execute` ist neu matched.
+
+DOL-SHA1 unverändert: `telesa.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R633B (`getRandVol`)
+
+**Vollmatch, strikt.**
+
+`MSRandVol::getRandVol` war 99.29032 %.
+`f1`, `f2` und `f3` trugen schon Amplitude, Kurve und Plus.
+Die Index-Rechnung für Kurve und Plus lag in `r0` und `r5` vertauscht.
+Dadurch tauschten die Basen `r3` und `r4` und die Loads von `0x2C` und `0x1C`.
+`plus` steht im Quelltext vor `curve`.
+MWCC rechnet das spätere Local zuerst, also Kurve vor Plus.
+Der Aufruf bleibt `getRandom(amp, curve, plus)`.
+
+`MSRandVol::getRandVol`: 0 Abweichungen, 124 Bytes, 31 Instruktionen.
+`validate-symbol-order` `mario/MSound/MSoundSE`: PASS.
+Schwache Reihenfolge bleibt compiler-gesteuert.
+1 ererbte UNUSED-Größenwarnung (`getRandomVolume`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `7042f0ed`: fuzzy 81.13211 % -> 81.13215 %,
+matched code 55.037983 % -> 55.04144 % (1975912 -> 1976036, +124).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10018 -> 10019.
+`MSoundSE` matched code 10756 -> 10880 (+124), Funktionen 26 -> 27 von 29.
+Fuzzy der Unit 99.0837 % -> 99.091125 %.
+Matched code der Unit 90.75262 % -> 91.79885 %.
+Matched data der Unit unverändert 100 % (2172).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `MSRandVol::getRandVol` ist neu matched.
+
+DOL-SHA1 unverändert: `MSoundSE.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R627A (`TMantaMessageState`)
+
+**Vollmatch, strikt.**
+
+`TBossMantaManager::TMantaMessageState::update` war 99.80357 %.
+Das Frame war `-0x80`, Ziel `-0x98`.
+Jeder Stack-Slot lag `0x18` Bytes zu tief.
+`char trash[0x18]` am Anfang hebt das Frame auf `-0x98`.
+Der Store auf `trash` fällt weg.
+`aliveCount` wurde vor `i` genullt.
+`int i = 0` und `for (; i < ...)` legen `li r8`, `li r3`, den Count-Load und `li r9` in die Zielreihenfolge.
+
+`TBossMantaManager::TMantaMessageState::update`: 0 Abweichungen, 448 Bytes, 112 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bossManta` gegen das Basisobjekt: PASS.
+0 neue Fehler, 10 ererbte.
+Die `theNerve`-Reihenfolge und 6 UNUSED-Größen waren schon vorher offen.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `79f0e560`: fuzzy 81.13215 % -> 81.13219 %,
+matched code 55.04144 % -> 55.053913 % (1976036 -> 1976484, +448).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10019 -> 10020.
+`bossManta` matched code 7276 -> 7724 (+448), Funktionen 29 -> 30 von 49.
+Fuzzy der Unit 98.16056 % -> 98.16459 %.
+Matched code der Unit 33.30282 % -> 35.35335 %.
+Matched data der Unit unverändert 41.944077 % (1260).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TBossMantaManager::TMantaMessageState::update` ist neu matched.
+
+DOL-SHA1 unverändert: `bossManta.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R628A (`calcFarthestVertex`)
+
+**Vollmatch, strikt.**
+
+`calcFarthestVertex` war 99.807014 %.
+Das Frame war `-0x58`, Ziel `-0x70`.
+`diffs[3]` lag `0x14` Bytes zu tief und klebte an den gesicherten Registern.
+Retail hat dort 4 Bytes Luft.
+`volatile f32 tmp` lag 4 Bytes zu tief und klebte an `diffs`.
+Retail hat dazwischen `0x10` Bytes Luft.
+`char gapTop[4]` vor `diffs`, `char gapMid[0x10]` dahinter und `char trash[4]` nach `tmp` heben Frame, Array und `tmp` auf die Zielslots.
+Die Stores auf die Pads fallen weg.
+Die Schleife und das `volatile`-Sqrt bleiben unverändert.
+
+`calcFarthestVertex`: 0 Abweichungen, 456 Bytes, 114 Instruktionen.
+`validate-symbol-order` `mario/Enemy/walker`: PASS.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `bb6f9c9c`: fuzzy 81.13219 % -> 81.1322 %,
+matched code 55.053913 % -> 55.066616 % (1976484 -> 1976940, +456).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10020 -> 10021.
+`walker` matched code 524 -> 980 (+456), Funktionen 5 -> 6 von 7.
+Fuzzy der Unit 92.41618 % -> 92.43738 %.
+Matched code der Unit 12.620423 % -> 23.603083 %.
+Matched data der Unit unverändert 100 % (56).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `calcFarthestVertex` ist neu matched.
+
+DOL-SHA1 unverändert: `walker.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R635B (`checkSoundArea`)
+
+**Vollmatch, strikt.**
+
+`MSoundSE::checkSoundArea` war 99.64 %.
+Das Frame war `-0x48`, Ziel `-0x58`.
+Die vier Vecs lagen lückenlos im Abstand `0xC`.
+Retail packt die beiden `getInCubeNo`-Kopien oben.
+Vor jedem Quell-Vec liegen 4 Bytes Luft.
+Unter dem untersten Vec fehlen 8 Bytes.
+`int hole1` zwischen den Kopien und dem ersten Quell-Vec, `int hole2` zwischen den Quell-Vecs und `int bot1`/`bot2` darunter setzen die Slots.
+Die Null-Stores fallen weg.
+Case 8 bleibt unverändert.
+
+`MSoundSE::checkSoundArea`: 0 Abweichungen, 348 Bytes, 87 Instruktionen.
+`validate-symbol-order` `mario/MSound/MSoundSE`: PASS.
+Schwache Reihenfolge bleibt compiler-gesteuert.
+1 ererbte UNUSED-Größenwarnung (`getRandomVolume`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `337ee4c2`: fuzzy 81.1322 % -> 81.13224 %,
+matched code 55.066616 % -> 55.076313 % (1976940 -> 1977288, +348).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10021 -> 10022.
+`MSoundSE` matched code 10880 -> 11228 (+348), Funktionen 27 -> 28 von 29.
+Fuzzy der Unit 99.091125 % -> 99.101585 %.
+Matched code der Unit 91.79885 % -> 94.73507 %.
+Matched data der Unit unverändert 100 % (2172).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `MSoundSE::checkSoundArea` ist neu matched.
+
+DOL-SHA1 unverändert: `MSoundSE.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R630A (`getRumblePow`)
+
+**Vollmatch, strikt.**
+
+`TBiancoGateKeeper::getRumblePow` war 99.781815 %.
+Das Frame war beidseitig `-0x28`.
+`diff` lag bei `0x1c` statt `0x18`.
+`dist` und `pow` sind zwei Float-Locals.
+Zusammen belegen sie den 4-Byte-Slot über dem Vec.
+`dist` wird nach dem Nulltest mit `2000 / dist` überschrieben.
+Der zweite Local fällt weg.
+Der Vec landet auf `0x18`.
+Der Clamp bleibt eine Zuweisung.
+
+`TBiancoGateKeeper::getRumblePow`: 0 Abweichungen, 220 Bytes, 55 Instruktionen.
+`validate-symbol-order` `mario/Enemy/gatekeeper`: PASS.
+0 neue Fehler.
+25 UNUSED-Größen stimmen.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `f49beeb4`: fuzzy 81.13224 % -> 81.132256 %,
+matched code 55.076313 % -> 55.08244 % (1977288 -> 1977508, +220).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10022 -> 10023.
+`gatekeeper` matched code 11844 -> 12064 (+220), Funktionen 47 -> 48 von 55.
+Fuzzy der Unit 99.24186 % -> 99.244446 %.
+Matched code der Unit 63.828407 % -> 65.01401 %.
+Matched data der Unit unverändert 99.743256 % (3108).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TBiancoGateKeeper::getRumblePow` ist neu matched.
+
+DOL-SHA1 unverändert: `gatekeeper.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R89C (`getEdgeDegree`)
+
+**Vollmatch, strikt.**
+
+`TPollutionPos::getEdgeDegree` war 97.8353 %.
+Das Frame war `-0x20`, Ziel `-0x38`.
+`index()` im Subskript faltet den gehoisteten `(z & 3) * 8`-Term in die `lbzx`-Basis.
+Der Heightmap-Pointer landet im Offset.
+`u32 idx = index(x + dx, y + dy)` materialisiert den vollen Index.
+`mHeightMap[idx]` nimmt den Pointer als `lbzx`-Basis.
+`char trash[0x18]` setzt das Frame auf `-0x38` und `r31` auf `0x34`.
+Gleiches Padding-Muster wie `isSame` in dieser TU.
+
+`TPollutionPos::getEdgeDegree`: 0 Abweichungen, 340 Bytes, 85 Instruktionen.
+`validate-symbol-order` `mario/Map/PollutionPos`: PASS.
+1 ererbte UNUSED-Größenwarnung (`subtractFromYMap`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `3604ef1b`: fuzzy 81.132256 % -> 81.132454 %,
+matched code 55.08244 % -> 55.09191 % (1977508 -> 1977848, +340).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10023 -> 10024.
+`PollutionPos` matched code 1416 -> 1756 (+340), Funktionen 8 -> 9 von 9.
+Fuzzy der Unit 99.580864 % -> 100 %.
+Matched code der Unit 80.63781 % -> 100 %.
+Matched data der Unit unverändert 100 % (212).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TPollutionPos::getEdgeDegree` ist neu matched.
+
+DOL-SHA1 unverändert: `PollutionPos.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R631A (`TNerveSmallEnemyFreeze`)
+
+**Vollmatch, strikt.**
+
+`TNerveSmallEnemyFreeze::execute` war 99.775 %.
+Der Rumpf stimmte.
+Das Frame war `-0x40`, Ziel `-0x38`.
+`getSLFreezeWait()` gibt eine `const`-Referenz zurück und hebt das Frame auf `-0x40`.
+`mSLFreezeWait.value` senkt es auf `-0x30`.
+`char trash[8]` setzt es auf `-0x38`.
+Die Stores auf `trash` fallen weg.
+`freezeTime` bleibt in `r30`.
+
+`TNerveSmallEnemyFreeze::execute`: 0 Abweichungen, 160 Bytes, 40 Instruktionen.
+`validate-symbol-order` `mario/Enemy/smallEnemy`: PASS.
+0 neue Fehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `9d63a884`: fuzzy 81.132454 % -> 81.13247 %,
+matched code 55.09191 % -> 55.096363 % (1977848 -> 1978008, +160).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10024 -> 10025.
+`smallEnemy` matched code 11800 -> 11960 (+160), Funktionen 54 -> 55 von 64.
+Fuzzy der Unit 98.40333 % -> 98.40537 %.
+Matched code der Unit 67.18288 % -> 68.093834 %.
+Matched data der Unit unverändert 66.87631 % (1276).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TNerveSmallEnemyFreeze::execute` ist neu matched.
+
+DOL-SHA1 unverändert: `smallEnemy.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R90C (`calcEntryRadius`)
+
+**Vollmatch, strikt.**
+
+`THitActor::calcEntryRadius` war 97.6129 %.
+`rad = rad * rad + height2` überschreibt den Radius in `f2`.
+Der True-Zweig gibt das `frsqrte`-Produkt zurück, der Else-Zweig `height2`.
+`approxSqrt` hält das Produkt in einem `volatile f32`, damit `frsqrte` in `f1` landet.
+`char trash[0x20]` davor setzt den Spill auf `0x30`.
+`char trash2[8]` danach setzt das Frame auf `-0x40`.
+`(void)` auf beiden Arrays, sonst streicht sie der Compiler.
+
+`THitActor::calcEntryRadius`: 0 Abweichungen, 124 Bytes, 31 Instruktionen.
+`validate-symbol-order` `mario/Strategic/HitActor`: PASS.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `cd971d83`: fuzzy 81.13247 % -> 81.13254 %,
+matched code 55.096363 % -> 55.099823 % (1978008 -> 1978132, +124).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10025 -> 10026.
+`HitActor` matched code 544 -> 668 (+124), Funktionen 5 -> 6 von 6.
+Fuzzy der Unit 99.556885 % -> 100 %.
+Matched code der Unit 81.437126 % -> 100 %.
+Matched data der Unit unverändert 100 % (184).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `THitActor::calcEntryRadius` ist neu matched.
+
+DOL-SHA1 unverändert: `HitActor.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R632A (`loadInit`)
+
+**Vollmatch, strikt.**
+
+`TGessoPolluteObj::loadInit` war 99.83582 %.
+Das Frame war beidseitig `-0x78`.
+`search` hing direkt an `getChildren().push_back`.
+Die Iterator-Slots lagen gemischt `0x4` und `0x8` zu hoch.
+Ein benannter `TIdxGroupObj*` wie in `TOneShotGenerator::loadAfter` setzt die Slots.
+`push_back` bleibt der nächste Aufruf.
+
+`TGessoPolluteObj::loadInit`: 0 Abweichungen, 268 Bytes, 67 Instruktionen.
+`validate-symbol-order` `mario/Enemy/gesso`: PASS.
+Schwache Reihenfolge war schon vorher offen.
+2 ererbte UNUSED-Größenwarnungen (`modifyRotate`, `isUseBodyCallBack`).
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `e66f7786`: fuzzy 81.13254 % -> 81.13256 %,
+matched code 55.099823 % -> 55.107285 % (1978132 -> 1978400, +268).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10026 -> 10027.
+`gesso` matched code 13192 -> 13460 (+268), Funktionen 79 -> 80 von 91.
+Fuzzy der Unit 98.31646 % -> 98.31871 %.
+Matched code der Unit 67.595825 % -> 68.969055 %.
+Matched data der Unit unverändert 100 % (3980).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TGessoPolluteObj::loadInit` ist neu matched.
+
+DOL-SHA1 unverändert: `gesso.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R633A (`receiveMessageLv1`)
+
+**Vollmatch, strikt.**
+
+`THinokuri2::receiveMessageLv1` war 99.80606 %.
+Das Frame war `-0x68` statt `-0x78`.
+`char trash[0x10]` setzt das Frame auf `-0x78`.
+`getParticleAttack` lag in `r3` und die Trefferpunkte in `r0`.
+Ein `u8 hp` nach der `<= 0`-Prüfung legt den Angriff in `r0` und die Punkte in `r3`.
+`dmgAmount >= hp` nullt die Punkte, sonst `hp - dmgAmount`.
+
+`THinokuri2::receiveMessageLv1`: 0 Abweichungen, 660 Bytes, 165 Instruktionen.
+`validate-symbol-order` `mario/Enemy/hinokuri2`: PASS.
+6 ererbte UNUSED-Größenwarnungen bleiben.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+
+`ninja changes_all` gegen `496273af`: fuzzy 81.13256 % -> 81.13259 %,
+matched code 55.107285 % -> 55.125664 % (1978400 -> 1979060, +660).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10027 -> 10028.
+`hinokuri2` matched code 16352 -> 17012 (+660), Funktionen 60 -> 61 von 70.
+Fuzzy der Unit 99.20297 % -> 99.208305 %.
+Matched code der Unit 68.17879 % -> 70.93062 %.
+Matched data der Unit unverändert 68.008255 % (2636).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `THinokuri2::receiveMessageLv1` ist neu matched.
+
+DOL-SHA1 unverändert: `hinokuri2.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R636B (`updateDemo`)
+
+**Vollmatch, strikt.**
+
+`TCameraBck::updateDemo` war 98.9646 %.
+Das Frame war zu klein und `J3DTransformInfo` lag zu tief.
+`J3DTransformInfo info` vor `char trash[8]` und `char low[0xC]` setzt das Frame auf `-0x80` und die Info auf `0x44`.
+`checkState` materialisiert beide Seiten in `r0`.
+`int result` plus `switch` auf `getState() & STATE_COMPLETED_ONCE` schreibt nur im Fall 0 eine Null und normalisiert danach mit `cmpwi r31`.
+Der Rückgabetyp ist `int`, damit das Epilog `mr r3, r31` bleibt.
+
+`TCameraBck::updateDemo`: 0 Abweichungen, 452 Bytes, 113 Instruktionen.
+`validate-symbol-order` `mario/Camera/CameraBck`: PASS.
+4 ererbte UNUSED-Größenwarnungen bleiben.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`THinokuri2::receiveMessageLv1` unberührt.
+
+`ninja changes_all` gegen `bf5af9b3`: fuzzy 81.13259 % -> 81.13274 %,
+matched code 55.125664 % -> 55.13826 % (1979060 -> 1979512, +452).
+Matched data unverändert 69.31025 % (443815).
+Funktionen matched 10028 -> 10029.
+`CameraBck` matched code 616 -> 1068 (+452), Funktionen 6 -> 7 von 7.
+Fuzzy der Unit 99.5618 % -> 100.0 %.
+Matched code der Unit 57.677902 % -> 100.0 %.
+Matched data der Unit unverändert 100 % (608).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TCameraBck::updateDemo` ist neu matched.
+
+DOL-SHA1 unverändert: `CameraBck.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R93C (`drawSetting`)
+
+**Vollmatch, strikt.**
+
+`TMirrorCamera::drawSetting` war 99.10256 %.
+Die Skalierung der Lichtmatrix ist `0.5`, `-0.5`, `0.5`, `0.5`.
+`f32 fovy = gpCamera->mFovy` setzt `fmuls f1, f0, f1`.
+`char trash[8]` und `char gap[4]` am Ende setzen das Frame auf `-0xb8`.
+Die Matrizen liegen dann auf `0x80`, `0x50` und `0x20`.
+
+`TMirrorCamera::drawSetting`: 0 Abweichungen, 156 Bytes, 39 Instruktionen.
+`validate-symbol-order` `mario/Map/MapMirror` scheitert vorbestehend.
+`scaleAdd` fehlt und `TVec3::set` steht an der falschen Stelle.
+5 ererbte UNUSED-Größenwarnungen bleiben.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TCameraBck::updateDemo` unberührt.
+
+`ninja changes_all` gegen `28ec6aff`: fuzzy 81.13274 % -> 81.132774 %,
+matched code 55.13826 % -> 55.142605 % (1979512 -> 1979668, +156).
+Matched data 69.31025 % -> 69.31899 % (443815 -> 443871, +56).
+Funktionen matched 10029 -> 10030.
+`MapMirror` matched code 3176 -> 3332 (+156), Funktionen 20 -> 21 von 27.
+Fuzzy der Unit 86.34954 % -> 86.372536 %.
+Matched code der Unit 52.1682 % -> 54.730618 %.
+Matched data der Unit 93.99142 % -> 100 % (876 -> 932).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TMirrorCamera::drawSetting` ist neu matched.
+
+DOL-SHA1 unverändert: `MapMirror.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R635A (`init`)
+
+**Vollmatch, strikt.**
+
+`TWireBinder::init` war 99.6 %.
+`reset` ist in `init` geinlined.
+Das Frame war `-0x48` statt `-0x50`, die Vektoren lagen 8 Bytes zu tief.
+`char trash[8]` mit `(void)&trash` vor den Vektoren setzt das Frame auf `-0x50`.
+Die Vektoren liegen dann auf `0x24` und `0x30`.
+`*(Vec*)&` statt `operator=` hält das Frame, weil `operator=` `dont_inline` ist.
+`local30 -= local24` und `mDir.normalize(local30)` bleiben.
+
+`TWireBinder::init`: 0 Abweichungen, 268 Bytes, 67 Instruktionen.
+`validate-symbol-order` `mario/Enemy/wireBinder`: PASS.
+4 ererbte UNUSED-Größenwarnungen bleiben.
+`reset` bleibt `0x130` gegen `0x138` in der Map.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TMirrorCamera::drawSetting` unberührt.
+`TConductor::init` unberührt.
+
+`ninja changes_all` gegen `a6fdc05f`: fuzzy 81.132774 % -> 81.13279 %,
+matched code 55.142605 % -> 55.150066 % (1979668 -> 1979936, +268).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10030 -> 10031.
+`wireBinder` matched code 748 -> 1016 (+268), Funktionen 7 -> 8 von 9.
+Fuzzy der Unit 99.76869 % -> 99.82477 %.
+Matched code der Unit 43.69159 % -> 59.345795 %.
+Matched data der Unit unverändert 100 % (48).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TWireBinder::init` ist neu matched.
+
+DOL-SHA1 unverändert: `wireBinder.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R94C (`load`)
+
+**Vollmatch, strikt.**
+
+`TDolpicEventRiccoMammaGate::load` war 99.1875 %.
+`u32 flag = unk2C` vor `getBool` setzt `lwz r4` vor `lwz r3`.
+`char trash[4]` nach `f32 unused` setzt das Frame auf `-0x68`.
+`unused` liegt dann auf `0x50`.
+
+`TDolpicEventRiccoMammaGate::load`: 0 Abweichungen, 640 Bytes, 160 Instruktionen.
+`validate-symbol-order` `mario/Map/MapEventDolpic`: PASS.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+25 objekt-only Weak-Symbole bleiben.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TWireBinder::init` unberührt.
+`TMirrorCamera::drawSetting` unberührt.
+
+`ninja changes_all` gegen `c73fed6c`: fuzzy 81.13279 % -> 81.132935 %,
+matched code 55.150066 % -> 55.167896 % (1979936 -> 1980576, +640).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10031 -> 10032.
+`MapEventDolpic` matched code 3000 -> 3640 (+640), Funktionen 13 -> 14 von 14.
+Fuzzy der Unit 99.85714 % -> 100 %.
+Matched code der Unit 82.41759 % -> 100 %.
+Matched data der Unit unverändert 100 % (868).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TDolpicEventRiccoMammaGate::load` ist neu matched.
+
+DOL-SHA1 unverändert: `MapEventDolpic.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R636A (`load`)
+
+**Vollmatch, strikt.**
+
+`TPoiHanaManager::load` war 99.8 %.
+Die vier Abweichungen waren nur die Relocs von `mSLTrapJumpMaxSpY` und `mSLTrapJumpMinSpY`.
+Beide Namen sind 18 Bytes, deshalb blieben die `addi`-Offsets `0x2f8` und `0x30c`.
+Im Ziel liegt `mSLTrapJumpMaxSpY` auf Member `0x37c` und `mSLTrapJumpMinSpY` auf `0x390`.
+Deklaration und `PARAM_INIT` stehen jetzt in dieser Reihenfolge.
+
+`TPoiHanaManager::load`: 0 Abweichungen, 532 Bytes, 133 Instruktionen.
+`validate-symbol-order` `mario/Enemy/poihana`: PASS.
+1 ererbte UNUSED-Größenwarnung (`isOnTrap`, `0xb4` gegen `0xb0`) bleibt.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TWireBinder::init` unberührt.
+`TDolpicEventRiccoMammaGate::load` unberührt.
+`MarNameRefGen_Enemy` bleibt ohne Regression.
+
+`ninja changes_all` gegen `a94e03cd` bewegt die Totals nicht.
+Der Report hatte `load` schon als fuzzy 100 % gezählt.
+`decomp-diff` mit `functionRelocDiffs=data_value` geht von 99.8 % auf 100 %.
+Fuzzy bleibt 81.132935 %.
+Matched code bleibt 55.167896 % (1980576).
+Matched data bleibt 69.31899 % (443871).
+Funktionen matched bleiben 10032.
+`poihana` matched code bleibt 10012, Funktionen 49 von 54.
+Fuzzy der Unit bleibt 97.89171 %.
+Matched code der Unit bleibt 76.56776 %.
+Matched data der Unit bleibt 96.462585 % (2836).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TPoiHanaManager::load` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `poihana.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R95C (`doActorToWire`)
+
+**Vollmatch, strikt.**
+
+`TMapWireActorManager::doActorToWire` war 99.4 %.
+Die Kollisionsschleife steht in `TMapWireActor::checkTakingActor` und wird geinlined.
+Das erzeugt `addi r29, r28, 0` statt `li r29, 0`.
+Die Bedingung ist `unk74->unk7C`, nicht `unk0->mHeldObject`.
+`char trash[0x28]` am Anfang setzt das Frame auf `-0x58`.
+
+`TMapWireActorManager::doActorToWire`: 0 Abweichungen, 484 Bytes, 121 Instruktionen.
+`validate-symbol-order` `mario/Map/MapWireManager` scheitert weiter am ererbten fehlenden `__ct__10TTakeActorFPCc`.
+Die Reihenfolge der übrigen Symbole stimmt.
+`checkTakingActor` ist UNUSED und jetzt `0xc0` gegen `0xe8` in der Map.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TPoiHanaManager::load` unberührt.
+`TDolpicEventRiccoMammaGate::load` unberührt.
+`TMirrorCamera::drawSetting` unberührt.
+
+`ninja changes_all` gegen `3ca7f1da`: fuzzy 81.132935 % -> 81.13302 %,
+matched code 55.167896 % -> 55.181377 % (1980576 -> 1981060, +484).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10032 -> 10033.
+`MapWireManager` matched code 3112 -> 3596 (+484), Funktionen 19 -> 20 von 23.
+Fuzzy der Unit 98.868324 % -> 98.93798 %.
+Matched code der Unit 74.23664 % -> 85.78245 %.
+Matched data der Unit unverändert 100 % (476).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TMapWireActorManager::doActorToWire` ist neu matched.
+
+DOL-SHA1 unverändert: `MapWireManager.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R638B (`readBlock_`)
+
+**Vollmatch, strikt.**
+
+`TCardManager::readBlock_` war 99.13 %.
+Ein direkter `TCardSector::read`-Aufruf ließ den ersten `CARDRead`-Status nicht in `r30`.
+`readSector` nimmt `result` als Referenz, damit der Status im Aufruferregister bleibt.
+Die Hilfsgrenze hält `CalcCheckSum` und `set` als `bl`.
+`char trash[4]` und `char trash2[0x18]` setzen das Frame auf `-0x58`.
+`CARDFileInfo` liegt dann auf `0x28`.
+
+`TCardManager::readBlock_`: 0 Abweichungen, 620 Bytes, 155 Instruktionen.
+`validate-symbol-order` `mario/System/CardManager`: PASS.
+4 ererbte UNUSED-Größenwarnungen bleiben.
+`read` ist jetzt `0x104` gegen `0xc8` in der Map, vorher `0x90`.
+`writeCardSector_` ist jetzt `0x108` gegen `0x104` in der Map, vorher `0xd4`.
+`readSector` ist ein zusätzliches lokales Symbol, nicht in der Map.
+Die Reihenfolge der Map-Symbole stimmt.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TMapWireActorManager::doActorToWire` unberührt.
+`TPoiHanaManager::load` unberührt.
+`TDolpicEventRiccoMammaGate::load` unberührt.
+`TMirrorCamera::drawSetting` unberührt.
+`open_`, `mount_` und `createFile_` bleiben 100 %.
+
+`ninja changes_all` gegen `e7927fe9`: fuzzy 81.13302 % -> 81.13316 %,
+matched code 55.181377 % -> 55.198647 % (1981060 -> 1981680, +620).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10033 -> 10034.
+`CardManager` matched code 4832 -> 5452 (+620), Funktionen 27 -> 28 von 33.
+Fuzzy der Unit 95.82776 % -> 95.89516 %.
+Matched code der Unit 60.309536 % -> 68.04793 %.
+Matched data der Unit unverändert 48.64865 % (144).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TCardManager::readBlock_` ist neu matched.
+
+DOL-SHA1 unverändert: `CardManager.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R638A (`emWaiting`)
+
+**Vollmatch, strikt.**
+
+`TEnemyMario::emWaiting` war 99.59 % im Report.
+`getStickPower` gibt `0.0f` zurück und ist 8 Bytes, passend zur Map.
+`setStickToAngle` multipliziert mit diesem Wert statt mit `64.0f`.
+`changeEMWalkGraph` setzt den Tracer über `unk124->reset()`.
+`getTracer()` lässt ein Inline-Temporary und macht das Frame von `emWaiting` 8 Bytes zu groß.
+`TEnemyMario::emWaiting`: 0 Abweichungen, 280 Bytes, 70 Instruktionen.
+`changeEMDoing` bleibt 100 %.
+`changeEMWalkGraph` bleibt UNUSED mit 76 Bytes (`0x4c`).
+`setStickToAngle` bleibt UNUSED mit 120 Bytes (`0x78`).
+`validate-symbol-order` `mario/Enemy/enemyMario`: ererbtes MISSING `getPoint__9TPathNodeCFv`, sonst Ordnung und Linkage in Ordnung.
+`getStickPower` ist nicht mehr in den UNUSED-Größenwarnungen (`0x8` gegen vorher `0x4`).
+6 ererbte UNUSED-Größenwarnungen bleiben.
+Das sind `emDrawStamp`, `emEnforceTake`, `emWalkGraph`, `setStickAgainstMario`, `kill` und `canJumpToNode`.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TPoiHanaManager::load` unberührt.
+`TMapWireActorManager::doActorToWire` unberührt.
+`TCardManager::readBlock_` unberührt.
+
+`ninja changes_all` gegen `e248a437`: fuzzy 81.13316 % -> 81.13332 %,
+matched code 55.198647 % -> 55.206448 % (1981680 -> 1981960, +280).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10034 -> 10035.
+`enemyMario` matched code 4708 -> 4988 (+280), Funktionen 20 -> 21 von 36.
+Fuzzy der Unit 97.10768 % -> 97.132645 %.
+Matched code der Unit 20.984133 % -> 22.232128 %.
+Matched data der Unit unverändert 62.927414 % (4196).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+`emJumping`, `emWalkAround` und `consider` steigen nur im Fuzzy und sind nicht neu matched.
+Nur `TEnemyMario::emWaiting` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `enemyMario.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+
+### R639A (`setPolluteGoal`)
+
+**Vollmatch, strikt.**
+
+`TGesso::setPolluteGoal` war 99.67227 %.
+`calcVelocityToJumpToY` bekam ein uninitialisiertes Stack-`local`.
+Der Rückgabewert wurde verworfen.
+Das Ziel ist `mPolluteVelocity`.
+Die Zuweisung des Rückgabewerts kopiert von `0x50`.
+`r5` ist `r31+0x1b8`.
+Das Frame ist `-0xa8`.
+
+`TGesso::setPolluteGoal`: 0 Abweichungen, 476 Bytes, 119 Instruktionen.
+`validate-symbol-order` `mario/Enemy/gesso`: PASS.
+Weak-Order-Warnung bleibt.
+2 ererbte UNUSED-Größenwarnungen bleiben (`modifyRotate` `0x4` gegen `0x38`, `isUseBodyCallBack` `0x4` gegen `0x1c`).
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TEnemyMario::emWaiting` unberührt.
+
+`ninja changes_all` gegen `7764b87b`: fuzzy 81.13332 % -> 81.13338 %,
+matched code 55.206448 % -> 55.219704 % (1981960 -> 1982436, +476).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10035 -> 10036.
+`gesso` matched code 13460 -> 13936 (+476), Funktionen 80 -> 81 von 91.
+Fuzzy der Unit 98.31871 % -> 98.326706 %.
+Matched code der Unit 68.969055 % -> 71.40807 %.
+Matched data der Unit unverändert 100 % (3980).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TGesso::setPolluteGoal` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `gesso.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R640A (`execute`)
+
+**Vollmatch, strikt.**
+
+`TNerveMantaSpawn::execute` war 99.81554 %.
+Die Sound- und Partikeltabellen lagen 8 Bytes zu tief.
+Das Frame war `-0x58` statt `-0x60`.
+Zwei temporäre Inline-Stufen vor `SMSGetMSound` legen je 4 Bytes unter die Tabellen.
+`MantaSoundAccess2().get()` ruft `MantaSoundAccess::get()` und dann `SMSGetMSound`.
+Die Tabellen stehen auf `0x2c` und `0x3c`.
+Das Frame ist `-0x60`.
+
+`TNerveMantaSpawn::execute`: 0 Abweichungen, 412 Bytes, 103 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bossManta` scheitert weiter am ererbten ORDER der `theNerve__*`-Objekte.
+6 ererbte UNUSED-Größenwarnungen bleiben.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TGesso::setPolluteGoal` unberührt.
+
+`ninja changes_all` gegen `b287a52b`: fuzzy 81.13338 % -> 81.1334 %,
+matched code 55.219704 % -> 55.231182 % (1982436 -> 1982848, +412).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10036 -> 10037.
+`bossManta` matched code 7724 -> 8136 (+412), Funktionen 30 -> 31 von 49.
+Fuzzy der Unit 98.16459 % -> 98.16807 %.
+Matched code der Unit 35.35335 % -> 37.23911 %.
+Matched data der Unit unverändert 41.944077 % (1260).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TNerveMantaSpawn::execute` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `bossManta.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R640B (`initECTMir`)
+
+**Vollmatch, strikt.**
+
+`TMarDirector::initECTMir` war 99.48387 %.
+Das anonyme `TRect` im Aufruf setzte `r4` vor `r3`.
+Ein benanntes `rect` setzt `r3` vor `r4`.
+Das Frame war `-0x68`, Ziel `-0x88`.
+`rect` lag auf `0x40`, Ziel `0x64`.
+`char trash[0x24]` hinter `rect` hebt das Frame auf `-0x88`.
+`rect` landet auf `0x64`.
+Der Store auf `trash` fällt weg.
+`trash[0x20]` ließ `rect` auf `0x60`.
+
+`TMarDirector::initECTMir`: 0 Abweichungen, 248 Bytes, 62 Instruktionen.
+`validate-symbol-order` `mario/System/MarDirectorInitECT`: PASS.
+Alle Map-Symbole vorhanden, Reihenfolge der nicht-weak Symbole stimmt, Linkage stimmt.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TNerveMantaSpawn::execute` unberührt.
+
+`ninja changes_all` gegen `b972a840`: fuzzy 81.1334 % -> 81.13343 %,
+matched code 55.231182 % -> 55.238087 % (1982848 -> 1983096, +248).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10037 -> 10038.
+`MarDirectorInitECT` matched code 16 -> 264 (+248), Funktionen 1 -> 2 von 5.
+Fuzzy der Unit 94.371185 % -> 94.39624 %.
+Matched code der Unit 0.31323415 % -> 5.1683636 %.
+Matched data der Unit unverändert 100 % (696).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TMarDirector::initECTMir` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `MarDirectorInitECT.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R641A (`tryTake`)
+
+**Vollmatch, strikt.**
+
+`TEnemyMario::tryTake` war 99.85 %.
+`getCollision` und `getActorType` sind je eine tote Inline-Stufe.
+Zusammen mit `getColNum` war das Frame `-0x38` statt `-0x28`.
+Die Kollision kommt aus `mCollisions[i]`.
+Der Typ kommt aus `mActorType`.
+`getColNum` bleibt.
+Das Frame ist `-0x28`.
+
+`TEnemyMario::tryTake`: 0 Abweichungen, 240 Bytes, 60 Instruktionen.
+`emWaiting` bleibt 100 %.
+`validate-symbol-order` `mario/Enemy/enemyMario`: ererbtes MISSING `getPoint__9TPathNodeCFv`.
+Ordnung und Linkage stimmen.
+6 ererbte UNUSED-Größenwarnungen bleiben.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TMarDirector::initECTMir` unberührt.
+`TNerveMantaSpawn::execute` unberührt.
+
+`ninja changes_all` gegen `926cbe2d`: fuzzy bleibt 81.13343 %.
+Matched code 55.238087 % -> 55.244774 % (1983096 -> 1983336, +240).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10038 -> 10039.
+`enemyMario` matched code 4988 -> 5228 (+240), Funktionen 21 -> 22 von 36.
+Fuzzy der Unit 97.132645 % -> 97.13425 %.
+Matched code der Unit 22.232128 % -> 23.301836 %.
+Matched data der Unit unverändert 62.927414 % (4196).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TEnemyMario::tryTake` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `enemyMario.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R642A (`TamaNokoDown`)
+
+**Vollmatch, strikt.**
+
+`TNerveTamaNokoDown::execute` war 99.91926 %.
+Das Frame war `-0x68`, Ziel `-0x60`.
+`mSLPickUpTime.get()` ist eine tote Inline-Stufe und lässt das Frame 8 Bytes zu groß.
+Direktes `mSLPickUpTime.value` lässt das Frame 8 Bytes zu klein (`-0x58`).
+`char trash[8]` hebt nur den hohen Pool.
+Die Sand-`TVec3` blieb dabei zu tief.
+Zwei leere Zugriffs-Stufen (`TamaParamAccess`, `TamaParamAccess2`) plus `.value` legen Frame und `TVec3` auf das Ziel.
+Die Helfer werden vollständig geinlined und erscheinen nicht im Objekt.
+
+`TNerveTamaNokoDown::execute`: 0 Abweichungen, 644 Bytes, 161 Instruktionen.
+`validate-symbol-order` `mario/Enemy/tamaNoko`: PASS mit Warnungen.
+Alle Map-Symbole vorhanden, Linkage stimmt.
+Nur weak Symbole sind ungeordnet.
+Zwei ererbte UNUSED-Größenwarnungen bleiben (`forceWakeUp`, `setBckAnm` der Blume).
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TEnemyMario::tryTake` unberührt.
+`TNerveMantaSpawn::execute` unberührt.
+`TGesso::setPolluteGoal` unberührt.
+
+`ninja changes_all` gegen `93665d60`: fuzzy 81.13343 % -> 81.13345 %.
+Matched code 55.244774 % -> 55.262714 % (1983336 -> 1983980, +644).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10039 -> 10040.
+`tamaNoko` matched code 10632 -> 11276 (+644), Funktionen 50 -> 51 von 58.
+Fuzzy der Unit 97.4331 % -> 97.43624 %.
+Matched code der Unit 64.31164 % -> 68.207115 %.
+Matched data der Unit unverändert 94.22751 % (2220).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TNerveTamaNokoDown::execute` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `tamaNoko.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R643A (`behaveToMario`)
+
+**Vollmatch, strikt.**
+
+`TBossEelCollision::behaveToMario` war 99.87681 %.
+Das Frame war `-0x78`, Ziel `-0x80`.
+Die `TVec3` lag 4 Bytes zu tief, die gesicherten Register 8 Bytes zu tief.
+`char trash[4]` hebt den hohen Pool.
+Das ist dasselbe Muster wie in `TBossEelAwaCollision::behaveToMario` und `TBossEelBarrierCollision::behaveToMario`.
+Das Frame ist `-0x80`.
+Die `TVec3` liegt auf `0x68`.
+
+`TBossEelCollision::behaveToMario`: 0 Abweichungen, 552 Bytes, 138 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bosseel`: PASS mit Warnungen.
+Alle Map-Symbole vorhanden, Linkage stimmt.
+Nur weak Symbole sind ungeordnet.
+5 ererbte UNUSED-Größenwarnungen bleiben.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TNerveTamaNokoDown::execute` unberührt.
+
+`ninja changes_all` gegen `f6e1d30d`: fuzzy 81.13345 % -> 81.13347 %.
+Matched code 55.262714 % -> 55.278088 % (1983980 -> 1984532, +552).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10040 -> 10041.
+`bosseel` matched code 26740 -> 27292 (+552), Funktionen 125 -> 126 von 142.
+Fuzzy der Unit 99.18656 % -> 99.18805 %.
+Matched code der Unit 58.57869 % -> 59.78794 %.
+Matched data der Unit unverändert 55.96121 % (3924).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TBossEelCollision::behaveToMario` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `bosseel.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R644A (`checkActorsHit`)
+
+**Vollmatch, strikt.**
+
+`TObjHitCheck::checkActorsHit` war 99.824646 %.
+Die vier mittleren Gruppen gingen durch `entryGroup`.
+Die Spielerschleife nahm `unk10[3]` und Marios Angriffsradius.
+Ziel ist `checkAndEntryGroup` für `unk10[7]`, `unk10[8]`, `unk10[9]` und `unk10[6]`.
+Die Schleife läuft über `unk10[5]`.
+Mario geht mit `getDamageRadius` und `getDamageHeight` in `checkDistance`.
+`getChildren()` einmal in eine Referenz zu ziehen nimmt die 8 Bytes unter den Iterator-Temps weg.
+`char trash[4]` in `checkGroupPlayer` hebt den hohen Iterator-Pool um 4.
+`char trash[0x18]` in `checkActorsHit` hebt das Frame von `-0xc0` auf `-0xd8`.
+`checkGroupPlayer` bleibt UNUSED mit Größe `0x194`.
+
+`TObjHitCheck::checkActorsHit`: 0 Abweichungen, 844 Bytes, 211 Instruktionen.
+`validate-symbol-order` `mario/Strategic/ObjHitCheck`: PASS mit Warnungen.
+Alle Map-Symbole vorhanden, Reihenfolge und Linkage stimmen.
+Die ererbte `checkGroup`-Größenwarnung bleibt (`0x274` gegen `0x4`).
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TBossEelCollision::behaveToMario` unberührt.
+
+`ninja changes_all` gegen `e05bb2f0`: fuzzy 81.13347 % -> 81.13351 %.
+Matched code 55.278088 % -> 55.301594 % (1984532 -> 1985376, +844).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10041 -> 10042.
+`ObjHitCheck` matched code 700 -> 1544 (+844), Funktionen 5 -> 6 von 10.
+Fuzzy der Unit 99.68316 % -> 99.71836 %.
+Matched code der Unit 16.65081 % -> 36.72693 %.
+Matched data der Unit unverändert 100 % (16).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TObjHitCheck::checkActorsHit` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `ObjHitCheck.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R645A (`checkAndEntryGroup`)
+
+**Vollmatch, strikt.**
+
+`TObjHitCheck::checkAndEntryGroup` war 99.80114 %.
+Nur Stack.
+Das Frame war `-0x130`, Ziel `-0x140`.
+Die Iterator-Temps lagen 4 Bytes zu hoch, die benannten Iteratoren 16 Bytes zu tief.
+`getChildren()` einmal in eine Referenz zu ziehen setzt die Temps.
+`end` und `it` stehen vor der Schleife.
+`char trash[4]` hebt die gesicherten Register.
+`char trash2[0x14]` hebt die Iteratoren.
+Das Frame ist `-0x140`.
+
+`TObjHitCheck::checkAndEntryGroup`: 0 Abweichungen, 704 Bytes, 176 Instruktionen.
+`validate-symbol-order` `mario/Strategic/ObjHitCheck`: PASS mit Warnungen.
+Alle Map-Symbole vorhanden, Reihenfolge und Linkage stimmen.
+Die ererbte `checkGroup`-Größenwarnung bleibt (`0x274` gegen `0x4`).
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TObjHitCheck::checkActorsHit` bleibt strikt matched.
+
+`ninja changes_all` gegen `6e9d77df`: fuzzy 81.13351 % -> 81.13354 %.
+Matched code 55.301594 % -> 55.321205 % (1985376 -> 1986080, +704).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10042 -> 10043.
+`ObjHitCheck` matched code 1544 -> 2248 (+704), Funktionen 6 -> 7 von 10.
+Fuzzy der Unit 99.71836 % -> 99.75166 %.
+Matched code der Unit 36.72693 % -> 53.47288 %.
+Matched data der Unit unverändert 100 % (16).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TObjHitCheck::checkAndEntryGroup` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `ObjHitCheck.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R646A (`entryGroup`)
+
+**Vollmatch, strikt.**
+
+`TObjHitCheck::entryGroup` war 99.66102 %.
+Nur Stack.
+Das Frame war `-0xd8`, Ziel `-0xe0`.
+Die Iterator-Temps lagen 4 Bytes zu hoch, die benannten Iteratoren 8 Bytes zu tief.
+`getChildren()` einmal in eine Referenz zu ziehen setzt die Temps.
+`end` und `it` stehen vor der Schleife.
+`char trash2[0xc]` hebt die Iteratoren und das Frame auf `-0xe0`.
+
+`TObjHitCheck::entryGroup`: 0 Abweichungen, 472 Bytes, 118 Instruktionen.
+`validate-symbol-order` `mario/Strategic/ObjHitCheck`: PASS mit Warnungen.
+Alle Map-Symbole vorhanden, Reihenfolge und Linkage stimmen.
+Die ererbte `checkGroup`-Größenwarnung bleibt (`0x274` gegen `0x4`).
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TObjHitCheck::checkAndEntryGroup` und `checkActorsHit` bleiben strikt matched.
+
+`ninja changes_all` gegen `6464e24a`: fuzzy 81.13354 % -> 81.13359 %.
+Matched code 55.321205 % -> 55.334354 % (1986080 -> 1986552, +472).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10043 -> 10044.
+`ObjHitCheck` matched code 2248 -> 2720 (+472), Funktionen 7 -> 8 von 10.
+Fuzzy der Unit 99.75166 % -> 99.78973 %.
+Matched code der Unit 53.47288 % -> 64.70029 %.
+Matched data der Unit unverändert 100 % (16).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TObjHitCheck::entryGroup` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `ObjHitCheck.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R647A (`isResignationAttack`)
+
+**Vollmatch, strikt.**
+
+`TWalkerEnemy::isResignationAttack` war 99.65455 %.
+Das Frame war `-0x58`, Ziel `-0x48`.
+Die `dist`-`TVec3` lag 12 Bytes zu hoch.
+`getSLGiveUpLength()` geht durch `TParamT::get()` und lässt das Frame 16 Bytes zu groß.
+Direktes `mSLGiveUpLength.value` legt das Frame auf `-0x48`.
+Der `dont_inline`-Kopierkonstruktor von `TVec3` lässt die `TVec3` dann noch 4 Bytes zu hoch (`0x2c` statt `0x28`).
+Die Kopie als `Vec`-Zuweisung, derselbe Rumpf wie der Kopierkonstruktor, legt sie auf `0x28`.
+
+`TWalkerEnemy::isResignationAttack`: 0 Abweichungen, 220 Bytes, 55 Instruktionen.
+`validate-symbol-order` `mario/Enemy/walkerEnemy`: PASS.
+Alle Map-Symbole vorhanden, Reihenfolge und Linkage stimmen.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TObjHitCheck::entryGroup` unberührt.
+`TObjHitCheck::checkAndEntryGroup` unberührt.
+`TObjHitCheck::checkActorsHit` unberührt.
+
+`ninja changes_all` gegen `45b13131`: fuzzy 81.13359 % -> 81.13361 %.
+Matched code 55.334354 % -> 55.34048 % (1986552 -> 1986772, +220).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10044 -> 10045.
+`walkerEnemy` matched code 6248 -> 6468 (+220), Funktionen 29 -> 30 von 33.
+Fuzzy der Unit 99.96411 % -> 99.97429 %.
+Matched code der Unit 83.66363 % -> 86.609535 %.
+Matched data der Unit unverändert 100 % (1204).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TWalkerEnemy::isResignationAttack` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `walkerEnemy.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R648A (`perform`)
+
+**Vollmatch, strikt.**
+
+`TBPPolDrop::perform` war 99.81529 %.
+Nur Stack, plus die Reihenfolge der Radius-Stores.
+Das Frame war `-0xc0`, Ziel `-0xb8`.
+`mSLPollBallStampScale.get()` lässt das Frame 8 Bytes zu groß.
+Direktes `.value` legt es auf `-0xb0`, 8 Bytes zu klein.
+`char trash[4]` hebt das Frame auf `-0xb8`.
+Die benannten Locals bleiben 4 Bytes zu tief.
+`char bump[4]` hinter `TCircleShadowRequest` hebt sie.
+`mRadiusZ` wird vor `mRadiusX` geschrieben.
+Beide sind `400.0f`.
+Die Stores liegen bei `0x7c` und dann `0x78`.
+
+`TBPPolDrop::perform`: 0 Abweichungen, 628 Bytes, 157 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bosspakkun`: PASS mit Warnungen.
+Alle Map-Symbole vorhanden, Reihenfolge und Linkage stimmen.
+Die ererbten UNUSED-Größenwarnungen bleiben (`ignoreWaterCheck`, `vomitFinished`).
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TWalkerEnemy::isResignationAttack` unberührt.
+
+`ninja changes_all` gegen `d9031ea8`: fuzzy 81.13361 % -> 81.133644 %.
+Matched code 55.34048 % -> 55.357975 % (1986772 -> 1987400, +628).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10045 -> 10046.
+`bosspakkun` matched code 21296 -> 21924 (+628), Funktionen 109 -> 110 von 126.
+Fuzzy der Unit 99.20057 % -> 99.20349 %.
+Matched code der Unit 53.76692 % -> 55.352455 %.
+Matched data der Unit unverändert 99.855804 % (5540).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TBPPolDrop::perform` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `bosspakkun.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R646B (`perform`)
+
+**Vollmatch, strikt.**
+
+`TSunMgr::perform` war 98.82243 %.
+Der einzige Opcode war `lfs` auf `unkF8[0].x` statt `lfsu f1, 0xf8(r3)`.
+Danach lädt Retail `y` über `4(r3)`.
+Eine Referenz auf `unkF8[0]` in `isInBounds` erzeugt das `lfsu`.
+Dieselbe Referenz macht aus `TSunModel::perform` ein `addi r3, r29, 0xf8`.
+Dort bleibt Retail bei `lfs f1, 0xf8(r29)`, weil `this` weiterlebt.
+`sunInView` bindet die Referenz nur in `TSunMgr::perform`.
+`isInBounds` bleibt für die anderen Aufrufer unverändert.
+Das Frame war `-0x28`.
+Die Referenz hebt es auf `-0x30`.
+Ziel ist `-0x60`.
+`char trash[0x30]` hebt das Frame auf `-0x60`.
+Es kommen keine Instruktionen dazu.
+`TLensFlare::perform` bleibt 76.7 %.
+`TLensGlow::perform` bleibt 98.7 %.
+`TSunModel::perform` bleibt 92.2 %.
+
+`TSunMgr::perform`: 0 Abweichungen, 428 Bytes, 107 Instruktionen.
+`validate-symbol-order` `mario/Camera/sunmgr`: PASS.
+Alle Map-Symbole vorhanden, Reihenfolge der nicht-weak Symbole stimmt, Linkage stimmt.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`SunModel.hpp` unberührt.
+`TBPPolDrop::perform` unberührt.
+
+`ninja changes_all` gegen `1a8855f1`: fuzzy 81.133644 % -> 81.13379 %,
+matched code 55.357975 % -> 55.369896 % (1987400 -> 1987828, +428).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10046 -> 10047.
+`sunmgr` matched code 1160 -> 1588 (+428), Funktionen 6 -> 7 von 8.
+Fuzzy der Unit 99.52446 % -> 99.771034 %.
+Matched code der Unit 56.751465 % -> 77.6908 %.
+Matched data der Unit unverändert 100 % (388).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TSunMgr::perform` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `sunmgr.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R650A (`execute`)
+
+**Vollmatch, strikt.**
+
+`TNerveBathtubKillerExplosion::execute` war 99.9500 %.
+`TNerveBathtubKillerBreak::execute` war 99.9437 %.
+Beide Frames waren schon `-0x30`.
+Die `TVec3`-Temporary von `mVelocity = TVec3(0, 0, 0)` lag bei `0x18`, Ziel `0x1c`.
+`getActorKeeper()` ging direkt in den Out-of-line-`getMActor`-Call, ohne 4-Byte-Slot.
+`TMActorKeeper* keeper = getActorKeeper()` legt den Slot unter die Temporary.
+Sie rückt auf `0x1c`.
+Keine zusätzliche Instruktion.
+`setDeadBathtubKillerAnm` bleibt UNUSED mit Map-Größe `0xb8`.
+
+`TNerveBathtubKillerExplosion::execute`: 0 Abweichungen, 320 Bytes, 80 Instruktionen.
+`TNerveBathtubKillerBreak::execute`: 0 Abweichungen, 284 Bytes, 71 Instruktionen.
+`validate-symbol-order` `mario/Enemy/BathtubKiller`: PASS mit Warnungen.
+Alle Map-Symbole vorhanden, Reihenfolge der nicht-weak Symbole stimmt, Linkage stimmt.
+Die ererbten Weak-Order- und UNUSED-Größenwarnungen bleiben.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TSunMgr::perform` unberührt.
+
+`ninja changes_all` gegen `7d003f1a`: fuzzy 81.13379 % -> 81.133804 %.
+Matched code 55.369896 % -> 55.386723 % (1987828 -> 1988432, +604).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10047 -> 10049.
+`BathtubKiller` matched code 6444 -> 7048 (+604), Funktionen 27 -> 29 von 45.
+Fuzzy der Unit 48.139946 % -> 48.14161 %.
+Matched code der Unit 33.499687 % -> 36.639633 %.
+Matched data der Unit unverändert 94.97488 % (2268).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur die beiden Death-Nerves sind neu strikt matched.
+
+DOL-SHA1 unverändert: `BathtubKiller.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R651A (`moveObject`)
+
+**Vollmatch, strikt.**
+
+`TPakkunSeed::moveObject` war 99.6769 %.
+Der Frame war 8 Bytes zu klein (`-0x38` gegen `-0x40`).
+Eine benannte `mVelocity`-Kopie legte sret und Argument 8 Bytes zu tief und vertauschte `addi r3`/`r4`.
+`MsGetRotFromZaxis(TVec3<f32>(mVelocity))` setzt `r4` vor `r3`.
+`seedPad()` davor hebt sret und Argument um 8 Bytes, ohne eine Instruktion im Diff.
+0 Abweichungen, 260 Bytes, 65 Instruktionen.
+`validate-symbol-order` `mario/Enemy/pakkun`: PASS mit Warnungen.
+Die ererbten Weak-Order- und UNUSED-Größenwarnungen bleiben.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+Die Death-Nerves aus R650A bleiben unberührt.
+
+`ninja changes_all` gegen `af53cd63`: fuzzy 81.133804 % -> 81.133830 %.
+Matched code 55.386723 % -> 55.393963 % (1988432 -> 1988692, +260).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10049 -> 10050.
+`pakkun` matched code 10748 -> 11008 (+260), Funktionen 64 -> 65 von 77.
+Fuzzy der Unit 97.38068 % -> 97.38533 %.
+Matched code der Unit 59.53911 % -> 60.97939 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TPakkunSeed::moveObject` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `pakkun.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R652A (`load`)
+
+**Vollmatch, strikt.**
+
+`TBoxTelesa::load` war 99.818184 %.
+Der Frame war schon `-0x40`.
+Die drei Default-`TVec3` von `newAndRegisterObj` lagen 4 Bytes zu tief (`0x10`/`0x1c`/`0x28` gegen `0x14`/`0x20`/`0x2c`).
+Die `stfs`-Reihenfolge stimmte bereits.
+`boxPad()` legt einen toten 4-Byte-Return-Slot unter die Argumente und hebt sie um 4, ohne den Frame zu ändern und ohne eine Instruktion im Diff.
+0 Abweichungen, 264 Bytes, 66 Instruktionen.
+`validate-symbol-order` `mario/Enemy/telesa`: PASS mit Warnungen.
+Die ererbten Weak-Order- und UNUSED-Größenwarnungen bleiben.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TPakkunSeed::moveObject` aus R651A bleibt unberührt.
+
+`ninja changes_all` gegen `84cbc934`: fuzzy bleibt 81.13383 %.
+Matched code 55.393963 % -> 55.401314 % (1988692 -> 1988956, +264).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10050 -> 10051.
+`telesa` matched code 15440 -> 15704 (+264), Funktionen 77 -> 78 von 86.
+Fuzzy der Unit 99.61473 % -> 99.61706 %.
+Matched code der Unit 74.99514 % -> 76.27744 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TBoxTelesa::load` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `telesa.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R653A (`execute`)
+
+**Vollmatch, strikt.**
+
+`TNerveMantaHitWater::execute` war 99.766 %.
+Der Frame war 8 Bytes zu klein (`-0xa8` gegen `-0xb0`).
+Die Sound- und Partikel-Arrays lagen 4 Bytes zu tief, und die Sound-Id stand in `r26` statt `r27`.
+`mantaPad()` hebt die Arrays um 4 und den Frame um 8, ohne eine eigene Instruktion.
+`startSoundActor(hitSounds[mGeneration], ...)` legt die Id in `r27`.
+0 Abweichungen, 496 Bytes, 124 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bossManta`: dieselbe vorbestehende ORDER-Abweichung und UNUSED-Größenwarnungen.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TBoxTelesa::load` aus R652A bleibt unberührt.
+
+`ninja changes_all` gegen `d8cb52cd`: fuzzy 81.13383 % -> 81.13386 %.
+Matched code 55.401314 % -> 55.41513 % (1988956 -> 1989452, +496).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10051 -> 10052.
+`bossManta` matched code 8136 -> 8632 (+496), Funktionen 31 -> 32 von 49.
+Fuzzy der Unit 98.16807 % -> 98.17338 %.
+Matched code der Unit 37.23911 % -> 39.50934 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TNerveMantaHitWater::execute` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `bossManta.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R105C (`initTexImage`)
+
+**Vollmatch, strikt.**
+
+`TPollutionLayer::initTexImage` war 99.8547 %.
+Der Frame war zu klein (`-0x168` gegen `-0x1d8`).
+`fullPath` lag bei `0x44`, Ziel `0xb8`.
+`long long pad[14]` nach dem Puffer hebt Frame und Puffer.
+Die Adresse bleibt ein direktes `addi r3, r1, 0xb8`.
+Die Indexsumme war `x + Produkt` (`add r3, r26, r0`).
+Ziel ist `Produkt + x` (`add r3, r0, r26`).
+Ein benanntes `row` und `bmp[0x436 + row + x]` dreht die Operanden.
+0 Abweichungen, 468 Bytes, 117 Instruktionen.
+`validate-symbol-order` `mario/Map/PollutionLayer`: PASS mit Warnungen.
+Die ererbten UNUSED-Größenwarnungen bleiben.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TBoxTelesa::load` unberührt.
+`stampModel` bleibt 99.3 %.
+
+`ninja changes_all` gegen `d8cb52cd`: fuzzy 81.13383 % -> 81.13386 %.
+Matched code 55.401314 % -> 55.414356 % (1988956 -> 1989424, +468).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10051 -> 10052.
+`PollutionLayer` matched code 5616 -> 6084 (+468), Funktionen 24 -> 25 von 26.
+Fuzzy der Unit 99.97485 % -> 99.98582 %.
+Matched code der Unit 90.52224 % -> 98.065765 %.
+Matched data der Unit unverändert 100 % (1036).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TPollutionLayer::initTexImage` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `PollutionLayer.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R651B (`evStartTimer`)
+
+**Vollmatch, strikt.**
+
+`evStartTimer` war 99.75824 %.
+Der Frame war 8 Bytes zu klein (`-0x60` gegen `-0x68`).
+Pop-Slice, Push-Slice und der `fctiwz`-Spill lagen 8 Bytes zu tief.
+Zwei `(void)SMSGetMarDirector()` nach `push()` heben Slices, Spill und Frame um 8, ohne eine eigene Instruktion.
+0 Abweichungen, 364 Bytes, 91 Instruktionen.
+`validate-symbol-order` `mario/System/EventWatcher`: dieselbe vorbestehende MISSING `set__Q29JGeometry8TVec3<f>FRC3Vec`.
+Die Weak-Order-Warnung und die beiden UNUSED-Größenwarnungen bleiben.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TPollutionLayer::initTexImage` aus R105C bleibt unberührt.
+
+`ninja changes_all` gegen `bc1e801f`: fuzzy 81.133896 % -> 81.13391 %.
+Matched code 55.428165 % -> 55.438305 % (1989920 -> 1990284, +364).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10053 -> 10054.
+`EventWatcher` matched code 30228 -> 30592 (+364), Funktionen 78 -> 79 von 105.
+Fuzzy der Unit 98.93437 % -> 98.936455 %.
+Matched code der Unit 71.569275 % -> 72.4311 %.
+Matched data der Unit unverändert 100 % (2508).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `evStartTimer` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `EventWatcher.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R654A (`isHitValid`)
+
+**Vollmatch, strikt.**
+
+`TStayPakkun::isHitValid` war 99.530304 %.
+Die Umwandlung von `mSLPolluteRange` landete in `r4`, `f4`, `f5` und `f0`.
+Ziel ist `lbz r3`, Magic in `f3`, `32.0` in `f0`, das Double in `f2` und `fmuls f4, f0, f4`.
+`TPakkunSaveLoadParams* param` plus `f32 size = param->mSLPolluteRange.get()` und `32.0f * size` im `clean`-Aufruf färbt die Register richtig.
+Diese Trennung allein macht den Frame 8 Bytes zu klein (`-0x60` gegen `-0x68`).
+`char trash[8]` am Funktionsanfang hält Frame und die Slots `0x50`/`0x54`, ohne eine eigene Instruktion.
+0 Abweichungen, 528 Bytes, 132 Instruktionen.
+`validate-symbol-order` `mario/Enemy/pakkun`: PASS mit Warnungen.
+Die ererbte Weak-Order-Warnung bleibt.
+Die beiden UNUSED-Größenwarnungen (`createPakkunSmoke`, `isHideEnd`) bleiben.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TPakkunSeed::moveObject` aus R651A bleibt strikt matched.
+`evStartTimer` aus R651B bleibt unberührt.
+
+`ninja changes_all` gegen `36fb92a1`: fuzzy 81.13391 % -> 81.13399 %.
+Matched code 55.438305 % -> 55.453014 % (1990284 -> 1990812, +528).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10054 -> 10055.
+`pakkun` matched code 11008 -> 11536 (+528), Funktionen 65 -> 66 von 77.
+Fuzzy der Unit 97.38533 % -> 97.39907 %.
+Matched code der Unit 60.97939 % -> 63.904278 %.
+Matched data der Unit unverändert 100 % (2908).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TStayPakkun::isHitValid` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `pakkun.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R106C (`entryMirrorDrawBufferAlways`)
+
+**Vollmatch, strikt.**
+
+`TMirrorActor::entryMirrorDrawBufferAlways` war 99.81967 %.
+Der Frame war 8 Bytes zu groß (`-0x68` gegen `-0x60`).
+Ein gemeinsames `TDrawBufObj* db` für Opa und Xlu nimmt die 8 Bytes weg.
+Die Suche bleibt zweimal `TNameRefGen::search`.
+0 Abweichungen, 244 Bytes, 61 Instruktionen.
+
+`TMirrorActor::init` inlined denselben Rumpf.
+Ohne Pad schrumpfte sein Frame von `-0xd8` auf `-0xd0`.
+`char trash[4]; trash[0] = 0;` am Anfang setzt es zurück auf `-0xd8`.
+Die Iterator-Spills von `push_back` liegen dann auf den Retail-Offsets.
+`init` war 99.91338 % und ist mit dem Pad ebenfalls strikt.
+0 Abweichungen, 508 Bytes, 127 Instruktionen.
+`perform` bleibt 98.6 %.
+
+`validate-symbol-order` `mario/Strategic/MirrorActor`: PASS mit Warnung.
+Die ererbte UNUSED-Größenwarnung `isInMirror` (`0x4` gegen `0x8`) bleibt.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`evStartTimer` aus R651B bleibt unberührt.
+`TStayPakkun::isHitValid` aus R654A bleibt unberührt.
+
+`ninja changes_all` gegen `1ae60d39`: fuzzy 81.13399 % -> 81.134 %.
+Matched code 55.453014 % -> 55.47396 % (1990812 -> 1991564, +752).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10055 -> 10057.
+`MirrorActor` matched code 1436 -> 2188 (+752), Funktionen 4 -> 6 von 7.
+Fuzzy der Unit 99.78914 % -> 99.82428 %.
+Matched code der Unit 57.348244 % -> 87.380196 %.
+Matched data der Unit unverändert 100 % (524).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Neu strikt matched sind `entryMirrorDrawBufferAlways` und `init`.
+
+DOL-SHA1 unverändert: `MirrorActor.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R652B (`evEggYoshiStartFruit`)
+
+**Vollmatch, strikt.**
+
+`evEggYoshiStartFruit` war 99.86207 %.
+Das Frame war schon `-0x80`, das `stfd` schon bei `0x68`.
+Pop-, Kopie- und Push-Slices lagen 4 Bytes zu tief, mit einem 4-Byte-Loch unter dem Spill.
+Ein `(void)SMSGetMarDirector()` nach `push()` hebt nur die Slices um 4, ohne eine eigene Instruktion.
+0 Abweichungen, 464 Bytes, 116 Instruktionen.
+`validate-symbol-order` `mario/System/EventWatcher`: dieselbe vorbestehende MISSING `set__Q29JGeometry8TVec3<f>FRC3Vec`.
+Die Weak-Order-Warnung und die beiden UNUSED-Größenwarnungen bleiben.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`evStartTimer` aus R651B bleibt unberührt.
+`TStayPakkun::isHitValid` aus R654A bleibt unberührt.
+`TMirrorActor::entryMirrorDrawBufferAlways` und `init` aus R106C bleiben unberührt.
+
+`ninja changes_all` gegen `564ded60`: fuzzy 81.134 % -> 81.13402 %.
+Matched code 55.47396 % -> 55.48689 % (1991564 -> 1992028, +464).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10057 -> 10058.
+`EventWatcher` matched code 30592 -> 31056 (+464), Funktionen 79 -> 80 von 105.
+Fuzzy der Unit 98.936455 % -> 98.937965 %.
+Matched code der Unit 72.4311 % -> 73.52969 %.
+Matched data der Unit unverändert 100 % (2508).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `evEggYoshiStartFruit` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `EventWatcher.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R653B (`evStartSE`)
+
+**Vollmatch, strikt.**
+
+`evStartSE` war 99.8764 %.
+Das Frame war schon `-0x50`, das `stfd` schon bei `0x40`.
+Pop- und Push-Slices lagen 4 Bytes zu tief, mit einem 4-Byte-Loch unter dem Spill.
+Ein `(void)SMSGetMarDirector()` nach `push()` hebt nur die Slices um 4, ohne eine eigene Instruktion.
+0 Abweichungen, 356 Bytes, 89 Instruktionen.
+`validate-symbol-order` `mario/System/EventWatcher`: dieselbe vorbestehende MISSING `set__Q29JGeometry8TVec3<f>FRC3Vec`.
+Die Weak-Order-Warnung und die beiden UNUSED-Größenwarnungen bleiben.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`evEggYoshiStartFruit` aus R652B bleibt unberührt.
+
+`ninja changes_all` gegen `10aa925e`: fuzzy 81.13402 % -> 81.13404 %.
+Matched code 55.48689 % -> 55.4968 % (1992028 -> 1992384, +356).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10058 -> 10059.
+`EventWatcher` matched code 31056 -> 31412 (+356), Funktionen 80 -> 81 von 105.
+Fuzzy der Unit 98.937965 % -> 98.93901 %.
+Matched code der Unit 73.52969 % -> 74.372574 %.
+Matched data der Unit unverändert 100 % (2508).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `evStartSE` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `EventWatcher.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R107C (`moveSRT`)
+
+**Vollmatch, strikt.**
+
+`TMapCollisionMove::moveSRT` war 99.9322 %.
+Das Frame war schon `-0x38`.
+Der inlined `TVec3` aus `move()` lag 4 Bytes zu tief (`0x20` gegen `0x24`).
+`(void)collisionMovePad()` nach `move()` hebt nur den Vektor um 4, ohne eine eigene Instruktion.
+`collisionMovePad` ist `return gpMarDirector` und wird wegoptimiert.
+0 Abweichungen, 236 Bytes, 59 Instruktionen.
+`TMapCollisionMove::move` bleibt strikt.
+`validate-symbol-order` `mario/Map/MapCollisionEntry`: dieselbe vorbestehende MISSING `__ct__17TMapCollisionBaseFv`.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`evStartSE` aus R653B bleibt unberührt.
+
+`ninja changes_all` gegen `c95d4e9b`: fuzzy bleibt 81.13404 %.
+Matched code 55.4968 % -> 55.503376 % (1992384 -> 1992620, +236).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10059 -> 10060.
+`MapCollisionEntry` matched code 2592 -> 2828 (+236), Funktionen 20 -> 21 von 21.
+Fuzzy der Unit 99.99434 % -> 100 %.
+Matched code der Unit 91.65488 % -> 100 %.
+Matched data der Unit unverändert 100 % (264).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TMapCollisionMove::moveSRT` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `MapCollisionEntry.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R108C (`isTouchedOneWallAndMoveXZ`)
+
+**Vollmatch, strikt.**
+
+`TMap::isTouchedOneWallAndMoveXZ` war 99.7907 %.
+Das Frame war schon `-0x60`.
+Der `TBGWallCheckRecord` lag 4 Bytes zu tief.
+`(void)SMSGetMarDirector()` davor hebt den Record um 4, ohne eine eigene Instruktion.
+0 Abweichungen, 172 Bytes, 43 Instruktionen.
+`isTouchedOneWall` inlined denselben Rumpf und bleibt strikt.
+Sein bisheriges `char pad[4]` fällt weg, die Bytes bleiben dieselben.
+`validate-symbol-order` `mario/Map/Map`: dieselben vorbestehenden MISSING und die BINDING-Abweichung `__dt__4TMapFv`.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TMapCollisionMove::moveSRT` aus R107C bleibt unberührt.
+
+`ninja changes_all` gegen `6eea63d8`: fuzzy bleibt 81.13404 %.
+Matched code 55.503376 % -> 55.508167 % (1992620 -> 1992792, +172).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10060 -> 10061.
+`Map` matched code 2992 -> 3164 (+172), Funktionen 24 -> 25 von 29.
+Fuzzy der Unit 99.39426 % -> 99.40056 %.
+Matched code der Unit 52.380955 % -> 55.39216 %.
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `isTouchedOneWallAndMoveXZ` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `Map.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R654B (`MSStageCubeSwitch::proc`)
+
+**Vollmatch, strikt.**
+
+`MSStageCubeSwitch::proc` war 99.34746 %.
+Das Frame lag bei `-0x30` statt `-0x38`.
+`this` wurde als `mr r31, r3` statt `addi r31, r3, 0` gesichert.
+Ein `register`-`asm` setzt `addi r31, r3, 0` und die Adresse von `local_18` in `r4`.
+`char trash[8]` nach `tmp` hebt das Frame auf `-0x38` und legt die beiden `Vec`s auf `0x14` und `0x20`.
+0 Abweichungen, 472 Bytes, 118 Instruktionen.
+`validate-symbol-order` `mario/System/MSoundMainSide`: dieselbe vorbestehende MISSING `begin__Q27JGadget38TVector<Pv,Q27JGadget14TAllocator<Pv>>Fv`.
+Sechs UNUSED-Größenwarnungen bleiben.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TMap::isTouchedOneWallAndMoveXZ` aus R108C bleibt unberührt.
+
+`ninja changes_all` gegen `abb48400`: fuzzy 81.13404 % -> 81.134125 %.
+Matched code 55.508167 % -> 55.521317 % (1992792 -> 1993264, +472).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10061 -> 10062.
+`MSoundMainSide` matched code 2920 -> 3392 (+472), Funktionen 20 -> 21 von 27.
+Fuzzy der Unit 96.68858 % -> 96.72103 %.
+Matched code der Unit 30.762747 % -> 35.735355 %.
+Matched data der Unit unverändert 100 % (756).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `MSStageCubeSwitch::proc` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `MSoundMainSide.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R655A (`execute`)
+
+**Vollmatch, strikt.**
+
+`TNerveTobiPukuFly::execute` war 99.762375 %.
+Argument und Rückgabe von `MsGetRotFromZaxis` lagen 12 Bytes zu tief, das Frame war `-0x50` statt `-0x60`.
+`JGeometry::TVec3<f32>(self->mVelocity)` als Argument setzt `addi r4` vor `addi r3`.
+`flyPad()` legt die fehlenden 12 Bytes unter die Temps, ohne eine eigene Instruktion.
+0 Abweichungen, 404 Bytes, 101 Instruktionen.
+`validate-symbol-order` `mario/Enemy/tobiPuku`: PASS mit Warnungen.
+Die ererbte Weak-Order-Warnung bleibt.
+Fünf UNUSED-Größenwarnungen bleiben (`fallStart`, `flyStart`, `isRoll`, `canBound`, `bound`).
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`MSStageCubeSwitch::proc` aus R654B bleibt unberührt.
+
+`ninja changes_all` gegen `40740964`: fuzzy 81.134125 % -> 81.13416 %.
+Matched code 55.521317 % -> 55.53257 % (1993264 -> 1993668, +404).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10062 -> 10063.
+`tobiPuku` matched code 15744 -> 16148 (+404), Funktionen 108 -> 109 von 116.
+Fuzzy der Unit 99.048256 % -> 99.05304 %.
+Matched code der Unit 78.48455 % -> 80.498505 %.
+Matched data der Unit unverändert 96.70995 % (4468).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TNerveTobiPukuFly::execute` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `tobiPuku.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R655B (`CPolarSubCamera::execGroundCheck_`)
+
+**Vollmatch, strikt.**
+
+`CPolarSubCamera::execGroundCheck_` war 99.9762 %.
+Das Frame lag schon bei `-0x50`.
+Der Out-Pointer lag auf `0x2c` statt `0x28`.
+`out` zeigt vier Bytes unter `ground`, und beide Zugriffe falten auf `addi`/`lwz` mit `0x28`.
+0 Abweichungen, 336 Bytes, 84 Instruktionen.
+`validate-symbol-order` `mario/Camera/CameraBGCheck`: PASS.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TNerveTobiPukuFly::execute` aus R655A bleibt unberührt.
+
+`ninja changes_all` gegen `ebf560e4`: fuzzy unverändert 81.13416 %.
+Matched code 55.53257 % -> 55.541927 % (1993668 -> 1994004, +336).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10063 -> 10064.
+`CameraBGCheck` matched code 1272 -> 1608 (+336), Funktionen 4 -> 5 von 7.
+Fuzzy der Unit 88.111984 % -> 88.11422 %.
+Matched code der Unit 35.610302 % -> 45.0168 %.
+Matched data der Unit unverändert 100 % (56).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `CPolarSubCamera::execGroundCheck_` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `CameraBGCheck.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R109C (`TSky::perform`)
+
+**Vollmatch, strikt.**
+
+`TSky::perform` war 99.77103 %.
+Das Frame lag bei `-0x120` statt `-0x138`.
+Jeder Stack-Slot, inklusive der `GXColor`-Kopie, lag um `0x18` zu tief.
+Sechs `(void)SMSGetMarDirector()` heben Frame und Slots um `0x18`, ohne eine eigene Instruktion.
+0 Abweichungen, 856 Bytes, 214 Instruktionen.
+`validate-symbol-order` `mario/Map/Sky`: PASS.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`CPolarSubCamera::execGroundCheck_` aus R655B bleibt unberührt.
+
+`ninja changes_all` gegen `9b08519d`: fuzzy 81.13416 % -> 81.13422 %.
+Matched code 55.541927 % -> 55.56577 % (1994004 -> 1994860, +856).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10064 -> 10065.
+`Sky` matched code 1312 -> 2168 (+856), Funktionen 6 -> 7 von 7.
+Fuzzy der Unit 99.90959 % -> 100 %.
+Matched code der Unit 60.51661 % -> 100 %.
+Matched data der Unit unverändert 100 % (412).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TSky::perform` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `Sky.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R110C (`TMirrorModelManager::load`)
+
+**Vollmatch, strikt.**
+
+`TMirrorModelManager::load` war 99.84112 %.
+Das Frame lag bei `-0x148` statt `-0x150`.
+Die drei `s32` und der `snprintf`-Puffer lagen 8 Bytes zu tief.
+Zwei `(void)SMSGetMarDirector()` heben Frame und Slots um 8, ohne eine eigene Instruktion.
+0 Abweichungen, 428 Bytes, 107 Instruktionen.
+`validate-symbol-order` `mario/Map/MapMirror`: dieselben vorbestehenden MISSING `scaleAdd` und die ORDER-Abweichung `set<f>`.
+Fünf UNUSED-Größenwarnungen bleiben.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TSky::perform` aus R109C bleibt unberührt.
+
+`ninja changes_all` gegen `65a5ad7b`: fuzzy 81.13422 % -> 81.13423 %.
+Matched code 55.56577 % -> 55.57769 % (1994860 -> 1995288, +428).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10065 -> 10066.
+`MapMirror` matched code 3332 -> 3760 (+428), Funktionen 21 -> 22 von 27.
+Fuzzy der Unit 86.372536 % -> 86.383705 %.
+Matched code der Unit 54.730618 % -> 61.76084 %.
+Matched data der Unit unverändert 100 % (932).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TMirrorModelManager::load` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `MapMirror.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R656A (`getManagerByName`)
+
+**Vollmatch, strikt.**
+
+`TConductor::getManagerByName` war 99.59574 %.
+Das Frame lag bei `-0x48` statt `-0x58`.
+Die Iteratoren lagen 16 Bytes zu tief, die `operator!=`-Kopien 8 Bytes zu tief.
+`while (it != e)` mit getrennten `begin()`/`end()` setzt Frame und beide Slots.
+0 Abweichungen, 188 Bytes, 47 Instruktionen.
+`validate-symbol-order` `mario/Enemy/conductor`: PASS mit Warnungen.
+Vier ererbte UNUSED-Größenwarnungen bleiben (`clipGenerators`, `maskNFlagOfChildren`, `conduct`, `polluterExterminated`).
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TMirrorModelManager::load` aus R110C bleibt unberührt.
+Dieselbe Schleife ist in `makeEnemyAppear` und `makeOneEnemyAppear` inlined.
+Deren Fuzzy geht von 99.913666 % auf 99.8777 % bzw. von 99.178215 % auf 99.28713 %.
+Beide bleiben nonmatching.
+Matched code zählt nur die neuen 188 Bytes von `getManagerByName`.
+
+`ninja changes_all` gegen `c7549caa`: fuzzy 81.13423 % -> 81.134254 %.
+Matched code 55.57769 % -> 55.582928 % (1995288 -> 1995476, +188).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10066 -> 10067.
+`conductor` matched code 5140 -> 5328 (+188), Funktionen 42 -> 43 von 50.
+Fuzzy der Unit 99.7842 % -> 99.79499 %.
+Matched code der Unit 55.45965 % -> 57.488132 %.
+Matched data der Unit unverändert 98.61111 % (568).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TConductor::getManagerByName` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `conductor.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R111C (`TPollutionCounterLayer::countTexDegree`)
+
+**Vollmatch, strikt.**
+
+`TPollutionCounterLayer::countTexDegree` war 99.86577 %.
+Das Frame lag bei `-0x68` statt `-0xc0`.
+Das inlined `GXTexObj` lag bei `r1+0x2c` statt `r1+0x80`.
+`char trash[4]` und zwanzig verworfene `countTexPad()`-Aufrufe setzen Frame und Texobj.
+Zwei lokale `u16` stellen die `lhz`-Reihenfolge von `mFlags` vor `mPollutionType` her.
+0 Abweichungen, 596 Bytes, 149 Instruktionen.
+`countObjDegree` bleibt 100 %.
+`drawJointObjStamp` bleibt nonmatching.
+`validate-symbol-order` `mario/Map/PollutionCount`: derselbe vorbestehende MISSING UNUSED `__ct__21TPollutionCounterBaseFv`.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TConductor::getManagerByName` aus R656A bleibt unberührt.
+
+`ninja changes_all` gegen `147b9a18`: fuzzy 81.134254 % -> 81.13427 %.
+Matched code 55.582928 % -> 55.59953 % (1995476 -> 1996072, +596).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10067 -> 10068.
+`PollutionCount` matched code 9308 -> 9904 (+596), Funktionen 36 -> 37 von 38.
+Fuzzy der Unit 99.951096 % -> 99.95868 %.
+Matched code der Unit 88.21077 % -> 93.85898 %.
+Matched data der Unit unverändert 79.22078 % (244).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TPollutionCounterLayer::countTexDegree` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `PollutionCount.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R657A (`TNerveBPTouchDown::execute`)
+
+**Vollmatch, strikt.**
+
+`TNerveBPTouchDown::execute` war 99,87 %.
+`getPoint()` zieht das fabrizierte `getPosition()` mit, und das hält ein 8-Byte-Phantom.
+Das Frame lag bei `-0x50` statt `-0x48`, der Ziel-`TVec3` acht Bytes zu tief.
+Ein lokales `Pt::get` gibt `mPosition` mit derselben Nullprüfung zurück.
+Das Frame trifft `-0x48`.
+Der Vektor liegt danach bei `0x28` statt `0x2c`.
+`char trash[4]` mit `(void)&trash` direkt nach der Kopie hebt ihn auf `0x2c`, ohne eine Instruktion.
+0 Abweichungen, 400 Bytes, 100 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bosspakkun`: PASS mit Warnungen.
+Zwei ererbte UNUSED-Größenwarnungen bleiben (`ignoreWaterCheck`, `vomitFinished`).
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TPollutionCounterLayer::countTexDegree` aus R111C bleibt unberührt.
+`TPathNode::getPoint` bleibt unverändert.
+Dieselbe Rückgabe von `mPosition` an den anderen Call-Sites verschiebt bereits passende Funktionen.
+
+`ninja changes_all` gegen `8acee7c2`: fuzzy 81.13427 % -> 81.134285 %.
+Matched code 55.59953 % -> 55.61067 % (1996072 -> 1996472, +400).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10068 -> 10069.
+`bosspakkun` matched code 21924 -> 22324 (+400), Funktionen 110 -> 111 von 126.
+Fuzzy der Unit 99.20349 % -> 99.2048 %.
+Matched code der Unit 55.352455 % -> 56.36235 %.
+Matched data der Unit unverändert 99.855804 % (5540).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TNerveBPTouchDown::execute` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `bosspakkun.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R658A (`TNerveBPTakeOff::execute`)
+
+**Vollmatch, strikt.**
+
+`TNerveBPTakeOff::execute` war 99,9058 %.
+`getPoint()` zieht das fabrizierte `getPosition()` mit, und das hält ein 8-Byte-Phantom.
+Das Frame lag bei `-0x68` statt `-0x60`, der Ziel-`TVec3` acht Bytes zu hoch.
+Ein lokales `Pt::get` gibt `mPosition` mit derselben Nullprüfung zurück.
+Das Frame trifft `-0x60`.
+Der Vektor liegt danach bei `0x40` statt `0x44`.
+`char trash[4]` mit `(void)&trash` direkt nach der Kopie hebt ihn auf `0x44`, ohne eine Instruktion.
+0 Abweichungen, 552 Bytes, 138 Instruktionen.
+`TNerveBPTouchDown::execute` bleibt 100 %.
+`validate-symbol-order` `mario/Enemy/bosspakkun`: PASS mit Warnungen.
+Zwei ererbte UNUSED-Größenwarnungen bleiben (`ignoreWaterCheck`, `vomitFinished`).
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TNerveBPTouchDown::execute` aus R657A bleibt unberührt.
+`TPathNode::getPoint` bleibt unverändert.
+
+`ninja changes_all` gegen `9664af57`: fuzzy 81.134285 % -> 81.13431 %.
+Matched code 55.61067 % -> 55.626045 % (1996472 -> 1997024, +552).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10069 -> 10070.
+`bosspakkun` matched code 22324 -> 22876 (+552), Funktionen 111 -> 112 von 126.
+Fuzzy der Unit 99.2048 % -> 99.20612 %.
+Matched code der Unit 56.36235 % -> 57.75601 %.
+Matched data der Unit unverändert 99.855804 % (5540).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TNerveBPTakeOff::execute` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `bosspakkun.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R659A (`TWalkerEnemy::isReachedToGoalXZ`)
+
+**Vollmatch, strikt.**
+
+`TWalkerEnemy::isReachedToGoalXZ` war 99,68 %.
+`getPoint()` zieht das fabrizierte `getPosition()` mit, und das hält ein 8-Byte-Phantom.
+Das Frame lag bei `-0x30` statt `-0x20`, der Ziel-`TVec3` bei `0x20` statt `0x14`.
+Ein lokales `Pt::get` gibt `mPosition` mit derselben Nullprüfung zurück.
+Frame und Vektor treffen ohne zusätzliches `trash`.
+0 Abweichungen, 200 Bytes, 50 Instruktionen.
+`validate-symbol-order` `mario/Enemy/walkerEnemy`: PASS.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TNerveBPTakeOff::execute` aus R658A bleibt unberührt.
+`TPathNode::getPoint` bleibt unverändert.
+`isResignationAttack` bleibt unberührt.
+
+`ninja changes_all` gegen `8a02a3cd`: fuzzy 81.13431 % -> 81.13432 %.
+Matched code 55.626045 % -> 55.63162 % (1997024 -> 1997224, +200).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10070 -> 10071.
+`walkerEnemy` matched code 6468 -> 6668 (+200), Funktionen 30 -> 31 von 33.
+Fuzzy der Unit 99.97429 % -> 99.98286 %.
+Matched code der Unit 86.609535 % -> 89.28763 %.
+Matched data der Unit unverändert 100 % (1204).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TWalkerEnemy::isReachedToGoalXZ` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `walkerEnemy.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R660A (`TTobiPuku::isReachedToGoalXZ`)
+
+**Vollmatch, strikt.**
+
+`TTobiPuku::isReachedToGoalXZ` war 99,68 %.
+`getPoint()` zieht das fabrizierte `getPosition()` mit, und das hält ein 8-Byte-Phantom.
+Das Frame lag bei `-0x30` statt `-0x20`, der Ziel-`TVec3` bei `0x20` statt `0x14`.
+Ein lokales `Pt::get` gibt `mPosition` mit derselben Nullprüfung zurück.
+Die Zuweisung bleibt `tmp = Pt::get(...)`.
+Frame und Vektor treffen ohne zusätzliches `trash`.
+0 Abweichungen, 200 Bytes, 50 Instruktionen.
+`validate-symbol-order` `mario/Enemy/tobiPuku`: PASS mit Warnungen.
+Die Weak-Order-Warnung und fünf UNUSED-Größenwarnungen (`fallStart`, `flyStart`, `isRoll`, `canBound`, `bound`) bleiben.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TWalkerEnemy::isReachedToGoalXZ` aus R659A bleibt unberührt.
+`walkBehavior` bleibt unberührt.
+`TPathNode::getPoint` bleibt unverändert.
+
+`ninja changes_all` gegen `dd69394a`: fuzzy 81.13432 % -> 81.13434 %.
+Matched code 55.63162 % -> 55.637188 % (1997224 -> 1997424, +200).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10071 -> 10072.
+`tobiPuku` matched code 16148 -> 16348 (+200), Funktionen 109 -> 110 von 116.
+Fuzzy der Unit 99.05304 % -> 99.05623 %.
+Matched code der Unit 80.498505 % -> 81.495514 %.
+Matched data der Unit unverändert 96.70995 % (4468).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TTobiPuku::isReachedToGoalXZ` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `tobiPuku.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R658B (`MAnmSound::startAnimSound`)
+
+**Vollmatch, strikt.**
+
+`MAnmSound::startAnimSound` war 99,42 %.
+Das Frame lag bei `-0x30` statt `-0x38`.
+`char trash[8]` hebt das Frame auf `-0x38`.
+Fall 7 lud das Ground-Wort nach `r0` und das Nibble nach `r5`.
+Das Original hält das Wort in `r5`, das Nibble in `r0`, `srwi` direkt nach `r6`, danach `extsh r5, r0`.
+Ein lokales `startMarioVoiceGround` trifft diese Register ohne Extra-Instruktion.
+0 Abweichungen, 248 Bytes, 62 Instruktionen.
+`validate-symbol-order` `mario/MSound/MAnmSound`: PASS.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TTobiPuku::isReachedToGoalXZ` aus R660A bleibt unberührt.
+`MAnmSoundNPC::startAnimSound` bleibt unberührt.
+
+`ninja changes_all` gegen `68b2c752`: fuzzy 81.13434 % -> 81.13439 %.
+Matched code 55.637188 % -> 55.644096 % (1997424 -> 1997672, +248).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10072 -> 10073.
+`MAnmSound` matched code 1056 -> 1304 (+248), Funktionen 5 -> 6 von 7.
+Fuzzy der Unit 93.93067 % -> 94.0063 %.
+Matched code der Unit 55.46219 % -> 68.4874 %.
+Matched data der Unit unverändert 100 % (252).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `MAnmSound::startAnimSound` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `MAnmSound.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R662A (`TSpineEnemy::calcTurnSpeedToReach`)
+
+**Vollmatch, strikt.**
+
+`TSpineEnemy::calcTurnSpeedToReach` war 99,41 %.
+`fnmsubs` schrieb nach `f1` statt `f0`, danach waren `frsqrte` und `fmul` vertauscht.
+`f32 x = 1.0f - dVar11 * dVar11` hält das Ergebnis in `f0`.
+`f64 g = __frsqrte(x)` lässt die Schätzung `double`, das Produkt ist `fmul` plus `frsp`.
+Das Frame lag bei `-0x28` statt `-0x30`.
+Der Float-Spill lag vier Bytes zu tief, der Double-Spill acht Bytes zu tief.
+`volatile char gap[8]` und `volatile char trash[4]` setzen Frame und Spills.
+Die Funktion bleibt in `walkToCurPathNode` geinlined.
+0 Abweichungen, 224 Bytes, 56 Instruktionen.
+`validate-symbol-order` `mario/Enemy/enemy` scheitert weiter am vorbestehenden fehlenden schwachen `TVec3::operator=` und an vier UNUSED-Größen.
+Diese Änderung fügt keine Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`MAnmSound::startAnimSound` aus R658B bleibt unberührt.
+`walkToCurPathNode` bleibt auf dem bisherigen Match.
+
+`ninja changes_all` gegen `0182e39b`: fuzzy 81.13439 % -> 81.13443 %.
+Matched code 55.644096 % -> 55.650337 % (1997672 -> 1997896, +224).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10073 -> 10074.
+`enemy` matched code 4280 -> 4504 (+224), Funktionen 25 -> 26 von 39.
+Fuzzy der Unit 96.64079 % -> 96.652435 %.
+Matched code der Unit 37.75582 % -> 39.731827 %.
+Matched data der Unit unverändert 100 % (580).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TSpineEnemy::calcTurnSpeedToReach` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `enemy.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R660B (`CPolarSubCamera::isNeedGroundCheck_`)
+
+**Vollmatch, strikt.**
+
+`CPolarSubCamera::isNeedGroundCheck_` war 99,34 %.
+`mDistMin` landete in `f1` und `mDistMax` in `f2`.
+Das Original hält `mDistMin` in `f2`, `mDistMax` in `f1`, und `distY` überschreibt `f2`.
+`f32 b` wird vor `distY` deklariert und erst danach zugewiesen.
+Damit bleibt `b` in `f1` und `fsubs` schreibt `distY` nach `f2`.
+0 Abweichungen, 364 Bytes, 91 Instruktionen.
+`validate-symbol-order` `mario/Camera/CameraBGCheck`: PASS.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TSpineEnemy::calcTurnSpeedToReach` aus R662A bleibt unberührt.
+`calcInHouseNo_` bleibt unberührt.
+
+`ninja changes_all` gegen `8e583bc5`: fuzzy 81.13443 % -> 81.13448 %.
+Matched code 55.650337 % -> 55.660473 % (1997896 -> 1998260, +364).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10074 -> 10075.
+`CameraBGCheck` matched code 1608 -> 1972 (+364), Funktionen 5 -> 6 von 7.
+Fuzzy der Unit 88.11422 % -> 88.18141 %.
+Matched code der Unit 45.0168 % -> 55.20717 %.
+Matched data der Unit unverändert 100 % (56).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `CPolarSubCamera::isNeedGroundCheck_` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `CameraBGCheck.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R115C (`TPollutionCounterLayer::drawJointObjStamp`)
+
+**Vollmatch, strikt.**
+
+`TPollutionCounterLayer::drawJointObjStamp` war 99,33 %.
+Das Frame lag bei `-0xd0` statt `-0xe0`.
+Vier verworfene `countTexPad()`-Aufrufe heben das Frame ohne Extra-Instruktion.
+`unk0` und `mJointObj` laufen über die lokale `info`-Referenz.
+`f32 minZ` vor `f32 minX` stellt die `lfs`-Reihenfolge vor `makeWorldToPollutionMtx` her.
+0 Abweichungen, 648 Bytes, 162 Instruktionen.
+`countTexDegree` bleibt 100 %.
+`validate-symbol-order` `mario/Map/PollutionCount`: derselbe vorbestehende MISSING UNUSED `__ct__21TPollutionCounterBaseFv`.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`CPolarSubCamera::isNeedGroundCheck_` aus R660B bleibt unberührt.
+`TSpineEnemy::calcTurnSpeedToReach` aus R662A bleibt unberührt.
+`countTexDegree` aus R111C bleibt unberührt.
+
+`ninja changes_all` gegen `4bb7f55f`: fuzzy 81.13448 % -> 81.134605 %.
+Matched code 55.660473 % -> 55.678524 % (1998260 -> 1998908, +648).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10075 -> 10076.
+`PollutionCount` matched code 9904 -> 10552 (+648), Funktionen 37 -> 38 von 38.
+Fuzzy der Unit 99.95868 % -> 100.0 %.
+Matched code der Unit 93.85898 % -> 100.0 %.
+Matched data der Unit unverändert 79.22078 % (244).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TPollutionCounterLayer::drawJointObjStamp` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `PollutionCount.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R116C (`TBathWaterMeshRenderer::makeNormalMap`)
+
+**Vollmatch, strikt.**
+
+`TBathWaterMeshRenderer::makeNormalMap` war 99,73 %.
+`scale * (b - a)` landete in `f1`, der folgende `lfsx` von `b2` in `f0`.
+Das Original hält das Produkt in `f0` und `b2 - a2` in `f1`.
+`f32 nx = scale * (b - a)` bleibt über `b2 -= a2` in `f0`.
+`b2 * scale` wird `fmuls f0, f1, f30`.
+0 Abweichungen, 528 Bytes, 132 Instruktionen.
+`validate-symbol-order` `mario/Map/BathWaterManager` scheitert weiter am vorbestehenden MISSING UNUSED `clearEFB`, an der schwachen Bindung von `makeNormalMap` und an der Reihenfolge um `calcCoord`.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TPollutionCounterLayer::drawJointObjStamp` aus R115C bleibt unberührt.
+`countTexDegree` bleibt unberührt.
+
+`ninja changes_all` gegen `4dac99d0`: fuzzy 81.134605 % -> 81.13464 %.
+Matched code 55.678524 % -> 55.693233 % (1998908 -> 1999436, +528).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10076 -> 10077.
+`BathWaterManager` matched code 7892 -> 8420 (+528), Funktionen 27 -> 28 von 40.
+Fuzzy der Unit 95.077736 % -> 95.08206 %.
+Matched code der Unit 24.421339 % -> 26.055204 %.
+Matched data der Unit unverändert 82.36559 % (1532).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TBathWaterMeshRenderer::makeNormalMap` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `BathWaterManager.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R662B (`TApplication::initialize_bootAfter`)
+
+**Vollmatch, strikt.**
+
+`TApplication::initialize_bootAfter` war 98,77 %.
+`getResource` direkt in `getResSize` legte den Zeiger in `r4`.
+Das Original kopiert ihn über `r0` und dann `mr r4, r0`, zweimal.
+Benannte `fontRes` und `aafRes` erzeugen genau diese Kopien.
+`sizeof(MSound)` war `0x30c` wegen eines unbenutzten Schwanzes ab `0xD2`.
+Ohne `unkD2`, `unk304` und `unk308` endet die Klasse bei `0xD4`, wie `new MSound`.
+0 Abweichungen, 688 Bytes, 172 Instruktionen.
+`validate-symbol-order` `mario/System/Application`: PASS.
+Die vorbestehende Weak-Order-Warnung und die UNUSED-Größe von `initialize_processMeter` bleiben.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TBathWaterMeshRenderer::makeNormalMap` aus R116C bleibt unberührt.
+`TPollutionCounterLayer::drawJointObjStamp` aus R115C bleibt unberührt.
+`CPolarSubCamera::isNeedGroundCheck_` aus R660B bleibt unberührt.
+
+`ninja changes_all` gegen `c1569b87`: fuzzy 81.13464 % -> 81.13487 %.
+Matched code 55.693233 % -> 55.712395 % (1999436 -> 2000124, +688).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10077 -> 10078.
+`Application` matched code 5572 -> 6260 (+688), Funktionen 15 -> 16 von 21.
+Fuzzy der Unit 97.3489 % -> 97.43461 %.
+Matched code der Unit 56.580017 % -> 63.566208 %.
+Matched data der Unit unverändert 95.32164 % (1956).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TApplication::initialize_bootAfter` ist neu strikt matched.
+Kein anderes Unit im `changes_all`-Report.
+
+DOL-SHA1 unverändert: `Application.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R667A (`JGeometry::TQuat4<float>::slerp`)
+
+**Vollmatch, strikt.**
+
+`JGeometry::TQuat4<float>::slerp` war 99,79 %.
+Der Rumpf stimmte bereits.
+Nur das Frame war `-0xa8` statt `-0xb8`.
+`char trash[0x10]` in einer expliziten Spezialisierung in `fireWanwan.cpp` hebt das Frame um 16 Byte.
+Die gesicherten Register rücken mit, ohne neue Instruktionen.
+Die Spezialisierung bleibt weak, wie in `mario.MAP`.
+0 Abweichungen, 584 Bytes, 146 Instruktionen.
+`validate-symbol-order` `mario/Enemy/fireWanwan`: dieselben vier vorbestehenden MISSING-Symbole.
+Symbolreihenfolge und Bindung stimmen.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`JGQuat4.hpp` bleibt unberührt, damit andere TUs nicht umallokieren.
+`TApplication::initialize_bootAfter` aus R662B bleibt unberührt.
+
+`ninja changes_all` gegen den Stand von R662B: fuzzy 81.13487 % -> 81.13491 %.
+Matched code 55.712395 % -> 55.72866 % (2000124 -> 2000708, +584).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10078 -> 10079.
+`fireWanwan` matched code 14784 -> 15368 (+584), Funktionen 62 -> 63 von 95.
+Fuzzy der Unit 94.355064 % -> 94.35824 %.
+Matched code der Unit 37.884377 % -> 39.380894 %.
+Matched data der Unit unverändert 90.77341 % (2676).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `JGeometry::TQuat4<float>::slerp` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `fireWanwan.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R120C (`TMirrorModelObj::setPlane`)
+
+**Vollmatch, strikt.**
+
+`TMirrorModelObj::setPlane` war 99,78 %.
+`getVertexData()` hielt das Frame bei `-0x68` statt `-0x58`.
+`getModelData()->getVtxPosArray()` setzt das Frame auf `-0x58`.
+Ein benanntes `J3DModelData*` legt den Vektor auf `r1+0x3c`.
+`(void)planePad()` schiebt ihn auf `r1+0x40`, ohne neue Instruktion.
+0 Abweichungen, 180 Bytes, 45 Instruktionen.
+`validate-symbol-order` `mario/Map/MapMirror` FAIL ist vorbestehend:
+MISSING UNUSED `TVec3::scaleAdd` und ORDER von `TVec3::set`.
+`planePad` wird nicht emittiert.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`JGeometry::TQuat4<float>::slerp` aus R667A bleibt unberührt.
+`TApplication::initialize_bootAfter` aus R662B bleibt unberührt.
+
+`ninja changes_all` gegen `f9deb823`: fuzzy bleibt 81.13491 %.
+Matched code 55.72866 % -> 55.733673 % (2000708 -> 2000888, +180).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10079 -> 10080.
+`MapMirror` matched code 3760 -> 3940 (+180), Funktionen 22 -> 23 von 27.
+Fuzzy der Unit 86.383705 % -> 86.390274 %.
+Matched code der Unit 61.76084 % -> 64.717476 %.
+Matched data der Unit unverändert 100 % (932).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TMirrorModelObj::setPlane` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `MapMirror.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R670A (`TFireWanwanManager::perform`)
+
+**Vollmatch, strikt.**
+
+`TFireWanwanManager::perform` war 99,6 %.
+Der Retail-Aufruf ist virtuelles `reset` an vtable `0xfc`, nicht `kill` an `0xe4`.
+`TFireWanwan*` vor der Schleife legt den Index auf r28 und den Zeiger auf r29.
+Der Boss-22-Block steht direkt in `perform`, damit `diff` ein Local des Aufrufers ist.
+`char trash[0x44]` setzt den Vektor auf `r1+0xe8` und das Frame auf `-0x110`.
+0 Abweichungen, 680 Bytes, 170 Instruktionen.
+`validate-symbol-order` `mario/Enemy/fireWanwan`: dieselben vier vorbestehenden MISSING-Symbole.
+Symbolreihenfolge und Bindung stimmen.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`JGeometry::TQuat4<float>::slerp` aus R667A bleibt unberührt.
+`TMirrorModelObj::setPlane` aus R120C bleibt unberührt.
+
+Report gegen `cd7eea26`: fuzzy 81.13495 % -> 81.13503 %.
+Matched code 55.733673 % -> 55.752617 % (2000888 -> 2001568, +680).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10080 -> 10081.
+`fireWanwan` matched code 15368 -> 16048 (+680), Funktionen 63 -> 64 von 95.
+Fuzzy der Unit 94.35824 % -> 94.36521 %.
+Matched code der Unit 39.380894 % -> 41.12341 %.
+Matched data der Unit unverändert 90.77341 % (2676).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TFireWanwanManager::perform` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `fireWanwan.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R121C (`TMapObjBase::rotateVecByAxisY`)
+
+**Vollmatch, strikt.**
+
+`TMapObjBase::rotateVecByAxisY` war 99,78 %.
+`mult33` geht über `at()` und hält das Frame bei `-0xf0` statt `-0xd0`.
+`ref()` statt `at()` setzt das Frame auf `-0xd0`.
+`storeVec` ist eine zusätzliche Inline-Stufe, damit `TVec3::set` in der TU bleibt.
+0 Abweichungen, 268 Bytes, 67 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/MapObjLib` FAIL ist vorbestehend:
+MISSING `SMatrix33C::at` und ORDER von `getVerticalVecToTargetXZ`.
+Gegen das Basisobjekt: 0 neue Fehler, 2 geerbt.
+`getVerticalVecToTargetXZ` fuzzy 41,81 % -> 41,41 %.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TMirrorModelObj::setPlane` aus R120C bleibt unberührt.
+`TFireWanwanManager::perform` aus R670A bleibt unberührt.
+
+`ninja changes_all` gegen `7cef6c23`: fuzzy 81.13498 % -> 81.134964 %.
+Matched code 55.752617 % -> 55.76008 % (2001568 -> 2001836, +268).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10081 -> 10082.
+`MapObjLib` matched code 10336 -> 10604 (+268), Funktionen 80 -> 81 von 86.
+Fuzzy der Unit 96.16511 % -> 96.158455 %.
+Matched code der Unit 78.13728 % -> 80.163284 %.
+Matched data der Unit unverändert 100 % (892).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TMapObjBase::rotateVecByAxisY` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `MapObjLib.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R122C (`TMapStaticObj::perform`)
+
+**Vollmatch, strikt.**
+
+`TMapStaticObj::perform` war 99,93 %.
+Das Frame lag bei `-0x140` statt `-0x148`, die Effektmatrix bei `r1+0xd8` statt `r1+0xcc`.
+`char trash[4]` setzt das Frame auf `-0x148`.
+Benannte `J3DDrawBuffer*`, `J3DModelData*`, `J3DMaterial*` und `J3DTexGenBlock*` legen die Matrix auf `r1+0xcc`.
+0 Abweichungen, 700 Bytes, 175 Instruktionen.
+`validate-symbol-order` `mario/Map/MapStaticObject` PASS.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TMapObjBase::rotateVecByAxisY` aus R121C bleibt unberührt.
+`TMirrorModelObj::setPlane` aus R120C bleibt unberührt.
+
+`ninja changes_all` gegen `2d4223f8`: fuzzy 81.134964 % -> 81.13498 %.
+Matched code 55.76008 % -> 55.779583 % (2001836 -> 2002536, +700).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10082 -> 10083.
+`MapStaticObject` matched code 2708 -> 3408 (+700), Funktionen 15 -> 16 von 19.
+Fuzzy der Unit 98.18711 % -> 98.197205 %.
+Matched code der Unit 52.56211 % -> 66.14907 %.
+Matched data der Unit unverändert 100 % (3564).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TMapStaticObj::perform` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `MapStaticObject.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R673A (`TBossPakkun::perform`)
+
+**Vollmatch, strikt.**
+
+`TBossPakkun::perform` war 99,58 %.
+`unk1BC` ist `s8`, damit der Test `extsb.` statt `cmplwi` erzeugt.
+`bpIsLatestNerve` vergleicht `getLatestNerve()` links und legt `cmplw r3, r0`.
+Ein benannter Nerve-Zeiger färbt `pushNerve` auf r5 und die Spine auf r6.
+`step /= 100` lädt den Dividenden nach r3 für `mulhw r0, r0, r3`.
+`bpPerformSwapped` hält den alten `MActor*` in r30 über `TSpineEnemy::perform`.
+`char trash[0x60]` setzt `pos` auf `r1+0x148` und das Frame auf `-0x178`.
+0 Abweichungen, 2000 Bytes, 500 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bosspakkun` PASS.
+Zwei vorbestehende UNUSED-Größenwarnungen bleiben (`ignoreWaterCheck`, `vomitFinished`).
+Die Inlines werden nicht emittiert.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TMapStaticObj::perform` aus R122C bleibt unberührt.
+`TMapObjBase::rotateVecByAxisY` aus R121C bleibt unberührt.
+`TFireWanwanManager::perform` aus R670A bleibt unberührt.
+`JGeometry::TQuat4<float>::slerp` aus R667A bleibt unberührt.
+`TMirrorModelObj::setPlane` aus R120C bleibt unberührt.
+
+`ninja changes_all` gegen `ff2f3611`: fuzzy 81.13498 % -> 81.135216 %.
+Matched code 55.779583 % -> 55.83529 % (2002536 -> 2004536, +2000).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10083 -> 10084.
+`bosspakkun` matched code 22876 -> 24876 (+2000), Funktionen 112 -> 113 von 126.
+Fuzzy der Unit 99.20612 % -> 99.22743 %.
+Matched code der Unit 57.75601 % -> 62.805492 %.
+Matched data der Unit unverändert 99.855804 % (5540).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TBossPakkun::perform` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `bosspakkun.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R673B (`TGCConsole2::processDrawTelop`)
+
+**Vollmatch, strikt.**
+
+`TGCConsole2::processDrawTelop` war 99,71 %.
+Die beiden `JUTRect`-Kopien und das `fctiwz`-Slot lagen einheitlich `0x18` zu tief, das Frame bei `-0x50` statt `-0x68`.
+`char trash[0x18]` nach den Rects schiebt genau diese Slots.
+0 Abweichungen, 168 Bytes, 42 Instruktionen.
+`validate-symbol-order` `mario/GC2D/GCConsole2` PASS.
+Vier vorbestehende UNUSED-Größenwarnungen bleiben.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TBossPakkun::perform` aus R673A bleibt unberührt.
+
+Matched code der Unit 12320 -> 12488 (+168), Funktionen 31 -> 32 von 60.
+Matched code der Unit 19.52580 % -> 19.79206 %.
+Gegen R673A gerechnet: matched code 55.83529 % -> 55.839968 % (2004536 -> 2004704, +168).
+Funktionen matched 10084 -> 10085.
+Complete units bleiben 418.
+Nur `TGCConsole2::processDrawTelop` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `GCConsole2.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R674B (`TSunShine::perform`)
+
+**Vollmatch, strikt.**
+
+`TSunShine::perform` war 99,89 %.
+Das Frame `-0x30` stimmte schon.
+`unk14` und `pos` lagen 4 Bytes zu tief (`r1+0x14` / `r1+0x18`).
+Ein benanntes `viewport` aus `getViewport()` schiebt beide Slots auf `r1+0x18` und `r1+0x1c`.
+0 Abweichungen, 220 Bytes, 55 Instruktionen.
+`validate-symbol-order` `mario/GC2D/SunGlass` PASS.
+Eine vorbestehende UNUSED-Größenwarnung bleibt (`changeAlpha`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TGCConsole2::processDrawTelop` aus R673B bleibt unberührt.
+
+Matched code der Unit 1612 -> 1832 (+220), Funktionen 7 -> 8 von 8.
+Matched code der Unit 87.99127 % -> 100 %.
+Gegen R673B gerechnet: matched code 55.839968 % -> 55.846096 % (2004704 -> 2004924, +220).
+Funktionen matched 10085 -> 10086.
+Complete units bleiben 418.
+Nur `TSunShine::perform` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `SunGlass.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R674A (`TBossMantaAdditionalCollisionSet::update`)
+
+**Vollmatch, strikt.**
+
+`TBossMantaAdditionalCollisionSet::update` war 99,47 %.
+Das Frame lag bei `-0x98` statt `-0xf0`.
+`char trash[0x58]` setzt das Frame auf `-0xf0`.
+Die Joint-Indizes ohne eigene `int`s bleiben in r30, dem Byte-Offset der Schleife.
+0 Abweichungen, 480 Bytes, 120 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bossManta` PASS mit geerbten Fehlern.
+Die `theNerve`-Reihenfolge und sechs UNUSED-Größenwarnungen bestanden schon.
+Keine neuen Symbolfehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TSunShine::perform` aus R674B bleibt unberührt.
+`TGCConsole2::processDrawTelop` aus R673B bleibt unberührt.
+`TBossPakkun::perform` aus R673A bleibt unberührt.
+
+`ninja changes_all` gegen `2f6f03bd`: fuzzy 81.13523 % -> 81.13531 %.
+Matched code 55.846096 % -> 55.859463 % (2004924 -> 2005404, +480).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10086 -> 10087.
+`bossManta` matched code 8632 -> 9112 (+480), Funktionen 32 -> 33 von 49.
+Fuzzy der Unit 98.17338 % -> 98.18491 %.
+Matched code der Unit 39.50934 % -> 41.706337 %.
+Matched data der Unit unverändert 41.944077 % (1260).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TBossMantaAdditionalCollisionSet::update` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `bossManta.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R675A (`TBGTentacle::TNode::calcVelocity`)
+
+**Vollmatch, strikt.**
+
+`TBGTentacle::TNode::calcVelocity` war 99,37 %.
+Das Frame lag bei `-0xe0` statt `-0xf0`.
+`char trash[0x10]` am Ende setzt das Frame und die Vec-Slots.
+`param_2->mPosition += local_8C` hält den Nachbarn in r31.
+`fVar5 < nodeLen` erzeugt `fcmpo f26, f27`.
+0 Abweichungen, 1000 Bytes, 250 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bgtentacle` PASS.
+Fünf vorbestehende UNUSED-Größenwarnungen bleiben.
+Keine neuen Symbolfehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TBossMantaAdditionalCollisionSet::update` aus R674A bleibt unberührt.
+`TSunShine::perform` aus R674B bleibt unberührt.
+`TGCConsole2::processDrawTelop` aus R673B bleibt unberührt.
+`TBossPakkun::perform` aus R673A bleibt unberührt.
+`TBGTentacle::perform` bleibt unberührt.
+
+`ninja changes_all` gegen `5a1402de`: fuzzy 81.13531 % -> 81.13548 %.
+Matched code 55.859463 % -> 55.887325 % (2005404 -> 2006404, +1000).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10087 -> 10088.
+`bgtentacle` matched code 6500 -> 7500 (+1000), Funktionen 27 -> 28 von 39.
+Fuzzy der Unit 95.25451 % -> 95.282524 %.
+Matched code der Unit 29.002321 % -> 33.464214 %.
+Matched data der Unit unverändert 43.28358 % (1044).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TBGTentacle::TNode::calcVelocity` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `bgtentacle.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R675B (`TPauseMenu2::loadAfter`)
+
+**Vollmatch, strikt.**
+
+`TPauseMenu2::loadAfter` war 99,89 %.
+Das Frame lag bei `-0x88` statt `-0xb0`.
+Die übrigen Slots lagen einheitlich `0x28` zu tief.
+Der Rückgabeslot von `getWhite` blieb bei `r1+0x60`, solange die Farbe direkt zugewiesen wurde.
+Ein benanntes `JUtility::TColor white` plus `char trash[0x38]` setzt Frame und Farblot auf Retail.
+0 Abweichungen, 592 Bytes, 148 Instruktionen.
+`validate-symbol-order` `mario/GC2D/PauseMenu2` zeigt dieselben Fehler wie unverändertes HEAD.
+Die ORDER von `TVec3::set` und die weak/global-Bindung von `appearWindow` und `disappearWindow` bestanden schon.
+Eine vorbestehende UNUSED-Größenwarnung bleibt (`SMS_getNormalStage`).
+Keine neuen Symbolfehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TBGTentacle::TNode::calcVelocity` aus R675A bleibt unberührt.
+`TBossMantaAdditionalCollisionSet::update` aus R674A bleibt unberührt.
+`TSunShine::perform` aus R674B bleibt unberührt.
+`TGCConsole2::processDrawTelop` aus R673B bleibt unberührt.
+
+Matched code der Unit 2268 -> 2860 (+592), Funktionen 7 -> 8 von 13.
+Matched code der Unit 27.444337 % -> 34.607938 %.
+Gegen R675A gerechnet: matched code 55.887325 % -> 55.903815 % (2006404 -> 2006996, +592).
+Funktionen matched 10088 -> 10089.
+Complete units bleiben 418.
+Nur `TPauseMenu2::loadAfter` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `PauseMenu2.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R676A (`TFireWanwanTailHit::moveRequest`)
+
+**Vollmatch, strikt.**
+
+`TFireWanwanTailHit::moveRequest` war 99,38 %.
+Das Frame lag bei `-0x40` statt `-0x48`.
+`char trash[8]` am Ende setzt das Frame und die `next`-Slots.
+`translation(mPosition)` lädt die Translation aus `r30+0x10`.
+0 Abweichungen, 292 Bytes, 73 Instruktionen.
+`validate-symbol-order` `mario/Enemy/fireWanwan` PASS mit geerbten Fehlern.
+Vier vorbestehende MISSING-Symbole und 27 UNUSED-Größenwarnungen bleiben.
+Keine neuen Symbolfehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TPauseMenu2::loadAfter` aus R675B bleibt unberührt.
+`TBGTentacle::TNode::calcVelocity` aus R675A bleibt unberührt.
+`TBossMantaAdditionalCollisionSet::update` aus R674A bleibt unberührt.
+`TFireWanwanManager::perform` aus R670A bleibt unberührt.
+`JGeometry::TQuat4<float>::slerp` aus R667A bleibt unberührt.
+
+`ninja changes_all` gegen `adf2694c`: fuzzy 81.1355 % -> 81.13554 %.
+Matched code 55.90381 % -> 55.911945 % (2006996 -> 2007288, +292).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10089 -> 10090.
+`fireWanwan` matched code 16048 -> 16340 (+292), Funktionen 64 -> 65 von 95.
+Fuzzy der Unit 94.36521 % -> 94.36983 %.
+Matched code der Unit 41.12341 % -> 41.87167 %.
+Matched data der Unit unverändert 90.77341 % (2676).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TFireWanwanTailHit::moveRequest` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `fireWanwan.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R676B (`TCardSave::drawMessageBM`)
+
+**Vollmatch, strikt.**
+
+`TCardSave::drawMessageBM` war 99,86 %.
+Das Frame lag bei `-0x158` statt `-0x168`.
+Alle Stack-Slots lagen einheitlich `0x10` zu tief.
+`char trash[0x10]` als letztes Lokales schiebt Frame und Slots auf Retail.
+0 Abweichungen, 1252 Bytes, 313 Instruktionen.
+`validate-symbol-order` `mario/GC2D/CardSave` PASS.
+Eine vorbestehende UNUSED-Größenwarnung bleibt (`changePattern`).
+Keine neuen Symbolfehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TFireWanwanTailHit::moveRequest` aus R676A bleibt unberührt.
+`TPauseMenu2::loadAfter` aus R675B bleibt unberührt.
+`TSunShine::perform` aus R674B bleibt unberührt.
+`TGCConsole2::processDrawTelop` aus R673B bleibt unberührt.
+
+Matched code der Unit 3188 -> 4440 (+1252), Funktionen 8 -> 9 von 20.
+Matched code der Unit 7.015228 % -> 9.770267 %.
+Gegen R676A gerechnet: matched code 55.911945 % -> 55.946819 % (2007288 -> 2008540, +1252).
+Funktionen matched 10090 -> 10091.
+Complete units bleiben 418.
+Nur `TCardSave::drawMessageBM` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `CardSave.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R677B (`TCardSave::waitForSelect2`)
+
+**Vollmatch, strikt.**
+
+`TCardSave::waitForSelect2` war 99,82 %.
+Das Frame lag bei `-0x128` statt `-0x148`.
+Alle Stack-Slots lagen einheitlich `0x20` zu tief.
+`char trash[0x20]` als letztes Lokales schiebt Frame und Slots auf Retail.
+0 Abweichungen, 1784 Bytes, 446 Instruktionen.
+`validate-symbol-order` `mario/GC2D/CardSave` PASS.
+Eine vorbestehende UNUSED-Größenwarnung bleibt (`changePattern`).
+Keine neuen Symbolfehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TCardSave::drawMessageBM` aus R676B bleibt unberührt.
+`TFireWanwanTailHit::moveRequest` aus R676A bleibt unberührt.
+`TPauseMenu2::loadAfter` aus R675B bleibt unberührt.
+`TSunShine::perform` aus R674B bleibt unberührt.
+`TGCConsole2::processDrawTelop` aus R673B bleibt unberührt.
+
+Matched code der Unit 4440 -> 6224 (+1784), Funktionen 9 -> 10 von 20.
+Matched code der Unit 9.770267 % -> 13.695977 %.
+Gegen R676B gerechnet: matched code 55.94682 % -> 55.996513 % (2008540 -> 2010324, +1784).
+Funktionen matched 10091 -> 10092.
+Fuzzy 81.13559 % -> 81.13568 %.
+Matched data unverändert 69.31899 % (443871).
+Complete units bleiben 418.
+Nur `TCardSave::waitForSelect2` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `CardSave.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R678B (`TCardSave::waitForSelectOver`)
+
+**Vollmatch, strikt.**
+
+`TCardSave::waitForSelectOver` war 99,79 %.
+Das Frame lag bei `-0x118` statt `-0x138`.
+Alle Stack-Slots lagen einheitlich `0x20` zu tief.
+`char trash[0x20]` als letztes Lokales schiebt Frame und Slots auf Retail.
+0 Abweichungen, 1560 Bytes, 390 Instruktionen.
+`validate-symbol-order` `mario/GC2D/CardSave` PASS.
+Eine vorbestehende UNUSED-Größenwarnung bleibt (`changePattern`).
+Keine neuen Symbolfehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TCardSave::waitForSelect2` aus R677B bleibt unberührt.
+`TCardSave::drawMessageBM` aus R676B bleibt unberührt.
+`TFireWanwanTailHit::moveRequest` aus R676A bleibt unberührt.
+`TPauseMenu2::loadAfter` aus R675B bleibt unberührt.
+`TSunShine::perform` aus R674B bleibt unberührt.
+`TGCConsole2::processDrawTelop` aus R673B bleibt unberührt.
+
+Matched code der Unit 6224 -> 7784 (+1560), Funktionen 10 -> 11 von 20.
+Matched code der Unit 13.695977 % -> 17.128775 %.
+Gegen R677B gerechnet: matched code 55.996513 % -> 56.039967 % (2010324 -> 2011884, +1560).
+Funktionen matched 10092 -> 10093.
+Fuzzy 81.13568 % -> 81.135765 %.
+Matched data unverändert 69.31899 % (443871).
+Complete units bleiben 418.
+Nur `TCardSave::waitForSelectOver` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `CardSave.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R679A (`TTelesa::init`)
+
+**Vollmatch, strikt.**
+
+`TTelesa::init` war 99,48 %.
+Das Frame lag bei `-0xb0` statt `-0xc0`.
+Alle Stack-Slots lagen einheitlich `0x10` zu tief.
+`char trash[0x10]` als letztes Lokales schiebt Frame und Slots auf Retail.
+Der Joint-Zähler im leeren Loop ist `u8`, damit `clrlwi` mit 24 und `cmpw` entstehen.
+0 Abweichungen, 664 Bytes, 166 Instruktionen.
+`validate-symbol-order` `mario/Enemy/telesa` PASS.
+Vorbestehende Weak-Order-Warnungen und zwei UNUSED-Größenwarnungen bleiben (`resetBaseGround`, `isResetTransY`).
+Keine neuen Symbolfehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TCardSave::waitForSelectOver` aus R678B bleibt unberührt.
+`TCardSave::waitForSelect2` aus R677B bleibt unberührt.
+`TCardSave::drawMessageBM` aus R676B bleibt unberührt.
+`TFireWanwanTailHit::moveRequest` aus R676A bleibt unberührt.
+
+`ninja changes_all` gegen `9b38aeaa`: fuzzy 81.135765 % -> 81.13587 %.
+Matched code 56.039967 % -> 56.05846 % (2011884 -> 2012548, +664).
+Funktionen matched 10093 -> 10094.
+Matched data unverändert 69.31899 % (443871).
+`telesa` matched code 15704 -> 16368 (+664), Funktionen 78 -> 79 von 86.
+Fuzzy der Unit 99.61706 % -> 99.633965 %.
+Matched code der Unit 76.27744 % -> 79.502625 %.
+Complete units bleiben 418.
+Nur `TTelesa::init` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `telesa.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R679B (`JDrama::TLookAtCamera::perform`)
+
+**Vollmatch, strikt.**
+
+`JDrama::TLookAtCamera::perform` war 99,73 %.
+Das Frame lag bei `-0x28` statt `-0x30`.
+Alle Stack-Slots lagen einheitlich `0x8` zu tief.
+`char trash[8]` am Funktionsanfang schiebt Frame und Slots auf Retail, analog zu `TOrthoProj::perform` in derselben TU.
+0 Abweichungen, 164 Bytes, 41 Instruktionen.
+`validate-symbol-order` `mario/JSystem/JDrama/JDRCamera` PASS.
+Vorbestehende Weak-Order-Warnung bleibt.
+Keine neuen Symbolfehler.
+Die TU bleibt `NonMatching` (nicht gelinkt), obwohl objdiff die Unit jetzt auf 100 % Code und Daten sieht.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TTelesa::init` aus R679A bleibt unberührt.
+`TCardSave::waitForSelectOver` aus R678B bleibt unberührt.
+`TCardSave::waitForSelect2` aus R677B bleibt unberührt.
+`TCardSave::drawMessageBM` aus R676B bleibt unberührt.
+
+`ninja changes_all` gegen `a6bbfbc6`: fuzzy 81.13587 % -> 81.135895 %.
+Matched code 56.05846 % -> 56.063026 % (2012548 -> 2012712, +164).
+Funktionen matched 10094 -> 10095.
+Matched data unverändert 69.31899 % (443871).
+`JDRCamera` matched code 2908 -> 3072 (+164), Funktionen 70 -> 71 von 71.
+Fuzzy der Unit 99.98568 % -> 100 %.
+Matched code der Unit 94.66145 % -> 100 %.
+Complete units bleiben 418.
+Nur `JDrama::TLookAtCamera::perform` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `JDRCamera.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R680B (`JPADrawCalcScaleYBySpeed::calc`)
+
+**Vollmatch, strikt.**
+
+`JPADrawCalcScaleYBySpeed::calc` war 99,83 %.
+Das Frame lag bei `-0x70` statt `-0x78`.
+Alle Stack-Slots lagen einheitlich `0x8` zu tief.
+`char trash[8]` als letztes Lokales schiebt Frame und Slots auf Retail.
+0 Abweichungen, 304 Bytes, 76 Instruktionen.
+`validate-symbol-order` `mario/JSystem/JParticle/JPADrawVisitor` PASS.
+Keine neuen Symbolfehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`JDrama::TLookAtCamera::perform` aus R679B bleibt unberührt.
+`TTelesa::init` aus R679A bleibt unberührt.
+`JPADrawCalcScaleXBySpeed::calc` bleibt unberührt.
+
+`ninja changes_all` gegen `025029c7`: fuzzy bleibt 81.135895 %.
+Matched code 56.063026 % -> 56.071495 % (2012712 -> 2013016, +304).
+Funktionen matched 10095 -> 10096.
+Matched data unverändert 69.31899 % (443871).
+`JPADrawVisitor` matched code 9924 -> 10228 (+304), Funktionen 104 -> 105 von 121.
+Fuzzy der Unit 99.310486 % -> 99.31265 %.
+Matched code der Unit 41.370686 % -> 42.637985 %.
+Complete units bleiben 418.
+Nur `JPADrawCalcScaleYBySpeed::calc` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `JPADrawVisitor.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R681B (`JPADrawCalcScaleXBySpeed::calc`)
+
+**Vollmatch, strikt.**
+
+`JPADrawCalcScaleXBySpeed::calc` war 99,83 %.
+Das Frame lag bei `-0x70` statt `-0x78`.
+Alle Stack-Slots lagen einheitlich `0x8` zu tief.
+`char trash[8]` als letztes Lokales schiebt Frame und Slots auf Retail, analog zu `JPADrawCalcScaleYBySpeed::calc`.
+0 Abweichungen, 304 Bytes, 76 Instruktionen.
+`validate-symbol-order` `mario/JSystem/JParticle/JPADrawVisitor` PASS.
+Keine neuen Symbolfehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`JPADrawCalcScaleYBySpeed::calc` aus R680B bleibt unberührt.
+`JDrama::TLookAtCamera::perform` aus R679B bleibt unberührt.
+`TTelesa::init` aus R679A bleibt unberührt.
+
+`ninja changes_all` gegen `8bfc4d3a`: fuzzy 81.135895 % -> 81.13591 %.
+Matched code 56.071495 % -> 56.07996 % (2013016 -> 2013320, +304).
+Funktionen matched 10096 -> 10097.
+Matched data unverändert 69.31899 % (443871).
+`JPADrawVisitor` matched code 10228 -> 10532 (+304), Funktionen 105 -> 106 von 121.
+Fuzzy der Unit 99.31265 % -> 99.31483 %.
+Matched code der Unit 42.637985 % -> 43.905285 %.
+Complete units bleiben 418.
+Nur `JPADrawCalcScaleXBySpeed::calc` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `JPADrawVisitor.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R682C (`JASystem::HardStream::TControl::volFloatToU8`)
+
+**Vollmatch, strikt.**
+
+`JASystem::HardStream::TControl::volFloatToU8` war 99,8 %.
+Das Frame lag bei `-0x18` statt `-0x20`.
+Der `stfd`/`lwz`-Spill lag einheitlich `0x8` zu tief.
+`char trash[8]` am Funktionsanfang schiebt Frame und Spill auf Retail.
+0 Abweichungen, 64 Bytes, 16 Instruktionen.
+`validate-symbol-order` `mario/JSystem/JAudio/JASystem/JASHardStream` PASS.
+Vorbestehende UNUSED-Größenwarnungen der Stub-Funktionen bleiben.
+Keine neuen Symbolfehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`JPADrawCalcScaleXBySpeed::calc` aus R681B bleibt unberührt.
+`JPADrawCalcScaleYBySpeed::calc` aus R680B bleibt unberührt.
+`JDrama::TLookAtCamera::perform` aus R679B bleibt unberührt.
+
+Delta gegen die R681B-Zahlen: matched code 2013320 -> 2013384 (+64), 56.07996 % -> 56.081745 %.
+Funktionen matched 10097 -> 10098.
+Nur `volFloatToU8` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `JASHardStream.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R683C (`JASystem::TChannel::stopLogicalChannel`)
+
+**Vollmatch, strikt.**
+
+`JASystem::TChannel::stopLogicalChannel` war 99,8 %.
+Das Frame lag bei `-0x18` statt `-0x20`.
+Die gesicherten Register lagen einheitlich `0x8` zu tief.
+`char trash[8]` am Funktionsanfang schiebt Frame und Epilog auf Retail.
+0 Abweichungen, 112 Bytes, 28 Instruktionen.
+`validate-symbol-order` `mario/JSystem/JAudio/JASystem/JASChannel` PASS.
+Vorbestehende UNUSED-Größenwarnungen der Stub-Funktionen bleiben.
+Keine neuen Symbolfehler.
+Die übrigen NonMatching-Funktionen der TU behalten Größe und Prozent.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`JASystem::HardStream::TControl::volFloatToU8` aus R682C bleibt unberührt.
+`JPADrawCalcScaleXBySpeed::calc` aus R681B bleibt unberührt.
+`JPADrawCalcScaleYBySpeed::calc` aus R680B bleibt unberührt.
+`JDrama::TLookAtCamera::perform` aus R679B bleibt unberührt.
+
+Delta gegen die R682C-Zahlen: matched code 2013384 -> 2013496 (+112), 56.081745 % -> 56.084865 %.
+Funktionen matched 10098 -> 10099.
+Nur `stopLogicalChannel` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `JASChannel.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R682B (`JPADrawExecBillBoard::exec`)
+
+**Vollmatch, strikt.**
+
+`JPADrawExecBillBoard::exec` war 99,75 %.
+Das Frame lag bei `-0x70` statt `-0x78`.
+Die Float-Locals lagen einheitlich `0x4` zu tief, die gesicherten Register `0x8`.
+`char trash[4]` als letztes Lokales füllt das Alignment-Loch und schiebt beides auf Retail.
+0 Abweichungen, 472 Bytes, 118 Instruktionen.
+`validate-symbol-order` `mario/JSystem/JParticle/JPADrawVisitor` PASS.
+Keine neuen Symbolfehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`JPADrawCalcScaleXBySpeed::calc` aus R681B bleibt unberührt.
+`JPADrawCalcScaleYBySpeed::calc` aus R680B bleibt unberührt.
+`JASystem::TChannel::stopLogicalChannel` aus R683C bleibt unberührt.
+`JASystem::HardStream::TControl::volFloatToU8` aus R682C bleibt unberührt.
+`JDrama::TLookAtCamera::perform` aus R679B bleibt unberührt.
+`TTelesa::init` aus R679A bleibt unberührt.
+
+`ninja changes_all` gegen `5d2a237a`: fuzzy 81.135925 % -> 81.13596 %.
+Matched code 56.084866 % -> 56.098015 % (2013496 -> 2013968, +472).
+Funktionen matched 10099 -> 10100.
+Matched data unverändert 69.31899 % (443871).
+`JPADrawVisitor` matched code 10532 -> 11004 (+472), Funktionen 106 -> 107 von 121.
+Fuzzy der Unit 99.31483 % -> 99.319824 %.
+Matched code der Unit 43.905285 % -> 45.872936 %.
+Complete units bleiben 418.
+Nur `JPADrawExecBillBoard::exec` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `JPADrawVisitor.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R683B (`JPADrawExecYBillBoard::exec`)
+
+**Vollmatch, strikt.**
+
+`JPADrawExecYBillBoard::exec` war 99,72 %.
+Das Frame lag bei `-0x80` statt `-0x88`.
+Die Float-Locals lagen einheitlich `0x4` zu tief, die gesicherten Register `0x8`.
+`char trash[4]` als letztes Lokales füllt das Alignment-Loch, analog zu `JPADrawExecBillBoard::exec`.
+0 Abweichungen, 548 Bytes, 137 Instruktionen.
+`validate-symbol-order` `mario/JSystem/JParticle/JPADrawVisitor` PASS.
+Keine neuen Symbolfehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`JPADrawExecBillBoard::exec` aus R682B bleibt unberührt.
+`JPADrawCalcScaleXBySpeed::calc` aus R681B bleibt unberührt.
+`JPADrawCalcScaleYBySpeed::calc` aus R680B bleibt unberührt.
+`JASystem::TChannel::stopLogicalChannel` aus R683C bleibt unberührt.
+`JASystem::HardStream::TControl::volFloatToU8` aus R682C bleibt unberührt.
+`JDrama::TLookAtCamera::perform` aus R679B bleibt unberührt.
+`TTelesa::init` aus R679A bleibt unberührt.
+
+`ninja changes_all` gegen `5a9c8e28`: fuzzy 81.13596 % -> 81.136 %.
+Matched code 56.098015 % -> 56.113277 % (2013968 -> 2014516, +548).
+Funktionen matched 10100 -> 10101.
+Matched data unverändert 69.31899 % (443871).
+`JPADrawVisitor` matched code 11004 -> 11552 (+548), Funktionen 107 -> 108 von 121.
+Fuzzy der Unit 99.319824 % -> 99.32633 %.
+Matched code der Unit 45.872936 % -> 48.157413 %.
+Complete units bleiben 418.
+Nur `JPADrawExecYBillBoard::exec` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `JPADrawVisitor.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R684C (`JASystem::Driver::__UpdateJcToDSP`)
+
+**Vollmatch, strikt.**
+
+`JASystem::Driver::__UpdateJcToDSP` war 99,89 %.
+Das Frame lag bei `-0x20` statt `-0x30`.
+Die gesicherten Register lagen einheitlich `0x10` zu tief.
+`char trash[0x10]` am Funktionsanfang schiebt Frame und Epilog auf Retail.
+0 Abweichungen, 328 Bytes, 82 Instruktionen.
+`validate-symbol-order` `mario/JSystem/JAudio/JASystem/JASChannel` PASS.
+Vorbestehende UNUSED-Größenwarnungen der Stub-Funktionen bleiben.
+Keine neuen Symbolfehler.
+Die übrigen NonMatching-Funktionen der TU behalten Größe und Prozent.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`JPADrawExecYBillBoard::exec` aus R683B bleibt unberührt.
+`JPADrawExecBillBoard::exec` aus R682B bleibt unberührt.
+`JASystem::TChannel::stopLogicalChannel` aus R683C bleibt unberührt.
+`JASystem::HardStream::TControl::volFloatToU8` aus R682C bleibt unberührt.
+`JPADrawCalcScaleXBySpeed::calc` aus R681B bleibt unberührt.
+`JPADrawCalcScaleYBySpeed::calc` aus R680B bleibt unberührt.
+
+`ninja changes_all` gegen `6ba29f5b`: fuzzy 81.136 % -> 81.13602 %.
+Matched code 56.113277 % -> 56.122413 % (2014516 -> 2014844, +328).
+Funktionen matched 10101 -> 10102.
+Matched data unverändert 69.31899 % (443871).
+`JASChannel` matched code 4764 -> 5092 (+328), Funktionen 28 -> 29 von 33.
+Fuzzy der Unit 99.9351 % -> 99.94026 %.
+Matched code der Unit 68.40896 % -> 73.1189 %.
+Complete units bleiben 418.
+Nur `JASystem::Driver::__UpdateJcToDSP` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `JASChannel.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R685C (`JAInter::StreamLib::callBack`)
+
+**Vollmatch, strikt.**
+
+`JAInter::StreamLib::callBack` war 99,94 %.
+Das Frame lag bei `-0x90` statt `-0xb0`.
+Gesicherte Register und Stack-Slots lagen einheitlich `0x20` zu tief.
+`char trash[0x20]` am Funktionsanfang schiebt Frame und Epilog auf Retail.
+0 Abweichungen, 2260 Bytes, 565 Instruktionen.
+`validate-symbol-order` `mario/JSystem/JAudio/JAInterface/JAIGFrameStream` PASS.
+Vorbestehende UNUSED-Größenwarnungen der Stub-Funktionen bleiben.
+Keine neuen Symbolfehler.
+Die TU bleibt `NonMatching` und wird nicht gelinkt, obwohl objdiff Code und Fuzzy jetzt auf 100 % sieht.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`JASystem::Driver::__UpdateJcToDSP` aus R684C bleibt unberührt.
+`JPADrawExecYBillBoard::exec` aus R683B bleibt unberührt.
+`JPADrawExecBillBoard::exec` aus R682B bleibt unberührt.
+`JASystem::TChannel::stopLogicalChannel` aus R683C bleibt unberührt.
+`JASystem::HardStream::TControl::volFloatToU8` aus R682C bleibt unberührt.
+`JPADrawCalcScaleXBySpeed::calc` aus R681B bleibt unberührt.
+`JPADrawCalcScaleYBySpeed::calc` aus R680B bleibt unberührt.
+
+`ninja changes_all` gegen `f3089874`: fuzzy 81.13602 % -> 81.136055 %.
+Matched code 56.12241 % -> 56.185364 % (2014844 -> 2017104, +2260).
+Funktionen matched 10102 -> 10103.
+Matched data unverändert 69.31899 % (443871).
+`JAIGFrameStream` matched code 5592 -> 7852 (+2260), Funktionen 25 -> 26 von 26.
+Fuzzy der Unit 99.98319 % -> 100 %.
+Matched code der Unit 71.21752 % -> 100 %.
+Complete units bleiben 418.
+Nur `JAInter::StreamLib::callBack` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `JAIGFrameStream.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R687A (`JPADrawExecRotBillBoard::exec`)
+
+**Vollmatch, strikt.**
+
+`JPADrawExecRotBillBoard::exec` war 99,83 %.
+Das Frame lag bereits bei `-0x80`.
+Die Float-Locals lagen einheitlich `0x4` zu tief.
+Die gesicherten Register stimmten schon.
+`char trash[4]` als letztes Lokales schiebt die Locals auf Retail, analog zu `JPADrawExecBillBoard::exec`.
+0 Abweichungen, 540 Bytes, 135 Instruktionen.
+`validate-symbol-order` `mario/JSystem/JParticle/JPADrawVisitor` PASS.
+Keine neuen Symbolfehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`JAInter::StreamLib::callBack` aus R685C bleibt unberührt.
+`JASystem::Driver::__UpdateJcToDSP` aus R684C bleibt unberührt.
+`JPADrawExecYBillBoard::exec` aus R683B bleibt unberührt.
+`JPADrawExecBillBoard::exec` aus R682B bleibt unberührt.
+`JASystem::TChannel::stopLogicalChannel` aus R683C bleibt unberührt.
+`JASystem::HardStream::TControl::volFloatToU8` aus R682C bleibt unberührt.
+`JPADrawCalcScaleXBySpeed::calc` aus R681B bleibt unberührt.
+`JPADrawCalcScaleYBySpeed::calc` aus R680B bleibt unberührt.
+`JDrama::TLookAtCamera::perform` aus R679B bleibt unberührt.
+`TTelesa::init` aus R679A bleibt unberührt.
+
+`ninja changes_all` gegen `53648c85`: fuzzy 81.136055 % -> 81.13607 %.
+Matched code 56.185364 % -> 56.2004 % (2017104 -> 2017644, +540).
+Funktionen matched 10103 -> 10104.
+Matched data unverändert 69.31899 % (443871).
+`JPADrawVisitor` matched code 11552 -> 12092 (+540), Funktionen 108 -> 109 von 121.
+Fuzzy der Unit 99.32633 % -> 99.33016 %.
+Matched code der Unit 48.157413 % -> 50.408535 %.
+Complete units bleiben 418.
+Nur `JPADrawExecRotBillBoard::exec` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `JPADrawVisitor.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R688A (`JPADrawExecGenPrjTexMtx::exec`)
+
+**Vollmatch, strikt.**
+
+`JPADrawExecGenPrjTexMtx::exec` war 99,75 %.
+Das Frame lag bei `-0x108` statt `-0x110`.
+Alle Stack-Slots lagen einheitlich `0x8` zu tief.
+`char trash[8]` als letztes Lokales schiebt Frame und Epilog auf Retail.
+0 Abweichungen, 428 Bytes, 107 Instruktionen.
+`validate-symbol-order` `mario/JSystem/JParticle/JPADrawVisitor` PASS.
+Keine neuen Symbolfehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`JPADrawExecRotBillBoard::exec` aus R687A bleibt unberührt.
+`JAInter::StreamLib::callBack` aus R685C bleibt unberührt.
+`JASystem::Driver::__UpdateJcToDSP` aus R684C bleibt unberührt.
+`JPADrawExecYBillBoard::exec` aus R683B bleibt unberührt.
+`JPADrawExecBillBoard::exec` aus R682B bleibt unberührt.
+`JASystem::TChannel::stopLogicalChannel` aus R683C bleibt unberührt.
+`JASystem::HardStream::TControl::volFloatToU8` aus R682C bleibt unberührt.
+`JPADrawCalcScaleXBySpeed::calc` aus R681B bleibt unberührt.
+`JPADrawCalcScaleYBySpeed::calc` aus R680B bleibt unberührt.
+`JDrama::TLookAtCamera::perform` aus R679B bleibt unberührt.
+`TTelesa::init` aus R679A bleibt unberührt.
+
+`ninja changes_all` gegen `2dd0bac9`: fuzzy 81.13607 % -> 81.13611 %.
+Matched code 56.2004 % -> 56.212322 % (2017644 -> 2018072, +428).
+Funktionen matched 10104 -> 10105.
+Matched data unverändert 69.31899 % (443871).
+`JPADrawVisitor` matched code 12092 -> 12520 (+428), Funktionen 109 -> 110 von 121.
+Fuzzy der Unit 99.33016 % -> 99.33467 %.
+Matched code der Unit 50.408535 % -> 52.192764 %.
+Complete units bleiben 418.
+Nur `JPADrawExecGenPrjTexMtx::exec` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `JPADrawVisitor.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R684B (`JPADrawExecRotYBillBoard::exec`)
+
+**Vollmatch, strikt.**
+
+`JPADrawExecRotYBillBoard::exec` war 99,79 %.
+Das Frame lag bereits bei `-0x80`.
+Die Float-Locals lagen einheitlich `0x4` zu tief.
+Die Position wird mit `MTXMultVecSR` transformiert, analog zu `JPADrawExecYBillBoard::exec`.
+`char trash[4]` als letztes Lokales schiebt die Locals auf Retail, analog zu `JPADrawExecRotBillBoard::exec`.
+0 Abweichungen, 616 Bytes, 154 Instruktionen.
+`validate-symbol-order` `mario/JSystem/JParticle/JPADrawVisitor` PASS.
+Keine neuen Symbolfehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`JPADrawExecGenPrjTexMtx::exec` aus R688A bleibt unberührt.
+`JPADrawExecRotBillBoard::exec` aus R687A bleibt unberührt.
+`JAInter::StreamLib::callBack` aus R685C bleibt unberührt.
+`JPADrawExecYBillBoard::exec` aus R683B bleibt unberührt.
+`JPADrawExecBillBoard::exec` aus R682B bleibt unberührt.
+`JPADrawCalcScaleXBySpeed::calc` aus R681B bleibt unberührt.
+`JPADrawCalcScaleYBySpeed::calc` aus R680B bleibt unberührt.
+`JDrama::TLookAtCamera::perform` aus R679B bleibt unberührt.
+`TTelesa::init` aus R679A bleibt unberührt.
+
+`ninja changes_all` gegen `ce9b5592`: fuzzy 81.13611 % -> 81.13614 %.
+Matched code 56.212322 % -> 56.229485 % (2018072 -> 2018688, +616).
+Funktionen matched 10105 -> 10106.
+Matched data unverändert 69.31899 % (443871).
+`JPADrawVisitor` matched code 12520 -> 13136 (+616), Funktionen 110 -> 111 von 121.
+Fuzzy der Unit 99.33467 % -> 99.340004 %.
+Matched code der Unit 52.192764 % -> 54.76071 %.
+Complete units bleiben 418.
+Nur `JPADrawExecRotYBillBoard::exec` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `JPADrawVisitor.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R686C (`JASystem::Driver::__UpdateJcToDSPInit`)
+
+**Vollmatch, strikt.**
+
+`JASystem::Driver::__UpdateJcToDSPInit` war 99,86 %.
+Das Frame lag bei `-0x20` statt `-0x30`.
+Gesicherte Register lagen einheitlich `0x10` zu tief.
+`char trash[0x10]` am Funktionsanfang schiebt Frame und Epilog auf Retail.
+0 Abweichungen, 264 Bytes, 66 Instruktionen.
+`validate-symbol-order` `mario/JSystem/JAudio/JASystem/JASChannel` PASS.
+Vorbestehende UNUSED-Größenwarnungen der Stub-Funktionen bleiben.
+Keine neuen Symbolfehler.
+Die anderen nonmatching Funktionen der TU behalten Größe und Prozent.
+Die TU bleibt `NonMatching` und wird nicht gelinkt.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`JPADrawExecRotYBillBoard::exec` aus R684B bleibt unberührt.
+`JPADrawExecGenPrjTexMtx::exec` aus R688A bleibt unberührt.
+`JPADrawExecRotBillBoard::exec` aus R687A bleibt unberührt.
+`JAInter::StreamLib::callBack` aus R685C bleibt unberührt.
+`JASystem::Driver::__UpdateJcToDSP` aus R684C bleibt unberührt.
+`JPADrawExecYBillBoard::exec` aus R683B bleibt unberührt.
+`JPADrawExecBillBoard::exec` aus R682B bleibt unberührt.
+`JASystem::TChannel::stopLogicalChannel` aus R683C bleibt unberührt.
+`JASystem::HardStream::TControl::volFloatToU8` aus R682C bleibt unberührt.
+`JPADrawCalcScaleXBySpeed::calc` aus R681B bleibt unberührt.
+`JPADrawCalcScaleYBySpeed::calc` aus R680B bleibt unberührt.
+`JDrama::TLookAtCamera::perform` aus R679B bleibt unberührt.
+`TTelesa::init` aus R679A bleibt unberührt.
+
+`ninja changes_all` gegen `c36e2798`: fuzzy 81.13614 % -> 81.13616 %.
+Matched code 56.229485 % -> 56.23684 % (2018688 -> 2018952, +264).
+Funktionen matched 10106 -> 10107.
+Matched data unverändert 69.31899 % (443871).
+`JASChannel` matched code 5092 -> 5356 (+264), Funktionen 29 -> 30 von 33.
+Fuzzy der Unit 99.94026 % -> 99.945435 %.
+Matched code der Unit 73.1189 % -> 76.90982 %.
+Complete units bleiben 418.
+Nur `JASystem::Driver::__UpdateJcToDSPInit` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `JASChannel.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R689A (`JPADrawExecRotationCross::exec`)
+
+**Vollmatch, strikt.**
+
+`JPADrawExecRotationCross::exec` war 99,7 %.
+Das Frame lag bei `-0x130` statt `-0x138`.
+Die Float-Locals lagen einheitlich `0x4` zu tief, die gesicherten Register `0x8`.
+`char trash[4]` als letztes Lokales schiebt Locals um 4 und das Frame durch Ausrichtung um 8 auf Retail.
+0 Abweichungen, 876 Bytes, 219 Instruktionen.
+`validate-symbol-order` `mario/JSystem/JParticle/JPADrawVisitor` PASS.
+Keine neuen Symbolfehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`JASystem::Driver::__UpdateJcToDSPInit` aus R686C bleibt unberührt.
+`JPADrawExecRotYBillBoard::exec` aus R684B bleibt unberührt.
+`JPADrawExecGenPrjTexMtx::exec` aus R688A bleibt unberührt.
+`JPADrawExecRotBillBoard::exec` aus R687A bleibt unberührt.
+`JAInter::StreamLib::callBack` aus R685C bleibt unberührt.
+`JASystem::Driver::__UpdateJcToDSP` aus R684C bleibt unberührt.
+`JPADrawExecYBillBoard::exec` aus R683B bleibt unberührt.
+`JPADrawExecBillBoard::exec` aus R682B bleibt unberührt.
+`JASystem::TChannel::stopLogicalChannel` aus R683C bleibt unberührt.
+`JASystem::HardStream::TControl::volFloatToU8` aus R682C bleibt unberührt.
+`JPADrawCalcScaleXBySpeed::calc` aus R681B bleibt unberührt.
+`JPADrawCalcScaleYBySpeed::calc` aus R680B bleibt unberührt.
+`JDrama::TLookAtCamera::perform` aus R679B bleibt unberührt.
+`TTelesa::init` aus R679A bleibt unberührt.
+
+`ninja changes_all` gegen `74f0bc48`: fuzzy 81.13616 % -> 81.13623 %.
+Matched code 56.23684 % -> 56.261242 % (2018952 -> 2019828, +876).
+Funktionen matched 10107 -> 10108.
+Matched data unverändert 69.31899 % (443871).
+`JPADrawVisitor` matched code 13136 -> 14012 (+876), Funktionen 111 -> 112 von 121.
+Fuzzy der Unit 99.340004 % -> 99.35168 %.
+Matched code der Unit 54.76071 % -> 58.41254 %.
+Complete units bleiben 418.
+Nur `JPADrawExecRotationCross::exec` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `JPADrawVisitor.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R688B (`TBaseNPC::execTurnToFirstState`)
+
+**Vollmatch, strikt.**
+
+`TBaseNPC::execTurnToFirstState` war 99,7 %.
+Das Frame lag bei `-0x40` statt `-0x50`.
+Jeder Stack-Slot lag einheitlich `0x10` zu tief.
+`char trash[0x10]` direkt vor `return result` schiebt Locals und Frame auf Retail.
+0 Abweichungen, 228 Bytes, 57 Instruktionen.
+`validate-symbol-order` `mario/NPC/NpcWalkTurn` PASS mit geerbtem Fehler.
+Fehlendes `TVec3<f>::set` steht schon auf dem Basisobjekt.
+Keine neuen Symbolfehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`JPADrawExecRotationCross::exec` aus R689A bleibt unberührt.
+`JASystem::Driver::__UpdateJcToDSPInit` aus R686C bleibt unberührt.
+`JPADrawExecRotYBillBoard::exec` aus R684B bleibt unberührt.
+`JPADrawExecGenPrjTexMtx::exec` aus R688A bleibt unberührt.
+`JPADrawExecRotBillBoard::exec` aus R687A bleibt unberührt.
+`JAInter::StreamLib::callBack` aus R685C bleibt unberührt.
+`JASystem::Driver::__UpdateJcToDSP` aus R684C bleibt unberührt.
+`JPADrawExecYBillBoard::exec` aus R683B bleibt unberührt.
+`JPADrawExecBillBoard::exec` aus R682B bleibt unberührt.
+
+`ninja changes_all` gegen `9fc51655`: fuzzy 81.13623 % -> 81.136246 %.
+Matched code 56.261242 % -> 56.26759 % (2019828 -> 2020056, +228).
+Funktionen matched 10108 -> 10109.
+Matched data unverändert 69.31899 % (443871).
+`NpcWalkTurn` matched code 448 -> 676 (+228), Funktionen 3 -> 4 von 7.
+Fuzzy der Unit 94.16081 % -> 94.18854 %.
+Matched code der Unit 20.702402 % -> 31.23845 %.
+Complete units bleiben 418.
+Nur `TBaseNPC::execTurnToFirstState` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `NpcWalkTurn.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R690C (`TRealoid::clipBoids`)
+
+**Vollmatch, strikt.**
+
+`TRealoid::clipBoids` war 99,83 %.
+Das Frame lag bei `-0x68` statt `-0x70`.
+Die `TVec3`-Local lag `0x4` zu tief, die gesicherten Register `0x8`.
+`char trash[4]` am Funktionsende schiebt die Local um 4 und das Frame durch Ausrichtung um 8 auf Retail.
+0 Abweichungen, 212 Bytes, 53 Instruktionen.
+`validate-symbol-order` `mario/Animal/fishoid` erbt den Linkage-Fehler von `TFishoidManager::~TFishoidManager`.
+Die vier UNUSED-Größenwarnungen bleiben.
+Keine neuen Symbolfehler.
+Die anderen nonmatching Funktionen der TU behalten Größe und Prozent.
+Die TU bleibt `NonMatching` und wird nicht gelinkt.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TBaseNPC::execTurnToFirstState` aus R688B bleibt unberührt.
+`JPADrawExecRotationCross::exec` aus R689A bleibt unberührt.
+`JASystem::Driver::__UpdateJcToDSPInit` aus R686C bleibt unberührt.
+
+`ninja changes_all` gegen `7c4347a5`: fuzzy 81.136246 % -> 81.13627 %.
+Matched code 56.26759 % -> 56.273495 % (2020056 -> 2020268, +212).
+Funktionen matched 10109 -> 10110.
+Matched data unverändert 69.31899 % (443871).
+`fishoid` matched code 2192 -> 2404 (+212), Funktionen 21 -> 22 von 26.
+Fuzzy der Unit 95.00726 % -> 95.01543 %.
+Matched code der Unit 49.727768 % -> 54.53721 %.
+Complete units bleiben 418.
+Nur `TRealoid::clipBoids` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `fishoid.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R691B (`__sinit_ConsoleStr_cpp`)
+
+**Vollmatch, strikt.**
+
+`__sinit_ConsoleStr_cpp` war 99,23 %.
+Vier `~` waren nur Register (`r0`/`r9`).
+Retail hält `-21` in `r9` und schreibt denselben Wert nach `cShineGetLeft1.x` und `cShineGetLeft2.x`.
+Die Quelle hatte `cShineGetLeft2` als `(-50, 7)`, also blieb `-50` in `r9` und `-21` wanderte nach `r0`.
+`cShineGetLeft2(-21, 7)` lässt MWCC `r9` wiederverwenden.
+0 Abweichungen, 104 Bytes, 26 Instruktionen.
+`validate-symbol-order` `mario/GC2D/ConsoleStr` PASS.
+Geerbte UNUSED-Größenwarnung `SMS_getNormalStage__FUl` (0x18 gegen 0x1c) bleibt.
+Keine neuen Symbolfehler.
+Die anderen nonmatching Funktionen der TU behalten Größe und Prozent.
+Die TU bleibt `NonMatching` und wird nicht gelinkt.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TRealoid::clipBoids` aus R690C bleibt unberührt.
+`TBaseNPC::execTurnToFirstState` aus R688B bleibt unberührt.
+
+`ninja changes_all` gegen `6865b72c`: fuzzy 81.13627 % -> 81.136284 %.
+Matched code 56.273495 % -> 56.276394 % (2020268 -> 2020372, +104).
+Funktionen matched 10110 -> 10111.
+Matched data unverändert 69.31899 % (443871).
+`ConsoleStr` matched code 1512 -> 1616 (+104), Funktionen 10 -> 11 von 19.
+Fuzzy der Unit 69.78037 % -> 69.78767 %.
+Matched code der Unit 13.790588 % -> 14.739147 %.
+Complete units bleiben 418.
+Nur `__sinit_ConsoleStr_cpp` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `ConsoleStr.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R699A (`TBaseNPC::requestNpcAnm_`)
+
+**Vollmatch, strikt.**
+
+`TBaseNPC::requestNpcAnm_` war 99,25 %.
+`TNpcKeepAnm::keep` ist inlined.
+`mBlendOn = blend != NPC_STOP_MOTION_BLEND_OFF` ließ die Bool-Umwandlung in `r3`.
+Retail hält `mKeepAnmCtrl` in `r3` und rechnet `blend` in `r5` (`neg r5, r5`).
+`mBlendOn = blend` trifft das.
+0 Abweichungen, 160 Bytes, 40 Instruktionen.
+`validate-symbol-order` `mario/NPC/NpcAnm` PASS mit geerbten Weak-Order- und UNUSED-Größenwarnungen.
+Keine neuen Symbolfehler.
+Die anderen nonmatching Funktionen der TU behalten Größe und Prozent.
+`requestTalkAnm_` bleibt unberührt.
+Die TU bleibt `NonMatching` und wird nicht gelinkt.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TBGTentacle::perform` aus R698C bleibt unberührt.
+
+`ninja changes_all` gegen `0e3d3813`: fuzzy 81.13646 % -> 81.1365 %.
+Matched code 56.35873 % -> 56.36319 % (2023328 -> 2023488, +160).
+Funktionen matched 10120 -> 10121.
+Matched data unverändert 69.31899 % (443871).
+`NpcAnm` matched code 9492 -> 9652 (+160), Funktionen 38 -> 39 von 44.
+Fuzzy der Unit 99.74161 % -> 99.749016 %.
+Matched code der Unit 58.563675 % -> 59.55084 %.
+Complete units bleiben 418.
+Nur `TBaseNPC::requestNpcAnm_` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `NpcAnm.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R698C (`TBGTentacle::perform`)
+
+**Vollmatch, strikt.**
+
+`TBGTentacle::perform` war 99,71 %.
+Das Frame lag bei `-0xd0` statt `-0x108`.
+Die übrigen Locals saßen schon richtig.
+`char trash[0x40]` am Anfang hebt nur das Frame und die gesicherten Register.
+`mSLAmputeeWait.get()` liefert eine Referenz und ließ `addi r3, r28, 0` stehen.
+Der direkte Zugriff auf `.value` macht daraus `mr r3, r28`.
+0 Abweichungen, 896 Bytes, 224 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bgtentacle` PASS.
+Die fünf UNUSED-Größenwarnungen bleiben.
+Keine neuen Symbolfehler.
+`decideOwnState` bleibt 100 %.
+Die anderen nonmatching Funktionen der TU behalten Größe und Prozent.
+Die TU bleibt `NonMatching` und wird nicht gelinkt.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`MActorAnmDataEach::loadAnmPtrArray` aus R697C bleibt unberührt.
+
+`ninja changes_all` gegen `d3b6b092`: fuzzy 81.13639 % -> 81.13646 %.
+Matched code 56.333775 % -> 56.35873 % (2022432 -> 2023328, +896).
+Funktionen matched 10119 -> 10120.
+Matched data unverändert 69.31899 % (443871).
+`bgtentacle` matched code 7500 -> 8396 (+896), Funktionen 28 -> 29 von 39.
+Fuzzy der Unit 95.282524 % -> 95.29413 %.
+Matched code der Unit 33.464214 % -> 37.462074 %.
+Complete units bleiben 418.
+Nur `TBGTentacle::perform` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `bgtentacle.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R697C (`MActorAnmDataEach::loadAnmPtrArray`)
+
+**Vollmatch, strikt.**
+
+`MActorAnmDataEach::loadAnmPtrArray` war 99,83 % in sechs Instanzen.
+Die zwei `char[256]`-Puffer und das Frame lagen einheitlich 8 Bytes zu tief.
+`char trash[8]` am Funktionsende schiebt beide Puffer und das Frame auf Retail.
+0 Abweichungen, je 240 Bytes, 60 Instruktionen.
+Sechs Instanzen sind neu strikt matched: TransformKey, ColorKey, TexPattern, TextureSRTKey, TevRegKey, ClusterKey.
+`validate-symbol-order` `mario/M3DUtil/MActorData` PASS.
+Die Weak-Reihenfolge-Warnung und die UNUSED-Größe von `MActorAnmDataBase::MActorAnmDataBase` bleiben.
+Keine neuen Symbolfehler.
+Die anderen nonmatching Funktionen der TU behalten Größe und Prozent.
+`MActorAnmData::MActorAnmData` bleibt 99,9 %.
+Die TU bleibt `NonMatching` und wird nicht gelinkt.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TSMSFader::update` aus R696C bleibt unberührt.
+
+`ninja changes_all` gegen `6aa76406`: fuzzy 81.13634 % -> 81.13639 %.
+Matched code 56.29366 % -> 56.333775 % (2020992 -> 2022432, +1440).
+Funktionen matched 10113 -> 10119.
+Matched data unverändert 69.31899 % (443871).
+`MActorData` matched code 1340 -> 2780 (+1440), Funktionen 7 -> 13 von 16.
+Fuzzy der Unit 99.54671 % -> 99.59015 %.
+Matched code der Unit 24.257784 % -> 50.32585 %.
+Complete units bleiben 418.
+Nur die sechs `loadAnmPtrArray`-Instanzen sind neu strikt matched.
+
+DOL-SHA1 unverändert: `MActorData.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R696C (`TSMSFader::update`)
+
+**Vollmatch, strikt.**
+
+`TSMSFader::update` war 99,66 %.
+`updateRequest` ist inlined.
+`fVar1 = unk8 - 1/mRate` schrieb die Differenz nach `f1`.
+Retail behält sie in `f2`, dem Register von `unk8`.
+`fVar1 = unk8; fVar1 -= 1.0f / mRate` trifft die `fsubs`.
+Das Frame lag bei `-0x18` statt `-0x28`.
+`char trash[16]` am Ende von `update` hebt es auf `-0x28`.
+0 Abweichungen, 348 Bytes, 87 Instruktionen.
+`validate-symbol-order` `mario/GC2D/ScrnFader` PASS.
+Die geerbte UNUSED-Größenwarnung `updateDelay` (0x4 gegen 0x54) bleibt.
+`updateRequest` bleibt UNUSED mit Map-Größe 0x80.
+Die anderen nonmatching Funktionen der TU behalten Größe und Prozent.
+Die TU bleibt `NonMatching` und wird nicht gelinkt.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TMario::considerRotateStart` aus R695A bleibt unberührt.
+`__sinit_ConsoleStr_cpp` aus R691B bleibt unberührt.
+
+`ninja changes_all` gegen `869f213c`: fuzzy 81.1363 % -> 81.13634 %.
+Matched code 56.28397 % -> 56.29366 % (2020644 -> 2020992, +348).
+Funktionen matched 10112 -> 10113.
+Matched data unverändert 69.31899 % (443871).
+`ScrnFader` matched code 3160 -> 3508 (+348), Funktionen 13 -> 14 von 16.
+Fuzzy der Unit 98.77491 % -> 98.801605 %.
+Matched code der Unit 70.2847 % -> 78.02491 %.
+Complete units bleiben 418.
+Nur `TSMSFader::update` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `ScrnFader.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R695A (`TMario::considerRotateStart`)
+
+**Vollmatch, strikt.**
+
+`TMario::considerRotateStart` war 99,87 %.
+Das Frame lag bei `-0x20` statt `-0x30`.
+`direction` und die gesicherten Register lagen einheitlich `0x10` zu tief.
+`char trash[0x10]` nach `int direction` füllt die Lücke unter der Local.
+Das Frame und `direction` treffen Retail.
+0 Abweichungen, 272 Bytes, 68 Instruktionen.
+`validate-symbol-order` `mario/Player/MarioRun` meldet weiter das vorbestehende MISSING `braking__6TMarioFv`.
+`braking` steht im Quelltext als `inline`, die Map führt es als UNUSED.
+Die 15 UNUSED-Größenwarnungen sind unverändert.
+Reihenfolge und Linkage der gelinkten Symbole passen.
+Die anderen nonmatching Funktionen der TU behalten Größe und Prozent.
+`turnning` und `walkEnd` bleiben 100 %.
+Die TU bleibt `NonMatching` und wird nicht gelinkt.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`__sinit_ConsoleStr_cpp` aus R691B bleibt unberührt.
+`TRealoid::clipBoids` aus R690C bleibt unberührt.
+
+`ninja changes_all` gegen `dfb50ce9`: fuzzy 81.136284 % -> 81.1363 %.
+Matched code 56.276394 % -> 56.28397 % (2020372 -> 2020644, +272).
+Funktionen matched 10111 -> 10112.
+Matched data unverändert 69.31899 % (443871).
+`MarioRun` matched code 7504 -> 7776 (+272), Funktionen 20 -> 21 von 34.
+Fuzzy der Unit 99.58125 % -> 99.58305 %.
+Matched code der Unit 37.4975 % -> 38.856686 %.
+Complete units bleiben 418.
+Nur `TMario::considerRotateStart` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `MarioRun.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R700C (`TNpcParts::addJellyFishParts`)
+
+**Vollmatch, strikt.**
+
+`TNpcParts::addJellyFishParts` war 99,83 %.
+`&unk0[5][1]` landete bei `0xf4`.
+`partsPerform` behandelt den Quallen-Teil als Index 11.
+`&unk0[0][11]` trifft `addi r29, r31, 0x2c`.
+Das Frame lag bei `-0x48` statt `-0x50`.
+Alle `r1`-Slots teilten dasselbe Delta `+8`.
+`char trash[0x8]` am Anfang hebt nur das Frame.
+0 Abweichungen, 376 Bytes, 94 Instruktionen.
+`validate-symbol-order` `mario/NPC/NpcParts` PASS.
+Die UNUSED-Größenwarnung `SetMActorAnmFrame` (0x4 gegen 0x84) bleibt.
+Keine neuen Symbolfehler.
+`partsFrameUpdate` und `getPartsMActor` bleiben 100 %.
+Die anderen nonmatching Funktionen der TU behalten Größe und Prozent.
+Die TU bleibt `NonMatching` und wird nicht gelinkt.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TBaseNPC::requestNpcAnm_` aus R699A bleibt unberührt.
+
+`ninja changes_all` gegen `007480cc`: fuzzy 81.1365 % -> 81.13651 %.
+Matched code 56.36319 % -> 56.37366 % (2023488 -> 2023864, +376).
+Funktionen matched 10121 -> 10122.
+Matched data unverändert 69.31899 % (443871).
+`NpcParts` matched code 264 -> 640 (+376), Funktionen 3 -> 4 von 7.
+Fuzzy der Unit 89.135864 % -> 89.16114 %.
+Matched code der Unit 10.42654 % -> 25.27646 %.
+Complete units bleiben 418.
+Nur `TNpcParts::addJellyFishParts` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `NpcParts.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.

@@ -133,6 +133,12 @@ s32 TCardManager::getWriteCount(TCardManager::TCriteria* criteria)
 	return count;
 }
 
+inline char* copyToHole()
+{
+	char pad[0x20];
+	return pad;
+}
+
 void TCardManager::copyTo(TCardManager::TCriteria* param_1,
                           TCardBookmarkInfo* param_2)
 {
@@ -151,10 +157,13 @@ void TCardManager::copyTo(TCardManager::TCriteria* param_1,
 	case 1: {
 		param_2->unk0 = 0;
 		JSUMemoryInputStream stream(param_1[sector].getPreviewBytes(), 0x1C);
-
-		param_2->unk4  = stream.readU32();
-		param_2->unk8  = stream.readU64();
-		param_2->unk10 = stream.readU64();
+		u64 bits;
+		copyToHole();
+		param_2->unk4 = stream.readU32();
+		stream.read(bits);
+		param_2->unk8  = bits;
+		stream.read(bits);
+		param_2->unk10 = bits;
 		param_2->unk18 = stream.readU32();
 		param_2->unk1C = stream.readU16();
 		param_2->unk1E = stream.readU16();
@@ -585,9 +594,29 @@ s32 TCardManager::getBookmarkInfos_()
 	return result;
 }
 
+// result is a reference so the inlined CARDRead return stays in the
+// caller's register. The helper boundary keeps CalcCheckSum and set
+// out of line, which a pasted body does not.
+static void readSector(TCardSector* sector, CARDFileInfo* file, s32 index,
+                       TCardManager::TCriteria* criteria, s32& result)
+{
+	result = CARDRead(file, sector, sizeof(TCardSector),
+	                  index * sizeof(TCardSector));
+	if (result == CARD_RESULT_READY) {
+		s32 writeCount   = sector->mWriteCount;
+		const void* data = &sector->mHeader;
+		bool eq = !(CalcCheckSum(sector, 0x1FFC) - sector->mCheckSum);
+		criteria->set(eq ? TCardManager::TCriteria::STATE_VALID
+		                 : TCardManager::TCriteria::STATE_CHECKSUM_BAD,
+		              writeCount, data);
+	}
+}
+
 s32 TCardManager::readBlock_(u32 index)
 {
+	char trash[4];
 	CARDFileInfo info;
+	char trash2[0x18];
 	s32 result = open_(&info);
 	if (result != CARD_RESULT_READY)
 		return result;
@@ -597,12 +626,13 @@ s32 TCardManager::readBlock_(u32 index)
 	u32 crit_idx = index * 2 + 1;
 
 	if (mSectorCriteria[crit_idx].mState == TCriteria::STATE_UNREAD)
-		result = sector->read(&info, crit_idx, mSectorCriteria + crit_idx);
+		readSector(sector, &info, crit_idx, mSectorCriteria + crit_idx,
+		           result);
 
 	if (result == CARD_RESULT_READY)
 		if (mSectorCriteria[crit_idx + 1].mState == TCriteria::STATE_UNREAD)
-			result = sector->read(&info, crit_idx + 1,
-			                      mSectorCriteria + (crit_idx + 1));
+			readSector(sector, &info, crit_idx + 1,
+			           mSectorCriteria + (crit_idx + 1), result);
 
 	if (result == CARD_RESULT_READY) {
 		int sec = decideUseSector(&mSectorCriteria[crit_idx]);
@@ -612,8 +642,8 @@ s32 TCardManager::readBlock_(u32 index)
 			sector->clearData();
 			sector->setCheckSum(0);
 		} else {
-			result = sector->read(&info, crit_idx + sec,
-			                      mSectorCriteria + (crit_idx + sec));
+			readSector(sector, &info, crit_idx + sec,
+			           mSectorCriteria + (crit_idx + sec), result);
 		}
 	}
 

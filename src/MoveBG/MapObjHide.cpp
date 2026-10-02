@@ -29,6 +29,10 @@
 #include <MSound/MSoundBGM.hpp>
 #include <M3DUtil/InfectiousStrings.hpp>
 
+// rogue rodata needed for matching @2782/@2784 before @3113 (twin strings @0x164)
+static const char rogueRodata2782[0xc] = { 0 };
+static const f32 rogueRodata2784[3]     = { 1.0f, 1.0f, 1.0f };
+
 void THideObjBase::appearObj(f32 y_offset)
 {
 	JGeometry::TVec3<f32> pos;
@@ -214,14 +218,19 @@ void TFruitBasket::countFruit(THitActor* param_1)
 
 void TFruitBasket::touchFruit(THitActor* param_1)
 {
-	if (fabsf(mRotation.x) < 45.0f) {
+	f32 rotX;
+	const TBGCheckData* roofPlane;
+
+	rotX = mRotation.x;
+	if (fabsf(rotX) < 45.0f) {
 		// Upwards facing basket -- check that the fruit's on top of us
-		if (((TLiveActor*)param_1)->getGroundPlane()->getActor() != this)
+		const TBGCheckData* groundPlane
+		    = ((TLiveActor*)param_1)->getGroundPlane();
+		if (groundPlane->getActor() != this)
 			return;
 	} else {
 		// Basket lying on it's side -- check that the fruit rolled inside
 		// enough to be under our side
-		const TBGCheckData* roofPlane;
 		gpMap->checkRoof(param_1->mPosition.x, param_1->mPosition.y,
 		                 param_1->mPosition.z, &roofPlane);
 		if (roofPlane->getActor() != this)
@@ -496,9 +505,23 @@ void TWaterHitPictureHideObj::loadAfter()
 
 void TWaterHitPictureHideObj::load(JSUMemoryInputStream& stream)
 {
-	THideObjBase::load(stream);
-
+	// Spelled out from THideObjBase::load so eventId is a local here.
+	// Inlined, it sat at 0x30. Retail wants eventId at 0x48, the color
+	// reads at 0x50/0x54/0x58, and frame -0x70. gap[4] is the hole
+	// between eventId and those reads; trash[0x18] is the stack below.
 	u32 r, g, b;
+	char gap[4];
+	s32 eventId;
+	char trash[0x18];
+	gap[0]   = 0;
+	trash[0] = 0;
+
+	TMapObjBase::load(stream);
+	TMapObjBase::loadHideObjInfo(stream, &eventId, &mAppearSpeed,
+	                             &mAppearYSpeed, &unk148);
+	setEventId(eventId);
+	SMS_LoadParticle("/scene/mapObj/ms_watcoin_hit.jpa", 0x57);
+
 	stream >> r >> g >> b;
 	mColor.r = r & 0xff;
 	mColor.g = g & 0xff;
@@ -587,25 +610,24 @@ void THideObjPictureTwin::afterFinishedAnim()
 
 void THideObjPictureTwin::loadAfter()
 {
+	char pad[8];
+	char nameBuf[0x40];
 	TWaterHitPictureHideObj::loadAfter();
 	char* wrapName = strstr(mName, "ふたご落書きＡ");
 	if (wrapName != nullptr) {
-		size_t len = strlen("ふたご落書きＡ");
-		char buffer[4];
-		buffer[0] = mName[len];
-		buffer[1] = mName[len + 1];
-		buffer[2] = mName[len + 2];
-		buffer[3] = mName[len + 3];
-
-		char buffer2[0x4C];
-		snprintf(buffer2, 0x40, "ふたご落書きＢ００");
-		buffer2[len]     = buffer[0];
-		buffer2[len + 1] = buffer[1];
-		buffer2[len + 2] = buffer[2];
-		buffer2[len + 3] = buffer[3];
+		size_t len     = strlen("ふたご落書きＡ");
+		char suffix0   = mName[len];
+		char suffix1   = mName[len + 1];
+		char suffix2   = mName[len + 2];
+		char suffix3   = mName[len + 3];
+		snprintf(nameBuf, 0x40, "ふたご落書きＢ００");
+		nameBuf[len]     = suffix0;
+		nameBuf[len + 1] = suffix1;
+		nameBuf[len + 2] = suffix2;
+		nameBuf[len + 3] = suffix3;
 
 		THideObjPictureTwin* hitActor = static_cast<THideObjPictureTwin*>(
-		    JDrama::TNameRefGen::search(buffer2));
+		    JDrama::TNameRefGen::search(nameBuf));
 		unk174         = hitActor;
 		unk174->unk174 = this;
 	}
@@ -675,7 +697,7 @@ void TBreakHideObj::initMapObj()
 	}
 }
 
-void TWoodBox::fabricatedGroundKillCheck(f32 dX, f32 dY)
+void TWoodBox::killNearWoodBox(f32 dX, f32 dY) const
 {
 	const TBGCheckData* groundPlane;
 	f32 resY = gpMap->checkGround(dX + gpMarioPos->x, gpMarioPos->y + 1000.0f,
@@ -688,6 +710,14 @@ void TWoodBox::fabricatedGroundKillCheck(f32 dX, f32 dY)
 		}
 	}
 }
+// Four inlined ground pointers sit 0x94 low in a frame 0x98 short.
+// 0x90 (not 0x94) lands them on retail 0xd4..0xe0 and the frame on -0xf0.
+static inline void woodBoxKillPad()
+{
+	char trash[0x90];
+	trash[0] = 0;
+}
+
 void TWoodBox::kill()
 {
 	startAnim(2);
@@ -700,10 +730,12 @@ void TWoodBox::kill()
 	SMSGetMSound()->startSoundActor(MSD_SE_IT_BARREL_CRASH, &mPosition, 0,
 	                                nullptr, 0, 4);
 
-	fabricatedGroundKillCheck(50.0f, 50.0f);
-	fabricatedGroundKillCheck(50.0f, -50.0f);
-	fabricatedGroundKillCheck(-50.0f, 50.0f);
-	fabricatedGroundKillCheck(-50.0f, -50.0f);
+	// Retail checks (-50,-50), (50,-50), (-50,50), then (50,50).
+	killNearWoodBox(-50.0f, -50.0f);
+	killNearWoodBox(50.0f, -50.0f);
+	killNearWoodBox(-50.0f, 50.0f);
+	killNearWoodBox(50.0f, 50.0f);
+	woodBoxKillPad();
 }
 
 void TWoodBox::loadAfter()

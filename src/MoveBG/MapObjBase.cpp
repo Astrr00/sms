@@ -11,6 +11,7 @@
 #include <MarioUtil/ShadowUtil.hpp>
 #include <M3DUtil/MActor.hpp>
 #include <M3DUtil/MActorAnm.hpp>
+#include <M3DUtil/SDLModel.hpp>
 #include <MSound/MSound.hpp>
 #include <MSound/MSoundSE.hpp>
 #include <JSystem/J3D/J3DGraphBase/J3DTransform.hpp>
@@ -121,8 +122,7 @@ void TMapObjBase::removeMapCollision()
 
 void TMapObjBase::setUpCurrentMapCollision()
 {
-	TMapCollisionManager* colman = mMapCollisionManager;
-	if (!colman)
+	if (!mMapCollisionManager)
 		return;
 
 	if (checkMapObjFlag(MAP_OBJ_FLAG_UNK8)) {
@@ -130,7 +130,7 @@ void TMapObjBase::setUpCurrentMapCollision()
 	} else {
 		JGeometry::TVec3<f32> pos(mPosition.x, mPosition.y - mYOffset,
 		                          mPosition.z);
-		colman->setUpUnk8TRS(pos, mRotation, mScaling);
+		mMapCollisionManager->setUpUnk8TRS(pos, mRotation, mScaling);
 	}
 }
 
@@ -217,9 +217,14 @@ void TMapObjBase::stopAnim() { }
 void TMapObjBase::startControlAnim(u16 param_1)
 {
 	startAnim(param_1);
-	if (mMapObjData->mAnim && param_1 < mMapObjData->mAnim->unk0)
-		mMActor->getFrameCtrl(mMapObjData->mAnim->unk4[param_1].unk8)
-		    ->setRate(0);
+	TMapObjData* data = mMapObjData;
+	if (data->mAnim && param_1 < data->mAnim->unk0) {
+		// clrlwi overwrites the first mAnim pointer; retail reloads it
+		// from the data pointer kept in r4.
+		const TMapObjAnimDataInfo* anim
+		    = *(const TMapObjAnimDataInfo* volatile*)&data->mAnim;
+		mMActor->getFrameCtrl(anim->unk4[param_1].unk8)->setRate(0);
+	}
 }
 
 void TMapObjBase::startBck(const char* param_1)
@@ -240,10 +245,8 @@ void TMapObjBase::startAnim(u16 param_1)
 	}
 
 	const TMapObjAnimDataInfo* anim = mMapObjData->mAnim;
-	if (!anim)
-		return;
-
-	if (param_1 >= anim->unk0)
+	// Last term of the || stays bgt / b, rather than a folded ble.
+	if (!anim || anim->unk0 <= param_1)
 		return;
 
 	const TMapObjAnimData* data = &anim->unk4[param_1];
@@ -251,7 +254,7 @@ void TMapObjBase::startAnim(u16 param_1)
 		if (unkFE != 0xffff && anim && anim->unk0 != 0) {
 			const TMapObjAnimData* d2 = &anim->unk4[unkFE];
 			if (d2->unk4 != nullptr) {
-				u8 type = d2->unk8;
+				int type = d2->unk8;
 				mMActor->getFrameCtrl(type)->setRate(0.0f);
 				mMActor->getFrameCtrl(type)->setFrame(0.0f);
 				mMActor->getUnk28(type)->unk0 = 0xffffffff;
@@ -278,6 +281,9 @@ void TMapObjBase::startAnim(u16 param_1)
 		actor->getModel()->getModelData()->getJointNodePointer(0)->setMtxCalc(
 		    actor->unk8);
 	}
+
+	char trash[0x10];
+	trash[0] = 0;
 }
 
 void TMapObjBase::makeObjDefault()
@@ -334,12 +340,23 @@ void TMapObjBase::makeObjDead()
 		SMS_HideAllShapePacket(getModel());
 }
 
+// Retail inlines the first setMtx site and keeps this weak out-of-line copy.
+#pragma dont_inline on
+extern "C" __declspec(weak) void
+setMtx__17TMapCollisionBaseFPA4_f(TMapCollisionBase* self, MtxPtr mtx)
+{
+	MTXCopy(mtx, self->unk20);
+}
+#pragma dont_inline off
+
 void TMapObjBase::makeObjAppeared()
 {
+	char trash[29];
+	trash[0] = 0;
 	offLiveFlag(LIVE_FLAG_DEAD | LIVE_FLAG_UNK8);
-	mVelocity.x = 0.0f;
-	mVelocity.y = 0.0f;
 	mVelocity.z = 0.0f;
+	mVelocity.y = 0.0f;
+	mVelocity.x = 0.0f;
 	onLiveFlag(LIVE_FLAG_UNK10);
 	mStateTimer = 0;
 	offHitFlag(HIT_FLAG_NO_COLLISION);
@@ -394,7 +411,7 @@ void TMapObjBase::makeObjAppeared()
 			            mScaling.x, mScaling.y, mScaling.z);
 
 			TMapCollisionBase* col = manager->getUnk8();
-			col->setMtx(mtx);
+			setMtx__17TMapCollisionBaseFPA4_f(col, mtx);
 			col->setUp();
 		}
 	}
@@ -471,49 +488,59 @@ void TMapObjBase::control()
 
 void TMapObjBase::setGroundCollision()
 {
-	if (!mMapCollisionManager)
-		return;
-	if (mMapCollisionManager->unk8->mKind != TMapCollisionBase::KIND_MOVE)
+	JGeometry::TVec3<f32> pos;
+	char trash[0x24];
+	trash[0] = 0;
+
+	if (mMapCollisionManager == nullptr)
 		return;
 
-	if (checkMapObjFlag(MAP_OBJ_FLAG_UNK2)) {
-		if (mColCount == 0 && unk102 == 0)
-			return;
-		--unk102;
-		if (mColCount != 0)
-			unk102 = 4;
-	}
-
-	if (checkMapObjFlag(MAP_OBJ_FLAG_UNK8)) {
-		MtxPtr mtx = getModel()->getAnmMtx(0);
-		if (mMapCollisionManager->unk8)
-			mMapCollisionManager->unk8->moveMtx(mtx);
-	} else {
-		JGeometry::TVec3<f32> pos(mPosition.x, mPosition.y - mYOffset,
-		                          mPosition.z);
-		if (checkMapObjFlag(MAP_OBJ_FLAG_UNK4)) {
-			mMapCollisionManager->unk8->offFlag(
-			    TMapCollisionBase::FLAG_UNK8000);
-			mMapCollisionManager->unk8->offFlag(
-			    TMapCollisionBase::FLAG_UNK4000);
-			if (mMapCollisionManager->unk8)
-				mMapCollisionManager->unk8->moveSRT(pos, mRotation, mScaling);
-		} else {
-			mMapCollisionManager->unk8->offFlag(
-			    TMapCollisionBase::FLAG_UNK4000);
-			if (mMapCollisionManager->unk8)
-				mMapCollisionManager->unk8->moveTrans(pos);
+	switch (mMapCollisionManager->unk8->mKind) {
+	case TMapCollisionBase::KIND_MOVE:
+		if (checkMapObjFlag(MAP_OBJ_FLAG_UNK2)) {
+			if (mColCount == 0 && unk102 == 0)
+				return;
+			--unk102;
+			if (mColCount != 0)
+				unk102 = 4;
 		}
+
+		if (checkMapObjFlag(MAP_OBJ_FLAG_UNK8)) {
+			MtxPtr mtx = getModel()->getAnmMtx(0);
+			if (mMapCollisionManager->unk8 != nullptr)
+				mMapCollisionManager->unk8->moveMtx(mtx);
+		} else {
+			pos.set(mPosition.x, mPosition.y - mYOffset, mPosition.z);
+
+			if (checkMapObjFlag(MAP_OBJ_FLAG_UNK4)) {
+				mMapCollisionManager->unk8->offFlag(
+				    TMapCollisionBase::FLAG_UNK8000);
+				mMapCollisionManager->unk8->offFlag(
+				    TMapCollisionBase::FLAG_UNK4000);
+				if (mMapCollisionManager->unk8 != nullptr)
+					mMapCollisionManager->unk8->moveSRT(pos, mRotation,
+					                                    mScaling);
+			} else {
+				mMapCollisionManager->unk8->offFlag(
+				    TMapCollisionBase::FLAG_UNK4000);
+				if (mMapCollisionManager->unk8 != nullptr)
+					mMapCollisionManager->unk8->moveTrans(pos);
+			}
+		}
+		break;
+	default:
+		break;
 	}
 }
 
 void TMapObjBase::perform(u32 cue, JDrama::TGraphics* graphics)
 {
-	if (gpMarDirector->isTalkModeNow() && !gpMarDirector->isDemoModeNow()) {
-		if (checkLiveFlag(LIVE_FLAG_DEAD))
-			return;
+	// Dead slot: retail frame is -0x90, body alone is -0x60.
+	char trash[0x28];
+	trash[0] = 0;
 
-		if (isActorType(0x4000003B))
+	if (gpMarDirector->isTalkModeNow() && !gpMarDirector->isDemoModeNow()) {
+		if (checkLiveFlag(LIVE_FLAG_DEAD) || isActorType(0x4000003B))
 			return;
 
 		if (cue & CUE_MOVE) {
@@ -602,7 +629,7 @@ void TMapObjBase::perform(u32 cue, JDrama::TGraphics* graphics)
 
 	if ((cue & CUE_CALC_VIEW) && mMActor
 	    && checkMapObjFlag(MAP_OBJ_FLAG_UNK400)) {
-		getModel()->viewCalc();
+		static_cast<SDLModel*>(getModel())->viewCalcSimple();
 		cue &= ~CUE_CALC_VIEW;
 		requestShadow();
 	}
@@ -654,11 +681,13 @@ BOOL TMapObjBase::receiveMessage(THitActor* sender, u32 message)
 
 void TMapObjBase::initAndRegister(const char* param_1)
 {
+	char trash[4];
+	trash[0] = 0;
+
 	unkF4 = param_1;
 	initMapObj();
 	if (mMapObjData->unkC) {
-		static_cast<TIdxGroupObj*>(
-		    JDrama::TNameRefGen::search(mMapObjData->unkC))
+		static_cast<TIdxGroupObj*>(JDrama::TNameRefGen::search(mMapObjData->unkC))
 		    ->push_back(this);
 	}
 }

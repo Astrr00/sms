@@ -11,6 +11,9 @@
 // rogue
 #include <MSound/MSoundBGM.hpp>
 
+static const char dummyMactorStringValue1[] = "\0\0\0\0\0\0\0\0\0\0\0";
+static const char SMS_NO_MEMORY_MESSAGE[]   = "メモリが足りません\n";
+
 using namespace MSoundSESystem;
 
 JSUList<MSRandVol> MSRandVol::smList;
@@ -31,18 +34,21 @@ MSRandVol::MSRandVol(u32 param)
     , unk14(param)
     , mAmplitude(0.5f)
 {
-	mPSlopes[0] = 0.0f;
-	mPSlopes[1] = 0.25f;
-	mPSlopes[2] = 0.5f;
-	mPSlopes[3] = 0.75f;
+	// Same 0.5f as mAmplitude. The name keeps it in f4 and
+	// reserves the extra frame slot.
+	f32 half       = 0.5f;
+	mPSlopes[0]    = 0.0f;
+	mPSlopes[1]    = 0.25f;
+	mPSlopes[2]    = half;
+	mPSlopes[3]    = 0.75f;
 
-	mCSlopes[0] = 1.0f;
-	mCSlopes[1] = 1.5f;
-	mCSlopes[2] = 2.0f;
-	mCSlopes[3] = 4.0f;
+	mCSlopes[0]    = 1.0f;
+	mCSlopes[1]    = 1.5f;
+	mCSlopes[2]    = 2.0f;
+	mCSlopes[3]    = 4.0f;
 
 	mAmplitudes[0] = 0.25f;
-	mAmplitudes[1] = 0.5f;
+	mAmplitudes[1] = half;
 	mAmplitudes[2] = 0.75f;
 	mAmplitudes[3] = 1.0f;
 }
@@ -51,12 +57,11 @@ u32 MSRandVol::getRandomVolume(u32 param_1, u32 param_2) { }
 
 f32 MSRandVol::getRandVol(u32 param_1)
 {
-	f32 d = JALCalc::getRandom(
-	            mAmplitudes[param_1 >> MSSeSwBit_RandomVolumeAmplitudeShift & 3]
-	                * mAmplitude,
-	            mCSlopes[param_1 >> MSSeSwBit_RandomVolumeCSlopeShift & 3],
-	            mPSlopes[param_1 >> MSSeSwBit_RandomVolumePSlopeShift & 3])
-	        + 1.0f;
+	f32 amp = mAmplitudes[param_1 >> MSSeSwBit_RandomVolumeAmplitudeShift & 3]
+	          * mAmplitude;
+	f32 plus  = mPSlopes[param_1 >> MSSeSwBit_RandomVolumePSlopeShift & 3];
+	f32 curve = mCSlopes[param_1 >> MSSeSwBit_RandomVolumeCSlopeShift & 3];
+	f32 d     = JALCalc::getRandom(amp, curve, plus) + 1.0f;
 
 	f32 x = d < 0.0f ? 0.0f : d;
 	return x > 2.0f ? 2.0f : x;
@@ -128,9 +133,10 @@ MSRandPlay::MSRandPlay(u32 sound_id, s32 wait_min, s32 wait_max,
     , mSoundID(sound_id)
     , mWaitMin(wait_min)
     , mWaitMax(wait_max)
-    , mCurveSlope(curve_slope)
-    , mPlusSlope(plus_slope)
+	, mCurveSlope(curve_slope)
+	, mPlusSlope(plus_slope)
 {
+	char pad[8];
 }
 
 void MSRandPlay::randPlay(u32 vec_idx)
@@ -352,19 +358,21 @@ void MSoundSE::construct()
 	// clang-format on
 
 	{
+		char pad[0x38];
+		pad[0] = 0;
 		MSSetSoundGrp* grp = new MSSetSoundGrp(
-		    0, "カモメ", 3, 2, 13, 2, 3.0f, 1, 44.0f, 3.0f, 1.0f, 1.0f, 0.0f,
+		    0, "カモメ", 3, 2, 19, 2, 3.0f, 1, 44.0f, 3.0f, 1.0f, 1.0f, 0.0f,
 		    0xf, 200.0f, 0xb4, 1.0f, 1.0f, 0.0f, false);
 		// clang-format off
 		grp->append(new MSSetSoundMember(MSD_SE_OBJ_KAMOME_SOLO, nullptr, 60.0f));
-		grp->append(new MSSetSoundMember(MSD_SE_OBJ_KAMOME_SOLO, nullptr, 60.0f));
-		grp->append(new MSSetSoundMember(MSD_SE_OBJ_KAMOME_SOLO, nullptr, 60.0f));
-		grp->append(new MSSetSoundMember(MSD_SE_OBJ_KAMOME_SOLO, nullptr, 60.0f));
-		grp->append(new MSSetSoundMember(MSD_SE_OBJ_KAMOME_SOLO, nullptr, 60.0f));
-		grp->append(new MSSetSoundMember(MSD_SE_OBJ_KAMOME_SOLO, nullptr, 60.0f));
-		grp->append(new MSSetSoundMember(MSD_SE_OBJ_KAMOME_SOLO, nullptr, 60.0f));
-		grp->append(new MSSetSoundMember(MSD_SE_OBJ_KAMOME_SOLO, nullptr, 60.0f));
-		grp->append(new MSSetSoundMember(MSD_SE_OBJ_KAMOME_SOLO, nullptr, 60.0f));
+		grp->append(new MSSetSoundMember(MSD_SE_OBJ_KAMOME_SOLO_12, nullptr, 60.0f));
+		grp->append(new MSSetSoundMember(MSD_SE_OBJ_KAMOME_SOLO_13, nullptr, 60.0f));
+		grp->append(new MSSetSoundMember(MSD_SE_OBJ_KAMOME_SOLO_21, nullptr, 60.0f));
+		grp->append(new MSSetSoundMember(MSD_SE_OBJ_KAMOME_SOLO_22, nullptr, 60.0f));
+		grp->append(new MSSetSoundMember(MSD_SE_OBJ_KAMOME_SOLO_23, nullptr, 60.0f));
+		grp->append(new MSSetSoundMember(MSD_SE_OBJ_KAMOME_ENSB, nullptr, 180.0f));
+		grp->append(new MSSetSoundMember(MSD_SE_OBJ_KAMOME_ENSB_2, nullptr, 180.0f));
+		grp->append(new MSSetSoundMember(MSD_SE_OBJ_KAMOME_ENSB_3, nullptr, 180.0f));
 		// clang-format on
 	}
 }
@@ -552,14 +560,26 @@ bool MSoundSE::checkSoundArea(u32 param_1, const Vec& param_2)
 
 	switch (param_1) {
 	case 7: {
-		Vec vec = *MSGMSound->unkAC[0].mPosition;
+		Vec vec1;
+		Vec vec3;
+		int hole1;
+		Vec vec;
+		int hole2;
+		Vec vec2;
+		int bot1;
+		int bot2;
+		hole1 = 0;
+		hole2 = 0;
+		bot1  = 0;
+		bot2  = 0;
+		vec   = *MSGMSound->unkAC[0].mPosition;
 		vec.y += 75.0f;
-		Vec vec1  = vec;
+		vec1      = vec;
 		int iVar2 = gpCubeCamera->getInCubeNo(vec1);
 
-		Vec vec2 = param_2;
+		vec2 = param_2;
 		vec2.y += 75.0f;
-		Vec vec3  = vec2;
+		vec3      = vec2;
 		int iVar3 = gpCubeCamera->getInCubeNo(vec3);
 
 		if (iVar3 != -1) {
@@ -613,6 +633,8 @@ JAISound* MSoundSE::startSoundActorInner(u32 id, JAISoundHandle* out_handle,
                                          JAIActor* actor, u32 fade,
                                          u8 camera_idx)
 {
+	char pad[8];
+	pad[0] = 0;
 	u32 uVar2 = MSound::getBstSwitch(id);
 	if (actor != (JAIActor*)0xffffffff) {
 		switch (MSGMSound->unkCD) {
@@ -716,16 +738,17 @@ u32 MSoundSE::getNewIDByGroundCode(u32 id, JAIActor* actor)
 	if (ground & 0xf00)
 		return id;
 
+	u32 result = id;
 	switch (id) {
 	case MSD_SE_MA_WALK_STONE_L_HEEL:
 	case MSD_SE_MA_WALK_STONE_L_TIP:
 	case MSD_SE_MA_WALK_STONE_R_HEEL:
 	case MSD_SE_MA_WALK_STONE_R_TIP:
-		id += ground << 3 & 0x7f8;
+		result += ground << 3 & 0x7f8;
 		break;
 	}
 
-	return id;
+	return result;
 }
 
 u32 MSoundSE::getNewIDBySurfaceCode(u32 id, JAIActor* actor)
@@ -780,6 +803,12 @@ u32 MSoundSE::getNewIDBySurfaceCode(u32 id, JAIActor* actor)
 	return id;
 }
 
+static inline void npcPad()
+{
+	char pad[0xC];
+	pad[0] = 0;
+}
+
 void MSoundSE::startSoundNpcActor(u32 id, const Vec* position, u32 ground_no,
                                   JAISoundHandle* out_handle, u32 fade,
                                   u8 camera_idx)
@@ -787,6 +816,7 @@ void MSoundSE::startSoundNpcActor(u32 id, const Vec* position, u32 ground_no,
 	JAIActor actor(position, position, position, ground_no);
 	checkMonoSound(id, &actor);
 	startSoundActorInner(id, out_handle, &actor, fade, camera_idx);
+	npcPad();
 }
 
 bool MSoundSE::checkMonoSound(u32 id, JAIActor* actor)

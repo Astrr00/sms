@@ -125,6 +125,9 @@ TNozzleBmdData nozzleBmdData = {
 	},
 };
 
+s32 TNozzleButton::getNozzleKind() const { return 0; } // fabricated
+s32 TNozzleTurbo::getNozzleKind() const { return 0; }  // fabricated
+
 static BOOL NozzleCtrl(J3DNode* node, BOOL param_2)
 {
 	// TODO: Inlined stack space
@@ -134,8 +137,7 @@ static BOOL NozzleCtrl(J3DNode* node, BOOL param_2)
 			                   ->getGunAngle();
 			if (gunAngle < 0) {
 				Mtx mtx;
-				// Unused stack space
-				// volatile u32 unused2[6];
+				char trash[0x14];
 				MsMtxSetRotRPH(mtx, 0.0f, 0.0f, SHORTANGLE2DEG(gunAngle));
 				MTXConcat(J3DSys::mCurrentMtx, mtx, J3DSys::mCurrentMtx);
 			}
@@ -149,8 +151,7 @@ static BOOL RotateCtrl(J3DNode* node, BOOL param_2)
 	if (!param_2 && gpMarioForCallBack != nullptr) {
 		s16 local1cd0 = gpMarioForCallBack->mWaterGun->unk1CD0;
 		Mtx mtx;
-		// Unused stack space
-		// volatile u32 unused2[7];
+		char trash[0x1c];
 		MsMtxSetRotRPH(mtx, 0.005493164f * local1cd0, 0.0f, 0.0f);
 		MTXConcat(J3DSys::mCurrentMtx, mtx, J3DSys::mCurrentMtx);
 	}
@@ -166,8 +167,7 @@ static BOOL WaterGunDivingCtrlL(J3DNode* node, BOOL param_2)
 		s32 nozzleSpeedY = gpMarioForCallBack->mWaterGun->unk1CC8;
 		s16 neg          = -nozzleSpeedY;
 		Mtx mtx;
-		// Unused stack space
-		// volatile u32 unused2[7];
+		char trash[0x1c];
 		MsMtxSetRotRPH(mtx, 0.0f, 0.0f, 0.005493164f * neg);
 		MTXConcat(J3DSys::mCurrentMtx, mtx, J3DSys::mCurrentMtx);
 	}
@@ -183,8 +183,7 @@ static BOOL WaterGunDivingCtrlR(J3DNode* node, BOOL param_2)
 		s32 nozzleSpeedY = gpMarioForCallBack->mWaterGun->unk1CCC;
 		s16 neg          = -nozzleSpeedY;
 		Mtx mtx;
-		// Unused stack space
-		// volatile u32 unused2[7];
+		char trash[0x1c];
 		MsMtxSetRotRPH(mtx, 0.0f, 0.0f, 0.005493164f * neg);
 		MTXConcat(J3DSys::mCurrentMtx, mtx, J3DSys::mCurrentMtx);
 	}
@@ -217,7 +216,7 @@ void TNozzleBase::init()
 
 void TNozzleBase::calcGunAngle(const TMarioControllerWork& work)
 {
-	// volatile u32 unused1[17];
+	char trash[0x48];
 	if (mFludd->mMario == gpMarioAddress
 	    && (gpCamera->isLButtonCamera() || gpCamera->isJetCoaster1stCamera())) {
 		unk36E = gpCamera->mCurrentTarget.mPitch;
@@ -226,10 +225,9 @@ void TNozzleBase::calcGunAngle(const TMarioControllerWork& work)
 
 	s16 angle;
 	if (mFludd->mMario->mStatus == MARIO_STATUS_SQUAT) {
-		// TODO: Wrong reguster used, using r3 instead of r4
-		angle = unk36E
-		        + (s16)(mFludd->mMario->mGamePad->mCompSPos[0 * 2 + 1]
-		                * mEmitParams.mRButtonMult.get());
+		angle = unk36E;
+		angle += (s16)(mFludd->mMario->mGamePad->mCompSPos[0 * 2 + 1]
+		               * mEmitParams.mRButtonMult.get());
 	} else {
 		angle = -mEmitParams.mLAngleBase.get();
 	}
@@ -252,7 +250,8 @@ void TNozzleBase::movement(const TMarioControllerWork& controllerWork)
 	if (mFludd->mCurrentWater <= 0) {
 		return;
 	}
-	s32 var1 = 256.0f * controllerWork.mAnalogR * 150.0f;
+	// Retail multiplies the analog by 150, then by 256.
+	s32 var1 = 150.0f * controllerWork.mAnalogR * 256.0f;
 
 	if (var1 > unk372) {
 		unk378 = (var1 - unk372) * 0.000015258789f;
@@ -274,13 +273,13 @@ void TNozzleBase::emitCommon(int param_1, TWaterEmitInfo* param_2)
 	    gpModelWaterManager->mWaterParticleTypes[mEmitParams.mType.get()]
 	        ->mAlive.get());
 
+	char trash[8];
 	JGeometry::TVec3<f32> pos;
 	JGeometry::TVec3<f32> dir;
 	JGeometry::TVec3<f32> speed;
+	char trash2[0x10];
 	mFludd->getEmitPosDirSpeed(param_1, &pos, &dir, &speed);
 
-	// TODO: This feels wrong
-	// TODO: Fix asm
 	param_2->mPos.value = pos;
 	param_2->mV.value   = speed;
 	param_2->mDir.value = dir;
@@ -358,6 +357,8 @@ void TNozzleBase::emit(int param_1)
 		}
 	}
 }
+
+bool TNozzleBase::isAnmEnd() const { return false; } // fabricated
 
 // TODO: This has a lot of inline functions, find them and update them
 // properly
@@ -496,6 +497,18 @@ void TNozzleBase::animation(int param_1)
 
 		break;
 	}
+}
+
+TNozzleTrigger::TNozzleTrigger(const char* name, const char* prm,
+                               TWaterGun* fludd)
+    : TNozzleBase(name, prm, fludd)
+{
+	unk38C = 0xffffffff;
+	unk384 = false;
+	unk385 = INACTIVE;
+	unk36C = 0;
+	unk386 = 0;
+	unk388 = 0.0f;
 }
 
 void TNozzleTrigger::init()
@@ -864,6 +877,19 @@ void TNozzleTrigger::animation(int param_1)
 	}
 }
 
+TNozzleButton::TNozzleButton(const char*, const char*, TWaterGun*) { } // fabricated
+void TNozzleButton::init() { }                                         // fabricated
+void TNozzleButton::movement(const TMarioControllerWork&) { }          // fabricated
+void TNozzleButton::animation(int) { }                                 // fabricated
+void TNozzleButton::emit(int) { } // fabricated
+
+TNozzleDeform::TNozzleDeform(const char* name, const char* prm, TWaterGun* fludd)
+    : TNozzleBase(name, prm, fludd)
+    , mBomb(name, "/Mario/WaterGun/NozzleDeformBomb.prm", fludd)
+{
+	init();
+}
+
 void TNozzleDeform::movement(const TMarioControllerWork& controllerWork)
 {
 	char trash[0x10];
@@ -1194,6 +1220,10 @@ void TNozzleDeform::animation(int param)
 	}
 }
 
+TNozzleTurbo::TNozzleTurbo(const char*, const char*, TWaterGun*) { } // fabricated
+void TNozzleTurbo::movement(const TMarioControllerWork&) { }         // fabricated
+void TNozzleTurbo::animation(int) { }                                // fabricated
+
 TWaterGun::TWaterGun(TMario* mario)
     : mNozzleDeform("normal_wg", "/Mario/WaterGun/NozzleDeform.prm", this)
     , mNozzleRocket(nullptr, "/Mario/WaterGun/NozzleTrgRocket.prm", this)
@@ -1419,7 +1449,13 @@ void TWaterGun::init()
 	}
 }
 
+void TWaterGun::createGunBody() { } // fabricated
+
 void TWaterGun::initInLoadAfter() { }
+
+void TWaterGun::entryAll() { }              // fabricated
+void TWaterGun::finalDrawInitialize() { }   // fabricated
+TWaterGun::TDeParams::TDeParams() { }       // fabricated
 
 // TODO: Do i really need to explcitly say this?
 #pragma dont_inline on
@@ -1456,6 +1492,27 @@ MtxPtr TWaterGun::getNozzleMtx()
 	return mFluddModel->mModel->getAnmMtx(unk1CD8);
 }
 
+void TWaterGun::setEmitPt()
+{
+	MActor* actor = getCurrentNozzle()->unk380;
+	if (actor != nullptr) {
+		actor->getModel()->setBaseTRMtx(getModel()->getAnmMtx(unk1CD8));
+	}
+
+	for (s32 index = 0;
+	     index < nozzleBmdData.getEmitterCount(mCurrentNozzle); ++index) {
+		MtxPtr mtx = getEmitMtx(index);
+		if (mtx != nullptr) {
+			mEmitPos[index].x = mtx[0][3];
+			mEmitPos[index].y = mtx[1][3];
+			mEmitPos[index].z = mtx[2][3];
+		}
+	}
+}
+
+J3DModel* TWaterGun::getModel() { return mFluddModel->mModel; }
+void TWaterGun::getWaterGunAnmID(int) { } // fabricated
+
 void TWaterGun::changeNozzle(TNozzleType nozzleType, bool animate)
 {
 	char trash[0x40];
@@ -1484,13 +1541,14 @@ void TWaterGun::changeNozzle(TNozzleType nozzleType, bool animate)
 
 void TWaterGun::movement()
 {
+	char trash[0xF0];
 	if (!canSpray()) {
 		unk1CC2 = 0;
 		unk1CC4 = 0;
 	}
 
-	unk1CC8 += (unk1CC2 - unk1CC8) * mWatergunParams.mChangeSpeed.get();
-	unk1CCC += (unk1CC4 - unk1CCC) * mWatergunParams.mChangeSpeed.get();
+	unk1CC8 += (unk1CC2 - unk1CC8) * mWatergunParams.mHoverSmooth.get();
+	unk1CCC += (unk1CC4 - unk1CCC) * mWatergunParams.mHoverSmooth.get();
 
 	rotateProp(getCurrentNozzle()->unk378);
 
@@ -1524,8 +1582,8 @@ void TWaterGun::movement()
 
 	// Nozzle swapping
 	if (mSwitchToSecondNozzleSpeed != 0.0f) {
+		f32 after = mSwitchToSecondNozzleProgress + mSwitchToSecondNozzleSpeed;
 		f32 before                    = mSwitchToSecondNozzleProgress;
-		f32 after                     = before + mSwitchToSecondNozzleSpeed;
 		mSwitchToSecondNozzleProgress = after;
 
 		if (before < 0.5f && 0.5f <= after)
@@ -1637,9 +1695,7 @@ void TWaterGun::calcAnimation(JDrama::TGraphics* graphics)
 
 void TWaterGun::perform(u32 cue, JDrama::TGraphics* graphics)
 {
-	// TODO: Missing stack space
-	// volatile u32 unused2[24];
-
+	char trash[0x50];
 	if ((cue & CUE_MOVE) != 0) {
 		if ((mFlags & WATER_GUN_FLAG_UNK10) != 0) {
 			mCurrentWater = 0;
@@ -1653,22 +1709,8 @@ void TWaterGun::perform(u32 cue, JDrama::TGraphics* graphics)
 
 	mFluddModel->perform(cue, graphics);
 
-	if ((cue & CUE_CALC_ANIM) != 0) {
-		MActor* p2 = getCurrentNozzle()->unk380;
-		if (p2 != nullptr) {
-			p2->getModel()->setBaseTRMtx(getModel()->getAnmMtx(unk1CD8));
-		}
-
-		for (s32 index = 0;
-		     index < nozzleBmdData.getEmitterCount(mCurrentNozzle); ++index) {
-			MtxPtr p1 = getEmitMtx(index);
-			if (p1 != nullptr) {
-				mEmitPos[index].x = p1[0][3];
-				mEmitPos[index].y = p1[1][3];
-				mEmitPos[index].z = p1[2][3];
-			}
-		}
-	}
+	if ((cue & CUE_CALC_ANIM) != 0)
+		setEmitPt();
 
 	if (getCurrentNozzle()->unk380) {
 		getCurrentNozzle()->unk380->perform(cue, graphics);
@@ -1732,6 +1774,8 @@ f32 TWaterGun::getPressureMax()
 	return 0.0f;
 }
 
+void TWaterGun::getWillBeEmitted() { } // fabricated
+
 // TODO: Figure out why inline happens
 #pragma dont_inline on
 void TWaterGun::getEmitPosDirSpeed(int index, JGeometry::TVec3<f32>* pos,
@@ -1773,6 +1817,8 @@ void TWaterGun::rotateProp(f32 rotation)
 		unk1CD0 = 0;
 	}
 }
+
+void TWaterGun::getMarioUpperStatus() { } // fabricated
 
 void TWaterGun::triggerPressureMovement(
     const TMarioControllerWork& controllerWork)
@@ -1918,3 +1964,6 @@ void TWaterGun::changeBackup()
 		mSwitchToSecondNozzleSpeed = -mWatergunParams.mChangeSpeed.get();
 	}
 }
+
+void TWaterGun::startDashEffect() { } // fabricated
+void TWaterGun::endDashEffect() { }   // fabricated

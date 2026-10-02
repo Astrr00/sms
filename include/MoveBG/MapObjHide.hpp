@@ -100,7 +100,10 @@ public:
 	virtual void touchActor(THitActor*);
 	virtual u32 touchWater(THitActor*);
 #pragma dont_inline on
-	virtual const JGeometry::TVec3<f32>& getObjAppearPos() { return mPosition; }
+	virtual const JGeometry::TVec3<f32>& getObjAppearPos() const
+	{
+		return mPosition;
+	}
 #pragma dont_inline off
 	virtual void afterFinishedAnim();
 	virtual void forward(f32);
@@ -129,7 +132,7 @@ public:
 	virtual void initMapObj();
 
 #pragma dont_inline on
-	virtual const JGeometry::TVec3<f32>& getObjAppearPos()
+	virtual const JGeometry::TVec3<f32>& getObjAppearPos() const
 	{
 		return unk174->mPosition;
 	}
@@ -162,7 +165,7 @@ public:
 	virtual void kill();
 
 	// Fabricated
-	void fabricatedGroundKillCheck(f32, f32);
+	void killNearWoodBox(f32, f32) const;
 };
 
 #endif

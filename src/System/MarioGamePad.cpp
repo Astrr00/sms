@@ -13,6 +13,8 @@ void TMarioGamePad::reset()
 
 void TMarioGamePad::updateMeaning()
 {
+	char trash[0x150];
+
 	if (mDisabledFrames > 0)
 		mDisabledFrames -= 1;
 

@@ -131,6 +131,14 @@ TMapObjGrassGroup::TMapObjGrassGroup()
 {
 }
 
+// Matrix sat 0x14 low and the fctiwz spills 0x18 low, in a frame 0x18
+// short. 0x10 lands both; 0x14 leaves the matrix 4 high.
+static inline void initDrawNearPad()
+{
+	char trash[0x10];
+	trash[0] = 0;
+}
+
 void TMapObjGrassManager::initDrawNear() const
 {
 	Mtx viewItm;
@@ -175,6 +183,7 @@ void TMapObjGrassManager::initDrawNear() const
 	GXSetAlphaCompare(GX_ALWAYS, 0, GX_AOP_OR, GX_ALWAYS, 0);
 	GXSetZMode(GX_TRUE, GX_LEQUAL, GX_TRUE);
 	GXSetCullMode(GX_CULL_NONE);
+	initDrawNearPad();
 }
 
 void TMapObjGrassManager::initDrawFar() const

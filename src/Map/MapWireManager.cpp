@@ -15,7 +15,17 @@
 f32 TMapWireActor::mCommonAttackRadius = 200.0f;
 f32 TMapWireActor::mCommonAttackHeight = 200.0f;
 
-void TMapWireActor::checkTakingActor() { }
+void TMapWireActor::checkTakingActor()
+{
+	if (unk74->unk7C != nullptr) {
+		for (int i = 0; i < mColCount; ++i) {
+			THitActor* col = mCollisions[i];
+			if (col->isActorType(0x80000001)
+			    && col->receiveMessage(this, HIT_MESSAGE_TAKE))
+				mHeldObject = (TTakeActor*)mCollisions[i];
+		}
+	}
+}
 
 f32 TMapWireActor::getPosInWire() const
 {
@@ -98,6 +108,8 @@ static void initDraw()
 
 void TMapWireActorManager::doActorToWire()
 {
+	char trash[0x28];
+	trash[0] = 0;
 	TMapWire* previousWire = unk7C;
 	int cubeNo             = gpCubeWire->getInCubeNo(unk0->mPosition);
 	if (cubeNo != -1)
@@ -110,14 +122,7 @@ void TMapWireActorManager::doActorToWire()
 		unk4.unk70       = 1;
 	}
 
-	if (unk0->mHeldObject != nullptr) {
-		for (int i = 0; i < unk4.mColCount; ++i) {
-			THitActor* col = unk4.mCollisions[i];
-			if (col->isActorType(0x80000001)
-			    && col->receiveMessage(&unk4, HIT_MESSAGE_TAKE))
-				unk4.mHeldObject = (TTakeActor*)unk4.mCollisions[i];
-		}
-	}
+	unk4.checkTakingActor();
 
 	if (previousWire != nullptr) {
 		if (unk7C != nullptr && unk7C != previousWire)
@@ -225,6 +230,8 @@ void TMapWireManager::loadAfter()
 
 void TMapWireManager::load(JSUMemoryInputStream& stream)
 {
+	char gap[4];
+	gap[0] = 0;
 	JDrama::TViewObj::load(stream);
 	stream.readString();
 	stream >> unk14;
@@ -233,6 +240,8 @@ void TMapWireManager::load(JSUMemoryInputStream& stream)
 	stream >> TMapWire::mDrawHeight;
 
 	s32 val;
+	char trash[1];
+	trash[0] = 0;
 	stream >> val;
 	mUpperSurface.r = val;
 	stream >> val;

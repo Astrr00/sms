@@ -76,6 +76,7 @@ void TMapObjPlane::draw()
 		f32 fVar1 = unkFC;
 
 		f32 worldZ = mCollision->gridToWorld(z);
+		f32 worldZ2 = worldZ + fVar1;
 
 		GXBegin(GX_TRIANGLESTRIP, GX_VTXFMT0, mExtents * 2);
 		for (int x = 0; x < mExtents; ++x) {
@@ -85,7 +86,7 @@ void TMapObjPlane::draw()
 			GXNormal3f32(normalAt(x, z).x, normalAt(x, z).y, normalAt(x, z).z);
 			GXTexCoord2f32(getTexPos(x), getTexPos(z));
 
-			GXPosition3f32(worldX, heightAt(x, z + 1), worldZ + fVar1);
+			GXPosition3f32(worldX, heightAt(x, z + 1), worldZ2);
 			GXNormal3f32(normalAt(x, z + 1).x, normalAt(x, z + 1).y,
 			             normalAt(x, z + 1).z);
 			GXPosition2f32(getTexPos(x), getTexPos(z + 1));
@@ -94,16 +95,18 @@ void TMapObjPlane::draw()
 	}
 }
 
-f32 TMapObjPlane::getTexPos(f32 v) const { return mTexScale * v; }
+f32 TMapObjPlane::getTexPos(f32 v) const { return v * mTexScale; }
 
 void TMapObjPlane::updateCheckData(int x, int z)
 {
 	if (x < 0 || mExtents <= x || z < 0 || mExtents <= z)
 		return;
 
+	// Both X samples, then both Z samples. That puts the z and x+1
+	// int-to-float spills at 0x88 and 0x90.
 	f32 x1 = mCollision->gridToWorld(x);
-	f32 z1 = mCollision->gridToWorld(z);
 	f32 x2 = mCollision->gridToWorld(x + 1);
+	f32 z1 = mCollision->gridToWorld(z);
 	f32 z2 = mCollision->gridToWorld(z + 1);
 
 	JGeometry::TVec3<f32> local_64(x1, heightAt(x, z) + 2.0f, z1);
@@ -230,13 +233,19 @@ void TMapObjPlane::perform(u32 cue, JDrama::TGraphics*)
 	}
 }
 
+static inline int readBmpDim(const u8* bmp, int base)
+{
+	int b0 = bmp[base];
+	int b1 = bmp[base + 1];
+	int b2 = bmp[base + 2];
+	int b3 = bmp[base + 3];
+	return (b3 << 24) + (b2 << 16) + (b1 << 8) + b0;
+}
+
 void TMapObjPlane::makeMountain()
 {
-	int width = (unk118[0x15] << 24) + (unk118[0x14] << 16)
-	            + (unk118[0x13] << 8) + unk118[0x12];
-
-	int height = (unk118[0x19] << 24) + (unk118[0x18] << 16)
-	             + (unk118[0x17] << 8) + unk118[0x16];
+	int width  = readBmpDim(unk118, 0x12);
+	int height = readBmpDim(unk118, 0x16);
 
 	for (int z = 0; z < mExtents; z = z + 1) {
 		for (int x = 0; x < mExtents; x = x + 1) {

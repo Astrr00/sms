@@ -150,6 +150,13 @@ static inline bool checkProgressiveSelect(TGCLogoDir* director)
 	return selected;
 }
 
+static inline JUtility::TColor logoColor()
+{
+	char pad[0x2c];
+	pad[0] = 0;
+	return JUtility::TColor(255, 255, 255, 255);
+}
+
 int TGCLogoDir::direct()
 {
 	int desiredAppState = TApplication::APP_STATE_DEFAULT;
@@ -166,8 +173,11 @@ int TGCLogoDir::direct()
 
 			mProgSelect->unkC.on(0xffff);
 			mLogoView->mLogoTex = mDolbyTexture;
-			mLogoView->mRect    = JUTRect(254, 201, 404, 271);
-			mLogoView->mColor   = JUtility::TColor(255, 255, 255, 255);
+			JUTRect logo(254, 201, 404, 271);
+			char gap[4];
+			gap[0] = 0;
+			mLogoView->mRect  = logo;
+			mLogoView->mColor = logoColor();
 			gpApplication.mFader->startWipe(14, 0.4f, 0.0f);
 			nextState = OVERALL_STATE_DOLBY;
 		}
@@ -189,6 +199,8 @@ int TGCLogoDir::direct()
 
 bool TGCLogoDir::direct_nlogo()
 {
+	char pad[0x98];
+	pad[0] = 0;
 	bool ended    = false;
 	int nextState = mState;
 	switch (mState) {
@@ -239,7 +251,7 @@ bool TGCLogoDir::direct_nlogo()
 	if (mState != STATE_FADE_OUT && mGamePad->isSomethingPushed())
 		nextState = STATE_FADE_OUT;
 
-	if (nextState != mState) {
+	if (nextState != *(volatile int*)&mState) {
 		switch (nextState) {
 		case STATE_FADE_OUT:
 			gpApplication.mFader->startWipe(15, 0.4f, 0.0f);
@@ -253,6 +265,8 @@ bool TGCLogoDir::direct_nlogo()
 
 bool TGCLogoDir::direct_dolby()
 {
+	char pad[0x30];
+	pad[0] = 0;
 	bool ended    = false;
 	int nextState = mState;
 	switch (mState) {
@@ -278,7 +292,7 @@ bool TGCLogoDir::direct_dolby()
 	if (mState != STATE_FADE_OUT && mGamePad->isSomethingPushed())
 		nextState = STATE_FADE_OUT;
 
-	if (nextState != mState) {
+	if (nextState != *(volatile int*)&mState) {
 		switch (nextState) {
 		case STATE_FADE_OUT:
 			gpApplication.mFader->startWipe(15, 0.4f, 0.0f);

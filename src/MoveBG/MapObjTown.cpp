@@ -74,6 +74,7 @@ TDoor::TDoor(const char* name)
 
 void TManhole::touchPlayer(THitActor*)
 {
+	char trash[0x48];
 	mState = STATE_NORMAL;
 	if (!animationFinished()) {
 		mPosition.y = mInitialPosition.y;
@@ -119,12 +120,18 @@ void TManhole::touchPlayer(THitActor*)
 			SMSGetMSound()->startSoundActor(MSD_SE_OBJ_MANHOLE_DOWN, &mPosition,
 			                                0, nullptr, 0, 4);
 		}
-		if (mPosition.y > mInitialPosition.y - mDownHeight)
+		f32* initY = &mInitialPosition.y;
+		initY        = (f32*)(volatile void*)initY;
+		f32 downHeight;
+		f32 initYVal;
+		downHeight = mDownHeight;
+		initYVal   = *initY;
+		if (mPosition.y > initYVal - downHeight)
 			mPosition.y = mPosition.y - mDownSpeed;
 		else
-			mPosition.y = mInitialPosition.y - mDownHeight;
+			mPosition.y = initYVal - downHeight;
 		unk148 = 1.0f;
-		unk14C = mInitialPosition.y - mPosition.y;
+		unk14C = *initY - mPosition.y;
 		offMapObjFlag(MAP_OBJ_FLAG_UNK100);
 		return;
 	}
@@ -291,10 +298,13 @@ void TMapObjBillboard::touchActor(THitActor* param_1) {
 
 u32 TMapObjBillboard::touchWater(THitActor* param_1)
 {
+	JGeometry::TVec3<f32> rot;
+	JGeometry::TVec3<f32> pos;
+	char trash[0x10];
 	swing(param_1);
 	if (mHiddenObj && mAllowReveal) {
-		JGeometry::TVec3<f32> rot = mRotation;
-		JGeometry::TVec3<f32> pos = mPosition;
+		rot = mRotation;
+		pos = mPosition;
 		rot.y -= 90.0f;
 		pos.y += mYOffset;
 		TMapObjBase* obj = mHiddenObj;
@@ -414,13 +424,24 @@ void TMapObjWaterSpray::calc()
 
 void TMapObjWaterSpray::load(JSUMemoryInputStream& stream)
 {
+	bool* flag;
 	TMapObjBase::load(stream);
 	if (strcmp(unkF4, "WaterSprayCylinder") == 0) {
 		unk138 = 0x154;
-		SMS_LoadParticle("/scene/mapObj/ms_shib_cyl1.jpa", unk138);
+		u16 id = unk138;
+		flag   = &gParticleFlagLoaded[id];
+		if (!*flag) {
+			gpResourceManager->load("/scene/mapObj/ms_shib_cyl1.jpa", id);
+			*flag = true;
+		}
 	} else {
 		unk138 = 0x155;
-		SMS_LoadParticle("/scene/mapObj/ms_shib_cub1.jpa", unk138);
+		u16 id = unk138;
+		flag   = &gParticleFlagLoaded[id];
+		if (!*flag) {
+			gpResourceManager->load("/scene/mapObj/ms_shib_cub1.jpa", id);
+			*flag = true;
+		}
 	}
 
 	stream >> unk13C;
@@ -491,8 +512,27 @@ THideObjInfo::THideObjInfo(const char* name)
 void TMapObjSwitch::control()
 {
 	TMapObjBase::control();
-	if (isStateTimerEngaged())
-		SMSGetMSound()->playTimer(mStateTimer);
+
+	bool engaged;
+	if (mStateTimer > 0)
+		engaged = true;
+	else
+		engaged = false;
+
+	if (engaged) {
+		volatile int* stateTimerPtr = &mStateTimer;
+		u32 timer                   = (u32)*stateTimerPtr;
+		gpMSound->playTimer(timer);
+	}
+}
+
+static inline void fireSwitchCam(const char* name)
+{
+	char pad[1];
+	pad[0] = 0;
+	SMSGetMarDirector()->fireStartDemoCamera(name, nullptr, -1, 0.0f, true,
+	                                         nullptr, 0, nullptr,
+	                                         JDrama::TFlagT<u16>());
 }
 
 BOOL TMapObjSwitch::receiveMessage(THitActor*, u32 message)
@@ -504,9 +544,7 @@ BOOL TMapObjSwitch::receiveMessage(THitActor*, u32 message)
 		removeMapCollision();
 		for (int i = 0; i < unk13C; ++i)
 			unk144[i]->action(unk140);
-		SMSGetMarDirector()->fireStartDemoCamera(
-		    "オブジェスイッチ用カメラ", nullptr, -1, 0.0f, true, nullptr, 0,
-		    nullptr, JDrama::TFlagT<u16>(0));
+		fireSwitchCam("オブジェスイッチ用カメラ");
 		mStateTimer = unk140;
 		onHitFlag(HIT_FLAG_NO_COLLISION);
 		return TRUE;
@@ -523,6 +561,10 @@ void TMapObjSwitch::registerObjInfo(THideObjInfo* info)
 
 void TMapObjSwitch::load(JSUMemoryInputStream& stream)
 {
+	s32 r;
+	s32 g;
+	s32 b;
+	char trash[0x10];
 	TMapObjBase::load(stream);
 	stream >> unk140;
 	if (unk140 <= 0)
@@ -530,9 +572,6 @@ void TMapObjSwitch::load(JSUMemoryInputStream& stream)
 	else
 		unk140 *= 10;
 
-	s32 r;
-	s32 g;
-	s32 b;
 	stream >> r;
 	stream >> g;
 	stream >> b;
@@ -608,15 +647,18 @@ void TRedCoinSwitch::loadAfter()
 	for (int i = 0; i < 8; ++i) {
 		char buf[0x40];
 		snprintf(buf, 0x40, "赤コイン %d", i);
-		static_cast<TMapObjBase*>(JDrama::TNameRefGen::search(buf))
-		    ->makeObjDead();
+		// The named search result reserves the extra 4-byte slot.
+		TMapObjBase* coin
+		    = static_cast<TMapObjBase*>(JDrama::TNameRefGen::search(buf));
+		coin->makeObjDead();
 	}
 }
 
 void TRedCoinSwitch::load(JSUMemoryInputStream& stream)
 {
-	TMapObjBase::load(stream);
 	u32 tmp;
+	char trash[8];
+	TMapObjBase::load(stream);
 	stream >> tmp;
 	unk138 = tmp;
 	if (unk138 <= 0)

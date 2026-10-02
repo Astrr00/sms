@@ -13,6 +13,15 @@ public:
 	void control();
 	void load(JSUMemoryInputStream&);
 	TCraneRotY(const char* name = "Ｙ軸回転クレーン");
+
+public:
+	/* 0x138 */ f32 unk138;
+	/* 0x13C */ f32 unk13C;
+	/* 0x140 */ f32 unk140;
+	/* 0x144 */ f32 unk144;
+	/* 0x148 */ u32 unk148;
+
+	static s32 mWaitTime;
 };
 
 class TCraneUpDown : public TMapObjBase {
@@ -20,6 +29,15 @@ public:
 	void control();
 	void initMapObj();
 	TCraneUpDown(const char* name = "上下クレーン");
+
+	static f32 mRotSpeed;
+	static s32 mWaitTime;
+
+public:
+	/* 0x138 */ TMapObjBase* unk138;
+	/* 0x13C */ u32 unk13C;
+	/* 0x140 */ f32 unk140;
+	/* 0x144 */ f32 unk144;
 };
 
 class TCraneCargo : public TLeanBlock {
@@ -39,13 +57,33 @@ public:
 	void calc();
 	void loadAfter();
 	TRiccoWatermill(const char* name = "リコ水車");
+
+	static f32 mRotAccel;
+	static f32 mRotSpeedMaxUp;
+	static f32 mSubmarineMaxTransY;
+	static f32 mSubmarineBottomTransY;
+
+public:
+	/* 0x138 */ f32 unk138;
+	/* 0x13C */ TMapObjBase* unk13C;
+	/* 0x140 */ u32 unk140;
+	/* 0x144 */ u8 unk144;
+	/* 0x148 */ TMapObjBase* unk148;
+	/* 0x14C */ u32 unk14C;
+	/* 0x150 */ u32 unk150;
+	/* 0x154 */ u32 unk154;
 };
 
 class TSurfGesoObj : public TItem {
 public:
 	void initMapObj();
 	TSurfGesoObj(const char* name = "イカサーフィン");
+
+public:
+	/* 0x154 */ GXColorS10 unk154;
 };
+
+class TFruitLauncher;
 
 class TFruitSwitch : public TMapObjBase {
 public:
@@ -53,6 +91,9 @@ public:
 	void pushDown();
 	BOOL receiveMessage(THitActor* sender, u32 message);
 	TFruitSwitch(const char* name = "フルーツスイッチ");
+
+public:
+	/* 0x138 */ TFruitLauncher* unk138;
 };
 
 class TFruitLauncher : public TMapObjBase {
@@ -61,6 +102,11 @@ public:
 	void fireObj();
 	void loadAfter();
 	TFruitLauncher(const char* name = "フルーツ発射口");
+
+public:
+	/* 0x138 */ TFruitSwitch* unk138;
+	/* 0x13C */ TFruitSwitch* unk13C;
+	/* 0x140 */ u32 unk140;
 };
 
 #endif

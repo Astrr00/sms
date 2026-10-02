@@ -28,6 +28,46 @@
 #include <MSound/MSoundBGM.hpp>
 #include <M3DUtil/InfectiousStrings.hpp>
 
+template <>
+void JGeometry::TQuat4<f32>::slerp(const JGeometry::TQuat4<f32>& param_1,
+                                   f32 param_2)
+{
+	char trash[0x10];
+	JGeometry::TQuat4<f32> q1;
+	q1.normalize(*this);
+	JGeometry::TQuat4<f32> q2;
+	q2.normalize(param_1);
+
+	f32 fVar13 = q1.dot(q2);
+
+	bool bVar9;
+	if (fVar13 < 0.0f) {
+		bVar9  = true;
+		fVar13 = -fVar13;
+	} else {
+		bVar9 = false;
+	}
+
+	f32 fVar92;
+	if (1.0f - fVar13 <= JGeometry::TUtil<f32>::epsilon()) {
+		fVar92 = 1.0f - param_2;
+	} else {
+		f32 fVar11 = acosf(fVar13);
+		f32 fVar12 = sinf(fVar11);
+
+		fVar92  = sinf((1.0f - param_2) * fVar11) / fVar12;
+		param_2 = sinf(param_2 * fVar11) / fVar12;
+	}
+
+	if (bVar9)
+		param_2 = -param_2;
+
+	this->x = fVar92 * q1.x + param_2 * q2.x;
+	this->y = fVar92 * q1.y + param_2 * q2.y;
+	this->z = fVar92 * q1.z + param_2 * q2.z;
+	this->w = fVar92 * q1.w + param_2 * q2.w;
+}
+
 namespace {
 const GXColorS10 cBodyColorOnFire   = { 400, -50, -100, 0 };
 const GXColorS10 cBodyColorOnCool   = { -50, -50, 50, 0 };
@@ -303,17 +343,33 @@ void TFireWanwanManager::perform(u32 cue, JDrama::TGraphics* graphics)
 {
 	TEnemyManager::perform(cue, graphics);
 
+	TFireWanwan* wanwan;
 	for (int i = 0; i < mObjNum; ++i) {
-		TFireWanwan* wanwan = (TFireWanwan*)unk18[i];
+		wanwan = (TFireWanwan*)unk18[i];
 		if (!gpMap->isInArea(wanwan->mPosition.x, wanwan->mPosition.z)
 		    || (wanwan->getGroundPlane()
 		        && wanwan->getGroundPlane()->isDeathPlane())) {
-			wanwan->kill();
+			wanwan->reset();
 		}
 	}
 
 	if (cue & CUE_MOVE) {
-		checkBalloonHelpBoss22();
+		if (!mBoss22BalloonWasShown) {
+			TFireWanwan* nearest
+			    = (TFireWanwan*)getNearestEnemy(SMS_GetMarioPos());
+			if (nearest) {
+				JGeometry::TVec3<f32> diff = SMS_GetMarioPos();
+				char trash[0x44];
+				diff -= nearest->getPosition();
+				f32 helpRange22
+				    = getWanwanParams()->mBoss22HelpRange.get();
+				if (diff.squared() < helpRange22 * helpRange22) {
+					mBoss22BalloonWasShown = true;
+					gpMarDirector->getConsole()->startAppearBalloon(0xE0016,
+					                                               true);
+				}
+			}
+		}
 		checkBalloonHelpBoss23();
 		checkBalloonHelpBoss24();
 		checkShineAppear();
@@ -432,6 +488,9 @@ TFireWanwanTailHit::TFireWanwanTailHit(TFireWanwan& param_1)
 
 BOOL TFireWanwanTailHit::receiveMessage(THitActor* sender, u32 message)
 {
+	char trash[0x10];
+	trash[0] = 0;
+
 	if (sender->getActorType() == 0x80000001) {
 		if (message == HIT_MESSAGE_TAKE) {
 			if (!mOwner->canTakenByMario())
@@ -460,7 +519,9 @@ void TFireWanwanTailHit::behaveTaken(THitActor* param_1)
 
 	mCurTailLength  = unkA4->getLength();
 	mPrevTailLength = mCurTailLength;
-	moveRequest(mPosition);
+	// Retail passes the holder's position. r31 is the sender.
+	// TODO: receiveMessage's frame is still 0xa0 against retail 0xb0.
+	moveRequest(param_1->mPosition);
 }
 
 void TFireWanwanTailHit::behaveApart()
@@ -662,7 +723,8 @@ BOOL TFireWanwanTailHit::moveRequest(const JGeometry::TVec3<f32>& param_1)
 	gpMap->isTouchedOneWallAndMoveXZ(&next.x, next.y, &next.z, 70.0f);
 	unkA4->unk0.back().mPos = next;
 	mPosition               = next;
-	unk74.translation(next);
+	unk74.translation(mPosition);
+	char trash[8];
 	return true;
 }
 
@@ -688,6 +750,16 @@ void TFireWanwanTailHit::offFireEffect()
 	JGeometry::TVec3<f32> scale(mOwner->mBodyScale);
 	MtxPtr mtx = unkA8[4]->mMActor->getModel()->getBaseTRMtx();
 	SMS_EasyEmitParticle(PARTICLE_MS_MOE_FIRE_OFF, mtx, this, scale);
+}
+
+// fabricated
+static inline void emitFireOff(TFireWanwanTailHit* self)
+{
+	char trash[0x4c];
+	trash[0] = 0;
+	JGeometry::TVec3<f32> scale(self->mOwner->mBodyScale);
+	MtxPtr mtx = self->unkA8[4]->mMActor->getModel()->getBaseTRMtx();
+	SMS_EasyEmitParticle(PARTICLE_MS_MOE_FIRE_OFF, mtx, self, scale);
 }
 
 void TFireWanwanTailHit::changeBodyToRed(f32 param_1)
@@ -1006,7 +1078,7 @@ void TFireWanwan::behaveToWater(THitActor* param_1)
 	                                nullptr, 0, 4);
 	mSpine->reset();
 	mSpine->setNext(&TNerveFireWanwanEscape::theNerve());
-	unk194->offFireEffect();
+	emitFireOff(unk194);
 	unk194->mIsOnFire       = false;
 	mSprayedByWaterCooldown = 20;
 }
@@ -1868,6 +1940,9 @@ DEFINE_NERVE(TNerveFireWanwanFindMario, TLiveActor)
 
 DEFINE_NERVE(TNerveFireWanwanAttack, TLiveActor)
 {
+	char trash[4];
+	trash[0] = 0;
+
 	TFireWanwan* self = (TFireWanwan*)spine->getBody();
 
 	if (spine->getTime() == 0) {
@@ -1946,6 +2021,9 @@ DEFINE_NERVE(TNerveFireWanwanRecoverGraph, TLiveActor)
 
 DEFINE_NERVE(TNerveFireWanwanRecover, TLiveActor)
 {
+	char trash[0x40];
+	trash[0] = 0;
+
 	TFireWanwan* self = (TFireWanwan*)spine->getBody();
 
 	if (spine->getTime() == 0) {
@@ -2027,6 +2105,7 @@ DEFINE_NERVE(TNerveFireWanwanHungTail, TLiveActor)
 	}
 
 	JGeometry::TVec3<f32> vec = self->mPosition;
+	char trash[8];
 	vec -= SMS_GetMarioPos();
 
 	self->mRotation.y = MsGetRotFromZaxisY(vec);
@@ -2084,6 +2163,9 @@ DEFINE_NERVE(TNerveFireWanwanFly, TLiveActor)
 
 DEFINE_NERVE(TNerveFireWanwanFreeze, TLiveActor)
 {
+	JGeometry::TVec3<f32> zero;
+	char gap[1];
+	gap[0] = 0;
 	TFireWanwan* self = (TFireWanwan*)spine->getBody();
 
 	if (spine->getTime() == 0) {
@@ -2095,7 +2177,8 @@ DEFINE_NERVE(TNerveFireWanwanFreeze, TLiveActor)
 		                                &self->mPosition, 0, nullptr, 0, 4);
 	}
 
-	self->setVelocity(JGeometry::TVec3<f32>(0.0f, 0.0f, 0.0f));
+	zero.set(0.0f, 0.0f, 0.0f);
+	self->setVelocity(zero);
 
 	if (self->getFreezeTime() < spine->getTime()) {
 		spine->pushAfterCurrent(&TNerveFireWanwanRecover::theNerve());

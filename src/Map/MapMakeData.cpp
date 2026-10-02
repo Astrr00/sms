@@ -120,6 +120,8 @@ void TMapCollisionBase::initAllCheckData(s16 default_additional_data,
                                          const f32* vertices, u16 param_3,
                                          const TLiveActor* actor)
 {
+	char pad[4];
+	pad[0] = 0;
 	mCheckDatas   = gpMapCollisionData->getCheckDataPoolTop();
 	mCheckDataNum = 0;
 

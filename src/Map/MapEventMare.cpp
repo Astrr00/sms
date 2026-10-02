@@ -38,36 +38,39 @@ J3DModel* TMareWallRock::getMapModel() const
 
 void TMareWallRock::depress() { }
 
+#pragma dont_inline on
 void TMareWallRock::appear()
 {
-	// TODO: hack, remove me
-	(void)0;
-	(void)0;
-	(void)0;
-	(void)0;
-
 	unk10C[0]->setUp();
 	unk104->awake();
-	unk10C[0]->moveTrans(JGeometry::TVec3<f32>(0.0f, 0.0f, unkFC));
-	f32 rotY = unk128;
+	JGeometry::TVec3<f32> trans(0.0f, 0.0f, unkFC);
+	unk10C[0]->moveTrans(trans);
+	char gap[9];
+	gap[0] = 0;
+	JGeometry::TVec3<f32> rot(0.0f, unk128, 0.0f);
 
 	if (JPABaseEmitter* em = gpMarioParticleManager->emit(
 	        MAP_MAP_MS_MARE_OBJUP_A, &unk11C, 0, &unk11C)) {
-		em->setRotation(JGeometry::TVec3<f32>(0.0f, rotY, 0.0f));
+		em->setRotation(rot);
 		em->setGlobalDynamicsScale(unk110);
 	}
 
 	if (JPABaseEmitter* em = gpMarioParticleManager->emit(
 	        MAP_MAP_MS_MARE_OBJUP_B, &unk11C, 2, &unk11C)) {
-		em->setRotation(JGeometry::TVec3<f32>(0.0f, rotY, 0.0f));
+		em->setRotation(rot);
 		em->setGlobalDynamicsScale(unk110);
 	}
 
 	unkF4 = 2;
 }
+#pragma dont_inline off
 
 void TMareWallRock::movement()
 {
+	// Declared ahead of the cases so the two spills pack under the
+	// saved regs. The named 0/0/z components are their 0x18 of homes.
+	JGeometry::TVec3<f32> tAppear;
+	JGeometry::TVec3<f32> tDepress;
 	switch (unkF4) {
 	case 0:
 		if (((TPollutionLayer*)gpPollution->getJointModel(unk108))
@@ -101,8 +104,13 @@ void TMareWallRock::movement()
 			SMSRumbleMgr->stop(0x13);
 			return;
 		}
-		JGeometry::TVec3<f32> t(0.0f, 0.0f, z);
-		unk10C[0]->moveTrans(t);
+		f32 tx = 0.0f;
+		f32 ty = 0.0f;
+		f32 tz = z;
+		tAppear.x = tx;
+		tAppear.y = ty;
+		tAppear.z = tz;
+		unk10C[0]->moveTrans(tAppear);
 		break;
 	}
 
@@ -130,13 +138,19 @@ void TMareWallRock::movement()
 		f32 z = transformInfo.mTranslate.z;
 		if (z > unkFC) {
 			unk10C[0]->remove();
-			unk104->kill();
+			// Retail calls sleep (vtable 0x1c), not kill (0x18).
+			unk104->sleep();
 			unk100 = mWaitTimeToAppear;
 			unkF4  = 3;
 			return;
 		}
-		JGeometry::TVec3<f32> t(0.0f, 0.0f, z);
-		unk10C[0]->moveTrans(t);
+		f32 tx = 0.0f;
+		f32 ty = 0.0f;
+		f32 tz = z;
+		tDepress.x = tx;
+		tDepress.y = ty;
+		tDepress.z = tz;
+		unk10C[0]->moveTrans(tDepress);
 		break;
 	}
 	}
@@ -204,7 +218,8 @@ void TMareWallRock::loadAfter()
 	mPosition.z     = (max.z + min.z) / 2.0f;
 	unkFC           = 100.0f + (max.z - min.z);
 	TMapObjBase::moveJoint(unk104->mJoint, 0.0f, 0.0f, unkFC);
-	unk104->kill();
+	// Retail calls sleep (vtable 0x1c), not kill (0x18).
+	unk104->sleep();
 	initHitActor(0x4000022C, 1, 0, 0.0f, 0.0f, 0.0f, 0.0f);
 	initEffect();
 }

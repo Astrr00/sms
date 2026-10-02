@@ -1,0 +1,91 @@
+#ifndef MOVE_BG_MAP_OBJ_FLAG_HPP
+#define MOVE_BG_MAP_OBJ_FLAG_HPP
+
+#include <JSystem/JDrama/JDRViewObj.hpp>
+#include <JSystem/JGeometry.hpp>
+#include <Strategic/HitActor.hpp>
+
+class TMapObjFlag;
+
+class TMapObjFlagManager : public JDrama::TViewObj {
+public:
+	class TMapObjFlagInfo {
+	public:
+		TMapObjFlagInfo()
+		{
+			unk0  = 0;
+			unk54 = nullptr;
+		}
+
+		// Retail stores: count at +0, flag pointers at +4, texture at +0x54.
+		/* 0x0 */ u32 unk0;
+		/* 0x4 */ TMapObjFlag* unk4[20];
+		/* 0x54 */ void* unk54;
+	};
+
+	TMapObjFlagManager(const char* name);
+
+	virtual ~TMapObjFlagManager() { }
+	virtual void load(JSUMemoryInputStream& stream);
+	virtual void perform(u32 cue, JDrama::TGraphics* graphics);
+
+	void registerObj(TMapObjFlag* flag, const char* name);
+	void loadFlag(TMapObjFlagInfo* info, TMapObjFlag* flag, const char* name);
+	void initDraw();
+
+	/* 0x10 */ TMapObjFlagInfo mInfos[15];
+};
+
+extern TMapObjFlagManager* gpMapObjFlagManager;
+
+class TMapObjFlag : public THitActor {
+public:
+	TMapObjFlag(const char* name);
+
+	virtual ~TMapObjFlag() { }
+	virtual void load(JSUMemoryInputStream& stream);
+	virtual void updateVertex();
+
+	void init(const char* name);
+	void update();
+	void draw();
+
+	static f32 mFlutterSpeed;
+
+	// Retail `new TMapObjFlag` is 0xC0.
+	/* 0x68 */ f32 unk68;
+	/* 0x6C */ f32 unk6C;
+	/* 0x70 */ s32 unk70;
+	/* 0x74 */ s32 unk74;
+	/* 0x78 */ f32** unk78;
+	/* 0x7C */ f32 unk7C;
+	/* 0x80 */ f32 unk80;
+	/* 0x84 */ f32 unk84;
+	/* 0x88 */ f32 unk88;
+	/* 0x8C */ TMtx34f unk8C;
+	/* 0xBC */ s32 unkBC;
+};
+
+class TMapObjFlagLower : public TMapObjFlag {
+public:
+	TMapObjFlagLower(const char* name)
+	    : TMapObjFlag(name)
+	{
+	}
+
+	virtual ~TMapObjFlagLower() { }
+	virtual void updateVertex();
+};
+
+class TMapObjFlagSail : public TMapObjFlag {
+public:
+	TMapObjFlagSail(const char* name)
+	    : TMapObjFlag(name)
+	{
+	}
+
+	virtual ~TMapObjFlagSail() { }
+	virtual void updateVertex();
+};
+
+#endif

@@ -44,10 +44,12 @@ int MSMainProc::getMonteVillageActorArea(const Vec& param_1)
 {
 	int result = 4;
 	if (MSGMSound->unkCD == 8) {
-		// inline?
+		Vec copy;
+		char pad[4];
+		pad[0] = 0;
 		Vec local_10 = param_1;
 		local_10.y += 75.0f;
-		Vec copy = local_10;
+		copy = local_10;
 		switch (gpCubeFastC->getInCubeNo(copy)) {
 		case 0:
 			result = 2;
@@ -587,6 +589,8 @@ void MSMainProc::startStageBGM(u8, u8)
 
 MSStage* MSStage::init(u8 param_1, u8)
 {
+	char pad[0x58];
+	pad[0] = 0;
 	smMSStage = nullptr;
 
 	gpMSound->unk9C->unk0 = 0.0f;
@@ -961,38 +965,46 @@ f32 MSStageCubeFade::calcParamRatioInCube(s32 id) { }
 
 void MSStageCubeSwitch::proc()
 {
+	register MSStageCubeSwitch* self;
+	register const Vec* slot;
+	Vec local_18;
+	asm {
+		addi self, r3, 0
+		addi slot, r1, local_18
+	}
 	Vec tmp = SMS_GetMarioPos();
+	char trash[8];
 	tmp.y += 75.0f;
-	Vec local_18 = tmp;
+	local_18 = tmp;
 
-	unk4 = gpCubeSoundChange->getInCubeNo(local_18);
+	self->unk4 = gpCubeSoundChange->getInCubeNo(*slot);
 
-	switch (unk4) {
+	switch (self->unk4) {
 	case -1:
-		if (unk8 == 0) {
-			unk10 = 0;
-			unk11 = 0;
+		if (self->unk8 == 0) {
+			self->unk10 = 0;
+			self->unk11 = 0;
 		} else {
-			unk10 = !unk10 ? !SMS_IsMarioStatusTypeJumping() : true;
-			if (unk10 == true && unk11 == 0)
-				toStageBgm();
-			unk11 = unk10;
+			self->unk10 = !self->unk10 ? !SMS_IsMarioStatusTypeJumping() : true;
+			if (self->unk10 == true && self->unk11 == 0)
+				self->toStageBgm();
+			self->unk11 = self->unk10;
 		}
 		break;
 	case 0:
-		if (unk8 == -1) {
-			unk10 = 0;
-			unk11 = 0;
+		if (self->unk8 == -1) {
+			self->unk10 = 0;
+			self->unk11 = 0;
 		} else {
-			unk10 = !unk10 ? !SMS_IsMarioStatusTypeJumping() : true;
-			if (unk10 == true && unk11 == 0)
-				toBossBgm();
+			self->unk10 = !self->unk10 ? !SMS_IsMarioStatusTypeJumping() : true;
+			if (self->unk10 == true && self->unk11 == 0)
+				self->toBossBgm();
 
-			unk11 = unk10;
+			self->unk11 = self->unk10;
 		}
 		break;
 	}
-	unk8 = unk4;
+	self->unk8 = self->unk4;
 }
 
 void MSStageCubeSwitch::toStageBgm()

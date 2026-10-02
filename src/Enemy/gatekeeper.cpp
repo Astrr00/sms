@@ -214,14 +214,14 @@ TBGKMtxCalc::TBGKMtxCalc(TBiancoGateKeeper* owner)
 void TBGKMtxCalc::joinAnm(int param_1)
 {
 	M3UMtxCalcSIAnmBlendQuat::joinAnm(
-	    mOwner->getActorKeeper()->getMActorAnmData()->getUnk2C()->getAnmPtr(
+	    mOwner->getActorKeeper()->getMActorAnmData()->mBckAnms->getAnmPtr(
 	        param_1));
 }
 
 void TBGKMtxCalc::setAnm(int param_1)
 {
 	M3UMtxCalcSIAnmBlendQuat::setAnm(
-	    mOwner->getActorKeeper()->getMActorAnmData()->getUnk2C()->getAnmPtr(
+	    mOwner->getActorKeeper()->getMActorAnmData()->mBckAnms->getAnmPtr(
 	        param_1));
 }
 
@@ -478,10 +478,10 @@ f32 TBiancoGateKeeper::getRumblePow()
 	f32 dist = diff.length();
 	if (dist == 0.0f)
 		return 1.0f;
-	f32 pow = 2000.0f / dist;
-	if (pow > 1.0f)
-		pow = 1.0f;
-	return pow;
+	dist = 2000.0f / dist;
+	if (dist > 1.0f)
+		dist = 1.0f;
+	return dist;
 }
 
 void TBiancoGateKeeper::rumblePad()
@@ -527,12 +527,27 @@ void TBiancoGateKeeper::startBGM()
 
 void TBiancoGateKeeper::stopBGM() { MSBgm::stopTrackBGM(1, 0xA); }
 
+// Dead 0x20 local under the inlined TFlag temp.
+// The small return keeps the slot and emits no instructions.
+struct BGKPadBig {
+	char c[0x20];
+};
+struct BGKPadSmall {
+	char c[4];
+};
+static inline BGKPadSmall bgkAppearPad()
+{
+	BGKPadBig big;
+	return *(BGKPadSmall*)(void*)&big;
+}
+
 void TBiancoGateKeeper::startAppearDemo()
 {
 	if (unk28A != 0)
 		return;
 
 	snprintf(mDemoName, 0x100, "%s出現カメラ", mName);
+	bgkAppearPad();
 	SMSGetMarDirector()->fireStartDemoCamera(mDemoName, &mPosition, -1, 0.0f,
 	                                         true, nullptr, 0, nullptr,
 	                                         JDrama::TFlagT<u16>(0));
@@ -831,6 +846,9 @@ DEFINE_NERVE(TNerveBGKAppear, TLiveActor)
 
 DEFINE_NERVE(TNerveBGKWait, TLiveActor)
 {
+	char trash[0x20];
+	trash[0] = 0;
+
 	TBiancoGateKeeper* self = (TBiancoGateKeeper*)spine->getBody();
 	MActor* actor           = self->getMActor();
 
@@ -903,6 +921,9 @@ DEFINE_NERVE(TNerveBGKWait, TLiveActor)
 
 DEFINE_NERVE(TNerveBGKWait2, TLiveActor)
 {
+	char trash[0x20];
+	trash[0] = 0;
+
 	TBiancoGateKeeper* self = (TBiancoGateKeeper*)spine->getBody();
 	MActor* actor           = self->getMActor();
 
@@ -971,6 +992,9 @@ DEFINE_NERVE(TNerveBGKSleepDamage, TLiveActor)
 
 DEFINE_NERVE(TNerveBGKAwakeDamage, TLiveActor)
 {
+	char trash[8];
+	trash[0] = 0;
+
 	TBiancoGateKeeper* self = (TBiancoGateKeeper*)spine->getBody();
 
 	if (spine->getTime() == 0)
@@ -1076,6 +1100,9 @@ DEFINE_NERVE(TNerveBGKDive, TLiveActor)
 
 DEFINE_NERVE(TNerveBGKLaunchGoro, TLiveActor)
 {
+	char trash[8];
+	trash[0] = 0;
+
 	TBiancoGateKeeper* self = (TBiancoGateKeeper*)spine->getBody();
 
 	if (spine->getTime() == 0)

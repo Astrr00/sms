@@ -7,6 +7,8 @@
 
 int TPollutionPos::getEdgeDegree(int x, int y) const
 {
+	char trash[0x18];
+
 	if (!isInArea(x, y))
 		return 0;
 
@@ -14,7 +16,8 @@ int TPollutionPos::getEdgeDegree(int x, int y) const
 	for (int dy = -1; dy <= 1; ++dy) {
 		for (int dx = -1; dx <= 1; ++dx) {
 			if (dx != 0 || dy != 0) {
-				if (mHeightMap[index(x + dx, y + dy)] == 0xFF)
+				u32 idx = index(x + dx, y + dy);
+				if (mHeightMap[idx] == 0xFF)
 					count += 1;
 			}
 		}

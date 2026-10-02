@@ -72,6 +72,20 @@ JGeometry::TVec3<f32> TSplineRail::getPosition(f32 t)
 	return unk0->getPoint(wrapT(t));
 }
 
+// Dead TVec3-sized local under the getPoint / MsGetRot return temps.
+// The small return keeps that slot and emits no instructions.
+struct TPosRotBig {
+	char c[0xC];
+};
+struct TPosRotSmall {
+	char c[0x4];
+};
+static inline TPosRotSmall posRotPad()
+{
+	TPosRotBig big;
+	return *(TPosRotSmall*)(void*)&big;
+}
+
 void TSplineRail::getPosAndRot(f32 t, JGeometry::TVec3<f32>* out_pos,
                                JGeometry::TVec3<f32>* out_rot)
 {
@@ -81,7 +95,7 @@ void TSplineRail::getPosAndRot(f32 t, JGeometry::TVec3<f32>* out_pos,
 	JGeometry::TVec3<f32> point;
 	JGeometry::TVec3<f32> dir;
 
-	char trash2[0xC];
+	posRotPad();
 
 	for (;;) {
 		if (t + dt > 1.0f)
@@ -264,9 +278,9 @@ int TGraphWeb::getShortestNextIndex(int param_1, int param_2, u32 param_3) const
 
 int TGraphWeb::getRandomNextIndex(int param_1, int param_2, u32 param_3) const
 {
-	const TGraphNode* graphNode = &getGraphNode(param_1);
-
 	TRailNode tmp;
+	int index = param_1;
+	const TGraphNode* graphNode = &getGraphNode(index);
 	const TRailNode* railNode;
 	if (param_3 == 0xffffffff) {
 		railNode = graphNode->getRailNode();
@@ -682,8 +696,10 @@ void TGraphWeb::attachToGround()
 	for (int j = 0; j < unk8; ++j) {
 		TRailNode* railNode = &unk4[j];
 		if (railNode->mFlags & 0x10) {
-			const TBGCheckData* checkData;
+			char trash[4];
+			(void)&trash;
 			JGeometry::TVec3<f32> pos;
+			const TBGCheckData* checkData;
 			pos.set(railNode->mPosition.x, railNode->mPosition.y,
 			        railNode->mPosition.z);
 			pos.y = gpMap->checkGround(pos, &checkData);
@@ -770,8 +786,10 @@ TGraphWeb::getNearestPosOnGraphLink(const JGeometry::TVec3<f32>& param_1) const
 int TGraphWeb::getNeighborNodeIndexByFlag(int param_1, int param_2,
                                           u32 param_3) const
 {
+	char trash[8];
 	int goodConnectionNum = 0;
 	int goodConnections[8];
+	char trash2[8];
 
 	const TRailNode* railNode = getGraphNode(param_1).getRailNode();
 	for (int i = 0; i < railNode->mConnectionNum; ++i) {
@@ -818,6 +836,7 @@ TGraphGroup::~TGraphGroup() { }
 
 void TGraphGroup::initGraphGroup()
 {
+	char trash[4];
 	for (int i = 0; i < unk4; ++i) {
 		if (unk8[i]->unk10 >= 0)
 			continue;

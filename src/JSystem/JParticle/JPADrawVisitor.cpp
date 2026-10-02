@@ -114,6 +114,7 @@ void JPADrawExecGenPrjTexMtx::exec(const JPADrawContext* dc)
 	GXLoadTexMtxImm(mtx, GX_TEXMTX0, GX_MTX3x4);
 	GXSetTexCoordGen(GX_TEXCOORD0, GX_TG_MTX3x4, GX_TG_POS, GX_TEXMTX0);
 	GXEnableTexOffsets(GX_TEXCOORD0, GX_TRUE, GX_TRUE);
+	char trash[8];
 }
 
 void JPADrawExecGenTexMtx0::exec(const JPADrawContext* dc)
@@ -357,6 +358,7 @@ void JPADrawExecBillBoard::exec(const JPADrawContext* dc,
 	GXPosition3f32(offs[3].x + pt.x, offs[3].y + pt.y, pt.z);
 	GXTexCoord2f32(dc->pcb->mTexCoords[3].x, dc->pcb->mTexCoords[3].y);
 	GXEnd();
+	char trash[4];
 }
 
 void JPADrawExecRotBillBoard::exec(const JPADrawContext* dc,
@@ -395,6 +397,7 @@ void JPADrawExecRotBillBoard::exec(const JPADrawContext* dc,
 	GXPosition3f32(offs[3].x + pt.x, offs[3].y + pt.y, pt.z);
 	GXTexCoord2f32(dc->pcb->mTexCoords[3].x, dc->pcb->mTexCoords[3].y);
 	GXEnd();
+	char trash[4];
 }
 
 void JPADrawExecYBillBoard::exec(const JPADrawContext* dc,
@@ -433,6 +436,7 @@ void JPADrawExecYBillBoard::exec(const JPADrawContext* dc,
 	GXPosition3f32(offs[3].x + pt.x, offs[3].y + pt.y, offs[3].z + pt.z);
 	GXTexCoord2f32(dc->pcb->mTexCoords[3].x, dc->pcb->mTexCoords[3].y);
 	GXEnd();
+	char trash[4];
 }
 void JPADrawExecRotYBillBoard::exec(const JPADrawContext* dc,
                                     JPABaseParticle* particle)
@@ -460,7 +464,7 @@ void JPADrawExecRotYBillBoard::exec(const JPADrawContext* dc,
 
 	JGeometry::TVec3<f32> pt;
 	particle->getGlobalPosition(pt);
-	MTXMultVec(dc->pcb->mViewMtx, &pt, &pt);
+	MTXMultVecSR(dc->pcb->mViewMtx, &pt, &pt);
 
 	GXBegin(GX_QUADS, GX_VTXFMT0, 4);
 	GXPosition3f32(offs[0].x + pt.x, offs[0].y + pt.y, offs[0].z + pt.z);
@@ -472,6 +476,7 @@ void JPADrawExecRotYBillBoard::exec(const JPADrawContext* dc,
 	GXPosition3f32(offs[3].x + pt.x, offs[3].y + pt.y, offs[3].z + pt.z);
 	GXTexCoord2f32(dc->pcb->mTexCoords[3].x, dc->pcb->mTexCoords[3].y);
 	GXEnd();
+	char trash[4];
 }
 
 void dirTypeVel(JPABaseParticle* particle, JPABaseEmitter*,
@@ -1079,6 +1084,7 @@ void JPADrawExecRotationCross::exec(const JPADrawContext* dc,
 	GXPosition3f32(pt[7].x + pos.x, pt[7].y + pos.y, pt[7].z + pos.z);
 	GXTexCoord2f32(dc->pcb->mTexCoords[3].x, dc->pcb->mTexCoords[3].y);
 	GXEnd();
+	char trash[4];
 }
 
 void JPADrawExecPoint::exec(const JPADrawContext* dc, JPABaseParticle* particle)
@@ -1541,6 +1547,7 @@ void JPADrawCalcScaleXBySpeed::calc(const JPADrawContext* dc,
 		params->mScaleX = params->unkC;
 	}
 	params->mScaleX *= vel.length() * 0.01f;
+	char trash[8];
 }
 
 void JPADrawCalcScaleYBySpeed::calc(const JPADrawContext* dc,
@@ -1566,6 +1573,7 @@ void JPADrawCalcScaleYBySpeed::calc(const JPADrawContext* dc,
 		params->mScaleY = params->unkC;
 	}
 	params->mScaleY *= vel.length() * 0.01f;
+	char trash[8];
 }
 
 void JPADrawCalcScaleCopyX2Y::calc(const JPADrawContext*,

@@ -54,12 +54,12 @@ void TNameKuriLauncher::stateLaunch()
 	if (mTicksSpentInCurState == 0) {
 		TSpineEnemy* enemy = getProperEnemy("ナメクリマネージャー");
 		if (enemy) {
-			Mtx mtx;
-			MsMtxSetRotRPH(mtx, mRotation.x, mRotation.y, mRotation.z);
-
 			JGeometry::TVec3<f32> local_14;
 			JGeometry::TVec3<f32> local_20;
+			Mtx mtx;
+			char trash[4];
 
+			MsMtxSetRotRPH(mtx, mRotation.x, mRotation.y, mRotation.z);
 			local_20.set(0.0f, 4.0f, 0.0f);
 			local_14.set(0.0f, 0.0f, 0.0f);
 			MTXMultVec(mtx, &local_20, &local_20);
@@ -489,6 +489,8 @@ void TNameKuri::setWalkAnm() { setBckAnm(7); }
 
 void TNameKuri::setDeadAnm()
 {
+	char trash[8];
+
 	setBckAnm(0);
 
 	SMSGetMSound()->startSoundActor(MSD_SE_EN_NAMEKURI_DOWN, &mPosition, 0,
@@ -510,6 +512,12 @@ void TNameKuri::setDeadAnm()
 
 	setVelocity(JGeometry::TVec3<f32>(0.0f, 0.0f, 0.0f));
 	onLiveFlag(LIVE_FLAG_UNK10);
+
+	struct Pad {
+		~Pad() { }
+		char c[0x1c];
+	};
+	Pad();
 }
 
 void TNameKuri::setAfterDeadEffect()
@@ -526,6 +534,8 @@ void TNameKuri::setWaitAnm() { setBckAnm(6); }
 
 void TNameKuri::setMeltAnm()
 {
+	char trash[8];
+
 	setBckAnm(1);
 
 	MtxPtr mtx = getMActor()->getModel()->getAnmMtx(2);
@@ -547,6 +557,12 @@ void TNameKuri::setMeltAnm()
 
 	SMSGetMSound()->startSoundActor(MSD_SE_EN_NAMEKURI_DOWN_WT, &mPosition, 0,
 	                                nullptr, 0, 4);
+
+	struct Pad {
+		~Pad() { }
+		char c[0x1c];
+	};
+	Pad();
 }
 
 void TNameKuri::setMActorAndKeeper()
@@ -575,6 +591,12 @@ void TNameKuri::reset()
 	                                  ->getNextColorIdx()];
 
 	offLiveFlag(LIVE_FLAG_UNK10);
+
+	struct Pad {
+		~Pad() { }
+		char c[8];
+	};
+	Pad();
 }
 
 void TNameKuri::attackToMario()
@@ -660,11 +682,12 @@ DEFINE_NERVE(TNerveNameKuriLand, TLiveActor)
 {
 	TNameKuri* self = (TNameKuri*)spine->getBody();
 
-	if (self->isBckAnm(4) && self->checkCurAnmEnd(0))
-		return true;
-
-	if (!self->isAirborne())
+	if (self->isBckAnm(4)) {
+		if (self->checkCurAnmEnd(0))
+			return true;
+	} else if (!self->isAirborne()) {
 		self->setBckAnm(4);
+	}
 
 	return false;
 }
@@ -793,8 +816,11 @@ DEFINE_NERVE(TNerveNKFollowMario, TLiveActor)
 {
 	TNameKuri* self = (TNameKuri*)spine->getBody();
 
-	if (spine->getTime() == 0)
-		self->setGoalPath(SMS_GetMarioHitActor());
+	if (spine->getTime() == 0) {
+		TPathNode marioNode(SMS_GetMarioHitActor());
+		char trash[0x10];
+		self->setGoalPath(marioNode);
+	}
 
 	self->walkToCurPathNode(self->getMarchSpeed(), 3.0f, 0.0f);
 

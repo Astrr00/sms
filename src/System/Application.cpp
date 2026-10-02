@@ -244,7 +244,10 @@ void TApplication::initialize()
 	                       SMSGetGCLogoRenderHeight());
 	TFlagManager::start(JKRGetCurrentHeap());
 	TTimeRec::start(0xDFC0);
-	TTimeRec::instance()->unk81C |= 1;
+	// Reference so the OR stores through &unk81C.
+	TTimeRec* rec = TTimeRec::instance();
+	u16& slot     = rec->unk81C;
+	slot |= 1;
 	TDrawSyncManager::smInstance->setCallback(0, 0xDFC0, 0xDFFF,
 	                                          TTimeRec::instance());
 	mMeter = new TProcessMeter(2);
@@ -259,8 +262,11 @@ void TApplication::initialize()
 	OSResumeThread(&gSetupThread);
 }
 
+#pragma dont_inline on
 void* TApplication::setupThreadFuncLogo()
 {
+	char pad[4];
+	pad[0] = 0;
 	while (!SMSGetMSound()->checkWaveOnAram(MS_WAVE_UNK0))
 		OSYieldThread();
 	while (!SMSGetMSound()->checkWaveOnAram(MS_WAVE_UNK210))
@@ -282,6 +288,7 @@ void* TApplication::setupThreadFuncLogo()
 
 	return nullptr;
 }
+#pragma dont_inline off
 
 #pragma dont_inline on
 static void* SetupThreadFuncLogo(void* param)
@@ -297,15 +304,16 @@ void TApplication::initialize_bootAfter()
 	this_01->mountFixed(arcBufNLogo, MBF_0);
 
 	this_01->becomeCurrent("/font");
-	u32 uVar1
-	    = this_01->getResSize(this_01->getResource("standard_fontEx.bfn"));
+	void* fontRes = this_01->getResource("standard_fontEx.bfn");
+	u32 uVar1     = this_01->getResSize(fontRes);
 	ResFONT* font = (ResFONT*)new (0x20) u8[uVar1];
 	this_01->readResource(font, uVar1, "standard_fontEx.bfn");
 	gpSystemFont = new JUTResFont(font, nullptr);
 
 	this_01->becomeCurrent("/audi");
-	u32 uVar3 = this_01->getResSize(this_01->getResource("mSound.aaf"));
-	u8* buf   = new u8[uVar3];
+	void* aafRes = this_01->getResource("mSound.aaf");
+	u32 uVar3    = this_01->getResSize(aafRes);
+	u8* buf = new u8[uVar3];
 	this_01->readResource(buf, uVar3, "mSound.aaf");
 	JKRHeap* prevHeap = JKRGetCurrentHeap();
 	gpMSound = new MSound(prevHeap, nullptr, 0xF40000, buf, nullptr, 0xb00000);
@@ -418,11 +426,14 @@ void TApplication::finalize()
 
 bool TApplication::checkAdditionalMovie()
 {
+	char pad[0x38];
+	pad[0] = 0;
 	bool result = false;
 
 	const TGameSequence& currArea = gpApplication.mCurrArea;
 
-	u8 uVar1 = SMS_getShineIDofExStage(currArea.unk0);
+	u8 stage = currArea.unk0;
+	u8 uVar1 = SMS_getShineIDofExStage(stage);
 	if (uVar1 != 0xFF) {
 		if (!TFlagManager::getInstance()->getShineFlag(uVar1)) {
 			if (!TFlagManager::getInstance()->getBool(0x3000D)) {
@@ -821,3 +832,6 @@ JKRMemArchive* TApplication::mountStageArchive()
 
 	return result;
 }
+
+// Map records a weak crTimeAry in this TU. Taking its address emits that copy.
+static void keepCrTimeAry() { (void)&TTimeRec::crTimeAry; }

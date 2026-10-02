@@ -46,21 +46,24 @@ bool TMapObjBase::isHideObj(THitActor* param_1)
 	return false;
 }
 
+// The second pair is inlined so `b1 || ...` shares one return true.
+// A single four-way disjunction does not.
+static inline bool stateIs3Or4(u8 state)
+{
+	bool b2 = true;
+	if (state != 3 && state != 4)
+		b2 = false;
+	return b2;
+}
+
 bool TMapObjBase::isDemo()
 {
 	bool b1 = true;
 	if (gpMarDirector->unk124 != 1 && gpMarDirector->unk124 != 2)
 		b1 = false;
 
-	if (!b1) {
-		// TODO: should be OR, but need fancy inlines for that...
-		bool b2 = true;
-		if (gpMarDirector->unk124 != 3 && gpMarDirector->unk124 != 4)
-			b2 = false;
-		if (b2) {
-			return true;
-		}
-	}
+	if (b1 || stateIs3Or4(gpMarDirector->unk124))
+		return true;
 	return false;
 }
 
@@ -103,16 +106,18 @@ void TMapObjBase::throwObjToOverhead(TMapObjBase* param_1, f32 param_2,
 void TMapObjBase::throwObjToFront(TMapObjBase* object, f32 y_offset, f32 speed,
                                   f32 vertical_speed) const
 {
+	char pre[8];
+	Mtx mtx;
+	char trash[8];
 	object->appear();
 	object->mPosition.set(mPosition.x, mPosition.y + y_offset, mPosition.z);
 	if (mMActor) {
-		MtxPtr mtx = getModel()->getAnmMtx(0);
-		object->mVelocity.set(mtx[0][2] * speed,
-		                      mtx[1][2] * speed + vertical_speed,
-		                      mtx[2][2] * speed);
+		MtxPtr anmMtx = getModel()->getAnmMtx(0);
+		object->mVelocity.set(anmMtx[0][2] * speed,
+		                      anmMtx[1][2] * speed + vertical_speed,
+		                      anmMtx[2][2] * speed);
 		object->offLiveFlag(LIVE_FLAG_UNK10);
 	} else {
-		Mtx mtx;
 		MsMtxSetRotRPH(mtx, mRotation.x, mRotation.y, mRotation.z);
 		object->mVelocity.set(mtx[0][2] * speed,
 		                      mtx[1][2] * speed + vertical_speed,
@@ -125,15 +130,16 @@ void TMapObjBase::throwObjToFrontFromPoint(TMapObjBase* object,
                                            const JGeometry::TVec3<f32>& point,
                                            f32 speed, f32 y_speed) const
 {
+	Mtx mtx;
+	char trash[8];
 	object->appear();
 	object->mPosition.set(point);
 	if (mMActor) {
-		MtxPtr mtx = getModel()->getAnmMtx(0);
-		object->mVelocity.set(mtx[0][2] * speed, mtx[1][2] * speed + y_speed,
-		                      mtx[2][2] * speed);
+		MtxPtr anmMtx = getModel()->getAnmMtx(0);
+		object->mVelocity.set(anmMtx[0][2] * speed, anmMtx[1][2] * speed + y_speed,
+		                      anmMtx[2][2] * speed);
 		object->offLiveFlag(LIVE_FLAG_UNK10);
 	} else {
-		Mtx mtx;
 		MsMtxSetRotRPH(mtx, mRotation.x, mRotation.y, mRotation.z);
 		object->mVelocity.set(mtx[0][2] * speed, mtx[1][2] * speed + y_speed,
 		                      mtx[2][2] * speed);
@@ -200,10 +206,13 @@ void TMapObjBase::startAllAnim(MActor* param_1, const char* param_2)
 
 void TMapObjBase::joinToGroup(const char* param_1, THitActor* param_2)
 {
+	char trash[4];
+
 	// TODO: The group type here is a wild guess
-	static_cast<JDrama::TViewObjPtrListT<THitActor>*>(
-	    JDrama::TNameRefGen::search(param_1))
-	    ->push_back(param_2);
+	JDrama::TNameRef* list = JDrama::TNameRefGen::search(param_1);
+	trash[0]               = 0;
+	static_cast<JDrama::TViewObjPtrListT<THitActor>*>(list)->push_back(
+	    param_2);
 }
 
 TMapCollisionWarp*
@@ -367,8 +376,9 @@ void TMapObjBase::makeLowerStr(const char* in, char* out)
 void TMapObjBase::makeRootMtxRotZ(MtxPtr ptr)
 {
 	char trash[0x18];
-	f32 fVar1 = sinf(mRotation.z * (M_PI / 180.0f));
-	f32 fVar2 = cosf(mRotation.z * (M_PI / 180.0f));
+	// 0.017453294f is the retail pi/180. M_PI / 180 is one bit low.
+	f32 fVar1 = sinf(mRotation.z * 0.017453294f);
+	f32 fVar2 = cosf(mRotation.z * 0.017453294f);
 
 	ptr[0][0] = fVar2;
 	ptr[0][1] = -fVar1;
@@ -395,8 +405,8 @@ void TMapObjBase::setRootMtxRotZ()
 void TMapObjBase::makeRootMtxRotY(MtxPtr ptr)
 {
 	char trash[0x18];
-	f32 fVar1 = sinf(mRotation.y * (M_PI / 180.0f));
-	f32 fVar2 = cosf(mRotation.y * (M_PI / 180.0f));
+	f32 fVar1 = sinf(mRotation.y * 0.017453294f);
+	f32 fVar2 = cosf(mRotation.y * 0.017453294f);
 
 	ptr[0][0] = fVar2;
 	ptr[0][1] = 0.0f;
@@ -423,8 +433,8 @@ void TMapObjBase::setRootMtxRotY()
 void TMapObjBase::makeRootMtxRotX(MtxPtr ptr)
 {
 	char trash[0x18];
-	f32 fVar1 = sinf(mRotation.x * (M_PI / 180.0f));
-	f32 fVar2 = cosf(mRotation.x * (M_PI / 180.0f));
+	f32 fVar1 = sinf(mRotation.x * 0.017453294f);
+	f32 fVar2 = cosf(mRotation.x * 0.017453294f);
 
 	ptr[0][0] = 1.0f;
 	ptr[0][1] = 0.0f;
@@ -544,15 +554,27 @@ void TMapObjBase::makeObjMtxRotByAxis(const JGeometry::TVec3<f32>& param_1,
 	param_3[2][3] = mPosition.z;
 }
 
+// fabricated: class method keeps onePlus in f6; void* blocks CSE of normal.x
+struct TReflectVel {
+	static void apply(JGeometry::TVec3<f32>* velocity,
+	                  const JGeometry::TVec3<f32>& normal, f32 onePlus)
+	{
+		f32 dot = velocity->dot(normal);
+		// void* so the post-dot normal loads are not CSEd with dot().
+		void* np = (void*)&normal;
+		f32 px   = dot * ((JGeometry::TVec3<f32>*)np)->x;
+		velocity->x -= onePlus * px;
+		f32 py = dot * ((JGeometry::TVec3<f32>*)np)->y;
+		velocity->y -= onePlus * py;
+		f32 pz = dot * ((JGeometry::TVec3<f32>*)np)->z;
+		velocity->z -= onePlus * pz;
+	}
+};
+
 void TMapObjBase::calcReflectingVelocity(const TBGCheckData* wall, f32 param_2,
                                          JGeometry::TVec3<f32>* velocity) const
 {
-	const JGeometry::TVec3<f32>& normal = wall->getNormal();
-	f32 onePlus                         = 1.0f + param_2;
-	f32 dot                             = velocity->dot(normal);
-	velocity->x -= onePlus * dot * normal.x;
-	velocity->y -= onePlus * dot * normal.y;
-	velocity->z -= onePlus * dot * normal.z;
+	TReflectVel::apply(velocity, wall->getNormal(), 1.0f + param_2);
 }
 
 // TODO: fabricated hack
@@ -574,11 +596,22 @@ void TMapObjBase::getVerticalVecFromOffsetXZ(f32, f32, JGeometry::TVec3<f32>*)
 {
 }
 
+// One extra inline: the caller's copy of set() stays out of line.
+static inline void storeVec(JGeometry::TVec3<f32>* v, f32 x, f32 y, f32 z)
+{
+	v->set(x, y, z);
+}
+
 void TMapObjBase::rotateVecByAxisY(JGeometry::TVec3<f32>* vec, f32 angle)
 {
 	JGeometry::TRotation3<TMtx33f> rot;
 	rot.setEular(0.0f, angle, 0.0f);
-	rot.mult33(*vec, *vec);
+	storeVec(vec, rot.ref(0, 0) * vec->x + rot.ref(0, 1) * vec->y
+	                 + rot.ref(0, 2) * vec->z,
+	         rot.ref(1, 0) * vec->x + rot.ref(1, 1) * vec->y
+	             + rot.ref(1, 2) * vec->z,
+	         rot.ref(2, 0) * vec->x + rot.ref(2, 1) * vec->y
+	             + rot.ref(2, 2) * vec->z);
 }
 
 void TMapObjBase::getNormalVecFromOffsetXZ(f32, f32, JGeometry::TVec3<f32>*) { }
@@ -658,10 +691,14 @@ f32 TMapObjBase::getDistance(const JGeometry::TVec3<f32>& param_1) const
 	f32 lenSq = dx * dx + dy * dy + dz * dz;
 	if (lenSq > 0.0f) {
 		f64 guess = __frsqrte((f64)lenSq);
-		volatile f32 y
-		    = (f32)((f64)lenSq
-		            * (0.5 * guess * -((f64)lenSq * (guess * guess) - 3.0)));
-		lenSq = y;
+		struct {
+			char pad[4];
+			volatile f32 y;
+		} sqrtTemp;
+		sqrtTemp.y = (f32)((f64)lenSq
+		                   * (0.5 * guess
+		                      * -((f64)lenSq * (guess * guess) - 3.0)));
+		lenSq = sqrtTemp.y;
 	}
 	return lenSq;
 }
@@ -775,7 +812,12 @@ void TMapObjBase::emitAndSRT(s32 param_1, u8 param_2,
 	    = gpMarioParticleManager->emit(param_1, param_3, param_2, param_3);
 
 	if (emitter) {
-		emitter->setRotation(param_4.x, param_4.y, param_4.z);
+		s16 rx = param_4.x;
+		s16 ry = param_4.y;
+		s16 rz = param_4.z;
+		char trash[4];
+		trash[0] = 0;
+		emitter->setRotation(rx, ry, rz);
 		emitter->setGlobalScale(param_5);
 	}
 }
@@ -787,9 +829,12 @@ void TMapObjBase::emitAndRotateScale(s32 param_1, u8 param_2,
 	    = gpMarioParticleManager->emit(param_1, param_3, param_2, this);
 
 	if (emitter) {
-		emitter->setRotation(mRotation.x / 180.0f * 32768.0f,
-		                     mRotation.y / 180.0f * 32768.0f,
-		                     mRotation.z / 180.0f * 32768.0f);
+		s16 rx = mRotation.x / 180.0f * 32768.0f;
+		s16 ry = mRotation.y / 180.0f * 32768.0f;
+		s16 rz = mRotation.z / 180.0f * 32768.0f;
+		char trash[0xC];
+		trash[0] = 0;
+		emitter->setRotation(rx, ry, rz);
 		emitter->setGlobalScale(mScaling);
 	}
 }
@@ -901,6 +946,9 @@ TMapObjMessenger::TMapObjMessenger(const char* name)
 {
 }
 
+// First argument stays in f2, the constant in f1: fadds f1, f2, f1.
+static inline f32 liftY(f32 base, f32 extra) { return base + extra; }
+
 u32 TMapObjTurn::touchWater(THitActor*)
 {
 	if (fabsf(unk158) < unk164) {
@@ -919,7 +967,8 @@ u32 TMapObjTurn::touchWater(THitActor*)
 			ySpeed = mAppearYSpeed;
 			speed  = mAppearSpeed;
 			obj->appear();
-			obj->mPosition.set(mPosition.x, mPosition.y + 200.0f, mPosition.z);
+			obj->mPosition.set(mPosition.x, liftY(mPosition.y, 200.0f),
+			                   mPosition.z);
 			if (mMActor) {
 				MtxPtr mtx = getModel()->getAnmMtx(0);
 				obj->mVelocity.set(mtx[0][2] * speed,

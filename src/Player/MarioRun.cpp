@@ -24,6 +24,7 @@ static const char cDirtyTexName[]  = "H_ma_rak_dummy";
 BOOL TMario::considerRotateStart()
 {
 	int direction;
+	char trash[0x10];
 	if (checkStickRotate(&direction) == 1 && mWaterGun != nullptr
 	    && mWaterGun->isEmitting()) {
 		if (direction > 0)
@@ -798,13 +799,16 @@ BOOL TMario::rotating()
 	if (mStatus == MARIO_STATUS_ROTATE_L)
 		mModelFaceAngle = mStatusTimer * 4096;
 	else
-		mModelFaceAngle = -(mStatusTimer * 4096);
+		// Unsigned store. A signed negation inserts extsh before sth.
+		mModelFaceAngle = (u16)-(mStatusTimer * 4096);
 
 	return 0;
 }
 
 BOOL TMario::turnning()
 {
+	char trash[4];
+	trash[0] = 0;
 	if (isThrowStart())
 		return 1;
 
@@ -975,7 +979,7 @@ BOOL TMario::surfing()
 
 		if ((wallToFace < -maxAngle || maxAngle < wallToFace)
 		    && mForwardVel > minSpeed) {
-			decHP(mDeParams.mHpMax.get());
+			decHP(mDeParams.mHPMax.get());
 			BOOL ret = changePlayerStatus(MARIO_STATUS_JUMP_BACK_DOWN, 0, true);
 			mForwardVel = 0.8f * -mForwardVel;
 			mVel.y      = 50.0f;
@@ -1036,7 +1040,9 @@ BOOL TMario::walkEnd()
 		break;
 	}
 
-	f32 rate = 0.25f * mForwardVel;
+	f32 quarter = 0.25f;
+	f32 vel     = mForwardVel;
+	f32 rate    = vel * quarter;
 	if (rate < 0.1f)
 		rate = 0.1f;
 	setAnimation(ANIM_RUN1, rate);
@@ -1196,11 +1202,11 @@ BOOL TMario::slipBack()
 
 BOOL TMario::catching()
 {
-	// TODO: removeme
-	(void)0;
+	char trash[8];
+	trash[0] = 0;
 
 	if (!(mInput & 0x8) && (mInput & 0x2)) {
-		if (mForwardVel > mDeParams.mClashSpeed.get())
+		if (mForwardVel > mJumpParams.mRotBroadEnableV.get())
 			return changePlayerStatus(MARIO_STATUS_ROTATE_BROAD_JUMP, 0, false);
 
 		return changePlayerStatus(MARIO_STATUS_CATCH_STOP, 0, false);

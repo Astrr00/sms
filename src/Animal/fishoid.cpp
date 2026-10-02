@@ -164,6 +164,7 @@ void TRealoid::clipBoids(JDrama::TGraphics* graphics)
 		else
 			unk154[i]->onFlag(TRealoidActor::FLAG_CLIPPED_OUT);
 	}
+	char trash[4];
 }
 
 void TRealoid::perform(u32 cue, JDrama::TGraphics* graphics)

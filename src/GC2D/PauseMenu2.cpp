@@ -137,7 +137,9 @@ void TPauseMenu2::loadAfter()
 	mCardSave
 	    = static_cast<TCardSave*>(JDrama::TNameRefGen::search("データセーブ"));
 
-	mItemColor = mMenuItems[0]->getWhite();
+	JUtility::TColor white = mMenuItems[0]->getWhite();
+	mItemColor            = white;
+	char trash[0x38]; // unused; matches retail stack layout
 
 	for (s32 i = 0; i < mNumItems; i++) {
 		mOrigItemBounds[i] = mMenuItems[i]->getBounds();

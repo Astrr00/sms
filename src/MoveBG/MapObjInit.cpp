@@ -10817,7 +10817,9 @@ void TMapObjBase::setMatTableTex(J3DMaterialTable* table)
 
 void TMapObjBase::initUnique()
 {
-	// TODO: I hate switches, someone fix this please...
+	// Stack pad: the original frame is 0x2D8 and the body never touches it.
+	char trash[0x1D0];
+	trash[0] = 0;
 	switch (getActorType()) {
 	case 0x2000003C:
 		mMActor->setLightType(LIGHT_TYPE_PLAYER);
@@ -10855,16 +10857,18 @@ void TMapObjBase::initUnique()
 		setMatTable(gpMapObjManager->unk94);
 		SMS_UnifyMaterial(getModel());
 		break;
-	case 0x40000263:
-		startAllAnim(mMActor, unkF4);
+	case 0x40000263: {
+		const char* animName = unkF4;
+		startAllAnim(mMActor, animName);
 		break;
+	}
 	case 0x4000003C:
 		mMActor->initSimpleMotionBlend(0x14);
 		break;
 	case 0x400000A8:
 	case 0x40000096:
 	case 0x4000009A:
-	case 0x4000009D:
+	case 0x4000009B:
 	case 0x4000009E:
 	case 0x4000009F:
 	case 0x400000A1:
@@ -10884,6 +10888,8 @@ void TMapObjBase::initUnique()
 		setMatTable(gpMapObjManager->unk90);
 		break;
 	case 0x400000CB:
+	case 0x400000CD:
+	case 0x400000CE:
 		setMatTable(gpMapObjManager->unkC0);
 		SMS_UnifyMaterial(getModel());
 		break;
@@ -11125,8 +11131,10 @@ void TMapObjBase::initModelData()
 
 void TMapObjBase::initActorData()
 {
+	char trash[0x10];
+	trash[0] = 0;
 	int i    = 0;
-	u16 code = JDrama::TNameRef::calcKeyCode(unkF4);
+	u32 code = JDrama::TNameRef::calcKeyCode(unkF4);
 	for (; sObjDataTable[i]->unk4; ++i) {
 		if (code == sObjDataTable[i]->unk38
 		    && strcmp(sObjDataTable[i]->unk0, unkF4) == 0)

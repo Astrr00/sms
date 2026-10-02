@@ -88,8 +88,9 @@ bool CPolarSubCamera::isNeedGroundCheck_()
 	           && (isNormalCameraSpecifyMode(mMode)
 	               || isTowerCameraSpecifyMode(mMode))) {
 		f32 a = mCurrentParams->mDistMin * JMASSin(mCurrentParams->mXAngleMin);
-		f32 b = mCurrentParams->mDistMax * JMASSin(mCurrentParams->mXAngleMax);
+		f32 b;
 		f32 distY = mPosition.y - mTarget.y;
+		b = mCurrentParams->mDistMax * JMASSin(mCurrentParams->mXAngleMax);
 		if (a > b)
 			b = a;
 		if (distY > 1.25f * b) {
@@ -193,6 +194,8 @@ bool CPolarSubCamera::execWallCheck_(Vec* param_1)
 
 bool CPolarSubCamera::execRoofCheck_(Vec param_1)
 {
+	char pad[4];
+	pad[0] = 0;
 	bool moved               = false;
 	bool skipCheck           = false;
 	const TBGCheckData* roof = nullptr;
@@ -209,11 +212,11 @@ bool CPolarSubCamera::execRoofCheck_(Vec param_1)
 	}
 
 	if (skipCheck || should_clip_fabricated(roof)) {
-		if (mCurrentTarget.mPosition.y
-		    > roofHeight - mSaveEx->mSLRoofHeight.get()) {
-			mCurrentTarget.mPosition.y
-			    = roofHeight - mSaveEx->mSLRoofHeight.get();
-			moved = true;
+		f32 y = mCurrentTarget.mPosition.y;
+		roofHeight -= mSaveEx->mSLRoofHeight.get();
+		if (y > roofHeight) {
+			mCurrentTarget.mPosition.y = roofHeight;
+			moved                      = true;
 		}
 	}
 	return moved;
@@ -233,10 +236,11 @@ bool CPolarSubCamera::execGroundCheck_(Vec param_1)
 	}
 
 	const TBGCheckData* ground;
+	const TBGCheckData** out = (const TBGCheckData**)((char*)&ground - 4);
 	f32 groundY = gpMap->checkGroundIgnoreWaterSurface(
-	    param_1.x, mPreviousTarget.mPosition.y + groundChg, param_1.z, &ground);
+	    param_1.x, mPreviousTarget.mPosition.y + groundChg, param_1.z, out);
 
-	if (should_clip_fabricated(ground)) {
+	if (should_clip_fabricated(*out)) {
 		if (mCurrentTarget.mPosition.y < groundY + groundOff) {
 			mCurrentTarget.mPosition.y = groundY + groundOff;
 			moved                      = true;

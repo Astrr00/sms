@@ -112,9 +112,12 @@ void TRoulette::perform(u32 cue, JDrama::TGraphics* graphics)
 
 void TRoulette::moveObject()
 {
+	char trash[0x20];
+	trash[0] = 0;
+
 	TLiveActor::moveObject();
 	if (unk142 != 0)
-		mRotation.x += unk13C;
+		mRotation.y += unk13C;
 
 	if (unk141 != 0 && unk140 != 0) {
 		gpMarioOriginal->mGamePad->onNeutralMarioKey();
@@ -256,6 +259,8 @@ void TSlotDrum::initMapObj()
 
 void TSlotDrum::initNeonMatColor()
 {
+	char trash[4];
+	trash[0] = 0;
 	const char* matNames[3] = { "_NEON_A", "_NEON_B", "_NEON_C" };
 	for (int i = 0; i < 3; i++) {
 		unk170[i].r = 120;
@@ -407,9 +412,14 @@ void TItemSlotDrum::moveObject()
 	if (unk1A4 > 0) {
 		unk1A4++;
 		if (unk1A4 > 160) {
-			unk1A4                             = 0;
-			unk19C[TMsRange<s32>(0, 2).rand()] = true;
-			f32 v = TMsRange<f32>(0.0f, 100.0f).rand();
+			unk1A4 = 0;
+			TMsRange<s32> pick(0, 2);
+			s32 idx;
+			idx = pick.rand();
+			unk19C[idx] = true;
+			TMsRange<f32> roll(0.0f, 100.0f);
+			f32 v;
+			v = roll.rand();
 			if (v < unk1A8 && unk1A8 > 10.0f)
 				unk198 = 0;
 			else if (v < 30.0f)
@@ -452,21 +462,28 @@ void TItemSlotDrum::moveObject()
 					SMSGetMSound()->startSoundActor(MSD_SE_BS_TELESA_SLT_STOP,
 					                                &mPosition, 0, nullptr, 0,
 					                                4);
-					bool allStopped = 0.0f == unk138[0] && 0.0f == unk138[1]
-					                  && 0.0f == unk138[2];
+					bool allStopped = true;
+					for (int k = 0; k < 3; ++k)
+						if (unk138[k] != 0.0f)
+							allStopped = false;
 					if (allStopped) {
 						unk1A2 = true;
 						generateItem();
 					}
 					for (int j = 0; j < unk148; ++j) {
 						if (unk19F[j]) {
-							if (TMsRange<f32>(0.0f, 1.0f).rand() < 0.9f)
+							TMsRange<f32> keep(0.0f, 1.0f);
+							f32 chance;
+							chance = keep.rand();
+							if (chance <= 0.9f)
 								unk19C[j] = true;
 							else
 								unk19F[j] = false;
 						}
 					}
-					if (unk13C[i] < (f32)unk168) {
+					f32 ang  = unk13C[i];
+					s32 step = unk168;
+					if (ang < (f32)step) {
 						unk170[i].r = 255;
 						unk170[i].g = 255;
 						unk170[i].b = 70;
@@ -503,6 +520,9 @@ void TItemSlotDrum::calcRootMatrix()
 
 u32 TItemSlotDrum::touchWater(THitActor* water)
 {
+	char trash[4];
+	trash[0] = 0;
+
 	if (unk194 || !unk1A2)
 		return 1;
 
@@ -529,7 +549,7 @@ void TItemSlotDrum::generateItem()
 		    mPosition, "テレサマネージャー", 1);
 		if (item != nullptr) {
 			Mtx m;
-			MsMtxSetRotY(m, mRotation.x);
+			MsMtxSetRotY(m, mRotation.y);
 			JGeometry::TVec3<f32> off(0.0f, -350.0f, 300.0f);
 			MTXMultVec(m, &off, &off);
 			item->mPosition += off;
@@ -546,7 +566,7 @@ void TItemSlotDrum::generateItem()
 		}
 		for (int i = 0; i < count; ++i) {
 			Mtx m;
-			MsMtxSetRotY(m, spread * ((f32)i - 1.0f) + (mRotation.x - spread));
+			MsMtxSetRotY(m, spread * ((f32)i - 1.0f) + (mRotation.y - spread));
 			JGeometry::TVec3<f32> off(0.0f, -350.0f, 200.0f);
 			MTXMultVec(m, &off, &off);
 			TMapObjBase* item = gpItemManager->makeObjAppear(
@@ -746,8 +766,10 @@ u32 TCasinoPanelGate::touchWater(THitActor* water)
 		return 1;
 	if (fabsf(mPosition.z - water->mPosition.z) < 50.0f) {
 		unk164 = 1;
+		// baseY + scale * unk144 keeps the band in f4 and mPosition.y in f5.
+		// The unscaled test stays mPosition.y + unk144 so fadds is f5, f4.
 		int idx;
-		if (water->mPosition.y > 3.0f * unk144 + mPosition.y) {
+		if (water->mPosition.y > mPosition.y + 3.0f * unk144) {
 			if (water->mPosition.x < mPosition.x - unk140)
 				idx = 12;
 			else if (water->mPosition.x < mPosition.x)
@@ -756,9 +778,9 @@ u32 TCasinoPanelGate::touchWater(THitActor* water)
 				idx = 15;
 			else
 				idx = 14;
-			if (water->mPosition.y < 3.5f * unk144 + mPosition.y)
+			if (water->mPosition.y < mPosition.y + 3.5f * unk144)
 				unk164 = -1;
-		} else if (water->mPosition.y > 2.0f * unk144 + mPosition.y) {
+		} else if (water->mPosition.y > mPosition.y + 2.0f * unk144) {
 			if (water->mPosition.x < mPosition.x - unk140)
 				idx = 8;
 			else if (water->mPosition.x < mPosition.x)
@@ -767,7 +789,7 @@ u32 TCasinoPanelGate::touchWater(THitActor* water)
 				idx = 11;
 			else
 				idx = 10;
-			if (water->mPosition.y < 2.5f * unk144 + mPosition.y)
+			if (water->mPosition.y < mPosition.y + 2.5f * unk144)
 				unk164 = -1;
 		} else if (water->mPosition.y > mPosition.y + unk144) {
 			if (water->mPosition.x < mPosition.x - unk140)
@@ -778,7 +800,7 @@ u32 TCasinoPanelGate::touchWater(THitActor* water)
 				idx = 7;
 			else
 				idx = 6;
-			if (water->mPosition.y < 1.5f * unk144 + mPosition.y)
+			if (water->mPosition.y < mPosition.y + 1.5f * unk144)
 				unk164 = -1;
 		} else {
 			if (water->mPosition.x < mPosition.x - unk140)
@@ -789,7 +811,7 @@ u32 TCasinoPanelGate::touchWater(THitActor* water)
 				idx = 3;
 			else
 				idx = 2;
-			if (water->mPosition.y < 0.5f * unk144 + mPosition.y)
+			if (water->mPosition.y < mPosition.y + 0.5f * unk144)
 				unk164 = -1;
 		}
 		unk138[idx] += unk154 * unk164;
@@ -830,22 +852,34 @@ void TDonchou::loadAfter()
 	TMapObjBase::loadAfter();
 	if (gpApplication.mCurrArea.getStage() == 14
 	    && gpMarDirector->getCurrentStage() == 0) {
-		unk144
+		TSlotDrum* drum
 		    = static_cast<TSlotDrum*>(JDrama::TNameRefGen::search("srotdram"));
-		unk148 = static_cast<TItemSlotDrum*>(
+		unk144 = drum;
+		TItemSlotDrum* itemDrum = static_cast<TItemSlotDrum*>(
 		    JDrama::TNameRefGen::search("itemsrotdram"));
+		unk148 = itemDrum;
 	}
+}
+
+static inline void startDonchouCamera(TDonchou* self)
+{
+	char pad[0xC];
+	pad[0] = 0;
+	SMSGetMarDirector()->fireStartDemoCamera(
+	    "どん帳カメラ", &self->mPosition, -1, 0.0f, true, nullptr, 0, nullptr,
+	    JDrama::TFlagT<u16>(0));
 }
 
 void TDonchou::calcRootMatrix()
 {
 	J3DModel* model = getModel();
-	TRotation3f mtx;
-	MsMtxSetXYZRPH(mtx, mPosition.x, mPosition.y + unk140, mPosition.z,
+	Mtx mtx;
+	MtxPtr mtxPtr = mtx;
+	MsMtxSetXYZRPH(mtxPtr, mPosition.x, mPosition.y + unk140, mPosition.z,
 	               mRotation.x, mRotation.y, mRotation.z);
-	model->setBaseTRMtx(mtx);
+	model->setBaseTRMtx(mtxPtr);
 	model->setBaseScale(mScaling);
-	mtx.ref(1, 3) += unk140;
+	mtxPtr[1][3] += unk140;
 	if (unk144 != nullptr && unk144->unk194 && unk148->unk194)
 		unk13C = 1;
 	if (unk13C != 0) {
@@ -858,9 +892,7 @@ void TDonchou::calcRootMatrix()
 				SMSGetMSound()->startSoundActor(MSD_SE_SY_DONCHO_OPEN,
 				                                &mPosition, 0, nullptr, 0, 4);
 				mMActor->setBck("donchou");
-				SMSGetMarDirector()->fireStartDemoCamera(
-				    "どん帳カメラ", &mPosition, -1, 0.0f, true, nullptr, 0,
-				    nullptr, JDrama::TFlagT<u16>(0));
+				startDonchouCamera(this);
 				J3DFrameCtrl* fc = mMActor->getFrameCtrl(ANM_TYPE_BCK);
 				fc->setRate(0.5f * fc->getRate());
 			}
@@ -987,14 +1019,20 @@ void TCloset::moveObject()
 
 void TCloset::calcRootMatrix()
 {
-	gpCurObject     = this;
+	char trash[4];
+	trash[0] = 0;
+
+	gpCurObject = this;
 	J3DModel* model = getModel();
-	TRotation3f mtx;
-	MsMtxSetXYZRPH(mtx, mPosition.x, mPosition.y + unk14C, mPosition.z,
+	struct {
+		char pad[4];
+		Mtx mtx;
+	} local;
+	MsMtxSetXYZRPH(local.mtx, mPosition.x, mPosition.y + unk14C, mPosition.z,
 	               mRotation.x, mRotation.y, mRotation.z);
-	model->setBaseTRMtx(mtx);
+	model->setBaseTRMtx(local.mtx);
 	model->setBaseScale(mScaling);
-	mtx.ref(1, 3) += unk14C;
+	local.mtx[1][3] += unk14C;
 	if (unk16C != 0 && mMActor->checkCurAnm("closetopen", ANM_TYPE_BCK)
 	    && mMActor->curAnmEndsNext(ANM_TYPE_BCK, nullptr))
 		mMapCollisionWarp->remove();
@@ -1005,9 +1043,9 @@ u32 TCloset::touchWater(THitActor* water)
 	if (unk16C != 0)
 		return 0;
 	if (fabsf(mPosition.x - water->mPosition.x) < 50.0f) {
-		f32 halfDepth = 1.1f * unk140;
+		// base ± scale * unk140 keeps the product in f3 and the water Z in f1.
 		int idx;
-		if (water->mPosition.z < mPosition.z - halfDepth) {
+		if (water->mPosition.z < mPosition.z - 1.1f * unk140) {
 			idx = 0;
 			if (mRotation.y < 0.0f)
 				idx = 3;
@@ -1015,7 +1053,7 @@ u32 TCloset::touchWater(THitActor* water)
 			idx = 1;
 			if (mRotation.y < 0.0f)
 				idx = 2;
-		} else if (water->mPosition.z < mPosition.z + halfDepth) {
+		} else if (water->mPosition.z < mPosition.z + 1.1f * unk140) {
 			idx = 2;
 			if (mRotation.y < 0.0f)
 				idx = 1;

@@ -114,7 +114,10 @@ TDrawSyncManager::~TDrawSyncManager() { }
 void TDrawSyncManager::setCallback(u32 param_1, u16 param_2, u16 param_3,
                                    TDrawSyncCallback* param_4)
 {
-	mCallbacks[param_1] = TDrawSyncTokenRange(param_2, param_3, param_4);
+	TDrawSyncTokenRange range(param_2, param_3, param_4);
+	char pad[1];
+	pad[0] = 0;
+	mCallbacks[param_1] = range;
 }
 
 void TDrawSyncManager::drawSyncCallbackSub(u16 param_1)

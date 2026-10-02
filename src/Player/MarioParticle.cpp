@@ -97,10 +97,11 @@ void TMario::emitSmoke(s16 rot)
 #pragma dont_inline on
 void TMario::emitSweat(s16 rot)
 {
+	JGeometry::TVec3<f32> pos;
+	char trash[4];
 	if (!checkFlag(MARIO_FLAG_HELMET_FLW_CAMERA)
 	    && !checkFlag(MARIO_FLAG_IN_ANY_WATER) && !isUnderWater()) {
 		MtxPtr mtx = mModel->getModel()->getAnmMtx(mJointIdHead);
-		JGeometry::TVec3<f32> pos;
 		pos.x = mtx[0][3];
 		pos.y = mtx[1][3];
 		pos.z = mtx[2][3];
@@ -117,6 +118,10 @@ void TMario::emitSweatSometimes()
 		emitSweat(angle);
 }
 
+void TMario::emitSweatSometimes(s16) { } // fabricated
+
+void TMario::emitRecover() { } // fabricated
+
 void TMario::emitGetEffect()
 {
 	gpMarioParticleManager->emitAndBindToPosPtr(PARTICLE_MS_ITEMGET1_A, &unk160,
@@ -126,8 +131,9 @@ void TMario::emitGetEffect()
 
 void TMario::emitGetWaterEffect()
 {
-	gpMarioParticleManager->emitAndBindToPosPtr(PARTICLE_MS_ITEMGET1_B, &unk160,
-	                                            0, nullptr);
+	const JGeometry::TVec3<f32>* pos = &unk160;
+	gpMarioParticleManager->emitAndBindToPosPtr(PARTICLE_MS_ITEMGET1_B, pos, 0,
+	                                            nullptr);
 }
 
 void TMario::emitGetCoinEffect(JGeometry::TVec3<f32>* pos)
@@ -135,6 +141,8 @@ void TMario::emitGetCoinEffect(JGeometry::TVec3<f32>* pos)
 	gpMarioParticleManager->emit(PARTICLE_MS_COINGET_A, pos, 0, nullptr);
 	gpMarioParticleManager->emit(PARTICLE_MS_COINGET_B, pos, 0, nullptr);
 }
+
+void TMario::strongTouchDownEffectDisp() { } // fabricated
 
 void TMario::strongTouchDownEffect()
 {
@@ -170,6 +178,8 @@ void TMario::rippleEffect()
 		}
 	}
 }
+
+void TMario::rippleEffectSmall() { } // fabricated
 
 void TMario::inOutWaterEffect(f32 waterY)
 {
@@ -221,13 +231,16 @@ struct TBubbleCallBack
 
 void TBubbleCallBack::execute(JPABaseEmitter*, JPABaseParticle* particle)
 {
+	char trash[4];
+	JGeometry::TVec3<f32> pos;
+	char trash2[4];
 	if (!gpMarioOriginal->checkFlag(MARIO_FLAG_HELMET_FLW_CAMERA)) {
-		JGeometry::TVec3<f32> pos;
 		particle->getCurrentPosition(pos);
 		if (pos.y > gpMarioOriginal->mFloorPosition.z) {
 			particle->unk10 |= 2;
-			if (gpMarioOriginal->mParticleParams.mBubbleToRipple.get()
-			    != 0.0f) {
+			f32 zero   = 0.0f;
+			f32 ripple = gpMarioOriginal->mParticleParams.mBubbleToRipple.get();
+			if (ripple != zero) {
 				gpMarioParticleManager->emit(PARTICLE_MS_M_AWAHAMON, &pos, 0,
 				                             nullptr);
 			}
@@ -291,6 +304,8 @@ void TMario::swimmingBubbleEffect()
 		}
 	}
 }
+
+void TMario::smallRippleEffect(JGeometry::TVec3<f32>*) { } // fabricated
 
 void TMario::runningRippleEffect()
 {
@@ -588,6 +603,8 @@ void TMario::emitRotateShootEffect()
 	                                            &mCenterPos, 1, this);
 }
 
+void TMario::setFootPrint(const JGeometry::TVec3<f32>&, int) { } // fabricated
+
 void TMario::emitFootPrintWithEffect(int effectId, int printId)
 {
 	char trash[8];
@@ -649,6 +666,8 @@ void TMario::emitFootPrintWithEffect(int effectId, int printId)
 	}
 }
 
+void TMario::emitFootPrint(int) { } // fabricated
+
 void TMario::emitDirtyFootPrint()
 {
 	emitFootPrintWithEffect(MAP_POLLUTION_MS_M_ASHIOS, -1);
@@ -675,6 +694,8 @@ void TMario::meltInWaterEffect()
 		}
 	}
 }
+
+void TMario::rocketEffectNozzle() { } // fabricated
 
 void TMario::rocketEffectStart()
 {
@@ -711,8 +732,9 @@ void TMario::elecEndEffect()
 
 void TMario::kickRoofEffect()
 {
+	char trash[8];
 	if (getMotionFrameCtrl().checkPass(8.0f)) {
-		MtxPtr mtx      = mModel->getModel()->getAnmMtx(mJointIdHead);
+		MtxPtr mtx      = mModel->getModel()->getAnmMtx(mJointIdChnFootR);
 		mFootprintPos.x = mtx[0][3];
 		mFootprintPos.y = mtx[1][3];
 		mFootprintPos.z = mtx[2][3];

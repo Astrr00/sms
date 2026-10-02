@@ -1,3 +1,22 @@
+#include <JSystem/JGadget/std-vector.hpp>
+
+class TBaseNPC;
+
+// The stock TVector_pointer ctor builds its TAllocator inside the inline.
+// A default argument puts that temporary in this caller, which is the slot
+// TMarDirector::TMarDirector passes to TVector_pointer_void.
+namespace JGadget {
+template <> class TVector_pointer<TBaseNPC> : public TVector_pointer_void {
+public:
+	TVector_pointer(const TAllocator<void*>& alloc = TAllocator<void*>())
+	    : TVector_pointer_void(alloc)
+	{
+	}
+
+	~TVector_pointer() { }
+};
+} // namespace JGadget
+
 #include <System/MarDirector.hpp>
 #include <System/PerformList.hpp>
 #include <System/EventWatcher.hpp>

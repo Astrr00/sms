@@ -41,14 +41,20 @@ void TMirrorCamera::drawSetting(MtxPtr param_1)
 {
 	GXLoadTexObj(&unk60, GX_TEXMAP0);
 	Mtx afStack_38;
-	C_MTXLightPerspective(afStack_38, unk80 * gpCamera->mFovy,
-	                      gpCamera->mAspect, 1.0f, -1.0f, 1.0f, 1.0f);
+	f32 fovy = gpCamera->mFovy;
+	C_MTXLightPerspective(afStack_38, unk80 * fovy, gpCamera->mAspect, 0.5f,
+	                      -0.5f, 0.5f, 0.5f);
 
 	Mtx afStack_68;
 	MTXConcat(getUnk30(), param_1, afStack_68);
 	Mtx afStack_98;
 	MTXConcat(afStack_38, afStack_68, afStack_98);
 	GXLoadTexMtxImm(afStack_98, 0x1E, GX_MTX3x4);
+
+	char trash[8];
+	char gap[4];
+	trash[0] = 0;
+	gap[0]   = 0;
 }
 
 void TMirrorCamera::calcEffectMtx(MtxPtr) { }
@@ -88,7 +94,7 @@ TMirrorCamera::TMirrorCamera(const char* name)
 static u8 getVertexFormat(const J3DModelData* model_data, GXAttr attr)
 {
 	const GXVtxAttrFmtList* list
-	    = model_data->getVertexData().getVtxAttrFmtList();
+	    = model_data->mVertexData.getVtxAttrFmtList();
 	for (; list->attr != GX_VA_NULL; ++list)
 		if (list->attr == attr)
 			return list->type;
@@ -112,16 +118,14 @@ void TMirrorModel::initPlaneInfo()
 	if (posComp == GX_S16) {
 		S16Vec* v = (S16Vec*)unk4->getModel()
 		                ->getModelData()
-		                ->getVertexData()
-		                .getVtxPosArray();
+		                ->mVertexData.getVtxPosArray();
 		unkC.x = v->x;
 		unkC.y = v->y;
 		unkC.z = v->z;
 	} else {
 		Vec* v = (Vec*)unk4->getModel()
 		             ->getModelData()
-		             ->getVertexData()
-		             .getVtxPosArray();
+		             ->mVertexData.getVtxPosArray();
 		unkC.x = v->x;
 		unkC.y = v->y;
 		unkC.z = v->z;
@@ -132,8 +136,7 @@ void TMirrorModel::initPlaneInfo()
 	if (normComp == GX_S16) {
 		S16Vec* v = (S16Vec*)unk4->getModel()
 		                ->getModelData()
-		                ->getVertexData()
-		                .getVtxNormArray();
+		                ->mVertexData.getVtxNormArray();
 		// BUG: probably meant to do a float division here?
 		unk18.x = v->x / 16384;
 		unk18.y = v->y / 16384;
@@ -141,8 +144,7 @@ void TMirrorModel::initPlaneInfo()
 	} else if (normComp == GX_F32) {
 		Vec* v = (Vec*)unk4->getModel()
 		             ->getModelData()
-		             ->getVertexData()
-		             .getVtxNormArray();
+		             ->mVertexData.getVtxNormArray();
 		unk18.x = v->x;
 		unk18.y = v->y;
 		unk18.z = v->z;
@@ -183,6 +185,8 @@ void TMirrorModel::init(const char* name)
 	                                     | (1 << J3DMLF_TevStageNumShift));
 
 	TPosition3f local_44;
+	char gap[0x10];
+	gap[0] = 0;
 	local_44.identity();
 	unk4->getModel()->setBaseTRMtx(local_44);
 	unk4->calc();
@@ -204,15 +208,16 @@ TMirrorModel::TMirrorModel()
 	unk18.zero();
 }
 
+static inline TMirrorModelManager* planePad() { return gpMirrorModelManager; }
+
 void TMirrorModelObj::setPlane()
 {
-	MtxPtr mtx = unk4->getModel()->getAnmMtx(0);
-	Vec* v     = (Vec*)unk4->getModel()
-	             ->getModelData()
-	             ->getVertexData()
-	             .getVtxPosArray();
+	(void)planePad();
+	MtxPtr mtx         = unk4->getModel()->getAnmMtx(0);
+	J3DModelData* data = unk4->getModel()->getModelData();
+	Vec* v             = (Vec*)data->getVtxPosArray();
 
-	JGeometry::TVec3<f32> local_18;
+	Vec local_18;
 	local_18.x = v->x;
 	local_18.y = v->y;
 	local_18.z = v->z;
@@ -222,7 +227,7 @@ void TMirrorModelObj::setPlane()
 	unk18.z = mtx[2][1];
 
 	MTXMultVec(mtx, &local_18, &local_18);
-	unk24 = -VECDotProduct(unk18, local_18);
+	unk24 = -VECDotProduct(&unk18, &local_18);
 	unk8->setUnk84AndUnk90(unk18.x, unk18.y, unk18.z, unk24);
 }
 
@@ -242,10 +247,18 @@ TMirrorModelManager* gpMirrorModelManager;
 bool TMirrorModelManager::isUpperThanMirrorPlane(
     const JGeometry::TVec3<f32>& param_1) const
 {
-	const JGeometry::TVec3<f32>* normal
-	    = unk18 != -1 ? &unk1C[unk18]->getNormalVec() : nullptr;
+	const JGeometry::TVec3<f32>* normal;
+	if (unk18 != -1)
+		normal = &unk1C[unk18]->getNormalVec();
+	else
+		normal = nullptr;
 
-	f32 d   = unk18 != -1 ? unk1C[unk18]->getD() : 0.0f;
+	f32 d;
+	if (unk18 != -1)
+		d = unk1C[unk18]->getD();
+	else
+		d = 0.0f;
+
 	f32 dot = normal->dot(param_1);
 
 	return dot + d < -50.0f ? false : true;
@@ -321,6 +334,8 @@ void TMirrorModelManager::registerObjMirror(TMirrorModel* model)
 
 void TMirrorModelManager::load(JSUMemoryInputStream& stream)
 {
+	(void)SMSGetMarDirector();
+	(void)SMSGetMarDirector();
 	JDrama::TViewObj::load(stream);
 	s32 local_28;
 	s32 local_2C;

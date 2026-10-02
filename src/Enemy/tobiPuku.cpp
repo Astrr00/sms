@@ -303,14 +303,13 @@ void TTobiPuku::hitWall()
 	                          0);
 
 	if (gpMap->isTouchedWallsAndMoveXZ(&record)) {
-		f32 dot = mVelocity.x * record.mResultWalls[0]->mNormal.x
-		          + mVelocity.y * record.mResultWalls[0]->mNormal.y
-		          + mVelocity.z * record.mResultWalls[0]->mNormal.z;
-		f32 bounce = -(2.0f * dot);
+		TBGCheckData* wall = record.mResultWalls[0];
+		f32 dot            = mVelocity.dot(wall->getNormal());
+		f32 bounce         = -(2.0f * dot);
 
-		mVelocity.x += bounce * record.mResultWalls[0]->mNormal.x;
+		mVelocity.x += bounce * wall->getNormal().x;
 		mVelocity.y *= 0.5f;
-		mVelocity.z += bounce * record.mResultWalls[0]->mNormal.z;
+		mVelocity.z += bounce * record.mResultWalls[0]->getNormal().z;
 
 		unk1D0 = mVelocity;
 		unk1B0 = mPosition.y;
@@ -323,6 +322,7 @@ void TTobiPuku::hitWall()
 				mVelocity.y = 0.0f;
 		}
 	}
+	char trash[0x28];
 }
 
 void TTobiPuku::bound() { }
@@ -457,8 +457,16 @@ void TTobiPuku::swimEffect()
 
 bool TTobiPuku::isReachedToGoalXZ()
 {
+	struct Pt {
+		static const JGeometry::TVec3<f32>& get(const TPathNode& node)
+		{
+			if (node.unk0 != 0)
+				return node.unk0->mPosition;
+			return node.unk4;
+		}
+	};
 	JGeometry::TVec3<f32> tmp;
-	tmp = getUnk104().getPoint();
+	tmp = Pt::get(getUnk104());
 	tmp -= mPosition;
 	tmp.y = 0.0f;
 
@@ -534,6 +542,12 @@ void TTobiPuku::hitWater()
 	unk1D0      = velocity;
 	unk1B0      = mPosition.y;
 	mRotation.y = 180.0f - 0.005493164f * *gpMarioAngleY;
+
+	struct Pad {
+		~Pad() { }
+		char c[0x1c];
+	};
+	Pad();
 }
 
 void TTobiPuku::kill()
@@ -639,24 +653,36 @@ void TPukuPuku::reset()
 	mSpine->initWith(&TNerveTobiPukuSwimWander::theNerve());
 }
 
+static void calcMoeRoot(TMoePuku* self)
+{
+	if (self->mRotation.x != 0.0f) {
+		if (self->isEaten())
+			return;
+		MsMtxSetXYZRPH(self->getModel()->getBaseTRMtx(), self->mPosition.x,
+		               self->mPosition.y + 70.0f * self->mRotation.x
+		                   / TTobiPuku::mLandAngle,
+		               self->mPosition.z, self->mRotation.x, self->mRotation.y,
+		               self->mRotation.z);
+	}
+	if (self->isPichiEffect()) {
+		self->unk1A0.set(self->mMActor->getModel()->getAnmMtx(1)[0][3],
+		                 self->mMActor->getModel()->getAnmMtx(1)[1][3],
+		                 self->mMActor->getModel()->getAnmMtx(1)[2][3]);
+		gpMarioParticleManager->emitAndBindToPosPtr(PARTICLE_MS_PUKU_PICHI,
+		                                            &self->unk1A0, 1, self);
+	}
+}
+
 void TMoePuku::calcRootMatrix()
 {
+	struct Pad {
+		~Pad() { }
+		char c[0x20];
+	};
+	Pad();
 	gpCurTobiPuku = this;
 	TSpineEnemy::calcRootMatrix();
-	if (mRotation.x != 0.0f) {
-		if (isEaten())
-			return;
-		MsMtxSetXYZRPH(getModel()->getBaseTRMtx(), mPosition.x,
-		               mPosition.y + 70.0f * mRotation.x / mLandAngle,
-		               mPosition.z, mRotation.x, mRotation.y, mRotation.z);
-	}
-	if (isPichiEffect()) {
-		unk1A0.set(mMActor->getModel()->getAnmMtx(1)[0][3],
-		           mMActor->getModel()->getAnmMtx(1)[1][3],
-		           mMActor->getModel()->getAnmMtx(1)[2][3]);
-		gpMarioParticleManager->emitAndBindToPosPtr(PARTICLE_MS_PUKU_PICHI,
-		                                            &unk1A0, 1, this);
-	}
+	calcMoeRoot(this);
 	if (mSpine->getCurrentNerve() == &TNerveTobiPukuFly::theNerve()) {
 		SMSGetMSound()->startSoundActor(MSD_SE_EN_MOEKURI_FLAME, &mPosition, 0,
 		                                nullptr, 0, 4);
@@ -819,6 +845,18 @@ DEFINE_NERVE(TNerveTobiPukuGenerate, TLiveActor)
 	return false;
 }
 
+struct FlyPadBig {
+	char c[0xc];
+};
+struct FlyPadSmall {
+	char c[4];
+};
+static inline FlyPadSmall flyPad()
+{
+	FlyPadBig big;
+	return *(FlyPadSmall*)(void*)&big;
+}
+
 DEFINE_NERVE(TNerveTobiPukuFly, TLiveActor)
 {
 	TTobiPuku* self = (TTobiPuku*)spine->getBody();
@@ -835,15 +873,21 @@ DEFINE_NERVE(TNerveTobiPukuFly, TLiveActor)
 		return true;
 	}
 
-	JGeometry::TVec3<f32> velocity  = self->mVelocity;
-	self->unk1E4                    = velocity.y;
-	JGeometry::TVec3<f32> velocity2 = self->mVelocity;
-	self->mRotation.x               = MsGetRotFromZaxis(velocity2).x;
+	JGeometry::TVec3<f32> velocity = self->mVelocity;
+	self->unk1E4                   = velocity.y;
+	flyPad();
+	self->mRotation.x
+	    = MsGetRotFromZaxis(JGeometry::TVec3<f32>(self->mVelocity)).x;
 	return false;
 }
 
 DEFINE_NERVE(TNerveTobiPukuAttack, TLiveActor)
 {
+	struct Pad {
+		~Pad() { }
+		char c[0xc];
+	};
+	Pad();
 	TTobiPuku* self = (TTobiPuku*)spine->getBody();
 	if (spine->getTime() == 0)
 		self->setAttackAnm();
@@ -865,13 +909,19 @@ DEFINE_NERVE(TNerveTobiPukuAttack, TLiveActor)
 			spine->pushAfterCurrent(&TNerveTobiPukuFall::theNerve());
 			return true;
 		}
-		return false;
+	} else {
+		return true;
 	}
-	return true;
+	return false;
 }
 
 DEFINE_NERVE(TNerveTobiPukuHitWater, TLiveActor)
 {
+	struct Pad {
+		~Pad() { }
+		char c[0x10];
+	};
+	Pad();
 	TTobiPuku* self = (TTobiPuku*)spine->getBody();
 	if (spine->getTime() == 0) {
 		if (self->isAirborne()) {
@@ -899,8 +949,9 @@ DEFINE_NERVE(TNerveTobiPukuHitWater, TLiveActor)
 		self->mPosition.y += 5.0f;
 	}
 
-	if (self->checkCurAnmEnd(0) && self->isAttackBck()) {
-		spine->pushAfterCurrent(&TNerveTobiPukuFall::theNerve());
+	if (self->checkCurAnmEnd(0)) {
+		if (self->isAttackBck())
+			spine->pushAfterCurrent(&TNerveTobiPukuFall::theNerve());
 		return true;
 	}
 	return false;
@@ -948,6 +999,11 @@ DEFINE_NERVE(TNerveTobiPukuPitiPiti, TLiveActor)
 
 DEFINE_NERVE(TNerveTobiPukuDie, TLiveActor)
 {
+	struct Pad {
+		~Pad() { }
+		char c[8];
+	};
+	Pad();
 	TTobiPuku* self = (TTobiPuku*)spine->getBody();
 	if (spine->getTime() == 0) {
 		if (self->isAirborne()) {

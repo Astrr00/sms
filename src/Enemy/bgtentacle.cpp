@@ -41,10 +41,10 @@ inline bool TBGTentacle::isAttackable()
 	return false;
 }
 
-const char* tstatestr[] = {
+static const char* tstatestr[] = {
 	"TSTATE_WAIT",     "TSTATE_ATTACK", "TSTATE_REST", "TSTATE_HELD",
 	"TSTATE_AMPUTEE",  "TSTATE_STUN",   "TSTATE_HIDE", "TSTATE_FOLLOWBODY",
-	"TSTATE_SYNCBODY", "TSTATE_GUARD",
+	"TSTATE_SYNCBODY", "TSTATE_GUARD",  nullptr,
 };
 
 TBGTentacle::TTentacleParams::TTentacleParams(const char* path)
@@ -470,7 +470,7 @@ void TBGTentacle::TNode::calcVelocity(TBGTentacle* param_1,
 		if (unk24) {
 			if (!param_2->unk24) {
 				local_8C.scale(nodeLenLimit);
-				mPosition += local_8C;
+				param_2->mPosition += local_8C;
 			}
 		} else {
 			local_8C.scale(nodeLenLimit);
@@ -478,7 +478,7 @@ void TBGTentacle::TNode::calcVelocity(TBGTentacle* param_1,
 			mPosition += local_8C;
 		}
 	} else {
-		if (nodeLen < fVar5) {
+		if (fVar5 < nodeLen) {
 			f32 m = nodeLen - fVar5;
 			if (m > speedMax)
 				m = speedMax;
@@ -503,6 +503,7 @@ void TBGTentacle::TNode::calcVelocity(TBGTentacle* param_1,
 		mVelocity.scale(inertiaProp);
 		mVelocity += local_74;
 	}
+	char trash[0x10];
 }
 
 void TBGTentacle::TNode::calcPosition(TBGTentacle* param_1)
@@ -531,6 +532,7 @@ void TBGTentacle::TNode::calcPosition(TBGTentacle* param_1)
 	}
 
 	JGeometry::TVec3<f32> local_1c = unk18;
+	char trash[0x20];
 	local_1c -= mPosition;
 	f32 len = local_1c.squared();
 	if (len > 0.01f) {
@@ -1109,6 +1111,7 @@ void TBGTentacle::decideOwnState()
 	case 10:
 		break;
 	}
+	char trash[0x1c];
 }
 
 void TBGTentacle::checkDamage()
@@ -1117,7 +1120,7 @@ void TBGTentacle::checkDamage()
 		if (mOwner->getAttackMode() == 6)
 			gpMarDirector->fireStreamingMovie(10);
 
-		mOwner->unk1A8 = mOwner->getSaveParam()->mSLAmputeeWait.get();
+		mOwner->unk1A8 = mOwner->getSaveParam()->mSLAmputeeWait.value;
 		changeStateAndFixNodes(4);
 	}
 }
@@ -1315,6 +1318,7 @@ void TBGTentacle::resetAllNodes(const JGeometry::TVec3<f32>& param_1)
 
 void TBGTentacle::perform(u32 cue, JDrama::TGraphics* graphics)
 {
+	char trash[0x40];
 	mTakeHit->perform(cue, graphics);
 
 	if (cue & CUE_MOVE) {

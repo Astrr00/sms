@@ -65,6 +65,8 @@ public:
 
 		for (int i = 0; i < 5; ++i)
 			unk5C[i] = 0;
+
+		char pad[0x68];
 	}
 	~MSSetSoundTL() { }
 

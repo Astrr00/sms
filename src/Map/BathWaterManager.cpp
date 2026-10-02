@@ -1006,7 +1006,8 @@ public:
 		TScreenTexture* tex = static_cast<TScreenTexture*>(
 		    JDrama::TNameRefGen::search("スクリーンテクスチャ"));
 
-		unk80148->getTexture()->setResTIMG(1, *tex->getTexture()->getTexInfo());
+		unk80148->getTexture()->setResTIMG(1,
+                                       *tex->getTexture()->getTexInfo());
 		unk80148->getMaterialNodePointer(0)->makeDisplayList();
 		unk8014C = new J3DModel(unk80148, 0, 1);
 
@@ -1600,9 +1601,11 @@ void TBathWaterMeshRenderer::makeNormalMap()
 			f32 a2 = unk20[r][c > 0 ? c - 1 : 0].y;
 			f32 b2 = unk20[r][c < unk800AC - 1 ? c + 1 : c].y;
 
-			unk30020[r][c].x = scale * (b - a);
+			f32 nx = scale * (b - a);
+			b2 -= a2;
+			unk30020[r][c].x = nx;
 			unk30020[r][c].y = scale * scale;
-			unk30020[r][c].z = scale * (b2 - a2);
+			unk30020[r][c].z = b2 * scale;
 			unk30020[r][c].normalize();
 		}
 	}
@@ -1659,7 +1662,8 @@ void TBathWaterMeshRenderer::calcCoord()
 void TBathWaterManager::loadAfter()
 {
 	TScreenTexture* tex = static_cast<TScreenTexture*>(
-	    JDrama::TNameRefGen::search("スクリーンテクスチャ"));
+	    JDrama::TNameRefGen::getInstance()->getRootNameRef()->search(
+	        "スクリーンテクスチャ"));
 	unk28[0] = new TBathWaterFlatRenderer(unk18);
 	unk28[1] = new TBathWaterMeshRenderer(unk18, tex->getTexture());
 	unk30    = unk28[1];
@@ -1717,7 +1721,7 @@ void TBathWaterManager::throwMario(f32 param_1)
 	diff.sub(SMS_GetMarioPos(), data.mPos);
 
 	JGeometry::TVec3<f32> local;
-	data.unk18.mult33(diff, local);
+	data.unk18.mult(diff, local);
 
 	JGeometry::TVec3<f32> horiz;
 	horiz   = local;
@@ -1728,7 +1732,7 @@ void TBathWaterManager::throwMario(f32 param_1)
 		horiz.setLength(4150.0f);
 
 		JGeometry::TVec3<f32> w;
-		data.unk18.mult33(horiz, w);
+		data.unk18.mult(horiz, w);
 		w += data.mPos;
 		w.y += 120.0f;
 

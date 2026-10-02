@@ -16,6 +16,12 @@
 extern void* gpSceneCmnDat;
 extern int gpSceneCmnDatSize;
 
+// Class body lives in an Enemy TU that is not decompiled yet.
+class TBossHanachan {
+public:
+	static void staticLoadParticle();
+};
+
 bool gParticleFlagLoaded[0x201];
 JPAResourceManager* gpResourceManager;
 JPAEmitterManager* gpEmitterManager4D2;
@@ -126,9 +132,13 @@ void TMarDirector::initLoadParticle()
 
 void TMarDirector::loadParticle()
 {
-	void* pvVar1 = new (0x20) char[0x200000];
+	// Retail frame is 0x18 larger; nothing in the body addresses the slot.
+	char pad[0x18];
+	pad[0] = 0;
+
+	void* pvVar1 = new (-0x20) char[0x200000];
 	SMSLoadArchive("/data/particle.arc", pvVar1, 0x200000, nullptr);
-	JKRMemArchive* this_00 = new (0x20) JKRMemArchive;
+	JKRMemArchive* this_00 = new (-0x20) JKRMemArchive;
 	this_00->mountFixed(pvVar1, MBF_0);
 	this_00->becomeCurrent("/");
 	loadParticleMario();
@@ -264,12 +274,10 @@ void TMarDirector::loadParticle()
 	this_00->unmountFixed();
 
 	if (mMap == 4 && unk7D == 2) {
-		void* hanachanJpaArch = SMSLoadArchive("/data/bosshanachanJpa.arc",
-		                                       pvVar1, 0x200000, nullptr);
-		this_00->mountFixed(hanachanJpaArch, MBF_0);
+		SMSLoadArchive("/data/bosshanachanJpa.arc", pvVar1, 0x200000, nullptr);
+		this_00->mountFixed(pvVar1, MBF_0);
 		this_00->becomeCurrent("/");
-		// TODO:
-		// TBossHanachan::staticLoadParticle();
+		TBossHanachan::staticLoadParticle();
 		this_00->unmountFixed();
 	}
 	JKRHeap::getCurrentHeap()->freeTail();

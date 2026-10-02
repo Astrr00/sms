@@ -23,6 +23,7 @@ static bool is_near(f32 h00, f32 h01, f32 h10, f32 h11)
 	return false;
 }
 
+#pragma dont_inline on
 u8 TPollutionObj::getDepthFromMap(int x, int z)
 {
 	const TBGCheckData* tmp;
@@ -48,6 +49,7 @@ u8 TPollutionObj::getDepthFromMap(int x, int z)
 	}
 	return 0xFF;
 }
+#pragma dont_inline off
 
 void TPollutionObj::updateDepthMap()
 {

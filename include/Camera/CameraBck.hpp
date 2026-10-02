@@ -17,8 +17,8 @@ public:
 	void isDemoFinished() const;
 	void endDemo();
 	void restartDemo();
-	bool updateDemo(JGeometry::TVec3<f32>*, JGeometry::TVec3<f32>*,
-	                JGeometry::TVec3<f32>*, f32*);
+	int updateDemo(JGeometry::TVec3<f32>*, JGeometry::TVec3<f32>*,
+	               JGeometry::TVec3<f32>*, f32*);
 	void setFrame(f32);
 
 public:

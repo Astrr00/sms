@@ -75,7 +75,9 @@ void TWalkerEnemy::moveObject()
 		mVelocity.z = local.z;
 		mSpine->pushNerve(&TNerveSmallEnemyJump::theNerve());
 		onLiveFlag(LIVE_FLAG_AIRBORNE);
-		mRotation.y += 5.0f;
+		// Retail adds 5 to the Y position. The yaw load above stays mRotation.y.
+		// TODO: frame is still 0x60 against retail 0x88. Do not pad it.
+		mPosition.y += 5.0f;
 	}
 }
 
@@ -101,7 +103,9 @@ void TWalkerEnemy::reset()
 	((TWalker*)mBinder)->reset();
 	mSpine->reset();
 	mSpine->setNext(mSpine->getDefault());
-	setGoalPath(TPathNode((THitActor*)gpMarioAddress));
+	TPathNode node((THitActor*)gpMarioAddress);
+	char trash[4];
+	setGoalPath(node);
 }
 
 void TWalkerEnemy::walkBehavior(int param_1, float param_2)
@@ -158,14 +162,16 @@ void TWalkerEnemy::initAttacker(THitActor* param_1)
 static inline f32 dist(const JGeometry::TVec3<f32>& a,
                        const JGeometry::TVec3<f32>& b)
 {
-	JGeometry::TVec3<f32> tmp = a;
+	JGeometry::TVec3<f32> tmp;
+	// dont_inline copy ctor reserves an extra slot
+	*(Vec*)&tmp = *(const Vec*)&a;
 	tmp.sub(b);
 	return tmp.length();
 }
 
 bool TWalkerEnemy::isResignationAttack()
 {
-	f32 fVar1 = getSaveParam2()->getSLGiveUpLength();
+	f32 fVar1 = getSaveParam2()->mSLGiveUpLength.value;
 
 	if (dist(unk104.getPoint(), mPosition) > fVar1)
 		return true;
@@ -175,7 +181,15 @@ bool TWalkerEnemy::isResignationAttack()
 
 bool TWalkerEnemy::isReachedToGoalXZ()
 {
-	JGeometry::TVec3<f32> tmp = getUnk104().getPoint();
+	struct Pt {
+		static const JGeometry::TVec3<f32>& get(const TPathNode& node)
+		{
+			if (node.unk0 != 0)
+				return node.unk0->mPosition;
+			return node.unk4;
+		}
+	};
+	JGeometry::TVec3<f32> tmp = Pt::get(getUnk104());
 	tmp -= mPosition;
 	tmp.y = 0.0f;
 

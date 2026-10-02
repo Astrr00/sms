@@ -87,10 +87,15 @@ void TCameraBck::endDemo() { unk0->setBckFromIndex(-1); }
 
 void TCameraBck::restartDemo() { }
 
-bool TCameraBck::updateDemo(JGeometry::TVec3<f32>* pos,
-                            JGeometry::TVec3<f32>* lookat,
-                            JGeometry::TVec3<f32>* up, f32* out_y_scale)
+int TCameraBck::updateDemo(JGeometry::TVec3<f32>* pos,
+                           JGeometry::TVec3<f32>* lookat,
+                           JGeometry::TVec3<f32>* up, f32* out_y_scale)
 {
+	J3DTransformInfo info;
+	char trash[8];
+	char low[0xC];
+	trash[0] = 0;
+	low[0]   = 0;
 
 	unk0->calcAnm();
 
@@ -106,7 +111,6 @@ bool TCameraBck::updateDemo(JGeometry::TVec3<f32>* pos,
 	if (out_y_scale != nullptr) {
 		J3DAnmTransformKey* anm = unk0->getBckAnm();
 		if (anm != nullptr) {
-			J3DTransformInfo info;
 			anm->getTransform((u16)unk8, &info);
 			*out_y_scale = info.mScale.y;
 		}
@@ -119,13 +123,20 @@ bool TCameraBck::updateDemo(JGeometry::TVec3<f32>* pos,
 			*lookat += *unk14;
 	}
 
-	bool result      = true;
+	int result       = 1;
 	J3DFrameCtrl* fc = unk0->getFrameCtrl(ANM_TYPE_BCK);
 	if (fc != nullptr) {
-		if (fc->checkState(J3DFrameCtrl::STATE_COMPLETED_ONCE))
-			result = true;
+		switch (fc->getState() & J3DFrameCtrl::STATE_COMPLETED_ONCE) {
+		case 0:
+			result = 0;
+			break;
+		default:
+			break;
+		}
+		if (result)
+			result = 1;
 		else
-			result = false;
+			result = 0;
 	}
 
 	return result;

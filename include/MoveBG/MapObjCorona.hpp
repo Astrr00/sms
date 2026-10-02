@@ -39,9 +39,9 @@ public:
 	               f32, f32*) const;
 	void updatePosture_();
 	void load(JSUMemoryInputStream&);
-	u8 getNumKillerLaunchable() const;
+	int getNumKillerLaunchable() const;
 	bool isKillerAttackable() const;
-	u8 getNumKillerBurstable() const;
+	int getNumKillerBurstable() const;
 	bool isBreaking() const;                                // Unused
 	bool isKillerLaunchable() const;                        // Unused
 	void showMessage(u32);                                  // Unused
@@ -80,7 +80,7 @@ public:
 	/* 0x24C */ int unk24C;
 	/* 0x250 */ int unk250;
 	/* 0x254 */ u32 unk254;
-	/* 0x258 */ u32 unk258;
+	/* 0x258 */ int unk258;
 	/* 0x25C */ u32 unk25C;
 	/* 0x260 */ int mMarioJntIdx;
 	/* 0x264 */ int mStarJntIdx;

@@ -280,12 +280,15 @@ void TPollutionLayer::perform(u32 cue, JDrama::TGraphics* graphics)
 
 static inline u8 readBmpPixel(const u8* bmp, int x, int y, int w, int h)
 {
-	return bmp[0x436 + x + w * (h - 1 - y)];
+	int row = w * (h - 1 - y);
+	return bmp[0x436 + row + x];
 }
 
 void TPollutionLayer::initTexImage(const char* name)
 {
 	char fullPath[256];
+	long long pad[14];
+	(void)pad;
 	snprintf(fullPath, 256, "/scene/map/pollution/%s.bmp", name);
 	mPollutionBmp = (u8*)JKRGetResource(fullPath);
 

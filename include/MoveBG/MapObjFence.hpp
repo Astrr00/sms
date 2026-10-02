@@ -3,6 +3,8 @@
 
 #include <MoveBG/MapObjBase.hpp>
 
+class TGraphTracer;
+
 // TODO: mark virtual methods as such
 
 class TFence : public TMapObjBase {
@@ -28,6 +30,9 @@ public:
 	    : TFence(name)
 	{
 	}
+
+public:
+	/* 0x13C */ TMapObjBase* unk13C;
 };
 
 class TRevolvingFenceInner : public TFence {
@@ -40,6 +45,8 @@ public:
 	void control();
 	void initMapCollisionData();
 	void initMapObj();
+
+	static f32 mSpeed;
 
 	TRevolvingFenceInner(const char* name = "フェンス内側")
 	    : TFence(name)
@@ -57,8 +64,8 @@ class TFenceWater : public TFence {
 public:
 	void draw() const;
 	BOOL receiveMessage(THitActor* sender, u32 message);
-	void changeStatusToGo();
-	void changeStatusToWait();
+	virtual void changeStatusToGo();
+	virtual void changeStatusToWait();
 	void controlRotation();
 	void control();
 	void initMapCollisionData();
@@ -67,6 +74,14 @@ public:
 	    : TFence(name)
 	{
 	}
+
+	static f32 mWaterAccel;
+	static f32 mBackSpeed;
+	static int mTurnedWaitTime;
+
+public:
+	/* 0x13C */ f32 unk13C;
+	/* 0x140 */ f32 unk140;
 };
 
 class TFenceWaterH : public TFenceWater {
@@ -88,10 +103,14 @@ public:
 	void control();
 	void initMapCollisionData();
 	void load(JSUMemoryInputStream&);
-	TRailFence(const char* name = "レールフェンス")
-	    : TFence(name)
-	{
-	}
+	TRailFence(const char* name = "レールフェンス");
+
+	static f32 mFallHeight;
+	static int mWaitTime;
+
+public:
+	/* 0x13C */ TGraphTracer* unk13C;
+	/* 0x140 */ f32 unk140;
 };
 
 #endif

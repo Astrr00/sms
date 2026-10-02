@@ -22,9 +22,23 @@ public:
 	int getCameraMode() const { return mCameraMode; }
 	int getDemoLengthFrames() const { return mDemoLengthFrames; }
 
+	struct TPitchYaw {
+		f32 x;
+		f32 y;
+		TPitchYaw() { }
+		TPitchYaw(const TPitchYaw& other)
+		{
+			struct Pair {
+				u32 a;
+				u32 b;
+			};
+			*(Pair*)this = *(const Pair*)&other;
+		}
+	};
+
 public:
 	/* 0xC */ JGeometry::TVec3<f32> mPosition;
-	/* 0x18 */ JGeometry::TVec2<f32> mPitchYaw;
+	/* 0x18 */ TPitchYaw mPitchYaw;
 	/* 0x20 */ u32 unk20;
 	/* 0x24 */ s32 mCameraMode;
 	/* 0x28 */ s32 unk28;

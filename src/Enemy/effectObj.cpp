@@ -128,24 +128,49 @@ BOOL TEffectObjBase::receiveMessage(THitActor* sender, u32 message)
 
 void TEffectObjBase::moveObject()
 {
+	Vec local_1c;
+	char trash[0x24];
 	if (unk68 == 2) {
 		unk74 += 1;
-		Vec local_1c;
 		VECScale(&mScaling, &local_1c, unk70 / unk6C);
 
 		if (JPABaseEmitter* emitter = gpMarioParticleManager->emit(
 		        PARTICLE_MS_MAP_FIRE_C, &mPosition, 3, this)) {
-			emitter->setGlobalScale(local_1c);
+			f32 x = local_1c.x;
+			f32 y = local_1c.y;
+			f32 z = local_1c.z;
+			emitter->mGlobalDynamicsScale.x = x;
+			emitter->mGlobalDynamicsScale.y = y;
+			emitter->mGlobalDynamicsScale.z = z;
+			emitter->mGlobalParticleScale.x = x;
+			emitter->mGlobalParticleScale.y = y;
+			emitter->mGlobalParticleScale.z = z;
 		}
 
 		if (JPABaseEmitter* emitter = gpMarioParticleManager->emit(
 		        PARTICLE_MS_MAP_FIRE_A, &mPosition, 1, this)) {
-			emitter->setGlobalScale(local_1c);
+			f32 x = local_1c.x;
+			f32 y = local_1c.y;
+			f32 z = local_1c.z;
+			emitter->mGlobalDynamicsScale.x = x;
+			emitter->mGlobalDynamicsScale.y = y;
+			emitter->mGlobalDynamicsScale.z = z;
+			emitter->mGlobalParticleScale.x = x;
+			emitter->mGlobalParticleScale.y = y;
+			emitter->mGlobalParticleScale.z = z;
 		}
 
 		if (JPABaseEmitter* emitter = gpMarioParticleManager->emit(
 		        PARTICLE_MS_MAP_FIRE_B, &mPosition, 1, this)) {
-			emitter->setGlobalScale(local_1c);
+			f32 x = local_1c.x;
+			f32 y = local_1c.y;
+			f32 z = local_1c.z;
+			emitter->mGlobalDynamicsScale.x = x;
+			emitter->mGlobalDynamicsScale.y = y;
+			emitter->mGlobalDynamicsScale.z = z;
+			emitter->mGlobalParticleScale.x = x;
+			emitter->mGlobalParticleScale.y = y;
+			emitter->mGlobalParticleScale.z = z;
 		}
 
 		SMSGetMSound()->startSoundActor(MSD_SE_OBJ_CALM_FLAME, &mPosition, 0,

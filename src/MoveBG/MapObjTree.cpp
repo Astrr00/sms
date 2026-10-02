@@ -96,6 +96,8 @@ int TMapObjTree::controlLeaf(int index)
 	if (abs(leaf.mAngle) < mLeafTouchImpulse
 	    && abs(leaf.mAngle) < mLeafTouchImpulse)
 		return 1;
+	// Last local, so it sits under the matrices and closes the 4-byte gap.
+	int pad = 0;
 	return 0;
 }
 
@@ -168,6 +170,9 @@ void TMapObjTree::initEach()
 
 void TMapObjTree::initMapObj()
 {
+	char buffer[64];
+	char trash[4];
+	trash[0] = 0;
 	TMapObjGeneral::initMapObj();
 	initEach();
 	mLeaves = new TMapObjLeaf[mLeafNum];
@@ -175,7 +180,6 @@ void TMapObjTree::initMapObj()
 		TMapObjLeaf& leaf = mLeaves[i];
 		// BUG: memory leak, mCollision was already allocated in ctor
 		leaf.mCollision = new TMapCollisionMove;
-		char buffer[64];
 		if (isActorType(0x40000038)) {
 			snprintf(buffer, 0x100, "/mapObj/palmLeaf%02d", i + 1);
 		} else {

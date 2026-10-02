@@ -158,6 +158,9 @@ static void initStageCommon()
 
 static void initStage()
 {
+	char trash[0x38];
+	trash[0] = 0;
+
 	if (gpMarDirector->getCurrentStage() > 9)
 		return;
 
@@ -304,6 +307,7 @@ bool TMap::isTouchedOneWall(f32 x, f32 y, f32 z, f32 radius) const
 
 bool TMap::isTouchedOneWallAndMoveXZ(f32* x, f32 y, f32* z, f32 radius) const
 {
+	(void)SMSGetMarDirector();
 	TBGWallCheckRecord record(*x, y, *z, radius, 1, 0);
 
 	int r = mCollisionData->checkWalls(&record);

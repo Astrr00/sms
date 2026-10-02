@@ -176,7 +176,7 @@ void TSpineEnemy::resetToPosition(const JGeometry::TVec3<f32>& position)
 	offLiveFlag(LIVE_FLAG_UNK8);
 	offLiveFlag(LIVE_FLAG_DEAD);
 	reset();
-	mHitPoints = getSaveParam() ? getSaveParam()->mSLHitPointMax.get() : 1;
+	mHitPoints = getMaxHitPoints();
 	offHitFlag(HIT_FLAG_NO_COLLISION);
 	mVelocity = JGeometry::TVec3<f32>(0.0f, 5.0f, 0.0f);
 	onLiveFlag(LIVE_FLAG_UNK8000);
@@ -220,6 +220,7 @@ f32 TSpineEnemy::calcMinimumTurnRadius(f32 param_1, f32 param_2) const
 
 f32 TSpineEnemy::calcTurnSpeedToReach(f32 march_speed, f32 param_2) const
 {
+	volatile char gap[8];
 	if (param_2 == 0.0f)
 		return 0.0f;
 
@@ -233,10 +234,10 @@ f32 TSpineEnemy::calcTurnSpeedToReach(f32 march_speed, f32 param_2) const
 	if (dVar11 == -1.0f)
 		return 180.0f;
 
-	f32 fVar32 = -(dVar11 * dVar11 - 1.0f);
-
-	// TODO: THitActor::calcEntryRadius has same problem
-	volatile f32 f = fVar32 * __frsqrte(fVar32);
+	f32 x          = 1.0f - dVar11 * dVar11;
+	f64 g          = __frsqrte(x);
+	volatile f32 f = x * g;
+	volatile char trash[4];
 	f32 tmp        = matan(f, dVar11) * (360.0f / 65536.0f);
 	return 90.0f - tmp;
 }
@@ -271,6 +272,11 @@ BOOL TSpineEnemy::isInSight(const JGeometry::TVec3<f32>& pos, f32 length,
 
 void TSpineEnemy::setGoalPathFromGraph()
 {
+	struct Pad {
+		~Pad() { }
+		char c[0x14];
+	};
+	Pad();
 	JGeometry::TVec3<f32> local_48;
 	unk124->getCurrent().getPoint(&local_48);
 	TPathNode local_3c(local_48);
@@ -424,7 +430,8 @@ void TSpineEnemy::updateStayCount(f32) { }
 
 BOOL TSpineEnemy::turnToCurPathNode(f32 param_1)
 {
-	JGeometry::TVec3<f32> tmp = getUnkF4().getPoint();
+	const TPathNode& node     = getUnkF4();
+	JGeometry::TVec3<f32> tmp = node.getPoint();
 	tmp -= mPosition;
 
 	f32 rot = MsAngleDiff(MsGetRotFromZaxisY(tmp), mRotation.y);

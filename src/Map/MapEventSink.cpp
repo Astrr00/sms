@@ -139,8 +139,11 @@ void TMapEventSink::startControl()
 	unk3C     = dVar4 / iVar3;
 	unk4C     = unk40;
 
-	unk5C[mRaisingBuildingIdx]->moveTrans(JGeometry::TVec3<f32>(
-	    info.mTranslate.x, info.mTranslate.y, info.mTranslate.z));
+	JGeometry::TVec3<f32> trans(info.mTranslate.x, info.mTranslate.y,
+	                            info.mTranslate.z);
+	char trash[21];
+	trash[0] = 0;
+	unk5C[mRaisingBuildingIdx]->setUpTrans(trans);
 }
 
 void TMapEventSink::initBuilding(int index, JSUMemoryInputStream& stream)
@@ -171,7 +174,11 @@ void TMapEventSink::initWithBuildingNum(JSUMemoryInputStream& stream)
 void TMapEventSink::load(JSUMemoryInputStream& stream)
 {
 	TMapEvent::load(stream);
-	mBuildingNum = stream.readU32();
+	u32 num;
+	stream >> num;
+	char trash[25];
+	trash[0] = 0;
+	mBuildingNum = num;
 	initWithBuildingNum(stream);
 	for (int i = 0; i < mBuildingNum; ++i) {
 		mIsBuildingRecovered[i] = false;
@@ -262,6 +269,9 @@ void TMapEventSinkInPollutionReset::makeBuildingRecovered(int i)
 
 void TMapEventSinkInPollutionReset::loadAfter()
 {
+	// Unused block fills the 0x88 frame gap left when the parent loadAfter
+	// is inlined here. Sized so saved regs move with the frame.
+	char trash[0x88];
 	TMapEventSinkInPollution::loadAfter();
 	for (int i = 0; i < mBuildingNum; ++i) {
 		getPollutionObj(i)->alive();
@@ -349,7 +359,7 @@ void TMapEventSinkBianco::startControl()
 		unk50[mRaisingBuildingIdx].set(7170.0f, 3675.0f, -185.0f);
 		SMSGetMarDirector()->fireStartDemoCamera(
 		    "bianco0_event0", nullptr, -1, 0.0f, true, nullptr, 0, nullptr,
-		    JDrama::TFlagT<u16>(0));
+		    JDrama::TFlagT<u16>());
 	}
 }
 

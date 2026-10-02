@@ -476,6 +476,7 @@ namespace HardStream {
 
 	u8 TControl::volFloatToU8(f32 param_1)
 	{
+		char trash[8];
 		if (param_1 > 1.0f)
 			param_1 = 1.0f;
 

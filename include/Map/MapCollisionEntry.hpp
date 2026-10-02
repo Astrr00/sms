@@ -152,6 +152,11 @@ public:
 	/* 0x64 */ u32 mEntrySize;
 };
 
+class TMarDirector;
+extern TMarDirector* gpMarDirector;
+
+inline TMarDirector* collisionMovePad() { return gpMarDirector; }
+
 class TMapCollisionMove : public TMapCollisionBase {
 public:
 	TMapCollisionMove();
@@ -163,9 +168,15 @@ public:
 	{
 		MsMtxSetTRS(unk20, param_1, param_2, param_3);
 		move();
+		(void)collisionMovePad();
 	}
 	virtual void moveTrans(const JGeometry::TVec3<f32>&);
+#ifdef PINNA_EMIT_MOVEMTX
+	// MapObjPinna.cpp provides the weak out-of-line body (MTXCopy + move).
+	virtual void moveMtx(MtxPtr mtx);
+#else
 	virtual void moveMtx(MtxPtr mtx) { MTXCopy(mtx, unk20); }
+#endif
 
 	void init(u32, u16 bg_type, s16 data, const TLiveActor* actor);
 	void move();

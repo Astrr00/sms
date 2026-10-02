@@ -67,6 +67,8 @@ void TPollutionLayer::changeEffectScale(const JGeometry::TVec3<f32>&, f32) { }
 
 void TPollutionLayer::spread()
 {
+	char trash[0x18];
+	(void)trash;
 	if (mSpreadTimer < mSpreadFrequency) {
 		mSpreadTimer += 1;
 	} else {
@@ -140,6 +142,7 @@ void TPollutionLayer::fire()
 
 void TPollutionLayer::action()
 {
+	char trash[0x10];
 	if (getPlaneType() != 0)
 		return;
 

@@ -97,7 +97,10 @@ static bool loadWaveBackword(JASystem::WaveArcLoader::TObject* obj)
 		return false;
 
 	JASystem::Kernel::THeap* root = JASystem::WaveArcLoader::getRootHeap();
-	if (!heap->selfAlloc(root, extent, (u32)root->mBase + root->unk10 - extent))
+	u32 addr = (u32)root->mBase;
+	addr += root->unk10;
+	addr -= extent;
+	if (!heap->selfAlloc(root, extent, addr))
 		return false;
 
 	u32* ptr = obj->getLoadFlagPtr();
@@ -109,6 +112,7 @@ static bool loadWaveBackword(JASystem::WaveArcLoader::TObject* obj)
 		return false;
 	}
 
+	char pad[0xC];
 	return true;
 }
 
@@ -334,6 +338,14 @@ void MSound::enterStage(MS_SCENE_WAVE wave, u8 param_2, u8 param3)
 	loadWave(wave);
 }
 
+static inline void clearOneCam(JAICamera& cam)
+{
+	char pad[4];
+	pad[0] = 0;
+	cam    = JAICamera();
+	cam    = JAInullCamera;
+}
+
 void MSound::exitStage()
 {
 	for (u8 cat = 0; cat < JAIGlobalParameter::getParamSeCategoryMax(); ++cat)
@@ -346,10 +358,8 @@ void MSound::exitStage()
 
 	mAudioCameras[0] = JAInullCamera;
 
-	unkAC[0] = JAICamera();
-	unkAC[0] = JAInullCamera;
-	unkAC[1] = JAICamera();
-	unkAC[1] = JAInullCamera;
+	clearOneCam(unkAC[0]);
+	clearOneCam(unkAC[1]);
 
 	unkCD    = 0xff;
 	unkCE    = 0xff;
@@ -706,6 +716,7 @@ void MSound::setCategoryVOLsDefault(u16 mask)
 
 void MSound::setCategoryVOLs(u16 param_1, f32 param_2)
 {
+	char pad[8];
 	u8 tmp = param_2 * 127.0f;
 	u8 uVar2;
 	if (tmp > 127)
@@ -837,13 +848,15 @@ void MSound::playTimer(u32 time)
 	}
 }
 
+static inline u32 asU32(u8 v) { return v; }
+
 u32 MSound::startMarioVoice(u32 param_1, s16 param_2, u8 param_3)
 {
 	if (((param_3 & 0x1) ? true : false) == 1)
 		return 0;
 
 	bool iVar6 = param_3 & 0x2 ? true : false;
-	u32 iVar3  = param_3 & 0x2 ? true : false;
+	u32 iVar3  = asU32(param_3 & 0x2 ? true : false);
 
 	bool r3 = 1;
 
@@ -1025,6 +1038,7 @@ u32 MSound::startMarioVoice(u32 param_1, s16 param_2, u8 param_3)
 
 	JAIActor local_48(unkAC[iVar3].mPosition, unkAC[iVar3].mPosition,
 	                  unkAC[iVar3].mPosition, 0);
+	char pad[0x28];
 	MSoundSESystem::MSoundSE::startSoundActorInner(param_1, unk8C + iVar6,
 	                                               &local_48, 1, 4);
 	if (unk8C[iVar6] != nullptr) {
@@ -1149,6 +1163,7 @@ void MSound::startSoundActorSpecial(u32 id, const Vec* position, f32 param_3,
 			}
 		}
 	}
+	char trash[8];
 }
 
 bool MSound::cameraLooksAtMario()

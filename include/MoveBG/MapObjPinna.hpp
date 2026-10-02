@@ -8,13 +8,19 @@
 // TODO: mark virtual methods as such
 
 class TCoin;
+class MActor;
 
 class TFerrisWheel : public TMapObjBase {
 public:
-	void becomeCalmlyCallback(u32, u32);
+	s32 becomeCalmlyCallback(u32, u32);
 	void control();
 	void initMapObj();
 	TFerrisWheel(const char* name = "観覧車");
+
+public:
+	/* 0x138 */ s32 unk138;
+	/* 0x13C */ TMapObjBase** unk13C;
+	/* 0x140 */ f32 unk140;
 };
 
 class THorizontalViking : public TMapObjBase {
@@ -22,19 +28,32 @@ public:
 	void updateTrans();
 	void moveNormal();
 	void control();
-	void reset();
+	virtual void reset();
 	void initMapObj();
 	THorizontalViking(const char*);
+
+public:
+	/* 0x138 */ f32 unk138;
+	/* 0x13C */ f32 unk13C;
+	/* 0x140 */ f32 unk140;
+	/* 0x144 */ f32 unk144;
+	/* 0x148 */ f32 unk148;
 };
 
 class TViking : public THorizontalViking {
 public:
 	void roll();
 	void control();
-	void reset();
+	virtual void reset();
 	void loadAfter();
 	void initMapObj();
 	TViking(const char* name = "バイキング");
+
+public:
+	/* 0x14C */ u32 unk14C;
+	/* 0x150 */ f32 unk150;
+	/* 0x154 */ f32 unk154;
+	/* 0x158 */ f32 unk158;
 };
 
 class TPinnaShell : public THitActor {
@@ -42,8 +61,19 @@ public:
 	void opened();
 	BOOL receiveMessage(THitActor* sender, u32 message);
 	void control();
-	TPinnaShell(const char*);
-	TPinnaShell();
+	TPinnaShell(const char* name = "シェル");
+
+public:
+	/* 0x68 */ s32 unk68;
+	/* 0x6C */ f32 unk6C;
+	/* 0x70 */ f32 unk70;
+	/* 0x74 */ u32 unk74;
+	/* 0x78 */ u32 unk78;
+	/* 0x7C */ u32 unk7C;
+	/* 0x80 */ u32 unk80;
+	/* 0x84 */ u32 unk84;
+	/* 0x88 */ u32 unk88;
+	/* 0x8C */ u32 unk8C;
 };
 
 class TShellCup : public TMapObjBase {
@@ -55,6 +85,17 @@ public:
 	void loadAfter();
 	void initMapObj();
 	TShellCup(const char* name = "シェルカップ");
+
+	static f32 mOpenRotMax;
+	static f32 mShellDamageRot;
+	static f32 mWaterOpenAccel;
+	static f32 mCloseAccel;
+
+public:
+	/* 0x138 */ TPinnaShell unk138[6];
+	/* 0x498 */ void* unk498;
+	/* 0x49C */ void* unk49C;
+	/* 0x4A0 */ void* unk4A0;
 };
 
 class TMerrygoround : public TMapObjBase {
@@ -63,6 +104,17 @@ public:
 	void draw() const;
 	void initMapObj();
 	TMerrygoround(const char* name = "メリーゴーランド");
+
+public:
+	/* 0x138 */ u32 unk138;
+	/* 0x13C */ u32 unk13C;
+	/* 0x140 */ u16 unk140;
+	/* 0x142 */ u16 unk142;
+	/* 0x144 */ u32 unk144[9];
+	/* 0x168 */ u32 unk168[9];
+	/* 0x18C */ u16 unk18C[9];
+	/* 0x1A0 */ u32 unk1A0;
+	/* 0x1A4 */ u16 unk1A4;
 };
 
 class TChangeStageMerrygoround : public TMapObjChangeStage {
@@ -86,6 +138,9 @@ public:
 	void kill();
 	void load(JSUMemoryInputStream&);
 	TBalloonKoopaJr(const char* name = "風船（クッパＪｒ）");
+
+public:
+	/* 0x148 */ JGeometry::TVec3<f32> unk148;
 };
 
 class TPinnaEntrance : public TMapObjBase {
@@ -102,7 +157,7 @@ public:
 
 class TAmiKing : public TMapObjBase {
 public:
-	u32 touchWater(THitActor*);
+	u32 touchWater(THitActor*) { return 1; }
 	void loadAfter();
 	void initMapObj();
 	void moveObject();
@@ -110,6 +165,9 @@ public:
 	void bind();
 	void touchPlayer(THitActor*);
 	TAmiKing(const char* name = "アミキング");
+
+	/* 0x138 */ u8 unk138;
+	/* 0x13C */ JGeometry::TVec3<f32> unk13C;
 };
 
 class TPinnaCoaster : public TMapObjBase {
@@ -117,6 +175,11 @@ public:
 	void control();
 	void initMapObj();
 	TPinnaCoaster(const char* name = "コースター");
+
+public:
+	/* 0x138 */ MActor* unk138;
+	/* 0x13C */ u32 unk13C;
+	/* 0x140 */ JGeometry::TVec3<f32> unk140;
 };
 
 class TMerryPole : public TMapObjBase {

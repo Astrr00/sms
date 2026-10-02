@@ -148,9 +148,14 @@ u32 TObjHitCheck::getTableIndex(const JGeometry::TVec3<f32>& pos,
 
 void TObjHitCheck::checkAndEntryGroup(TIdxGroupObj* group)
 {
-	TIdxGroupObj::iterator end = group->getChildren().end();
-	for (TIdxGroupObj::iterator it = group->getChildren().begin(); it != end;
-	     ++it) {
+	char trash[4];
+	(void)trash;
+	JGadget::TList_pointer<THitActor*>& children = group->getChildren();
+	TIdxGroupObj::iterator end                   = children.end();
+	TIdxGroupObj::iterator it                    = children.begin();
+	char trash2[0x14];
+	(void)trash2;
+	for (; it != end; ++it) {
 		(*it)->mColCount = 0;
 
 		if ((*it)->checkHitFlag(HIT_FLAG_NO_COLLISION))
@@ -174,9 +179,12 @@ void TObjHitCheck::checkAndEntryGroup(TIdxGroupObj* group)
 
 void TObjHitCheck::entryGroup(TIdxGroupObj* group)
 {
-	TIdxGroupObj::iterator end = group->getChildren().end();
-	for (TIdxGroupObj::iterator it = group->getChildren().begin(); it != end;
-	     ++it) {
+	JGadget::TList_pointer<THitActor*>& children = group->getChildren();
+	TIdxGroupObj::iterator end                   = children.end();
+	TIdxGroupObj::iterator it                    = children.begin();
+	char trash2[0xc];
+	(void)trash2;
+	for (; it != end; ++it) {
 		(*it)->mColCount = 0;
 
 		if ((*it)->checkHitFlag(HIT_FLAG_NO_COLLISION))
@@ -207,18 +215,20 @@ void TObjHitCheck::clearGroup(TIdxGroupObj* group)
 
 void TObjHitCheck::checkGroupPlayer(TIdxGroupObj* group)
 {
-	TIdxGroupObj::iterator end = group->getChildren().end();
+	char trash[4];
+	(void)trash;
+	JGadget::TList_pointer<THitActor*>& children = group->getChildren();
+	TIdxGroupObj::iterator end = children.end();
 	THitActor* mario           = (THitActor*)gpMarioAddress;
 
-	for (TIdxGroupObj::iterator it = group->getChildren().begin(); it != end;
-	     ++it) {
+	for (TIdxGroupObj::iterator it = children.begin(); it != end; ++it) {
 		(*it)->mColCount = 0;
 		if ((*it)->checkHitFlag(HIT_FLAG_NO_COLLISION))
 			continue;
 
 		if (checkDistance((*it)->mPosition, (*it)->getAttackRadius(),
 		                  (*it)->getAttackHeight(), mario->mPosition,
-		                  mario->getAttackRadius(), mario->getAttackHeight())) {
+		                  mario->getDamageRadius(), mario->getDamageHeight())) {
 			suffererIsInAttackArea(*it, mario);
 		}
 	}
@@ -228,25 +238,27 @@ void TObjHitCheck::checkGroup(TIdxGroupObj* group) { }
 
 void TObjHitCheck::checkActorsHit()
 {
+	char trash2[0x18];
+	(void)trash2;
 	initTable();
 
 	if (!(gpStrategy->unk50 & 0x800))
 		entryGroup(gpStrategy->unk10[3]);
 	if (!(gpStrategy->unk50 & 0x100))
-		entryGroup(gpStrategy->unk10[7]);
+		checkAndEntryGroup(gpStrategy->unk10[7]);
 	if (!(gpStrategy->unk50 & 0x200))
-		entryGroup(gpStrategy->unk10[8]);
+		checkAndEntryGroup(gpStrategy->unk10[8]);
 	if (!(gpStrategy->unk50 & 0x400))
-		entryGroup(gpStrategy->unk10[9]);
+		checkAndEntryGroup(gpStrategy->unk10[9]);
 	if (!(gpStrategy->unk50 & 0x40))
-		entryGroup(gpStrategy->unk10[6]);
+		checkAndEntryGroup(gpStrategy->unk10[6]);
 
 	if (!(gpStrategy->unk50 & 0x80)
 	    && gpModelWaterManager->askDoWaterHitCheck())
 		checkWater();
 
 	if (!(gpStrategy->unk50 & 0x800))
-		checkGroupPlayer(gpStrategy->unk10[3]);
+		checkGroupPlayer(gpStrategy->unk10[5]);
 }
 
 void TObjHitCheck::clearHitNum()

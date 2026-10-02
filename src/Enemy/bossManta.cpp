@@ -35,6 +35,19 @@
 #include <MSound/MSoundBGM.hpp>
 #include <M3DUtil/InfectiousStrings.hpp>
 
+namespace {
+
+// fabricated
+struct MantaSoundAccess {
+	MSound* get() const { return SMSGetMSound(); }
+};
+
+struct MantaSoundAccess2 {
+	MSound* get() const { return MantaSoundAccess().get(); }
+};
+
+} // namespace
+
 f32 TBossManta::sScale[] = { 20.0f, 10.0f, 5.0f, 2.0f, 1.0f, 1.0f };
 int TBossManta::sCenterJointIndex;
 int TBossManta::sBodyJointIndex;
@@ -185,8 +198,18 @@ DEFINE_NERVE(TNerveMantaMove, TLiveActor)
 	return FALSE;
 }
 
+struct MantaPad4 {
+	char c[4];
+};
+static inline MantaPad4 mantaPad()
+{
+	MantaPad4 p;
+	return *(MantaPad4*)(void*)&p;
+}
+
 DEFINE_NERVE(TNerveMantaHitWater, TLiveActor)
 {
+	mantaPad();
 	TBossManta* self = (TBossManta*)spine->getBody();
 
 	if (spine->getTime() == 0) {
@@ -196,9 +219,8 @@ DEFINE_NERVE(TNerveMantaHitWater, TLiveActor)
 		    = { MSD_SE_BS_MANTA_DAMAGE_1, MSD_SE_BS_MANTA_DAMAGE_2,
 			    MSD_SE_BS_MANTA_DAMAGE_3, MSD_SE_BS_MANTA_DAMAGE_4,
 			    MSD_SE_BS_MANTA_DAMAGE_5, MSD_SE_BS_MANTA_DAMAGE_5 };
-		u32 snd = hitSounds[self->mGeneration];
-		SMSGetMSound()->startSoundActor(snd, &self->mPosition, 0, nullptr, 0,
-		                                4);
+		SMSGetMSound()->startSoundActor(hitSounds[self->mGeneration],
+		                                &self->mPosition, 0, nullptr, 0, 4);
 	}
 
 	int effectCount = self->getSaveParams()->mSLDamageEffectNum.get();
@@ -258,8 +280,8 @@ DEFINE_NERVE(TNerveMantaSpawn, TLiveActor)
 		    = { MSD_SE_BS_MANTA_SEGMENT_1, MSD_SE_BS_MANTA_SEGMENT_2,
 			    MSD_SE_BS_MANTA_SEGMENT_3, MSD_SE_BS_MANTA_SEGMENT_4 };
 		u32 snd = sounds[self->mGeneration];
-		SMSGetMSound()->startSoundActor(snd, &self->mPosition, 0, nullptr, 0,
-		                                4);
+		MantaSoundAccess2().get()->startSoundActor(snd, &self->mPosition, 0,
+		                                           nullptr, 0, 4);
 		self->getManager()->spawn(self->mGeneration + 1, self->mPosition);
 	}
 
@@ -272,6 +294,8 @@ DEFINE_NERVE(TNerveMantaSpawn, TLiveActor)
 
 DEFINE_NERVE(TNerveMantaDeath, TLiveActor)
 {
+	char trash[4];
+	trash[0] = 0;
 	TBossManta* self = (TBossManta*)spine->getBody();
 
 	if (spine->getTime() == 0) {
@@ -361,7 +385,7 @@ void TBossManta::startWalkAnim()
 	getMActor()->setBckFromIndex(3);
 
 	J3DAnmTransform* oldAnm
-	    = getActorKeeper()->getMActorAnmData()->getUnk2C()->getAnmPtr(4);
+	    = getActorKeeper()->getMActorAnmData()->mBckAnms->getAnmPtr(4);
 	getMActor()->setBckOldMotionBlendAnmPtr(oldAnm);
 	getMActor()->setMotionBlendRatioForBck(0.5f);
 
@@ -544,6 +568,7 @@ BOOL TBossManta::receiveMessage(THitActor* sender, u32 message)
 void TBossManta::initNthGeneration(int gen)
 {
 	const f32 heights[6] = { 10.0f, 5.0f, 1.0f, 0.42f, 0.42f, 0.42f };
+	char trash[0x20];
 
 	mGeneration = gen;
 	f32 s       = sScale[mGeneration];
@@ -702,8 +727,10 @@ f32 TBossManta::getPolluteRadius()
 	case 0:
 	case 1:
 	case 2:
-	case 3:
-		return getSaveParams()->mSLPolluteRadius.get() * mScaling.x;
+	case 3: {
+		f32 radius = getSaveParams()->mSLPolluteRadius.get();
+		return radius * mScaling.x;
+	}
 	case 4:
 	case 5:
 		return 100.0f;
@@ -844,6 +871,7 @@ void TBossMantaManager::TMantaBattleState::update()
 
 void TBossMantaManager::TMantaMessageState::update()
 {
+	char trash[0x18];
 	switch (unk4) {
 	case 0:
 		if (((TBossManta*)unk0->getObj(0))->isSpawnState()) {
@@ -852,9 +880,9 @@ void TBossMantaManager::TMantaMessageState::update()
 		}
 		break;
 	case 1: {
-		int i;
+		int i = 0;
 		int aliveCount = 0;
-		for (i = 0; i < unk0->getActiveObjNum(); ++i) {
+		for (; i < unk0->getActiveObjNum(); ++i) {
 			if (!unk0->getObj(i)->checkLiveFlag(LIVE_FLAG_DEAD))
 				aliveCount++;
 		}
@@ -907,6 +935,7 @@ bool TBossMantaAdditionalCollisionSet::isUsed()
 void TBossMantaAdditionalCollisionSet::update(u32 cue,
                                               JDrama::TGraphics* graphics)
 {
+	char trash[0x58];
 	if (unkC != nullptr) {
 		if (unkC->checkLiveFlag(LIVE_FLAG_DEAD)) {
 			unkC = nullptr;
@@ -915,26 +944,26 @@ void TBossMantaAdditionalCollisionSet::update(u32 cue,
 		for (int i = 0; i < 3; ++i)
 			unk0[i]->perform(cue, graphics);
 
-		int centerIdx    = TBossManta::sCenterJointIndex;
-		MtxPtr centerMtx = unkC->getModel()->getAnmMtx(centerIdx);
-		f32 centerX      = centerMtx[0][3];
-		f32 centerY      = centerMtx[1][3];
-		f32 centerZ      = centerMtx[2][3];
+		MtxPtr centerMtx
+		    = unkC->getModel()->getAnmMtx(TBossManta::sCenterJointIndex);
+		f32 centerX = centerMtx[0][3];
+		f32 centerY = centerMtx[1][3];
+		f32 centerZ = centerMtx[2][3];
 
-		int bodyIdx    = TBossManta::sBodyJointIndex;
-		MtxPtr bodyMtx = unkC->getModel()->getAnmMtx(bodyIdx);
-		f32 bodyX      = bodyMtx[0][3];
-		f32 bodyY      = bodyMtx[1][3];
-		f32 bodyZ      = bodyMtx[2][3];
+		MtxPtr bodyMtx
+		    = unkC->getModel()->getAnmMtx(TBossManta::sBodyJointIndex);
+		f32 bodyX = bodyMtx[0][3];
+		f32 bodyY = bodyMtx[1][3];
+		f32 bodyZ = bodyMtx[2][3];
 
-		int rwingIdx    = TBossManta::sRwingJointIndex;
-		MtxPtr rwingMtx = unkC->getModel()->getAnmMtx(rwingIdx);
-		f32 rwingX      = rwingMtx[0][3];
-		f32 rwingY      = rwingMtx[1][3];
-		f32 rwingZ      = rwingMtx[2][3];
+		MtxPtr rwingMtx
+		    = unkC->getModel()->getAnmMtx(TBossManta::sRwingJointIndex);
+		f32 rwingX = rwingMtx[0][3];
+		f32 rwingY = rwingMtx[1][3];
+		f32 rwingZ = rwingMtx[2][3];
 
-		int lwingIdx    = TBossManta::sLwingJointIndex;
-		MtxPtr lwingMtx = unkC->getModel()->getAnmMtx(lwingIdx);
+		MtxPtr lwingMtx
+		    = unkC->getModel()->getAnmMtx(TBossManta::sLwingJointIndex);
 		f32 lwingX      = lwingMtx[0][3];
 		f32 lwingY      = lwingMtx[1][3];
 		f32 lwingZ      = lwingMtx[2][3];
@@ -1228,10 +1257,9 @@ void TBossMantaManager::perform(u32 cue, JDrama::TGraphics* graphics)
 		mCollisionSets[i]->update(cue, graphics);
 }
 
-void TBossMantaManager::setupEfbAlpha(JDrama::TGraphics* graphics)
+static inline void drawEfbAlphaQuad()
 {
-	ReInitializeGX();
-
+	Mtx m;
 	Mtx44 proj;
 	C_MTXOrtho(proj, (f32)SMSGetGameRenderHeight(), 0.0f, 0.0f,
 	           (f32)SMSGetGameRenderWidth(), 0.0f, 1000.0f);
@@ -1241,7 +1269,6 @@ void TBossMantaManager::setupEfbAlpha(JDrama::TGraphics* graphics)
 	GXSetDstAlpha(GX_TRUE, 0);
 	GXSetZMode(GX_TRUE, GX_ALWAYS, GX_FALSE);
 
-	Mtx m;
 	MTXIdentity(m);
 	GXLoadPosMtxImm(m, GX_PNMTX0);
 	GXSetCurrentMtx(GX_PNMTX0);
@@ -1251,12 +1278,19 @@ void TBossMantaManager::setupEfbAlpha(JDrama::TGraphics* graphics)
 	GXSetVtxAttrFmt(GX_VTXFMT0, GX_VA_POS, GX_POS_XYZ, GX_F32, 0);
 
 	GXBegin(GX_QUADS, GX_VTXFMT0, 4);
-	GXPosition3f32(0.0f, (f32)SMSGetGameRenderHeight(), -1.0f);
+	GXPosition3f32(0.0f, (f32)SMSGetGameRenderHeight(), -10.0f);
 	GXPosition3f32((f32)SMSGetGameRenderWidth(), (f32)SMSGetGameRenderHeight(),
-	               -1.0f);
-	GXPosition3f32((f32)SMSGetGameRenderWidth(), 0.0f, -1.0f);
-	GXPosition3f32(0.0f, 0.0f, -1.0f);
+	               -10.0f);
+	GXPosition3f32((f32)SMSGetGameRenderWidth(), 0.0f, -10.0f);
+	GXPosition3f32(0.0f, 0.0f, -10.0f);
 	GXEnd();
+}
+
+void TBossMantaManager::setupEfbAlpha(JDrama::TGraphics* graphics)
+{
+	ReInitializeGX();
+
+	drawEfbAlphaQuad();
 
 	GXSetNumChans(1);
 	GXSetChanCtrl(GX_COLOR0A0, GX_DISABLE, GX_SRC_REG, GX_SRC_REG,
@@ -1267,8 +1301,7 @@ void TBossMantaManager::setupEfbAlpha(JDrama::TGraphics* graphics)
 	GXSetNumTevStages(1);
 	GXSetTevOrder(GX_TEVSTAGE0, GX_TEXCOORD_NULL, GX_TEXMAP_NULL, GX_COLOR0A0);
 	GXSetTevOp(GX_TEVSTAGE0, GX_PASSCLR);
-	GXColor matColor = (GXColor) { 0, 0, 0, 0x4 };
-	GXSetChanMatColor(GX_COLOR0A0, matColor);
+	GXSetChanMatColor(GX_COLOR0A0, (GXColor) { 0, 0, 0, 0x4 });
 	GXSetAlphaUpdate(GX_TRUE);
 	GXSetDstAlpha(GX_FALSE, 0);
 	GXSetZMode(GX_TRUE, GX_GEQUAL, GX_FALSE);
@@ -1282,7 +1315,9 @@ void TBossMantaManager::createEnemies(int num)
 		num = getCapacity() - getObjNum();
 
 	if (unk38 != nullptr) {
-		u8 limit = unk38->mSLActiveEnemyNum.get();
+		// Retail loads mSLInstanceNum (value at 0x90), not the active count.
+		// TODO: frame is still 0xa8 against retail 0xb0. Do not pad it.
+		u8 limit = unk38->mSLInstanceNum.get();
 		if (num + getObjNum() > limit)
 			num = limit - getObjNum();
 	}

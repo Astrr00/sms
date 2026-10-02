@@ -67,7 +67,8 @@ void TGenerator::perform(u32 cue, JDrama::TGraphics* graphics)
 				if (mGraph == nullptr)
 					mGraph = gpConductor->getGraphByName(mGraphName);
 
-				enemy->getTracer()->setGraph(mGraph);
+				TGraphTracer* tracer = enemy->getTracer();
+				tracer->setGraph(mGraph);
 
 				JGeometry::TVec3<f32> rot(0.0f, 0.0f, 0.0f);
 				JGeometry::TVec3<f32> vel(0.0f, 4.0f, 0.0f);

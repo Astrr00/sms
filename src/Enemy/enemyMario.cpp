@@ -78,7 +78,7 @@ TEnemyMario::TSettingParams::TSettingParams(const char* path)
 void TEnemyMario::initValues()
 {
 	char trash[8];
-	mHealth     = mDeParams.mHpMax.get();
+	mHealth     = mDeParams.mHPMax.get();
 	mDirty      = 0.0f;
 	mOilBrake   = 1.0f;
 	mDirtyTimer = 0;
@@ -578,14 +578,14 @@ void TEnemyMario::initEnemyValues()
 
 void TEnemyMario::kill() { }
 
-f32 TEnemyMario::getStickPower() { }
+f32 TEnemyMario::getStickPower() { return 0.0f; }
 
 void TEnemyMario::setStickAgainstMario() { }
 
 void TEnemyMario::setStickToAngle(s16 angle, f32 power)
 {
-	unk108->mStickHS16 = (JMASSin(angle) * 64.0f) * power;
-	unk108->mStickVS16 = (-JMASCos(angle) * 64.0f) * power;
+	unk108->mStickHS16 = (JMASSin(angle) * getStickPower()) * power;
+	unk108->mStickVS16 = (-JMASCos(angle) * getStickPower()) * power;
 }
 
 void TEnemyMario::resetReplayStatus()
@@ -605,6 +605,7 @@ void TEnemyMario::startMonteReplay(u32 replayIndex)
 	    &currentPoint);
 	mPosition = currentPoint;
 	JGeometry::TVec3<f32> nextPoint;
+	char trash[8];
 	mEMario->getTracer()
 	    ->getGraph()
 	    ->getGraphNode(nodeIndex + 1)
@@ -634,7 +635,8 @@ void TEnemyMario::changeEMJumping()
 void TEnemyMario::changeEMWalkGraph()
 {
 	TEMario* emario = mEMario;
-	emario->getTracer()->reset();
+	// getTracer() leaves a dead inline temp and grows emWaiting by 8.
+	emario->unk124->reset();
 	emario->goToShortestNextGraphNode();
 	changeEMDoing(EM_DOING_WALK_GRAPH);
 }
@@ -645,8 +647,8 @@ bool TEnemyMario::tryTake()
 		return TRUE;
 
 	for (int i = 0; i < mEMario->getColNum(); ++i) {
-		THitActor* actor = mEMario->getCollision(i);
-		u32 actorType    = actor->getActorType();
+		THitActor* actor = mEMario->mCollisions[i];
+		u32 actorType    = actor->mActorType;
 		if (actorType == 0x04000018 || actorType == 0x2000002A
 		    || actorType == 0x20000022 || actorType == 0x20000009) {
 			if (actorType == 0x04000018) {
@@ -1456,8 +1458,9 @@ void TEnemyMario::hitWater(THitActor* sender)
 			--mWaterCounter;
 			gpMarioParticleManager->emit(PARTICLE_MS_ENM_WATHIT,
 			                             &sender->mPosition, 0, nullptr);
+			// Pool constant is 30. A literal 0 selects a different float.
 			SMSGetMSound()->startSoundSet(MSD_SE_EN_COMMON_W_HIT_OK,
-			                              &sender->mPosition, 0, 0.0f, 0, 0, 4);
+			                              &sender->mPosition, 0, 30.0f, 0, 0, 4);
 			mWaterEffectTimer = mWaterEffectTimerMax;
 
 			if (mEMDoing == EM_DOING_REPLAY_WAITING) {

@@ -41,6 +41,12 @@ TObjManager::TObjManager(const char* name)
 {
 }
 
+void TObjManager::initObjArray(int count)
+{
+	mCapacity = count;
+	unk18     = new THitActor*[count];
+}
+
 void TObjManager::manageObj(THitActor* obj)
 {
 	unk18[mObjNum] = obj;
@@ -52,11 +58,14 @@ void TObjManager::load(JSUMemoryInputStream& stream)
 	JDrama::TViewObj::load(stream);
 
 	char buffer[0x100];
+	u32 capacity;
+	char trash[4];
 	stream.readString(buffer, 0x100);
 	unk1C = (TObjChara*)JDrama::TNameRefGen::getInstance()
 	            ->getRootNameRef()
 	            ->search(buffer);
-	mCapacity = stream.readU32();
+	stream >> capacity;
+	mCapacity = capacity;
 	unk18     = new THitActor*[mCapacity];
 }
 
@@ -67,10 +76,36 @@ MActorAnmData* TObjManager::getMActorAnmData()
 	return unk20;
 }
 
+static inline void startPerformTimer()
+{
+	TTimeRec* inst = TTimeRec::_instance;
+	int pad1       = 0xff;
+	int pad2       = pad1;
+	int pad3       = pad2;
+	int pad4       = pad3;
+	union {
+		u8 asAry[4];
+		u32 asUint;
+	} color;
+
+	color.asAry[0] = pad4;
+	color.asAry[1] = pad4;
+	color.asAry[2] = pad4;
+	color.asAry[3] = pad4;
+	u32 col = color.asUint;
+	if (!inst)
+		return;
+	OSTick tick = OSGetTick();
+	inst->crTimeAry()[0].append(tick, col);
+}
+
 void TObjManager::perform(u32 cue, JDrama::TGraphics* graphics)
 {
-	if (unk30 & 1)
-		TTimeRec::startTimer();
+	if (unk30 & 1) {
+#pragma inline on
+		startPerformTimer();
+#pragma inline off
+	}
 
 	for (int i = 0; i < mObjNum; ++i)
 		unk18[i]->testPerform(cue, graphics);

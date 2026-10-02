@@ -269,6 +269,7 @@ void TPakkun::load(JSUMemoryInputStream& stream)
 	TSmallEnemy::load(stream);
 	reset();
 	TPathNode marioNode((THitActor*)gpMarioAddress);
+	char trash[4];
 	setGoalPath(marioNode);
 }
 
@@ -494,6 +495,19 @@ void TPakkunSeed::loadInit(TSpineEnemy* host, const char* model_name)
 	    PakkunSeedCallback);
 }
 
+
+struct SeedPadBig {
+	char c[8];
+};
+struct SeedPadSmall {
+	char c[4];
+};
+static inline SeedPadSmall seedPad()
+{
+	SeedPadBig big;
+	return *(SeedPadSmall*)(void*)&big;
+}
+
 void TPakkunSeed::moveObject()
 {
 	TEnemyAttachment::moveObject();
@@ -501,8 +515,8 @@ void TPakkunSeed::moveObject()
 	if (!unk168) {
 		unk170 = MsWrap(unk170 + 5.0f, 0.0f, 360.0f);
 		if (mPosition.y > mGroundHeight + 20.0f) {
-			JGeometry::TVec3<f32> velocity = mVelocity;
-			mRotation.x                    = MsGetRotFromZaxis(velocity).x;
+			seedPad();
+			mRotation.x = MsGetRotFromZaxis(JGeometry::TVec3<f32>(mVelocity)).x;
 		}
 	} else {
 		unk170 = MsClamp(unk170 + 5.0f, 0.0f, 360.0f);
@@ -709,6 +723,9 @@ void TStayPakkun::setDeadAnm() { setBckAnm(PAKKUN_ANM_DOWN); }
 
 void TStayPakkun::genRandomItem()
 {
+	char trash[0x24];
+	trash[0] = 0;
+
 	TPakkunManager* manager = (TPakkunManager*)mManager;
 	unk1A4                  = mPosition;
 	unk1A4.y += 100.0f;
@@ -727,15 +744,15 @@ void TStayPakkun::genRandomItem()
 	JPABaseEmitter* emitter = gpMarioParticleManager->emit(
 	    PARTICLE_MS_POPO_BOMB_A, &unk1A4, 0, nullptr);
 	if (emitter) {
-		emitter->setGlobalDynamicsScale(JGeometry::TVec3<f32>(1.5f));
-		emitter->setGlobalParticleScale(JGeometry::TVec3<f32>(1.5f));
+		emitter->mGlobalDynamicsScale.setAll(1.5f);
+		emitter->mGlobalParticleScale.setAll(1.5f);
 	}
 
 	emitter = gpMarioParticleManager->emit(PARTICLE_MS_POPO_BOMB_B, &unk1A4, 0,
 	                                       nullptr);
 	if (emitter) {
-		emitter->setGlobalDynamicsScale(JGeometry::TVec3<f32>(1.5f));
-		emitter->setGlobalParticleScale(JGeometry::TVec3<f32>(1.5f));
+		emitter->mGlobalDynamicsScale.setAll(1.5f);
+		emitter->mGlobalParticleScale.setAll(1.5f);
 	}
 }
 
@@ -766,6 +783,7 @@ void TStayPakkun::setBehavior()
 
 bool TStayPakkun::isHitValid(u32 message)
 {
+	char trash[8];
 	if (message == HIT_MESSAGE_UNKB) {
 		onLiveFlag(LIVE_FLAG_DEAD);
 		onLiveFlag(LIVE_FLAG_UNK20000);
@@ -777,8 +795,10 @@ bool TStayPakkun::isHitValid(u32 message)
 		mSpine->setNext(&TNerveStayPakkunHide::theNerve());
 		unk1BC = 1;
 
+		TPakkunSaveLoadParams* param = getSaveParam();
+		f32 size = param->mSLPolluteRange.get();
 		gpPollution->clean(mPosition.x, mGroundHeight, mPosition.z,
-		                   32.0f * getSaveParam()->mSLPolluteRange.get());
+		                   32.0f * size);
 		if (unk194->isState(PAKKUN_SEED_STATE_HIDE))
 			unk194->kill();
 		setBckAnm(PAKKUN_ANM_CRUSH_TO_HIDE);

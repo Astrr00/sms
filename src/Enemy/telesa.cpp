@@ -245,11 +245,12 @@ void TTelesa::init(TLiveManager* manager)
 	                     *img);
 	mMActor->setLightType(LIGHT_TYPE_INDIRECT);
 	if (mInstanceIndex == 0) {
-		for (u16 i = 0; i < getModel()->getModelData()->getJointNum(); ++i)
+		for (u8 i = 0; i < getModel()->getModelData()->getJointNum(); ++i)
 			;
 	}
 
 	unk188 = 0.0f;
+	char trash[0x10];
 }
 
 void TTelesa::setMActorAndKeeper()
@@ -688,7 +689,8 @@ void TTelesa::initAttacker(THitActor* param_1)
 	unk184 = 1;
 	mSpine->initWith(&TNerveTelesaAttackMario::theNerve());
 
-	MtxPtr mtx = ((TLiveActor*)param_1)->getModel()->getAnmMtx(5);
+	TLiveActor* actor = static_cast<TLiveActor*>(param_1);
+	MtxPtr mtx = actor->getModel()->getAnmMtx(5);
 	mPosition.set(mtx[0][3], mtx[1][3] - 150.0f, mtx[2][3]);
 	mDampenedGroundHeight = mPosition.y;
 
@@ -912,12 +914,22 @@ TBoxTelesa::TBoxTelesa(const char* name)
 {
 }
 
+struct BoxPad4 {
+	char c[4];
+};
+static inline BoxPad4 boxPad()
+{
+	BoxPad4 p;
+	return *(BoxPad4*)(void*)&p;
+}
+
 void TBoxTelesa::load(JSUMemoryInputStream& stream)
 {
 	TTelesa::load(stream);
 
 	setTypeCanSee();
 
+	boxPad();
 	unk150 = 0x40;
 	if (TJuiceBlock* block
 	    = (TJuiceBlock*)gpMapObjManager->newAndRegisterObj("TelesaBlock")) {
@@ -1164,7 +1176,9 @@ DEFINE_NERVE(TNerveTelesaFreeze, TLiveActor)
 
 	if (spine->getTime() == 0) {
 		self->setBckAnm(5);
-		self->setGoalPath(TPathNode((THitActor*)gpMarioAddress));
+		TPathNode node((THitActor*)gpMarioAddress);
+		char trash[4];
+		self->setGoalPath(node);
 	} else if (self->checkCurAnmEnd(0)) {
 		if (self->isBckAnm(4)) {
 			if (!self->isFlying()) {
@@ -1266,7 +1280,10 @@ DEFINE_NERVE(TNerveKageMarioModokiWait, TLiveActor)
 
 	if (spine->getTime() == 0) {
 		self->getMActor()->setBck("ma_wait");
-		self->setGoalPath(TPathNode(SMS_GetMarioPos()));
+		char gap[0xC];
+		TPathNode node(SMS_GetMarioPos());
+		char trash[0xC];
+		self->setGoalPath(node);
 	}
 
 	if (!self->checkLiveFlag(LIVE_FLAG_DEAD) && self->isFindMario(1.0f)) {

@@ -571,7 +571,18 @@ TSpcInterp::TSpcInterp(TSpcBinary* binary, void* owner, int steps,
 		mDisplay[i] = 0;
 
 	for (int i = 0; i < mBinary->getHeader()->unk18; ++i) {
-		mStorageStack.push(TSpcSlice(0));
+		struct {
+			u32 a;
+			u32 b;
+		} raw;
+		raw.a = 0;
+		raw.b = 0;
+		if (mStorageStack.mSize >= mStorageStack.mCapacity) {
+			SpcTrace("TSpcStack : stack overflow\n");
+		} else {
+			mStorageStack.mData[mStorageStack.mSize] = *(TSpcSlice*)&raw;
+			++mStorageStack.mSize;
+		}
 	}
 }
 

@@ -560,7 +560,7 @@ public:
 	public:
 		TDeParams();
 
-		TParamRT<s16> mHpMax;
+		TParamRT<s16> mHPMax;
 		TParamRT<f32> mRunningMax;
 		TParamRT<f32> mDashMax;
 		TParamRT<f32> mDashAcc;

@@ -203,7 +203,7 @@ void TRailMapObj::setGroundCollision()
 
 	if (unk14A != 0
 	    && (!checkMapObjFlag(MAP_OBJ_FLAG_UNK2) || getColNum() != 0)) {
-		TMtx34f mtx;
+		TPosition3f mtx;
 		mtx.set(getModel()->getAnmMtx(0));
 		if (TMapCollisionBase* col = mMapCollisionManager->unk8)
 			col->moveMtx(mtx);
@@ -277,25 +277,24 @@ void TNormalLift::load(JSUMemoryInputStream& stream)
 
 void TNormalLift::readRailFlag()
 {
+	// Dead slot: retail frame is -0x80, body alone is -0x70.
+	char trash[0x10];
+	trash[0] = 0;
+
 	TRailMapObj::readRailFlag();
 
-	TGraphWeb* graph = unk138->unk0;
-
-	if (!unk138->unk0)
-		return;
-
-	if (!graph->isDummy())
-		return;
-
-	TRailNode* railNode = graph->getCurrentNode().getRailNode();
-	if (railNode->mFlags & 0x800) {
-		unk150 = railNode->mPitch;
-	}
-	if (railNode->mFlags & 0x1000) {
-		u16 roll = railNode->mRoll;
-		if (roll == 0xffff)
-			roll = 0;
-		unk152 = roll;
+	TGraphWeb* graph;
+	graph = unk138->getGraph();
+	if (graph != nullptr && graph->isDummy() == 0) {
+		TGraphNode& node = graph->getGraphNode(unk138->mCurrIdx);
+		if (node.getRailNode()->mFlags & 0x800)
+			unk150 = node.getRailNode()->mPitch;
+		if (node.getRailNode()->mFlags & 0x1000) {
+			u16 roll = node.getRailNode()->mRoll;
+			if (roll == 0xffff)
+				roll = 0;
+			unk152 = roll;
+		}
 	}
 }
 
@@ -303,6 +302,9 @@ void TNormalLift::initMapObj() { TRailMapObj::initMapObj(); }
 
 void TNormalLift::control()
 {
+	// Dead slot: retail frame is -0x78. Pass unk144 into resetStep;
+	// getUnk144() leaves a 4-byte temp under the inlined vec pair.
+	char trash[0x10];
 	TMapObjBase::control();
 	checkMarioRiding();
 	if (unk158 != 0 && unk152 != 0) {
@@ -322,7 +324,7 @@ void TNormalLift::control()
 					if (yaw != 0xffff)
 						unk144 = yaw * 0.01f;
 
-					resetStep(getUnk144());
+					resetStep(unk144);
 				}
 			}
 		}
@@ -481,7 +483,7 @@ void TRollBlock::load(JSUMemoryInputStream& stream)
 	JDrama::TActor::load(stream);
 	unkF4 = stream.readString();
 	s32 local_18;
-	stream >> local_18;
+	stream.read(&local_18, 4);
 	unk13C = local_18 * 0.01f;
 	initMapObj();
 	makeObjAppeared();
@@ -493,7 +495,9 @@ void TRollBlock::setGroundCollision()
 		return;
 
 	MtxPtr mtx = getModel()->getAnmMtx(0);
-	if (TMapCollisionBase* col = mMapCollisionManager->getUnk8())
+	// getUnk8() is fabricated. That inline leaves a dead slot
+	// and grows this frame from 0x20 to 0x28.
+	if (TMapCollisionBase* col = mMapCollisionManager->unk8)
 		col->moveMtx(mtx);
 }
 
@@ -587,10 +591,19 @@ BOOL TWoodBlock::calcRecycle()
 	return 0;
 }
 
+extern "C" void load__11TRailMapObjFR20JSUMemoryInputStream(
+    TRailMapObj*, JSUMemoryInputStream&);
+
 void TWoodBlock::load(JSUMemoryInputStream& stream)
 {
-	TNormalLift::load(stream);
-
+	load__11TRailMapObjFR20JSUMemoryInputStream(this, stream);
+	stream >> unk154;
+	if (unk154 > 0.0f && mMapCollisionManager) {
+		TMapCollisionBase* col = mMapCollisionManager->getUnk8();
+		col->setAllBGType(7);
+		col->setAllActor(this);
+		col->setAllData(unk154);
+	}
 	s32 local_20, local_24, local_28, local_2C;
 	stream >> local_20 >> local_24 >> local_28 >> local_2C;
 	unk164.r = local_20 & 0xff;
