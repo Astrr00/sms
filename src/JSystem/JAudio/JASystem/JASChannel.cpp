@@ -788,6 +788,7 @@ BOOL TChannel::forceStopLogicalChannel()
 
 BOOL TChannel::stopLogicalChannel()
 {
+	char trash[8];
 	if (!unk20)
 		return FALSE;
 

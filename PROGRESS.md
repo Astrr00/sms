@@ -25160,3 +25160,30 @@ Nur `volFloatToU8` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `JASHardStream.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R683C (`JASystem::TChannel::stopLogicalChannel`)
+
+**Vollmatch, strikt.**
+
+`JASystem::TChannel::stopLogicalChannel` war 99,8 %.
+Das Frame lag bei `-0x18` statt `-0x20`.
+Die gesicherten Register lagen einheitlich `0x8` zu tief.
+`char trash[8]` am Funktionsanfang schiebt Frame und Epilog auf Retail.
+0 Abweichungen, 112 Bytes, 28 Instruktionen.
+`validate-symbol-order` `mario/JSystem/JAudio/JASystem/JASChannel` PASS.
+Vorbestehende UNUSED-Größenwarnungen der Stub-Funktionen bleiben.
+Keine neuen Symbolfehler.
+Die übrigen NonMatching-Funktionen der TU behalten Größe und Prozent.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`JASystem::HardStream::TControl::volFloatToU8` aus R682C bleibt unberührt.
+`JPADrawCalcScaleXBySpeed::calc` aus R681B bleibt unberührt.
+`JPADrawCalcScaleYBySpeed::calc` aus R680B bleibt unberührt.
+`JDrama::TLookAtCamera::perform` aus R679B bleibt unberührt.
+
+Delta gegen die R682C-Zahlen: matched code 2013384 -> 2013496 (+112), 56.081745 % -> 56.084865 %.
+Funktionen matched 10098 -> 10099.
+Nur `stopLogicalChannel` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `JASChannel.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
