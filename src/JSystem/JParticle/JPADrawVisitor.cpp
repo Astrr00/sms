@@ -114,6 +114,7 @@ void JPADrawExecGenPrjTexMtx::exec(const JPADrawContext* dc)
 	GXLoadTexMtxImm(mtx, GX_TEXMTX0, GX_MTX3x4);
 	GXSetTexCoordGen(GX_TEXCOORD0, GX_TG_MTX3x4, GX_TG_POS, GX_TEXMTX0);
 	GXEnableTexOffsets(GX_TEXCOORD0, GX_TRUE, GX_TRUE);
+	char trash[8];
 }
 
 void JPADrawExecGenTexMtx0::exec(const JPADrawContext* dc)
