@@ -25324,3 +25324,41 @@ Nur `JAInter::StreamLib::callBack` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `JAIGFrameStream.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R687A (`JPADrawExecRotBillBoard::exec`)
+
+**Vollmatch, strikt.**
+
+`JPADrawExecRotBillBoard::exec` war 99,83 %.
+Das Frame lag bereits bei `-0x80`.
+Die Float-Locals lagen einheitlich `0x4` zu tief.
+Die gesicherten Register stimmten schon.
+`char trash[4]` als letztes Lokales schiebt die Locals auf Retail, analog zu `JPADrawExecBillBoard::exec`.
+0 Abweichungen, 540 Bytes, 135 Instruktionen.
+`validate-symbol-order` `mario/JSystem/JParticle/JPADrawVisitor` PASS.
+Keine neuen Symbolfehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`JAInter::StreamLib::callBack` aus R685C bleibt unberührt.
+`JASystem::Driver::__UpdateJcToDSP` aus R684C bleibt unberührt.
+`JPADrawExecYBillBoard::exec` aus R683B bleibt unberührt.
+`JPADrawExecBillBoard::exec` aus R682B bleibt unberührt.
+`JASystem::TChannel::stopLogicalChannel` aus R683C bleibt unberührt.
+`JASystem::HardStream::TControl::volFloatToU8` aus R682C bleibt unberührt.
+`JPADrawCalcScaleXBySpeed::calc` aus R681B bleibt unberührt.
+`JPADrawCalcScaleYBySpeed::calc` aus R680B bleibt unberührt.
+`JDrama::TLookAtCamera::perform` aus R679B bleibt unberührt.
+`TTelesa::init` aus R679A bleibt unberührt.
+
+`ninja changes_all` gegen `53648c85`: fuzzy 81.136055 % -> 81.13607 %.
+Matched code 56.185364 % -> 56.2004 % (2017104 -> 2017644, +540).
+Funktionen matched 10103 -> 10104.
+Matched data unverändert 69.31899 % (443871).
+`JPADrawVisitor` matched code 11552 -> 12092 (+540), Funktionen 108 -> 109 von 121.
+Fuzzy der Unit 99.32633 % -> 99.33016 %.
+Matched code der Unit 48.157413 % -> 50.408535 %.
+Complete units bleiben 418.
+Nur `JPADrawExecRotBillBoard::exec` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `JPADrawVisitor.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
