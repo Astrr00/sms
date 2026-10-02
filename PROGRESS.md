@@ -25220,3 +25220,37 @@ Nur `JPADrawExecBillBoard::exec` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `JPADrawVisitor.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R683B (`JPADrawExecYBillBoard::exec`)
+
+**Vollmatch, strikt.**
+
+`JPADrawExecYBillBoard::exec` war 99,72 %.
+Das Frame lag bei `-0x80` statt `-0x88`.
+Die Float-Locals lagen einheitlich `0x4` zu tief, die gesicherten Register `0x8`.
+`char trash[4]` als letztes Lokales füllt das Alignment-Loch, analog zu `JPADrawExecBillBoard::exec`.
+0 Abweichungen, 548 Bytes, 137 Instruktionen.
+`validate-symbol-order` `mario/JSystem/JParticle/JPADrawVisitor` PASS.
+Keine neuen Symbolfehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`JPADrawExecBillBoard::exec` aus R682B bleibt unberührt.
+`JPADrawCalcScaleXBySpeed::calc` aus R681B bleibt unberührt.
+`JPADrawCalcScaleYBySpeed::calc` aus R680B bleibt unberührt.
+`JASystem::TChannel::stopLogicalChannel` aus R683C bleibt unberührt.
+`JASystem::HardStream::TControl::volFloatToU8` aus R682C bleibt unberührt.
+`JDrama::TLookAtCamera::perform` aus R679B bleibt unberührt.
+`TTelesa::init` aus R679A bleibt unberührt.
+
+`ninja changes_all` gegen `5a9c8e28`: fuzzy 81.13596 % -> 81.136 %.
+Matched code 56.098015 % -> 56.113277 % (2013968 -> 2014516, +548).
+Funktionen matched 10100 -> 10101.
+Matched data unverändert 69.31899 % (443871).
+`JPADrawVisitor` matched code 11004 -> 11552 (+548), Funktionen 107 -> 108 von 121.
+Fuzzy der Unit 99.319824 % -> 99.32633 %.
+Matched code der Unit 45.872936 % -> 48.157413 %.
+Complete units bleiben 418.
+Nur `JPADrawExecYBillBoard::exec` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `JPADrawVisitor.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
