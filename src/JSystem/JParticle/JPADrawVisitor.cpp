@@ -1566,6 +1566,7 @@ void JPADrawCalcScaleYBySpeed::calc(const JPADrawContext* dc,
 		params->mScaleY = params->unkC;
 	}
 	params->mScaleY *= vel.length() * 0.01f;
+	char trash[8];
 }
 
 void JPADrawCalcScaleCopyX2Y::calc(const JPADrawContext*,

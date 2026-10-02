@@ -25075,3 +25075,33 @@ Nur `JDrama::TLookAtCamera::perform` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `JDRCamera.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R680B (`JPADrawCalcScaleYBySpeed::calc`)
+
+**Vollmatch, strikt.**
+
+`JPADrawCalcScaleYBySpeed::calc` war 99,83 %.
+Das Frame lag bei `-0x70` statt `-0x78`.
+Alle Stack-Slots lagen einheitlich `0x8` zu tief.
+`char trash[8]` als letztes Lokales schiebt Frame und Slots auf Retail.
+0 Abweichungen, 304 Bytes, 76 Instruktionen.
+`validate-symbol-order` `mario/JSystem/JParticle/JPADrawVisitor` PASS.
+Keine neuen Symbolfehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`JDrama::TLookAtCamera::perform` aus R679B bleibt unberührt.
+`TTelesa::init` aus R679A bleibt unberührt.
+`JPADrawCalcScaleXBySpeed::calc` bleibt unberührt.
+
+`ninja changes_all` gegen `025029c7`: fuzzy bleibt 81.135895 %.
+Matched code 56.063026 % -> 56.071495 % (2012712 -> 2013016, +304).
+Funktionen matched 10095 -> 10096.
+Matched data unverändert 69.31899 % (443871).
+`JPADrawVisitor` matched code 9924 -> 10228 (+304), Funktionen 104 -> 105 von 121.
+Fuzzy der Unit 99.310486 % -> 99.31265 %.
+Matched code der Unit 41.370686 % -> 42.637985 %.
+Complete units bleiben 418.
+Nur `JPADrawCalcScaleYBySpeed::calc` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `JPADrawVisitor.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
