@@ -25043,3 +25043,35 @@ Nur `TTelesa::init` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `telesa.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R679B (`JDrama::TLookAtCamera::perform`)
+
+**Vollmatch, strikt.**
+
+`JDrama::TLookAtCamera::perform` war 99,73 %.
+Das Frame lag bei `-0x28` statt `-0x30`.
+Alle Stack-Slots lagen einheitlich `0x8` zu tief.
+`char trash[8]` am Funktionsanfang schiebt Frame und Slots auf Retail, analog zu `TOrthoProj::perform` in derselben TU.
+0 Abweichungen, 164 Bytes, 41 Instruktionen.
+`validate-symbol-order` `mario/JSystem/JDrama/JDRCamera` PASS.
+Vorbestehende Weak-Order-Warnung bleibt.
+Keine neuen Symbolfehler.
+Die TU bleibt `NonMatching` (nicht gelinkt), obwohl objdiff die Unit jetzt auf 100 % Code und Daten sieht.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TTelesa::init` aus R679A bleibt unberührt.
+`TCardSave::waitForSelectOver` aus R678B bleibt unberührt.
+`TCardSave::waitForSelect2` aus R677B bleibt unberührt.
+`TCardSave::drawMessageBM` aus R676B bleibt unberührt.
+
+`ninja changes_all` gegen `a6bbfbc6`: fuzzy 81.13587 % -> 81.135895 %.
+Matched code 56.05846 % -> 56.063026 % (2012548 -> 2012712, +164).
+Funktionen matched 10094 -> 10095.
+Matched data unverändert 69.31899 % (443871).
+`JDRCamera` matched code 2908 -> 3072 (+164), Funktionen 70 -> 71 von 71.
+Fuzzy der Unit 99.98568 % -> 100 %.
+Matched code der Unit 94.66145 % -> 100 %.
+Complete units bleiben 418.
+Nur `JDrama::TLookAtCamera::perform` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `JDRCamera.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
