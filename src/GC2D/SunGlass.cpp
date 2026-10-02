@@ -116,8 +116,10 @@ void TSunGlass::load(JSUMemoryInputStream& stream)
 
 void TSunShine::perform(u32 cue, JDrama::TGraphics* graphics)
 {
-	if (cue & CUE_DRAW)
-		draw(graphics->getViewport(), unk14);
+	if (cue & CUE_DRAW) {
+		const JDrama::TRect& viewport = graphics->getViewport();
+		draw(viewport, unk14);
+	}
 
 	if (cue & CUE_MOVE) {
 		unk14.a = gpSunMgr->getAddColor();

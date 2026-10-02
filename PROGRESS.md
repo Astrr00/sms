@@ -24756,3 +24756,28 @@ Nur `TGCConsole2::processDrawTelop` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `GCConsole2.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R674B (`TSunShine::perform`)
+
+**Vollmatch, strikt.**
+
+`TSunShine::perform` war 99,89 %.
+Das Frame `-0x30` stimmte schon.
+`unk14` und `pos` lagen 4 Bytes zu tief (`r1+0x14` / `r1+0x18`).
+Ein benanntes `viewport` aus `getViewport()` schiebt beide Slots auf `r1+0x18` und `r1+0x1c`.
+0 Abweichungen, 220 Bytes, 55 Instruktionen.
+`validate-symbol-order` `mario/GC2D/SunGlass` PASS.
+Eine vorbestehende UNUSED-Größenwarnung bleibt (`changeAlpha`).
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TGCConsole2::processDrawTelop` aus R673B bleibt unberührt.
+
+Matched code der Unit 1612 -> 1832 (+220), Funktionen 7 -> 8 von 8.
+Matched code der Unit 87.99127 % -> 100 %.
+Gegen R673B gerechnet: matched code 55.839968 % -> 55.846096 % (2004704 -> 2004924, +220).
+Funktionen matched 10085 -> 10086.
+Complete units bleiben 418.
+Nur `TSunShine::perform` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `SunGlass.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
