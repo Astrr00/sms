@@ -24814,3 +24814,39 @@ Nur `TBossMantaAdditionalCollisionSet::update` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `bossManta.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R675A (`TBGTentacle::TNode::calcVelocity`)
+
+**Vollmatch, strikt.**
+
+`TBGTentacle::TNode::calcVelocity` war 99,37 %.
+Das Frame lag bei `-0xe0` statt `-0xf0`.
+`char trash[0x10]` am Ende setzt das Frame und die Vec-Slots.
+`param_2->mPosition += local_8C` hält den Nachbarn in r31.
+`fVar5 < nodeLen` erzeugt `fcmpo f26, f27`.
+0 Abweichungen, 1000 Bytes, 250 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bgtentacle` PASS.
+Fünf vorbestehende UNUSED-Größenwarnungen bleiben.
+Keine neuen Symbolfehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TBossMantaAdditionalCollisionSet::update` aus R674A bleibt unberührt.
+`TSunShine::perform` aus R674B bleibt unberührt.
+`TGCConsole2::processDrawTelop` aus R673B bleibt unberührt.
+`TBossPakkun::perform` aus R673A bleibt unberührt.
+`TBGTentacle::perform` bleibt unberührt.
+
+`ninja changes_all` gegen `5a1402de`: fuzzy 81.13531 % -> 81.13548 %.
+Matched code 55.859463 % -> 55.887325 % (2005404 -> 2006404, +1000).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10087 -> 10088.
+`bgtentacle` matched code 6500 -> 7500 (+1000), Funktionen 27 -> 28 von 39.
+Fuzzy der Unit 95.25451 % -> 95.282524 %.
+Matched code der Unit 29.002321 % -> 33.464214 %.
+Matched data der Unit unverändert 43.28358 % (1044).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TBGTentacle::TNode::calcVelocity` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `bgtentacle.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.

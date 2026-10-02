@@ -470,7 +470,7 @@ void TBGTentacle::TNode::calcVelocity(TBGTentacle* param_1,
 		if (unk24) {
 			if (!param_2->unk24) {
 				local_8C.scale(nodeLenLimit);
-				mPosition += local_8C;
+				param_2->mPosition += local_8C;
 			}
 		} else {
 			local_8C.scale(nodeLenLimit);
@@ -478,7 +478,7 @@ void TBGTentacle::TNode::calcVelocity(TBGTentacle* param_1,
 			mPosition += local_8C;
 		}
 	} else {
-		if (nodeLen < fVar5) {
+		if (fVar5 < nodeLen) {
 			f32 m = nodeLen - fVar5;
 			if (m > speedMax)
 				m = speedMax;
@@ -503,6 +503,7 @@ void TBGTentacle::TNode::calcVelocity(TBGTentacle* param_1,
 		mVelocity.scale(inertiaProp);
 		mVelocity += local_74;
 	}
+	char trash[0x10];
 }
 
 void TBGTentacle::TNode::calcPosition(TBGTentacle* param_1)
