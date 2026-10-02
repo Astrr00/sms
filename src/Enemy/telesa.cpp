@@ -245,11 +245,12 @@ void TTelesa::init(TLiveManager* manager)
 	                     *img);
 	mMActor->setLightType(LIGHT_TYPE_INDIRECT);
 	if (mInstanceIndex == 0) {
-		for (u16 i = 0; i < getModel()->getModelData()->getJointNum(); ++i)
+		for (u8 i = 0; i < getModel()->getModelData()->getJointNum(); ++i)
 			;
 	}
 
 	unk188 = 0.0f;
+	char trash[0x10];
 }
 
 void TTelesa::setMActorAndKeeper()

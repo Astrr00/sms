@@ -25010,3 +25010,36 @@ Nur `TCardSave::waitForSelectOver` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `CardSave.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R679A (`TTelesa::init`)
+
+**Vollmatch, strikt.**
+
+`TTelesa::init` war 99,48 %.
+Das Frame lag bei `-0xb0` statt `-0xc0`.
+Alle Stack-Slots lagen einheitlich `0x10` zu tief.
+`char trash[0x10]` als letztes Lokales schiebt Frame und Slots auf Retail.
+Der Joint-Zähler im leeren Loop ist `u8`, damit `clrlwi` mit 24 und `cmpw` entstehen.
+0 Abweichungen, 664 Bytes, 166 Instruktionen.
+`validate-symbol-order` `mario/Enemy/telesa` PASS.
+Vorbestehende Weak-Order-Warnungen und zwei UNUSED-Größenwarnungen bleiben (`resetBaseGround`, `isResetTransY`).
+Keine neuen Symbolfehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TCardSave::waitForSelectOver` aus R678B bleibt unberührt.
+`TCardSave::waitForSelect2` aus R677B bleibt unberührt.
+`TCardSave::drawMessageBM` aus R676B bleibt unberührt.
+`TFireWanwanTailHit::moveRequest` aus R676A bleibt unberührt.
+
+`ninja changes_all` gegen `9b38aeaa`: fuzzy 81.135765 % -> 81.13587 %.
+Matched code 56.039967 % -> 56.05846 % (2011884 -> 2012548, +664).
+Funktionen matched 10093 -> 10094.
+Matched data unverändert 69.31899 % (443871).
+`telesa` matched code 15704 -> 16368 (+664), Funktionen 78 -> 79 von 86.
+Fuzzy der Unit 99.61706 % -> 99.633965 %.
+Matched code der Unit 76.27744 % -> 79.502625 %.
+Complete units bleiben 418.
+Nur `TTelesa::init` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `telesa.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
