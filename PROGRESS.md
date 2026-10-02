@@ -25589,3 +25589,35 @@ Nur `TRealoid::clipBoids` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `fishoid.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R691B (`__sinit_ConsoleStr_cpp`)
+
+**Vollmatch, strikt.**
+
+`__sinit_ConsoleStr_cpp` war 99,23 %.
+Vier `~` waren nur Register (`r0`/`r9`).
+Retail hält `-21` in `r9` und schreibt denselben Wert nach `cShineGetLeft1.x` und `cShineGetLeft2.x`.
+Die Quelle hatte `cShineGetLeft2` als `(-50, 7)`, also blieb `-50` in `r9` und `-21` wanderte nach `r0`.
+`cShineGetLeft2(-21, 7)` lässt MWCC `r9` wiederverwenden.
+0 Abweichungen, 104 Bytes, 26 Instruktionen.
+`validate-symbol-order` `mario/GC2D/ConsoleStr` PASS.
+Geerbte UNUSED-Größenwarnung `SMS_getNormalStage__FUl` (0x18 gegen 0x1c) bleibt.
+Keine neuen Symbolfehler.
+Die anderen nonmatching Funktionen der TU behalten Größe und Prozent.
+Die TU bleibt `NonMatching` und wird nicht gelinkt.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TRealoid::clipBoids` aus R690C bleibt unberührt.
+`TBaseNPC::execTurnToFirstState` aus R688B bleibt unberührt.
+
+`ninja changes_all` gegen `6865b72c`: fuzzy 81.13627 % -> 81.136284 %.
+Matched code 56.273495 % -> 56.276394 % (2020268 -> 2020372, +104).
+Funktionen matched 10110 -> 10111.
+Matched data unverändert 69.31899 % (443871).
+`ConsoleStr` matched code 1512 -> 1616 (+104), Funktionen 10 -> 11 von 19.
+Fuzzy der Unit 69.78037 % -> 69.78767 %.
+Matched code der Unit 13.790588 % -> 14.739147 %.
+Complete units bleiben 418.
+Nur `__sinit_ConsoleStr_cpp` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `ConsoleStr.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
