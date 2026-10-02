@@ -25289,3 +25289,38 @@ Nur `JASystem::Driver::__UpdateJcToDSP` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `JASChannel.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R685C (`JAInter::StreamLib::callBack`)
+
+**Vollmatch, strikt.**
+
+`JAInter::StreamLib::callBack` war 99,94 %.
+Das Frame lag bei `-0x90` statt `-0xb0`.
+Gesicherte Register und Stack-Slots lagen einheitlich `0x20` zu tief.
+`char trash[0x20]` am Funktionsanfang schiebt Frame und Epilog auf Retail.
+0 Abweichungen, 2260 Bytes, 565 Instruktionen.
+`validate-symbol-order` `mario/JSystem/JAudio/JAInterface/JAIGFrameStream` PASS.
+Vorbestehende UNUSED-Größenwarnungen der Stub-Funktionen bleiben.
+Keine neuen Symbolfehler.
+Die TU bleibt `NonMatching` und wird nicht gelinkt, obwohl objdiff Code und Fuzzy jetzt auf 100 % sieht.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`JASystem::Driver::__UpdateJcToDSP` aus R684C bleibt unberührt.
+`JPADrawExecYBillBoard::exec` aus R683B bleibt unberührt.
+`JPADrawExecBillBoard::exec` aus R682B bleibt unberührt.
+`JASystem::TChannel::stopLogicalChannel` aus R683C bleibt unberührt.
+`JASystem::HardStream::TControl::volFloatToU8` aus R682C bleibt unberührt.
+`JPADrawCalcScaleXBySpeed::calc` aus R681B bleibt unberührt.
+`JPADrawCalcScaleYBySpeed::calc` aus R680B bleibt unberührt.
+
+`ninja changes_all` gegen `f3089874`: fuzzy 81.13602 % -> 81.136055 %.
+Matched code 56.12241 % -> 56.185364 % (2014844 -> 2017104, +2260).
+Funktionen matched 10102 -> 10103.
+Matched data unverändert 69.31899 % (443871).
+`JAIGFrameStream` matched code 5592 -> 7852 (+2260), Funktionen 25 -> 26 von 26.
+Fuzzy der Unit 99.98319 % -> 100 %.
+Matched code der Unit 71.21752 % -> 100 %.
+Complete units bleiben 418.
+Nur `JAInter::StreamLib::callBack` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `JAIGFrameStream.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.

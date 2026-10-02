@@ -697,6 +697,7 @@ namespace StreamLib {
 
 	s32 callBack(void* param)
 	{
+		char trash[0x20];
 		bool decoded = false;
 
 		if (startInitFlag != 0) {
