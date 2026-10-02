@@ -25784,3 +25784,37 @@ Nur `TMario::considerRotateStart` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `MarioRun.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R700C (`TNpcParts::addJellyFishParts`)
+
+**Vollmatch, strikt.**
+
+`TNpcParts::addJellyFishParts` war 99,83 %.
+`&unk0[5][1]` landete bei `0xf4`.
+`partsPerform` behandelt den Quallen-Teil als Index 11.
+`&unk0[0][11]` trifft `addi r29, r31, 0x2c`.
+Das Frame lag bei `-0x48` statt `-0x50`.
+Alle `r1`-Slots teilten dasselbe Delta `+8`.
+`char trash[0x8]` am Anfang hebt nur das Frame.
+0 Abweichungen, 376 Bytes, 94 Instruktionen.
+`validate-symbol-order` `mario/NPC/NpcParts` PASS.
+Die UNUSED-Größenwarnung `SetMActorAnmFrame` (0x4 gegen 0x84) bleibt.
+Keine neuen Symbolfehler.
+`partsFrameUpdate` und `getPartsMActor` bleiben 100 %.
+Die anderen nonmatching Funktionen der TU behalten Größe und Prozent.
+Die TU bleibt `NonMatching` und wird nicht gelinkt.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TBaseNPC::requestNpcAnm_` aus R699A bleibt unberührt.
+
+`ninja changes_all` gegen `007480cc`: fuzzy 81.1365 % -> 81.13651 %.
+Matched code 56.36319 % -> 56.37366 % (2023488 -> 2023864, +376).
+Funktionen matched 10121 -> 10122.
+Matched data unverändert 69.31899 % (443871).
+`NpcParts` matched code 264 -> 640 (+376), Funktionen 3 -> 4 von 7.
+Fuzzy der Unit 89.135864 % -> 89.16114 %.
+Matched code der Unit 10.42654 % -> 25.27646 %.
+Complete units bleiben 418.
+Nur `TNpcParts::addJellyFishParts` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `NpcParts.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
