@@ -25557,3 +25557,35 @@ Nur `TBaseNPC::execTurnToFirstState` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `NpcWalkTurn.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R690C (`TRealoid::clipBoids`)
+
+**Vollmatch, strikt.**
+
+`TRealoid::clipBoids` war 99,83 %.
+Das Frame lag bei `-0x68` statt `-0x70`.
+Die `TVec3`-Local lag `0x4` zu tief, die gesicherten Register `0x8`.
+`char trash[4]` am Funktionsende schiebt die Local um 4 und das Frame durch Ausrichtung um 8 auf Retail.
+0 Abweichungen, 212 Bytes, 53 Instruktionen.
+`validate-symbol-order` `mario/Animal/fishoid` erbt den Linkage-Fehler von `TFishoidManager::~TFishoidManager`.
+Die vier UNUSED-Größenwarnungen bleiben.
+Keine neuen Symbolfehler.
+Die anderen nonmatching Funktionen der TU behalten Größe und Prozent.
+Die TU bleibt `NonMatching` und wird nicht gelinkt.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TBaseNPC::execTurnToFirstState` aus R688B bleibt unberührt.
+`JPADrawExecRotationCross::exec` aus R689A bleibt unberührt.
+`JASystem::Driver::__UpdateJcToDSPInit` aus R686C bleibt unberührt.
+
+`ninja changes_all` gegen `7c4347a5`: fuzzy 81.136246 % -> 81.13627 %.
+Matched code 56.26759 % -> 56.273495 % (2020056 -> 2020268, +212).
+Funktionen matched 10109 -> 10110.
+Matched data unverändert 69.31899 % (443871).
+`fishoid` matched code 2192 -> 2404 (+212), Funktionen 21 -> 22 von 26.
+Fuzzy der Unit 95.00726 % -> 95.01543 %.
+Matched code der Unit 49.727768 % -> 54.53721 %.
+Complete units bleiben 418.
+Nur `TRealoid::clipBoids` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `fishoid.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
