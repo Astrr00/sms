@@ -1541,6 +1541,7 @@ void JPADrawCalcScaleXBySpeed::calc(const JPADrawContext* dc,
 		params->mScaleX = params->unkC;
 	}
 	params->mScaleX *= vel.length() * 0.01f;
+	char trash[8];
 }
 
 void JPADrawCalcScaleYBySpeed::calc(const JPADrawContext* dc,
