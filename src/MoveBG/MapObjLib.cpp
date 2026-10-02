@@ -596,11 +596,22 @@ void TMapObjBase::getVerticalVecFromOffsetXZ(f32, f32, JGeometry::TVec3<f32>*)
 {
 }
 
+// One extra inline: the caller's copy of set() stays out of line.
+static inline void storeVec(JGeometry::TVec3<f32>* v, f32 x, f32 y, f32 z)
+{
+	v->set(x, y, z);
+}
+
 void TMapObjBase::rotateVecByAxisY(JGeometry::TVec3<f32>* vec, f32 angle)
 {
 	JGeometry::TRotation3<TMtx33f> rot;
 	rot.setEular(0.0f, angle, 0.0f);
-	rot.mult33(*vec, *vec);
+	storeVec(vec, rot.ref(0, 0) * vec->x + rot.ref(0, 1) * vec->y
+	                 + rot.ref(0, 2) * vec->z,
+	         rot.ref(1, 0) * vec->x + rot.ref(1, 1) * vec->y
+	             + rot.ref(1, 2) * vec->z,
+	         rot.ref(2, 0) * vec->x + rot.ref(2, 1) * vec->y
+	             + rot.ref(2, 2) * vec->z);
 }
 
 void TMapObjBase::getNormalVecFromOffsetXZ(f32, f32, JGeometry::TVec3<f32>*) { }

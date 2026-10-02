@@ -24631,3 +24631,36 @@ Nur `TFireWanwanManager::perform` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `fireWanwan.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R121C (`TMapObjBase::rotateVecByAxisY`)
+
+**Vollmatch, strikt.**
+
+`TMapObjBase::rotateVecByAxisY` war 99,78 %.
+`mult33` geht über `at()` und hält das Frame bei `-0xf0` statt `-0xd0`.
+`ref()` statt `at()` setzt das Frame auf `-0xd0`.
+`storeVec` ist eine zusätzliche Inline-Stufe, damit `TVec3::set` in der TU bleibt.
+0 Abweichungen, 268 Bytes, 67 Instruktionen.
+`validate-symbol-order` `mario/MoveBG/MapObjLib` FAIL ist vorbestehend:
+MISSING `SMatrix33C::at` und ORDER von `getVerticalVecToTargetXZ`.
+Gegen das Basisobjekt: 0 neue Fehler, 2 geerbt.
+`getVerticalVecToTargetXZ` fuzzy 41,81 % -> 41,41 %.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TMirrorModelObj::setPlane` aus R120C bleibt unberührt.
+`TFireWanwanManager::perform` aus R670A bleibt unberührt.
+
+`ninja changes_all` gegen `7cef6c23`: fuzzy 81.13498 % -> 81.134964 %.
+Matched code 55.752617 % -> 55.76008 % (2001568 -> 2001836, +268).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10081 -> 10082.
+`MapObjLib` matched code 10336 -> 10604 (+268), Funktionen 80 -> 81 von 86.
+Fuzzy der Unit 96.16511 % -> 96.158455 %.
+Matched code der Unit 78.13728 % -> 80.163284 %.
+Matched data der Unit unverändert 100 % (892).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TMapObjBase::rotateVecByAxisY` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `MapObjLib.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
