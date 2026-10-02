@@ -25621,3 +25621,37 @@ Nur `__sinit_ConsoleStr_cpp` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `ConsoleStr.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R695A (`TMario::considerRotateStart`)
+
+**Vollmatch, strikt.**
+
+`TMario::considerRotateStart` war 99,87 %.
+Das Frame lag bei `-0x20` statt `-0x30`.
+`direction` und die gesicherten Register lagen einheitlich `0x10` zu tief.
+`char trash[0x10]` nach `int direction` füllt die Lücke unter der Local.
+Das Frame und `direction` treffen Retail.
+0 Abweichungen, 272 Bytes, 68 Instruktionen.
+`validate-symbol-order` `mario/Player/MarioRun` meldet weiter das vorbestehende MISSING `braking__6TMarioFv`.
+`braking` steht im Quelltext als `inline`, die Map führt es als UNUSED.
+Die 15 UNUSED-Größenwarnungen sind unverändert.
+Reihenfolge und Linkage der gelinkten Symbole passen.
+Die anderen nonmatching Funktionen der TU behalten Größe und Prozent.
+`turnning` und `walkEnd` bleiben 100 %.
+Die TU bleibt `NonMatching` und wird nicht gelinkt.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`__sinit_ConsoleStr_cpp` aus R691B bleibt unberührt.
+`TRealoid::clipBoids` aus R690C bleibt unberührt.
+
+`ninja changes_all` gegen `dfb50ce9`: fuzzy 81.136284 % -> 81.1363 %.
+Matched code 56.276394 % -> 56.28397 % (2020372 -> 2020644, +272).
+Funktionen matched 10111 -> 10112.
+Matched data unverändert 69.31899 % (443871).
+`MarioRun` matched code 7504 -> 7776 (+272), Funktionen 20 -> 21 von 34.
+Fuzzy der Unit 99.58125 % -> 99.58305 %.
+Matched code der Unit 37.4975 % -> 38.856686 %.
+Complete units bleiben 418.
+Nur `TMario::considerRotateStart` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `MarioRun.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
