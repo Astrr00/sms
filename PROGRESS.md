@@ -25135,3 +25135,28 @@ Nur `JPADrawCalcScaleXBySpeed::calc` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `JPADrawVisitor.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R682C (`JASystem::HardStream::TControl::volFloatToU8`)
+
+**Vollmatch, strikt.**
+
+`JASystem::HardStream::TControl::volFloatToU8` war 99,8 %.
+Das Frame lag bei `-0x18` statt `-0x20`.
+Der `stfd`/`lwz`-Spill lag einheitlich `0x8` zu tief.
+`char trash[8]` am Funktionsanfang schiebt Frame und Spill auf Retail.
+0 Abweichungen, 64 Bytes, 16 Instruktionen.
+`validate-symbol-order` `mario/JSystem/JAudio/JASystem/JASHardStream` PASS.
+Vorbestehende UNUSED-Größenwarnungen der Stub-Funktionen bleiben.
+Keine neuen Symbolfehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`JPADrawCalcScaleXBySpeed::calc` aus R681B bleibt unberührt.
+`JPADrawCalcScaleYBySpeed::calc` aus R680B bleibt unberührt.
+`JDrama::TLookAtCamera::perform` aus R679B bleibt unberührt.
+
+Delta gegen die R681B-Zahlen: matched code 2013320 -> 2013384 (+64), 56.07996 % -> 56.081745 %.
+Funktionen matched 10097 -> 10098.
+Nur `volFloatToU8` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `JASHardStream.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
