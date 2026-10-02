@@ -24462,3 +24462,35 @@ Nur `TPollutionCounterLayer::drawJointObjStamp` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `PollutionCount.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R116C (`TBathWaterMeshRenderer::makeNormalMap`)
+
+**Vollmatch, strikt.**
+
+`TBathWaterMeshRenderer::makeNormalMap` war 99,73 %.
+`scale * (b - a)` landete in `f1`, der folgende `lfsx` von `b2` in `f0`.
+Das Original hält das Produkt in `f0` und `b2 - a2` in `f1`.
+`f32 nx = scale * (b - a)` bleibt über `b2 -= a2` in `f0`.
+`b2 * scale` wird `fmuls f0, f1, f30`.
+0 Abweichungen, 528 Bytes, 132 Instruktionen.
+`validate-symbol-order` `mario/Map/BathWaterManager` scheitert weiter am vorbestehenden MISSING UNUSED `clearEFB`, an der schwachen Bindung von `makeNormalMap` und an der Reihenfolge um `calcCoord`.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TPollutionCounterLayer::drawJointObjStamp` aus R115C bleibt unberührt.
+`countTexDegree` bleibt unberührt.
+
+`ninja changes_all` gegen `4dac99d0`: fuzzy 81.134605 % -> 81.13464 %.
+Matched code 55.678524 % -> 55.693233 % (1998908 -> 1999436, +528).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10076 -> 10077.
+`BathWaterManager` matched code 7892 -> 8420 (+528), Funktionen 27 -> 28 von 40.
+Fuzzy der Unit 95.077736 % -> 95.08206 %.
+Matched code der Unit 24.421339 % -> 26.055204 %.
+Matched data der Unit unverändert 82.36559 % (1532).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TBathWaterMeshRenderer::makeNormalMap` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `BathWaterManager.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
