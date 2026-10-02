@@ -25622,6 +25622,40 @@ Nur `__sinit_ConsoleStr_cpp` ist neu strikt matched.
 DOL-SHA1 unverändert: `ConsoleStr.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
 
+### R696C (`TSMSFader::update`)
+
+**Vollmatch, strikt.**
+
+`TSMSFader::update` war 99,66 %.
+`updateRequest` ist inlined.
+`fVar1 = unk8 - 1/mRate` schrieb die Differenz nach `f1`.
+Retail behält sie in `f2`, dem Register von `unk8`.
+`fVar1 = unk8; fVar1 -= 1.0f / mRate` trifft die `fsubs`.
+Das Frame lag bei `-0x18` statt `-0x28`.
+`char trash[16]` am Ende von `update` hebt es auf `-0x28`.
+0 Abweichungen, 348 Bytes, 87 Instruktionen.
+`validate-symbol-order` `mario/GC2D/ScrnFader` PASS.
+Die geerbte UNUSED-Größenwarnung `updateDelay` (0x4 gegen 0x54) bleibt.
+`updateRequest` bleibt UNUSED mit Map-Größe 0x80.
+Die anderen nonmatching Funktionen der TU behalten Größe und Prozent.
+Die TU bleibt `NonMatching` und wird nicht gelinkt.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TMario::considerRotateStart` aus R695A bleibt unberührt.
+`__sinit_ConsoleStr_cpp` aus R691B bleibt unberührt.
+
+`ninja changes_all` gegen `869f213c`: fuzzy 81.1363 % -> 81.13634 %.
+Matched code 56.28397 % -> 56.29366 % (2020644 -> 2020992, +348).
+Funktionen matched 10112 -> 10113.
+Matched data unverändert 69.31899 % (443871).
+`ScrnFader` matched code 3160 -> 3508 (+348), Funktionen 13 -> 14 von 16.
+Fuzzy der Unit 98.77491 % -> 98.801605 %.
+Matched code der Unit 70.2847 % -> 78.02491 %.
+Complete units bleiben 418.
+Nur `TSMSFader::update` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `ScrnFader.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
 ### R695A (`TMario::considerRotateStart`)
 
 **Vollmatch, strikt.**
