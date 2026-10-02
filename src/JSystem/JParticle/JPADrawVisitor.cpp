@@ -357,6 +357,7 @@ void JPADrawExecBillBoard::exec(const JPADrawContext* dc,
 	GXPosition3f32(offs[3].x + pt.x, offs[3].y + pt.y, pt.z);
 	GXTexCoord2f32(dc->pcb->mTexCoords[3].x, dc->pcb->mTexCoords[3].y);
 	GXEnd();
+	char trash[4];
 }
 
 void JPADrawExecRotBillBoard::exec(const JPADrawContext* dc,
