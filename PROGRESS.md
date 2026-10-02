@@ -24732,3 +24732,27 @@ Nur `TBossPakkun::perform` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `bosspakkun.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R673B (`TGCConsole2::processDrawTelop`)
+
+**Vollmatch, strikt.**
+
+`TGCConsole2::processDrawTelop` war 99,71 %.
+Die beiden `JUTRect`-Kopien und das `fctiwz`-Slot lagen einheitlich `0x18` zu tief, das Frame bei `-0x50` statt `-0x68`.
+`char trash[0x18]` nach den Rects schiebt genau diese Slots.
+0 Abweichungen, 168 Bytes, 42 Instruktionen.
+`validate-symbol-order` `mario/GC2D/GCConsole2` PASS.
+Vier vorbestehende UNUSED-Größenwarnungen bleiben.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TBossPakkun::perform` aus R673A bleibt unberührt.
+
+Matched code der Unit 12320 -> 12488 (+168), Funktionen 31 -> 32 von 60.
+Matched code der Unit 19.52580 % -> 19.79206 %.
+Gegen R673A gerechnet: matched code 55.83529 % -> 55.839968 % (2004536 -> 2004704, +168).
+Funktionen matched 10084 -> 10085.
+Complete units bleiben 418.
+Nur `TGCConsole2::processDrawTelop` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `GCConsole2.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
