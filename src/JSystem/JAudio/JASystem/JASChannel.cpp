@@ -144,6 +144,7 @@ namespace Driver {
 
 	static void __UpdateJcToDSP(TChannel* channel)
 	{
+		char trash[0x10];
 		DSPInterface::DSPBuffer* buf = channel->unk20->mDSPHandle;
 		if (channel->unkD0) {
 			for (u8 i = 0; i < 6; ++i)
