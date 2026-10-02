@@ -24361,3 +24361,38 @@ Nur `MAnmSound::startAnimSound` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `MAnmSound.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R662A (`TSpineEnemy::calcTurnSpeedToReach`)
+
+**Vollmatch, strikt.**
+
+`TSpineEnemy::calcTurnSpeedToReach` war 99,41 %.
+`fnmsubs` schrieb nach `f1` statt `f0`, danach waren `frsqrte` und `fmul` vertauscht.
+`f32 x = 1.0f - dVar11 * dVar11` hält das Ergebnis in `f0`.
+`f64 g = __frsqrte(x)` lässt die Schätzung `double`, das Produkt ist `fmul` plus `frsp`.
+Das Frame lag bei `-0x28` statt `-0x30`.
+Der Float-Spill lag vier Bytes zu tief, der Double-Spill acht Bytes zu tief.
+`volatile char gap[8]` und `volatile char trash[4]` setzen Frame und Spills.
+Die Funktion bleibt in `walkToCurPathNode` geinlined.
+0 Abweichungen, 224 Bytes, 56 Instruktionen.
+`validate-symbol-order` `mario/Enemy/enemy` scheitert weiter am vorbestehenden fehlenden schwachen `TVec3::operator=` und an vier UNUSED-Größen.
+Diese Änderung fügt keine Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`MAnmSound::startAnimSound` aus R658B bleibt unberührt.
+`walkToCurPathNode` bleibt auf dem bisherigen Match.
+
+`ninja changes_all` gegen `0182e39b`: fuzzy 81.13439 % -> 81.13443 %.
+Matched code 55.644096 % -> 55.650337 % (1997672 -> 1997896, +224).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10073 -> 10074.
+`enemy` matched code 4280 -> 4504 (+224), Funktionen 25 -> 26 von 39.
+Fuzzy der Unit 96.64079 % -> 96.652435 %.
+Matched code der Unit 37.75582 % -> 39.731827 %.
+Matched data der Unit unverändert 100 % (580).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TSpineEnemy::calcTurnSpeedToReach` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `enemy.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.

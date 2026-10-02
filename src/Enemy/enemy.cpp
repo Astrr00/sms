@@ -220,6 +220,7 @@ f32 TSpineEnemy::calcMinimumTurnRadius(f32 param_1, f32 param_2) const
 
 f32 TSpineEnemy::calcTurnSpeedToReach(f32 march_speed, f32 param_2) const
 {
+	volatile char gap[8];
 	if (param_2 == 0.0f)
 		return 0.0f;
 
@@ -233,10 +234,10 @@ f32 TSpineEnemy::calcTurnSpeedToReach(f32 march_speed, f32 param_2) const
 	if (dVar11 == -1.0f)
 		return 180.0f;
 
-	f32 fVar32 = -(dVar11 * dVar11 - 1.0f);
-
-	// TODO: THitActor::calcEntryRadius has same problem
-	volatile f32 f = fVar32 * __frsqrte(fVar32);
+	f32 x          = 1.0f - dVar11 * dVar11;
+	f64 g          = __frsqrte(x);
+	volatile f32 f = x * g;
+	volatile char trash[4];
 	f32 tmp        = matan(f, dVar11) * (360.0f / 65536.0f);
 	return 90.0f - tmp;
 }
