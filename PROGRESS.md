@@ -24494,3 +24494,39 @@ Nur `TBathWaterMeshRenderer::makeNormalMap` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `BathWaterManager.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R662B (`TApplication::initialize_bootAfter`)
+
+**Vollmatch, strikt.**
+
+`TApplication::initialize_bootAfter` war 98,77 %.
+`getResource` direkt in `getResSize` legte den Zeiger in `r4`.
+Das Original kopiert ihn über `r0` und dann `mr r4, r0`, zweimal.
+Benannte `fontRes` und `aafRes` erzeugen genau diese Kopien.
+`sizeof(MSound)` war `0x30c` wegen eines unbenutzten Schwanzes ab `0xD2`.
+Ohne `unkD2`, `unk304` und `unk308` endet die Klasse bei `0xD4`, wie `new MSound`.
+0 Abweichungen, 688 Bytes, 172 Instruktionen.
+`validate-symbol-order` `mario/System/Application`: PASS.
+Die vorbestehende Weak-Order-Warnung und die UNUSED-Größe von `initialize_processMeter` bleiben.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TBathWaterMeshRenderer::makeNormalMap` aus R116C bleibt unberührt.
+`TPollutionCounterLayer::drawJointObjStamp` aus R115C bleibt unberührt.
+`CPolarSubCamera::isNeedGroundCheck_` aus R660B bleibt unberührt.
+
+`ninja changes_all` gegen `c1569b87`: fuzzy 81.13464 % -> 81.13487 %.
+Matched code 55.693233 % -> 55.712395 % (1999436 -> 2000124, +688).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10077 -> 10078.
+`Application` matched code 5572 -> 6260 (+688), Funktionen 15 -> 16 von 21.
+Fuzzy der Unit 97.3489 % -> 97.43461 %.
+Matched code der Unit 56.580017 % -> 63.566208 %.
+Matched data der Unit unverändert 95.32164 % (1956).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TApplication::initialize_bootAfter` ist neu strikt matched.
+Kein anderes Unit im `changes_all`-Report.
+
+DOL-SHA1 unverändert: `Application.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
