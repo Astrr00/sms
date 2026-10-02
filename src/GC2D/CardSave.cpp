@@ -951,6 +951,7 @@ s8 TCardSave::drawMessageBM(TEProgress param_1)
 		break;
 	}
 
+	char trash[0x10];
 	return result;
 }
 

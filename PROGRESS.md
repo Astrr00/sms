@@ -24916,3 +24916,32 @@ Nur `TFireWanwanTailHit::moveRequest` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `fireWanwan.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R676B (`TCardSave::drawMessageBM`)
+
+**Vollmatch, strikt.**
+
+`TCardSave::drawMessageBM` war 99,86 %.
+Das Frame lag bei `-0x158` statt `-0x168`.
+Alle Stack-Slots lagen einheitlich `0x10` zu tief.
+`char trash[0x10]` als letztes Lokales schiebt Frame und Slots auf Retail.
+0 Abweichungen, 1252 Bytes, 313 Instruktionen.
+`validate-symbol-order` `mario/GC2D/CardSave` PASS.
+Eine vorbestehende UNUSED-Größenwarnung bleibt (`changePattern`).
+Keine neuen Symbolfehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TFireWanwanTailHit::moveRequest` aus R676A bleibt unberührt.
+`TPauseMenu2::loadAfter` aus R675B bleibt unberührt.
+`TSunShine::perform` aus R674B bleibt unberührt.
+`TGCConsole2::processDrawTelop` aus R673B bleibt unberührt.
+
+Matched code der Unit 3188 -> 4440 (+1252), Funktionen 8 -> 9 von 20.
+Matched code der Unit 7.015228 % -> 9.770267 %.
+Gegen R676A gerechnet: matched code 55.911945 % -> 55.946819 % (2007288 -> 2008540, +1252).
+Funktionen matched 10090 -> 10091.
+Complete units bleiben 418.
+Nur `TCardSave::drawMessageBM` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `CardSave.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
