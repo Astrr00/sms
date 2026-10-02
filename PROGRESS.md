@@ -24850,3 +24850,34 @@ Nur `TBGTentacle::TNode::calcVelocity` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `bgtentacle.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R675B (`TPauseMenu2::loadAfter`)
+
+**Vollmatch, strikt.**
+
+`TPauseMenu2::loadAfter` war 99,89 %.
+Das Frame lag bei `-0x88` statt `-0xb0`.
+Die übrigen Slots lagen einheitlich `0x28` zu tief.
+Der Rückgabeslot von `getWhite` blieb bei `r1+0x60`, solange die Farbe direkt zugewiesen wurde.
+Ein benanntes `JUtility::TColor white` plus `char trash[0x38]` setzt Frame und Farblot auf Retail.
+0 Abweichungen, 592 Bytes, 148 Instruktionen.
+`validate-symbol-order` `mario/GC2D/PauseMenu2` zeigt dieselben Fehler wie unverändertes HEAD.
+Die ORDER von `TVec3::set` und die weak/global-Bindung von `appearWindow` und `disappearWindow` bestanden schon.
+Eine vorbestehende UNUSED-Größenwarnung bleibt (`SMS_getNormalStage`).
+Keine neuen Symbolfehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TBGTentacle::TNode::calcVelocity` aus R675A bleibt unberührt.
+`TBossMantaAdditionalCollisionSet::update` aus R674A bleibt unberührt.
+`TSunShine::perform` aus R674B bleibt unberührt.
+`TGCConsole2::processDrawTelop` aus R673B bleibt unberührt.
+
+Matched code der Unit 2268 -> 2860 (+592), Funktionen 7 -> 8 von 13.
+Matched code der Unit 27.444337 % -> 34.607938 %.
+Gegen R675A gerechnet: matched code 55.887325 % -> 55.903815 % (2006404 -> 2006996, +592).
+Funktionen matched 10088 -> 10089.
+Complete units bleiben 418.
+Nur `TPauseMenu2::loadAfter` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `PauseMenu2.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
