@@ -24428,3 +24428,37 @@ Nur `CPolarSubCamera::isNeedGroundCheck_` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `CameraBGCheck.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R115C (`TPollutionCounterLayer::drawJointObjStamp`)
+
+**Vollmatch, strikt.**
+
+`TPollutionCounterLayer::drawJointObjStamp` war 99,33 %.
+Das Frame lag bei `-0xd0` statt `-0xe0`.
+Vier verworfene `countTexPad()`-Aufrufe heben das Frame ohne Extra-Instruktion.
+`unk0` und `mJointObj` laufen über die lokale `info`-Referenz.
+`f32 minZ` vor `f32 minX` stellt die `lfs`-Reihenfolge vor `makeWorldToPollutionMtx` her.
+0 Abweichungen, 648 Bytes, 162 Instruktionen.
+`countTexDegree` bleibt 100 %.
+`validate-symbol-order` `mario/Map/PollutionCount`: derselbe vorbestehende MISSING UNUSED `__ct__21TPollutionCounterBaseFv`.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`CPolarSubCamera::isNeedGroundCheck_` aus R660B bleibt unberührt.
+`TSpineEnemy::calcTurnSpeedToReach` aus R662A bleibt unberührt.
+`countTexDegree` aus R111C bleibt unberührt.
+
+`ninja changes_all` gegen `4bb7f55f`: fuzzy 81.13448 % -> 81.134605 %.
+Matched code 55.660473 % -> 55.678524 % (1998260 -> 1998908, +648).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10075 -> 10076.
+`PollutionCount` matched code 9904 -> 10552 (+648), Funktionen 37 -> 38 von 38.
+Fuzzy der Unit 99.95868 % -> 100.0 %.
+Matched code der Unit 93.85898 % -> 100.0 %.
+Matched data der Unit unverändert 79.22078 % (244).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TPollutionCounterLayer::drawJointObjStamp` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `PollutionCount.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.

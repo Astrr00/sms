@@ -330,8 +330,16 @@ static void makeWorldToPollutionMtx(f32 scale, f32 x, f32 z, TPosition3f* mtx)
 	mtx->mMtx[1][3] = -z * scale;
 }
 
+class TMarDirector;
+extern TMarDirector* gpMarDirector;
+static inline TMarDirector* countTexPad() { return gpMarDirector; }
+
 void TPollutionCounterLayer::drawJointObjStamp(int layer_index) const
 {
+	(void)countTexPad();
+	(void)countTexPad();
+	(void)countTexPad();
+	(void)countTexPad();
 	for (int i = 0; i < mJointObjStampTaskNum; ++i) {
 		const TPollutionJointObjTaskInfo& info = mJointObjStampTaskQueue[i];
 		if (info.mLayerIdx != layer_index)
@@ -346,7 +354,7 @@ void TPollutionCounterLayer::drawJointObjStamp(int layer_index) const
 		GXSetChanCtrl(GX_COLOR1A1, 0, GX_SRC_REG, GX_SRC_REG, 0, GX_DF_NONE,
 		              GX_AF_NONE);
 
-		if (mJointObjStampTaskQueue[i].unk0 == 0) {
+		if (info.unk0 == 0) {
 			GXSetChanMatColor(GX_COLOR0A0, (GXColor) { 0, 0, 0, 0xff });
 		} else {
 			GXSetChanMatColor(GX_COLOR0A0,
@@ -365,14 +373,15 @@ void TPollutionCounterLayer::drawJointObjStamp(int layer_index) const
 		                GX_TEVPREV);
 
 		TPosition3f local_6c;
-		makeWorldToPollutionMtx(layer->mPos.mInverseTexelScale, layer->mMinX,
-		                        layer->mMinZ, &local_6c);
+		f32 minZ = layer->mMinZ;
+		f32 minX = layer->mMinX;
+		makeWorldToPollutionMtx(layer->mPos.mInverseTexelScale, minX, minZ,
+		                        &local_6c);
 		GXLoadPosMtxImm(local_6c, GX_PNMTX0);
 
 		j3dSys.setVtxPos(layer->getModelData()->getVtxPosArray());
-		for (int j = 0; j < mJointObjStampTaskQueue[i].mJointObj->getShapeNum();
-		     ++j)
-			drawShape(mJointObjStampTaskQueue[i].mJointObj->getShape(j));
+		for (int j = 0; j < info.mJointObj->getShapeNum(); ++j)
+			drawShape(info.mJointObj->getShape(j));
 	}
 }
 
@@ -603,10 +612,6 @@ void TPollutionCounterLayer::cleanProhibitArea(int param_1) const
 }
 
 void TPollutionCounterLayer::drawModelStamp(int) { }
-
-class TMarDirector;
-extern TMarDirector* gpMarDirector;
-static inline TMarDirector* countTexPad() { return gpMarDirector; }
 
 void TPollutionCounterLayer::countTexDegree(int layer_index)
 {
