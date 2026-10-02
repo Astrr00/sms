@@ -25622,6 +25622,37 @@ Nur `__sinit_ConsoleStr_cpp` ist neu strikt matched.
 DOL-SHA1 unverändert: `ConsoleStr.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
 
+### R697C (`MActorAnmDataEach::loadAnmPtrArray`)
+
+**Vollmatch, strikt.**
+
+`MActorAnmDataEach::loadAnmPtrArray` war 99,83 % in sechs Instanzen.
+Die zwei `char[256]`-Puffer und das Frame lagen einheitlich 8 Bytes zu tief.
+`char trash[8]` am Funktionsende schiebt beide Puffer und das Frame auf Retail.
+0 Abweichungen, je 240 Bytes, 60 Instruktionen.
+Sechs Instanzen sind neu strikt matched: TransformKey, ColorKey, TexPattern, TextureSRTKey, TevRegKey, ClusterKey.
+`validate-symbol-order` `mario/M3DUtil/MActorData` PASS.
+Die Weak-Reihenfolge-Warnung und die UNUSED-Größe von `MActorAnmDataBase::MActorAnmDataBase` bleiben.
+Keine neuen Symbolfehler.
+Die anderen nonmatching Funktionen der TU behalten Größe und Prozent.
+`MActorAnmData::MActorAnmData` bleibt 99,9 %.
+Die TU bleibt `NonMatching` und wird nicht gelinkt.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TSMSFader::update` aus R696C bleibt unberührt.
+
+`ninja changes_all` gegen `6aa76406`: fuzzy 81.13634 % -> 81.13639 %.
+Matched code 56.29366 % -> 56.333775 % (2020992 -> 2022432, +1440).
+Funktionen matched 10113 -> 10119.
+Matched data unverändert 69.31899 % (443871).
+`MActorData` matched code 1340 -> 2780 (+1440), Funktionen 7 -> 13 von 16.
+Fuzzy der Unit 99.54671 % -> 99.59015 %.
+Matched code der Unit 24.257784 % -> 50.32585 %.
+Complete units bleiben 418.
+Nur die sechs `loadAnmPtrArray`-Instanzen sind neu strikt matched.
+
+DOL-SHA1 unverändert: `MActorData.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
 ### R696C (`TSMSFader::update`)
 
 **Vollmatch, strikt.**

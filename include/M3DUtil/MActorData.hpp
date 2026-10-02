@@ -65,6 +65,7 @@ public:
 		}
 
 		sortByFileNameRaw(mAnimations);
+		char trash[8];
 	}
 
 	T* getAnmPtr(int idx) const
