@@ -191,6 +191,7 @@ public:
 
 	void slerp(const TQuat4<T>& param_1, T param_2)
 	{
+		char trash[0x10];
 		TQuat4<f32> q1;
 		q1.normalize(*this);
 		TQuat4<f32> q2;
