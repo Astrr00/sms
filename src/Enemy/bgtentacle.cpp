@@ -1120,7 +1120,7 @@ void TBGTentacle::checkDamage()
 		if (mOwner->getAttackMode() == 6)
 			gpMarDirector->fireStreamingMovie(10);
 
-		mOwner->unk1A8 = mOwner->getSaveParam()->mSLAmputeeWait.get();
+		mOwner->unk1A8 = mOwner->getSaveParam()->mSLAmputeeWait.value;
 		changeStateAndFixNodes(4);
 	}
 }
@@ -1318,6 +1318,7 @@ void TBGTentacle::resetAllNodes(const JGeometry::TVec3<f32>& param_1)
 
 void TBGTentacle::perform(u32 cue, JDrama::TGraphics* graphics)
 {
+	char trash[0x40];
 	mTakeHit->perform(cue, graphics);
 
 	if (cue & CUE_MOVE) {

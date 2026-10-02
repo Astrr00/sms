@@ -25622,6 +25622,39 @@ Nur `__sinit_ConsoleStr_cpp` ist neu strikt matched.
 DOL-SHA1 unverändert: `ConsoleStr.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
 
+### R698C (`TBGTentacle::perform`)
+
+**Vollmatch, strikt.**
+
+`TBGTentacle::perform` war 99,71 %.
+Das Frame lag bei `-0xd0` statt `-0x108`.
+Die übrigen Locals saßen schon richtig.
+`char trash[0x40]` am Anfang hebt nur das Frame und die gesicherten Register.
+`mSLAmputeeWait.get()` liefert eine Referenz und ließ `addi r3, r28, 0` stehen.
+Der direkte Zugriff auf `.value` macht daraus `mr r3, r28`.
+0 Abweichungen, 896 Bytes, 224 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bgtentacle` PASS.
+Die fünf UNUSED-Größenwarnungen bleiben.
+Keine neuen Symbolfehler.
+`decideOwnState` bleibt 100 %.
+Die anderen nonmatching Funktionen der TU behalten Größe und Prozent.
+Die TU bleibt `NonMatching` und wird nicht gelinkt.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`MActorAnmDataEach::loadAnmPtrArray` aus R697C bleibt unberührt.
+
+`ninja changes_all` gegen `d3b6b092`: fuzzy 81.13639 % -> 81.13646 %.
+Matched code 56.333775 % -> 56.35873 % (2022432 -> 2023328, +896).
+Funktionen matched 10119 -> 10120.
+Matched data unverändert 69.31899 % (443871).
+`bgtentacle` matched code 7500 -> 8396 (+896), Funktionen 28 -> 29 von 39.
+Fuzzy der Unit 95.282524 % -> 95.29413 %.
+Matched code der Unit 33.464214 % -> 37.462074 %.
+Complete units bleiben 418.
+Nur `TBGTentacle::perform` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `bgtentacle.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
 ### R697C (`MActorAnmDataEach::loadAnmPtrArray`)
 
 **Vollmatch, strikt.**
