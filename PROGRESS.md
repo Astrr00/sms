@@ -25437,3 +25437,45 @@ Nur `JPADrawExecRotYBillBoard::exec` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `JPADrawVisitor.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R686C (`JASystem::Driver::__UpdateJcToDSPInit`)
+
+**Vollmatch, strikt.**
+
+`JASystem::Driver::__UpdateJcToDSPInit` war 99,86 %.
+Das Frame lag bei `-0x20` statt `-0x30`.
+Gesicherte Register lagen einheitlich `0x10` zu tief.
+`char trash[0x10]` am Funktionsanfang schiebt Frame und Epilog auf Retail.
+0 Abweichungen, 264 Bytes, 66 Instruktionen.
+`validate-symbol-order` `mario/JSystem/JAudio/JASystem/JASChannel` PASS.
+Vorbestehende UNUSED-Größenwarnungen der Stub-Funktionen bleiben.
+Keine neuen Symbolfehler.
+Die anderen nonmatching Funktionen der TU behalten Größe und Prozent.
+Die TU bleibt `NonMatching` und wird nicht gelinkt.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`JPADrawExecRotYBillBoard::exec` aus R684B bleibt unberührt.
+`JPADrawExecGenPrjTexMtx::exec` aus R688A bleibt unberührt.
+`JPADrawExecRotBillBoard::exec` aus R687A bleibt unberührt.
+`JAInter::StreamLib::callBack` aus R685C bleibt unberührt.
+`JASystem::Driver::__UpdateJcToDSP` aus R684C bleibt unberührt.
+`JPADrawExecYBillBoard::exec` aus R683B bleibt unberührt.
+`JPADrawExecBillBoard::exec` aus R682B bleibt unberührt.
+`JASystem::TChannel::stopLogicalChannel` aus R683C bleibt unberührt.
+`JASystem::HardStream::TControl::volFloatToU8` aus R682C bleibt unberührt.
+`JPADrawCalcScaleXBySpeed::calc` aus R681B bleibt unberührt.
+`JPADrawCalcScaleYBySpeed::calc` aus R680B bleibt unberührt.
+`JDrama::TLookAtCamera::perform` aus R679B bleibt unberührt.
+`TTelesa::init` aus R679A bleibt unberührt.
+
+`ninja changes_all` gegen `c36e2798`: fuzzy 81.13614 % -> 81.13616 %.
+Matched code 56.229485 % -> 56.23684 % (2018688 -> 2018952, +264).
+Funktionen matched 10106 -> 10107.
+Matched data unverändert 69.31899 % (443871).
+`JASChannel` matched code 5092 -> 5356 (+264), Funktionen 29 -> 30 von 33.
+Fuzzy der Unit 99.94026 % -> 99.945435 %.
+Matched code der Unit 73.1189 % -> 76.90982 %.
+Complete units bleiben 418.
+Nur `JASystem::Driver::__UpdateJcToDSPInit` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `JASChannel.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.

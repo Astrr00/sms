@@ -171,6 +171,7 @@ namespace Driver {
 
 	static void __UpdateJcToDSPInit(TChannel* channel)
 	{
+		char trash[0x10];
 		DSPInterface::DSPBuffer* buf = channel->unk20->mDSPHandle;
 
 		if (channel->isDolbyMode()) {
