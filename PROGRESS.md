@@ -24781,3 +24781,36 @@ Nur `TSunShine::perform` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `SunGlass.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R674A (`TBossMantaAdditionalCollisionSet::update`)
+
+**Vollmatch, strikt.**
+
+`TBossMantaAdditionalCollisionSet::update` war 99,47 %.
+Das Frame lag bei `-0x98` statt `-0xf0`.
+`char trash[0x58]` setzt das Frame auf `-0xf0`.
+Die Joint-Indizes ohne eigene `int`s bleiben in r30, dem Byte-Offset der Schleife.
+0 Abweichungen, 480 Bytes, 120 Instruktionen.
+`validate-symbol-order` `mario/Enemy/bossManta` PASS mit geerbten Fehlern.
+Die `theNerve`-Reihenfolge und sechs UNUSED-Größenwarnungen bestanden schon.
+Keine neuen Symbolfehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TSunShine::perform` aus R674B bleibt unberührt.
+`TGCConsole2::processDrawTelop` aus R673B bleibt unberührt.
+`TBossPakkun::perform` aus R673A bleibt unberührt.
+
+`ninja changes_all` gegen `2f6f03bd`: fuzzy 81.13523 % -> 81.13531 %.
+Matched code 55.846096 % -> 55.859463 % (2004924 -> 2005404, +480).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10086 -> 10087.
+`bossManta` matched code 8632 -> 9112 (+480), Funktionen 32 -> 33 von 49.
+Fuzzy der Unit 98.17338 % -> 98.18491 %.
+Matched code der Unit 39.50934 % -> 41.706337 %.
+Matched data der Unit unverändert 41.944077 % (1260).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TBossMantaAdditionalCollisionSet::update` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `bossManta.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
