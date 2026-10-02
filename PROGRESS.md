@@ -24881,3 +24881,38 @@ Nur `TPauseMenu2::loadAfter` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `PauseMenu2.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R676A (`TFireWanwanTailHit::moveRequest`)
+
+**Vollmatch, strikt.**
+
+`TFireWanwanTailHit::moveRequest` war 99,38 %.
+Das Frame lag bei `-0x40` statt `-0x48`.
+`char trash[8]` am Ende setzt das Frame und die `next`-Slots.
+`translation(mPosition)` lädt die Translation aus `r30+0x10`.
+0 Abweichungen, 292 Bytes, 73 Instruktionen.
+`validate-symbol-order` `mario/Enemy/fireWanwan` PASS mit geerbten Fehlern.
+Vier vorbestehende MISSING-Symbole und 27 UNUSED-Größenwarnungen bleiben.
+Keine neuen Symbolfehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TPauseMenu2::loadAfter` aus R675B bleibt unberührt.
+`TBGTentacle::TNode::calcVelocity` aus R675A bleibt unberührt.
+`TBossMantaAdditionalCollisionSet::update` aus R674A bleibt unberührt.
+`TFireWanwanManager::perform` aus R670A bleibt unberührt.
+`JGeometry::TQuat4<float>::slerp` aus R667A bleibt unberührt.
+
+`ninja changes_all` gegen `adf2694c`: fuzzy 81.1355 % -> 81.13554 %.
+Matched code 55.90381 % -> 55.911945 % (2006996 -> 2007288, +292).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10089 -> 10090.
+`fireWanwan` matched code 16048 -> 16340 (+292), Funktionen 64 -> 65 von 95.
+Fuzzy der Unit 94.36521 % -> 94.36983 %.
+Matched code der Unit 41.12341 % -> 41.87167 %.
+Matched data der Unit unverändert 90.77341 % (2676).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TFireWanwanTailHit::moveRequest` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `fireWanwan.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
