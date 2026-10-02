@@ -24664,3 +24664,33 @@ Nur `TMapObjBase::rotateVecByAxisY` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `MapObjLib.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R122C (`TMapStaticObj::perform`)
+
+**Vollmatch, strikt.**
+
+`TMapStaticObj::perform` war 99,93 %.
+Das Frame lag bei `-0x140` statt `-0x148`, die Effektmatrix bei `r1+0xd8` statt `r1+0xcc`.
+`char trash[4]` setzt das Frame auf `-0x148`.
+Benannte `J3DDrawBuffer*`, `J3DModelData*`, `J3DMaterial*` und `J3DTexGenBlock*` legen die Matrix auf `r1+0xcc`.
+0 Abweichungen, 700 Bytes, 175 Instruktionen.
+`validate-symbol-order` `mario/Map/MapStaticObject` PASS.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TMapObjBase::rotateVecByAxisY` aus R121C bleibt unberührt.
+`TMirrorModelObj::setPlane` aus R120C bleibt unberührt.
+
+`ninja changes_all` gegen `2d4223f8`: fuzzy 81.134964 % -> 81.13498 %.
+Matched code 55.76008 % -> 55.779583 % (2001836 -> 2002536, +700).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10082 -> 10083.
+`MapStaticObject` matched code 2708 -> 3408 (+700), Funktionen 15 -> 16 von 19.
+Fuzzy der Unit 98.18711 % -> 98.197205 %.
+Matched code der Unit 52.56211 % -> 66.14907 %.
+Matched data der Unit unverändert 100 % (3564).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `TMapStaticObj::perform` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `MapStaticObject.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.

@@ -214,16 +214,23 @@ void TMapStaticObj::perform(u32 cue, JDrama::TGraphics* graphics)
 		calcUnique(emitter);
 	}
 
+	J3DDrawBuffer* oldOpaBuf;
+	J3DDrawBuffer* oldXluBuf;
+	J3DModelData* data;
+	J3DMaterial* mat;
+	J3DTexGenBlock* block;
+
 	if ((cue & CUE_CALC_VIEW)
 	    && (mActorData->mFlags & TActorData::FLAG_IS_INDIRECT)) {
+		char trash[4];
 		Mtx afStack_7c;
+		trash[0] = 0;
 		SMS_GetLightPerspectiveForEffectMtx(afStack_7c);
 
-		getModelData()
-		    ->getMaterialNodePointer(0)
-		    ->getTexGenBlock()
-		    ->getTexMtx(1)
-		    ->setEffectMtx(afStack_7c);
+		data  = getModelData();
+		mat   = data->getMaterialNodePointer(0);
+		block = mat->getTexGenBlock();
+		block->getTexMtx(1)->setEffectMtx(afStack_7c);
 	}
 
 	if ((cue & CUE_ENTRY)
@@ -244,8 +251,8 @@ void TMapStaticObj::perform(u32 cue, JDrama::TGraphics* graphics)
 
 		if ((cue & CUE_ENTRY)
 		    && (mActorData->mFlags & TActorData::FLAG_UNK80)) {
-			J3DDrawBuffer* oldOpaBuf = j3dSys.getDrawBuffer(0);
-			J3DDrawBuffer* oldXluBuf = j3dSys.getDrawBuffer(1);
+			oldOpaBuf = j3dSys.getDrawBuffer(0);
+			oldXluBuf = j3dSys.getDrawBuffer(1);
 			j3dSys.setDrawBuffer(
 			    gpMapObjManager->getDrawBufferAfterIndirectOpa(), 0);
 			j3dSys.setDrawBuffer(
