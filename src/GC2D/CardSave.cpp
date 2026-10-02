@@ -1204,6 +1204,7 @@ s8 TCardSave::waitForSelect2(TEProgress param_1, TEProgress param_2)
 		break;
 	}
 
+	char trash[0x20];
 	return result;
 }
 

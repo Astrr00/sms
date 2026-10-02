@@ -24945,3 +24945,67 @@ Nur `TCardSave::drawMessageBM` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `CardSave.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R677B (`TCardSave::waitForSelect2`)
+
+**Vollmatch, strikt.**
+
+`TCardSave::waitForSelect2` war 99,82 %.
+Das Frame lag bei `-0x128` statt `-0x148`.
+Alle Stack-Slots lagen einheitlich `0x20` zu tief.
+`char trash[0x20]` als letztes Lokales schiebt Frame und Slots auf Retail.
+0 Abweichungen, 1784 Bytes, 446 Instruktionen.
+`validate-symbol-order` `mario/GC2D/CardSave` PASS.
+Eine vorbestehende UNUSED-Größenwarnung bleibt (`changePattern`).
+Keine neuen Symbolfehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TCardSave::drawMessageBM` aus R676B bleibt unberührt.
+`TFireWanwanTailHit::moveRequest` aus R676A bleibt unberührt.
+`TPauseMenu2::loadAfter` aus R675B bleibt unberührt.
+`TSunShine::perform` aus R674B bleibt unberührt.
+`TGCConsole2::processDrawTelop` aus R673B bleibt unberührt.
+
+Matched code der Unit 4440 -> 6224 (+1784), Funktionen 9 -> 10 von 20.
+Matched code der Unit 9.770267 % -> 13.695977 %.
+Gegen R676B gerechnet: matched code 55.94682 % -> 55.996513 % (2008540 -> 2010324, +1784).
+Funktionen matched 10091 -> 10092.
+Fuzzy 81.13559 % -> 81.13568 %.
+Matched data unverändert 69.31899 % (443871).
+Complete units bleiben 418.
+Nur `TCardSave::waitForSelect2` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `CardSave.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R677B (`TCardSave::waitForSelect2`)
+
+**Vollmatch, strikt.**
+
+`TCardSave::waitForSelect2` war 99,82 %.
+Das Frame lag bei `-0x128` statt `-0x148`.
+Alle Stack-Slots lagen einheitlich `0x20` zu tief.
+`char trash[0x20]` als letztes Lokales schiebt Frame und Slots auf Retail.
+0 Abweichungen, 1784 Bytes, 446 Instruktionen.
+`validate-symbol-order` `mario/GC2D/CardSave` PASS.
+Eine vorbestehende UNUSED-Größenwarnung bleibt (`changePattern`).
+Keine neuen Symbolfehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TCardSave::drawMessageBM` aus R676B bleibt unberührt.
+`TFireWanwanTailHit::moveRequest` aus R676A bleibt unberührt.
+`TPauseMenu2::loadAfter` aus R675B bleibt unberührt.
+`TSunShine::perform` aus R674B bleibt unberührt.
+`TGCConsole2::processDrawTelop` aus R673B bleibt unberührt.
+
+Matched code der Unit 4440 -> 6224 (+1784), Funktionen 9 -> 10 von 20.
+Matched code der Unit 9.770267 % -> 13.695977 %.
+Gegen R676B gerechnet: matched code 55.94682 % -> 55.996513 % (2008540 -> 2010324, +1784).
+Funktionen matched 10091 -> 10092.
+Fuzzy 81.13559 % -> 81.13568 %.
+Matched data unverändert 69.31899 % (443871).
+Complete units bleiben 418.
+Nur `TCardSave::waitForSelect2` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `CardSave.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
