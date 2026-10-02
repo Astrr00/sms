@@ -464,7 +464,7 @@ void JPADrawExecRotYBillBoard::exec(const JPADrawContext* dc,
 
 	JGeometry::TVec3<f32> pt;
 	particle->getGlobalPosition(pt);
-	MTXMultVec(dc->pcb->mViewMtx, &pt, &pt);
+	MTXMultVecSR(dc->pcb->mViewMtx, &pt, &pt);
 
 	GXBegin(GX_QUADS, GX_VTXFMT0, 4);
 	GXPosition3f32(offs[0].x + pt.x, offs[0].y + pt.y, offs[0].z + pt.z);
@@ -476,6 +476,7 @@ void JPADrawExecRotYBillBoard::exec(const JPADrawContext* dc,
 	GXPosition3f32(offs[3].x + pt.x, offs[3].y + pt.y, offs[3].z + pt.z);
 	GXTexCoord2f32(dc->pcb->mTexCoords[3].x, dc->pcb->mTexCoords[3].y);
 	GXEnd();
+	char trash[4];
 }
 
 void dirTypeVel(JPABaseParticle* particle, JPABaseEmitter*,

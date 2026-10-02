@@ -25400,3 +25400,40 @@ Nur `JPADrawExecGenPrjTexMtx::exec` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `JPADrawVisitor.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R684B (`JPADrawExecRotYBillBoard::exec`)
+
+**Vollmatch, strikt.**
+
+`JPADrawExecRotYBillBoard::exec` war 99,79 %.
+Das Frame lag bereits bei `-0x80`.
+Die Float-Locals lagen einheitlich `0x4` zu tief.
+Die Position wird mit `MTXMultVecSR` transformiert, analog zu `JPADrawExecYBillBoard::exec`.
+`char trash[4]` als letztes Lokales schiebt die Locals auf Retail, analog zu `JPADrawExecRotBillBoard::exec`.
+0 Abweichungen, 616 Bytes, 154 Instruktionen.
+`validate-symbol-order` `mario/JSystem/JParticle/JPADrawVisitor` PASS.
+Keine neuen Symbolfehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`JPADrawExecGenPrjTexMtx::exec` aus R688A bleibt unberührt.
+`JPADrawExecRotBillBoard::exec` aus R687A bleibt unberührt.
+`JAInter::StreamLib::callBack` aus R685C bleibt unberührt.
+`JPADrawExecYBillBoard::exec` aus R683B bleibt unberührt.
+`JPADrawExecBillBoard::exec` aus R682B bleibt unberührt.
+`JPADrawCalcScaleXBySpeed::calc` aus R681B bleibt unberührt.
+`JPADrawCalcScaleYBySpeed::calc` aus R680B bleibt unberührt.
+`JDrama::TLookAtCamera::perform` aus R679B bleibt unberührt.
+`TTelesa::init` aus R679A bleibt unberührt.
+
+`ninja changes_all` gegen `ce9b5592`: fuzzy 81.13611 % -> 81.13614 %.
+Matched code 56.212322 % -> 56.229485 % (2018072 -> 2018688, +616).
+Funktionen matched 10105 -> 10106.
+Matched data unverändert 69.31899 % (443871).
+`JPADrawVisitor` matched code 12520 -> 13136 (+616), Funktionen 110 -> 111 von 121.
+Fuzzy der Unit 99.33467 % -> 99.340004 %.
+Matched code der Unit 52.192764 % -> 54.76071 %.
+Complete units bleiben 418.
+Nur `JPADrawExecRotYBillBoard::exec` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `JPADrawVisitor.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
