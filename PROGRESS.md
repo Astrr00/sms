@@ -25520,3 +25520,40 @@ Nur `JPADrawExecRotationCross::exec` ist neu strikt matched.
 
 DOL-SHA1 unverändert: `JPADrawVisitor.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R688B (`TBaseNPC::execTurnToFirstState`)
+
+**Vollmatch, strikt.**
+
+`TBaseNPC::execTurnToFirstState` war 99,7 %.
+Das Frame lag bei `-0x40` statt `-0x50`.
+Jeder Stack-Slot lag einheitlich `0x10` zu tief.
+`char trash[0x10]` direkt vor `return result` schiebt Locals und Frame auf Retail.
+0 Abweichungen, 228 Bytes, 57 Instruktionen.
+`validate-symbol-order` `mario/NPC/NpcWalkTurn` PASS mit geerbtem Fehler.
+Fehlendes `TVec3<f>::set` steht schon auf dem Basisobjekt.
+Keine neuen Symbolfehler.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`JPADrawExecRotationCross::exec` aus R689A bleibt unberührt.
+`JASystem::Driver::__UpdateJcToDSPInit` aus R686C bleibt unberührt.
+`JPADrawExecRotYBillBoard::exec` aus R684B bleibt unberührt.
+`JPADrawExecGenPrjTexMtx::exec` aus R688A bleibt unberührt.
+`JPADrawExecRotBillBoard::exec` aus R687A bleibt unberührt.
+`JAInter::StreamLib::callBack` aus R685C bleibt unberührt.
+`JASystem::Driver::__UpdateJcToDSP` aus R684C bleibt unberührt.
+`JPADrawExecYBillBoard::exec` aus R683B bleibt unberührt.
+`JPADrawExecBillBoard::exec` aus R682B bleibt unberührt.
+
+`ninja changes_all` gegen `9fc51655`: fuzzy 81.13623 % -> 81.136246 %.
+Matched code 56.261242 % -> 56.26759 % (2019828 -> 2020056, +228).
+Funktionen matched 10108 -> 10109.
+Matched data unverändert 69.31899 % (443871).
+`NpcWalkTurn` matched code 448 -> 676 (+228), Funktionen 3 -> 4 von 7.
+Fuzzy der Unit 94.16081 % -> 94.18854 %.
+Matched code der Unit 20.702402 % -> 31.23845 %.
+Complete units bleiben 418.
+Nur `TBaseNPC::execTurnToFirstState` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `NpcWalkTurn.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.

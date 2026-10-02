@@ -132,6 +132,7 @@ bool TBaseNPC::execTurnToFirstState()
 		mRotation.y = SHORTANGLE2DEG(angle1);
 	}
 
+	char trash[0x10];
 	return result;
 }
 
