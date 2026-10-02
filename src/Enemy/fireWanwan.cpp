@@ -28,6 +28,46 @@
 #include <MSound/MSoundBGM.hpp>
 #include <M3DUtil/InfectiousStrings.hpp>
 
+template <>
+void JGeometry::TQuat4<f32>::slerp(const JGeometry::TQuat4<f32>& param_1,
+                                   f32 param_2)
+{
+	char trash[0x10];
+	JGeometry::TQuat4<f32> q1;
+	q1.normalize(*this);
+	JGeometry::TQuat4<f32> q2;
+	q2.normalize(param_1);
+
+	f32 fVar13 = q1.dot(q2);
+
+	bool bVar9;
+	if (fVar13 < 0.0f) {
+		bVar9  = true;
+		fVar13 = -fVar13;
+	} else {
+		bVar9 = false;
+	}
+
+	f32 fVar92;
+	if (1.0f - fVar13 <= JGeometry::TUtil<f32>::epsilon()) {
+		fVar92 = 1.0f - param_2;
+	} else {
+		f32 fVar11 = acosf(fVar13);
+		f32 fVar12 = sinf(fVar11);
+
+		fVar92  = sinf((1.0f - param_2) * fVar11) / fVar12;
+		param_2 = sinf(param_2 * fVar11) / fVar12;
+	}
+
+	if (bVar9)
+		param_2 = -param_2;
+
+	this->x = fVar92 * q1.x + param_2 * q2.x;
+	this->y = fVar92 * q1.y + param_2 * q2.y;
+	this->z = fVar92 * q1.z + param_2 * q2.z;
+	this->w = fVar92 * q1.w + param_2 * q2.w;
+}
+
 namespace {
 const GXColorS10 cBodyColorOnFire   = { 400, -50, -100, 0 };
 const GXColorS10 cBodyColorOnCool   = { -50, -50, 50, 0 };

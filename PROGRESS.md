@@ -24530,3 +24530,37 @@ Kein anderes Unit im `changes_all`-Report.
 
 DOL-SHA1 unverändert: `Application.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
+### R667A (`JGeometry::TQuat4<float>::slerp`)
+
+**Vollmatch, strikt.**
+
+`JGeometry::TQuat4<float>::slerp` war 99,79 %.
+Der Rumpf stimmte bereits.
+Nur das Frame war `-0xa8` statt `-0xb8`.
+`char trash[0x10]` in einer expliziten Spezialisierung in `fireWanwan.cpp` hebt das Frame um 16 Byte.
+Die gesicherten Register rücken mit, ohne neue Instruktionen.
+Die Spezialisierung bleibt weak, wie in `mario.MAP`.
+0 Abweichungen, 584 Bytes, 146 Instruktionen.
+`validate-symbol-order` `mario/Enemy/fireWanwan`: dieselben vier vorbestehenden MISSING-Symbole.
+Symbolreihenfolge und Bindung stimmen.
+Die Änderung fügt keine neuen Symbole hinzu und entfernt keine.
+Die TU bleibt `NonMatching`.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`JGQuat4.hpp` bleibt unberührt, damit andere TUs nicht umallokieren.
+`TApplication::initialize_bootAfter` aus R662B bleibt unberührt.
+
+`ninja changes_all` gegen den Stand von R662B: fuzzy 81.13487 % -> 81.13491 %.
+Matched code 55.712395 % -> 55.72866 % (2000124 -> 2000708, +584).
+Matched data unverändert 69.31899 % (443871).
+Funktionen matched 10078 -> 10079.
+`fireWanwan` matched code 14784 -> 15368 (+584), Funktionen 62 -> 63 von 95.
+Fuzzy der Unit 94.355064 % -> 94.35824 %.
+Matched code der Unit 37.884377 % -> 39.380894 %.
+Matched data der Unit unverändert 90.77341 % (2676).
+Complete units bleiben 418.
+Complete code und complete data unverändert.
+Nur `JGeometry::TQuat4<float>::slerp` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `fireWanwan.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
