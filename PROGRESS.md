@@ -25622,6 +25622,37 @@ Nur `__sinit_ConsoleStr_cpp` ist neu strikt matched.
 DOL-SHA1 unverändert: `ConsoleStr.cpp` bleibt `NonMatching` und wird nicht gelinkt.
 SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
 
+### R699A (`TBaseNPC::requestNpcAnm_`)
+
+**Vollmatch, strikt.**
+
+`TBaseNPC::requestNpcAnm_` war 99,25 %.
+`TNpcKeepAnm::keep` ist inlined.
+`mBlendOn = blend != NPC_STOP_MOTION_BLEND_OFF` ließ die Bool-Umwandlung in `r3`.
+Retail hält `mKeepAnmCtrl` in `r3` und rechnet `blend` in `r5` (`neg r5, r5`).
+`mBlendOn = blend` trifft das.
+0 Abweichungen, 160 Bytes, 40 Instruktionen.
+`validate-symbol-order` `mario/NPC/NpcAnm` PASS mit geerbten Weak-Order- und UNUSED-Größenwarnungen.
+Keine neuen Symbolfehler.
+Die anderen nonmatching Funktionen der TU behalten Größe und Prozent.
+`requestTalkAnm_` bleibt unberührt.
+Die TU bleibt `NonMatching` und wird nicht gelinkt.
+`MapObjBase.hpp`, `JGUtil.hpp`, `LightUtil.hpp`, `JDRFlag.hpp` unberührt.
+`TBGTentacle::perform` aus R698C bleibt unberührt.
+
+`ninja changes_all` gegen `0e3d3813`: fuzzy 81.13646 % -> 81.1365 %.
+Matched code 56.35873 % -> 56.36319 % (2023328 -> 2023488, +160).
+Funktionen matched 10120 -> 10121.
+Matched data unverändert 69.31899 % (443871).
+`NpcAnm` matched code 9492 -> 9652 (+160), Funktionen 38 -> 39 von 44.
+Fuzzy der Unit 99.74161 % -> 99.749016 %.
+Matched code der Unit 58.563675 % -> 59.55084 %.
+Complete units bleiben 418.
+Nur `TBaseNPC::requestNpcAnm_` ist neu strikt matched.
+
+DOL-SHA1 unverändert: `NpcAnm.cpp` bleibt `NonMatching` und wird nicht gelinkt.
+SHA1 `9f5a8caf56f5356aeac9d3ed28bf8de976a03625`.
+
 ### R698C (`TBGTentacle::perform`)
 
 **Vollmatch, strikt.**
